@@ -17,4 +17,9 @@ esac
 echo "Applying database migrations..."
 prisma migrate deploy
 
+if [ -n "${SEED_ADMIN_EMAIL:-}" ] && [ -n "${SEED_ADMIN_PASSWORD:-}" ]; then
+  echo "Seeding admin account..."
+  node prisma/seed-admin.mjs
+fi
+
 exec "$@"
