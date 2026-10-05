@@ -111,14 +111,15 @@ export function FieldHelp({
   function toggle(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
-    setOpen((current) => {
-      const next = !current;
-      if (next) {
-        window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: id }));
-        place();
-      }
-      return next;
-    });
+    const next = !open;
+    if (next) {
+      // Notify siblings outside setState. React replays updater functions
+      // during render, so dispatching from one would setState other FieldHelps
+      // while this instance is still rendering.
+      window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: id }));
+      place();
+    }
+    setOpen(next);
   }
 
   return (

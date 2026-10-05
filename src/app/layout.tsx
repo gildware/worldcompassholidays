@@ -3,6 +3,9 @@ import { Jost } from "next/font/google";
 import { theme } from "@/config/theme";
 import "./globals.css";
 
+// Pages read the live database. A production image must not freeze that data at build time.
+export const dynamic = "force-dynamic";
+
 const jost = Jost({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],

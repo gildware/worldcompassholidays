@@ -1,8 +1,15 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useActionState,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
-import { createTour, updateTour } from "@/actions/tours";
+import { saveTour } from "@/actions/tours";
 import {
   imageFromFields,
   type TourFormValues,
@@ -31,7 +38,12 @@ const STEPS = [
   {
     id: "general",
     title: "General",
-    description: "Content, media, FAQs, and itinerary",
+    description: "Content, FAQs, and itinerary",
+  },
+  {
+    id: "images",
+    title: "Images",
+    description: "Banner, cover, and gallery",
   },
   {
     id: "location",
@@ -51,7 +63,7 @@ const STEPS = [
   {
     id: "status",
     title: "Status",
-    description: "Publish, attributes, and feature image",
+    description: "Featured and attributes",
   },
   {
     id: "seo",
@@ -70,38 +82,31 @@ function Stepper({
   onJump: (index: number) => void;
 }) {
   return (
-    <ol className="grid w-full min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+    <ol className="grid w-full min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
       {STEPS.map((step, index) => {
         const active = index === current;
-        const done = index < current;
         return (
           <li key={step.id} className="min-w-0">
             <button
               type="button"
               onClick={() => onJump(index)}
-              disabled={index > current}
               title={step.description}
               className={[
                 "flex w-full min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors",
                 active
                   ? "border-brand bg-brand-soft"
-                  : done
-                    ? "border-line bg-white hover:bg-surface"
-                    : "border-line bg-surface text-muted",
-                index > current ? "cursor-not-allowed opacity-60" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
+                  : "border-line bg-white hover:bg-surface",
+              ].join(" ")}
             >
               <span
                 className={[
                   "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
-                  active || done
+                  active
                     ? "bg-brand text-white"
                     : "bg-white text-muted ring-1 ring-line",
                 ].join(" ")}
               >
-                {done ? "✓" : index + 1}
+                {index + 1}
               </span>
               <span className="min-w-0 truncate text-xs font-semibold text-navy">
                 {step.title}
@@ -118,8 +123,10 @@ type Draft = Omit<
   TourFormValues,
   "id" | "imageUrl" | "imageKey" | "imageDriver" | "featuredImageUrl" | "featuredImageKey" | "featuredImageDriver" | "seoImageUrl" | "seoImageKey" | "seoImageDriver" | "gallery"
 > & {
+  /** Full-width top banner on the tour page → featuredImage* */
   banner: UploadedImage | null;
-  featured: UploadedImage | null;
+  /** Card / listing image → imageUrl* */
+  cover: UploadedImage | null;
   seoImage: UploadedImage | null;
   gallery: GalleryItem[];
 };
@@ -165,10 +172,10 @@ function buildDraft(tour?: TourFormValues): Draft {
       facebookDescription: "",
       twitterTitle: "",
       twitterDescription: "",
-      published: true,
+      published: false,
       destinationId: "",
       banner: null,
-      featured: null,
+      cover: null,
       seoImage: null,
       gallery: [],
     };
@@ -211,12 +218,13 @@ function buildDraft(tour?: TourFormValues): Draft {
     twitterDescription: tour.twitterDescription,
     published: tour.published,
     destinationId: tour.destinationId,
-    banner: imageFromFields(tour.imageUrl, tour.imageKey, tour.imageDriver),
-    featured: imageFromFields(
-      tour.featuredImageUrl,
-      tour.featuredImageKey,
-      tour.featuredImageDriver,
-    ),
+    banner:
+      imageFromFields(
+        tour.featuredImageUrl,
+        tour.featuredImageKey,
+        tour.featuredImageDriver,
+      ) ?? imageFromFields(tour.imageUrl, tour.imageKey, tour.imageDriver),
+    cover: imageFromFields(tour.imageUrl, tour.imageKey, tour.imageDriver),
     seoImage: imageFromFields(
       tour.seoImageUrl,
       tour.seoImageKey,
@@ -264,21 +272,56 @@ export function TourTabsForm({
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(() => buildDraft(tour));
+  const [tourId, setTourId] = useState<string | null>(tour?.id ?? null);
   const [imageBusy, setImageBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [saveMode, setSaveMode] = useState<
+    "continue" | "draft" | "publish" | null
+  >(null);
+  const pendingFocusRef = useRef<string | null>(null);
+  const pendingContinueRef = useRef(false);
+  const pendingDraftRef = useRef(false);
+  const pendingPublishRef = useRef(false);
   const currentStepId: StepId = STEPS[step].id;
-  const [state, action] = useActionState(
-    isEdit ? updateTour : createTour,
-    initialFormState,
-  );
+  const [state, action] = useActionState(saveTour, initialFormState);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    if (state.success) {
+    if (state.error) {
+      pendingContinueRef.current = false;
+      pendingDraftRef.current = false;
+      pendingPublishRef.current = false;
+      setSaveMode(null);
+      return;
+    }
+    if (!state.success) return;
+
+    if (state.tourId) setTourId(state.tourId);
+
+    if (pendingContinueRef.current) {
+      pendingContinueRef.current = false;
+      setSaveMode(null);
+      setStep((current) => Math.min(current + 1, STEPS.length - 1));
+      return;
+    }
+
+    if (pendingDraftRef.current || pendingPublishRef.current) {
+      pendingDraftRef.current = false;
+      pendingPublishRef.current = false;
+      setSaveMode(null);
       router.push("/admin/tours?saved=1");
       router.refresh();
     }
-  }, [state.success, router]);
+  }, [state, router]);
+
+  useEffect(() => {
+    const name = pendingFocusRef.current;
+    if (!name) return;
+    pendingFocusRef.current = null;
+    const timer = window.setTimeout(() => focusField(name), 40);
+    return () => window.clearTimeout(timer);
+  }, [step, fieldErrors]);
 
   const destinationName = useMemo(
     () =>
@@ -286,8 +329,18 @@ export function TourTabsForm({
     [destinations, draft.destinationId],
   );
 
+  function clearFieldError(name: string) {
+    setFieldErrors((current) => {
+      if (!current[name]) return current;
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
+  }
+
   function patch<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
+    clearFieldError(String(key));
   }
 
   function toggleList(key: "travelStyles" | "facilities", value: string) {
@@ -302,76 +355,120 @@ export function TourTabsForm({
     });
   }
 
-  function validateStep(index: number): string | null {
+  function validateStepFields(index: number): Record<string, string> {
     const id = STEPS[index].id;
+    const errors: Record<string, string> = {};
+
     if (id === "general") {
-      if (!draft.banner) return "Upload a banner image.";
-      if (draft.title.trim().length < 2) return "Enter a title.";
-      if (draft.summary.trim().length < 10) {
-        return "Add a short description (at least 10 characters).";
+      if (draft.title.trim().length < 2) {
+        errors.title = "Enter a title.";
       }
-      return null;
-    }
-    if (id === "location") {
-      if (!draft.destinationId) return "Choose a destination.";
-      return null;
-    }
-    if (id === "pricing") {
+      if (draft.summary.trim().length < 10) {
+        errors.summary = "Add a short description (at least 10 characters).";
+      }
       if (!Number.isInteger(draft.durationDays) || draft.durationDays < 1) {
-        return "Duration days must be at least 1.";
+        errors.durationDays = "Duration days must be at least 1.";
+      }
+      if (!Number.isInteger(draft.minPeople) || draft.minPeople < 1) {
+        errors.minPeople = "Minimum people must be at least 1.";
       }
       if (!Number.isInteger(draft.maxGroupSize) || draft.maxGroupSize < 1) {
-        return "Max people must be at least 1.";
+        errors.maxGroupSize = "Max people must be at least 1.";
       }
-      if (!Number.isInteger(draft.priceFrom) || draft.priceFrom < 0) {
-        return "Price must be zero or more.";
+      if (
+        Number.isInteger(draft.minPeople) &&
+        Number.isInteger(draft.maxGroupSize) &&
+        draft.maxGroupSize < draft.minPeople
+      ) {
+        errors.maxGroupSize = "Max people must be at least the minimum.";
       }
-      return null;
     }
-    return null;
+
+    if (id === "images") {
+      if (!draft.banner) errors.banner = "Upload a banner image.";
+      if (!draft.cover) errors.cover = "Upload a cover image for cards.";
+    }
+
+    if (id === "location") {
+      if (!draft.destinationId) {
+        errors.destinationId = "Choose a destination.";
+      }
+    }
+
+    if (id === "pricing") {
+      if (!Number.isInteger(draft.priceFrom) || draft.priceFrom < 0) {
+        errors.priceFrom = "Price must be zero or more.";
+      }
+      if (!draft.currency.trim()) errors.currency = "Choose a currency.";
+      if (!draft.difficulty.trim()) {
+        errors.difficulty = "Choose a difficulty.";
+      }
+    }
+
+    return errors;
   }
 
-  function goNext() {
-    if (imageBusy) {
-      setFormError("Wait for image uploads to finish.");
-      return;
-    }
-    const error = validateStep(step);
-    if (error) {
-      setFormError(error);
-      return;
-    }
+  function focusField(name: string) {
+    const root = document.querySelector(`[data-field="${name}"]`);
+    if (!(root instanceof HTMLElement)) return;
+    root.scrollIntoView({ behavior: "smooth", block: "center" });
+    const target = root.querySelector<HTMLElement>(
+      'input:not([type="hidden"]):not([type="file"]), textarea, button[aria-haspopup="listbox"], [role="button"]',
+    );
+    target?.focus({ preventScroll: true });
+  }
+
+  function showFieldErrors(errors: Record<string, string>, jumpStep?: number) {
+    const first = Object.keys(errors)[0];
+    if (!first) return;
     setFormError(null);
-    setStep((current) => Math.min(current + 1, STEPS.length - 1));
+    setFieldErrors(errors);
+    if (typeof jumpStep === "number" && jumpStep !== step) {
+      pendingFocusRef.current = first;
+      setStep(jumpStep);
+      return;
+    }
+    window.setTimeout(() => focusField(first), 0);
   }
 
   function goBack() {
     setFormError(null);
+    setFieldErrors({});
     setStep((current) => Math.max(current - 1, 0));
   }
 
   function jumpTo(index: number) {
-    if (index > step) return;
+    if (index < 0 || index >= STEPS.length) return;
     setFormError(null);
+    setFieldErrors({});
     setStep(index);
   }
 
-  function save() {
-    if (imageBusy) {
-      setFormError("Wait for image uploads to finish.");
-      return;
+  function validateDraftFields(): Record<string, string> {
+    const errors: Record<string, string> = {};
+    if (draft.title.trim().length < 2) {
+      errors.title = "Enter a title to save and continue.";
     }
-    for (let index = 0; index < STEPS.length; index += 1) {
-      const error = validateStep(index);
-      if (error) {
-        setStep(index);
-        setFormError(error);
-        return;
-      }
-    }
+    return errors;
+  }
 
+  function collectStepErrors() {
+    return STEPS.map((_, index) => validateStepFields(index));
+  }
+
+  function findFirstStepWithErrors(
+    errorsByStep: Record<string, string>[],
+  ): number {
+    return errorsByStep.findIndex((errors) => Object.keys(errors).length > 0);
+  }
+
+  const isPublishable = collectStepErrors().every(
+    (errors) => Object.keys(errors).length === 0,
+  );
+
+  function buildFormData(publish: boolean) {
     const formData = new FormData();
-    if (tour) formData.set("tourId", tour.id);
+    if (tourId) formData.set("tourId", tourId);
     formData.set("title", draft.title.trim());
     formData.set("summary", draft.summary.trim());
     formData.set("description", draft.description.trim());
@@ -408,19 +505,19 @@ export function TourTabsForm({
     formData.set("galleryJson", JSON.stringify(draft.gallery));
     formData.set("travelStylesJson", JSON.stringify(draft.travelStyles));
     formData.set("facilitiesJson", JSON.stringify(draft.facilities));
-    if (draft.published) formData.set("published", "on");
+    if (publish) formData.set("published", "on");
     if (draft.isFeatured) formData.set("isFeatured", "on");
     if (draft.seoIndex) formData.set("seoIndex", "on");
 
-    if (draft.banner) {
-      formData.set("imageUrl", draft.banner.url);
-      formData.set("imageKey", draft.banner.key);
-      formData.set("imageDriver", draft.banner.driver);
+    if (draft.cover) {
+      formData.set("imageUrl", draft.cover.url);
+      formData.set("imageKey", draft.cover.key);
+      formData.set("imageDriver", draft.cover.driver);
     }
-    if (draft.featured) {
-      formData.set("featuredImageUrl", draft.featured.url);
-      formData.set("featuredImageKey", draft.featured.key);
-      formData.set("featuredImageDriver", draft.featured.driver);
+    if (draft.banner) {
+      formData.set("featuredImageUrl", draft.banner.url);
+      formData.set("featuredImageKey", draft.banner.key);
+      formData.set("featuredImageDriver", draft.banner.driver);
     }
     if (draft.seoImage) {
       formData.set("seoImageUrl", draft.seoImage.url);
@@ -428,8 +525,73 @@ export function TourTabsForm({
       formData.set("seoImageDriver", draft.seoImage.driver);
     }
 
+    return formData;
+  }
+
+  function saveAndContinue() {
+    if (imageBusy) {
+      setFormError("Wait for image uploads to finish.");
+      return;
+    }
+    const errors = validateDraftFields();
+    if (Object.keys(errors).length > 0) {
+      showFieldErrors(errors, 0);
+      return;
+    }
+
+    // Keep a live tour published when it is still complete.
+    const keepPublished =
+      isEdit && Boolean(tour?.published) && isPublishable;
+
     setFormError(null);
-    startTransition(() => action(formData));
+    setFieldErrors({});
+    setSaveMode("continue");
+    pendingContinueRef.current = true;
+    pendingDraftRef.current = false;
+    pendingPublishRef.current = false;
+    startTransition(() => action(buildFormData(keepPublished)));
+  }
+
+  function saveDraft() {
+    if (imageBusy) {
+      setFormError("Wait for image uploads to finish.");
+      return;
+    }
+    const errors = validateDraftFields();
+    if (Object.keys(errors).length > 0) {
+      showFieldErrors(errors, 0);
+      return;
+    }
+
+    setFormError(null);
+    setFieldErrors({});
+    setSaveMode("draft");
+    pendingContinueRef.current = false;
+    pendingDraftRef.current = true;
+    pendingPublishRef.current = false;
+    startTransition(() => action(buildFormData(false)));
+  }
+
+  function publish() {
+    if (imageBusy) {
+      setFormError("Wait for image uploads to finish.");
+      return;
+    }
+
+    const errorsByStep = collectStepErrors();
+    const firstBad = findFirstStepWithErrors(errorsByStep);
+    if (firstBad >= 0) {
+      showFieldErrors(errorsByStep[firstBad], firstBad);
+      return;
+    }
+
+    setFormError(null);
+    setFieldErrors({});
+    setSaveMode("publish");
+    pendingContinueRef.current = false;
+    pendingDraftRef.current = false;
+    pendingPublishRef.current = true;
+    startTransition(() => action(buildFormData(true)));
   }
 
   function updateSurrounding(
@@ -466,22 +628,45 @@ export function TourTabsForm({
       ) : null}
 
       <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-line bg-white">
-        <div className="shrink-0 border-b border-line px-4 py-3 sm:px-5">
-          <h2 className="text-sm font-semibold text-navy">
-            {STEPS[step].title}
-          </h2>
-          <p className="mt-0.5 text-xs text-muted">{STEPS[step].description}</p>
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-navy">
+              {STEPS[step].title}
+            </h2>
+            <p className="mt-0.5 truncate text-xs text-muted">
+              {STEPS[step].description}
+            </p>
+          </div>
+          {isEdit ? (
+            <Button
+              type="button"
+              size="sm"
+              className="shrink-0"
+              onClick={publish}
+              disabled={pending || imageBusy}
+            >
+              {pending && saveMode === "publish"
+                ? "Publishing…"
+                : "Save and publish"}
+            </Button>
+          ) : null}
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
         {currentStepId === "general" ? (
             <div className="grid gap-4">
-              <Field label="Title">
+              <Field
+                label="Title"
+                name="title"
+                required
+                error={fieldErrors.title}
+              >
                 <input
                   value={draft.title}
                   onChange={(e) => patch("title", e.target.value)}
                   className="!h-10"
                   placeholder="Title"
+                  aria-invalid={Boolean(fieldErrors.title)}
                 />
               </Field>
               <Field label="Content" hint="Longer tour description.">
@@ -492,12 +677,19 @@ export function TourTabsForm({
                   className="!min-h-0 resize-y"
                 />
               </Field>
-              <Field label="Short description" hint="Shown on cards.">
+              <Field
+                label="Short description"
+                name="summary"
+                required
+                hint="Shown on cards."
+                error={fieldErrors.summary}
+              >
                 <textarea
                   value={draft.summary}
                   onChange={(e) => patch("summary", e.target.value)}
                   rows={3}
                   className="!min-h-0 resize-y"
+                  aria-invalid={Boolean(fieldErrors.summary)}
                 />
               </Field>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -550,7 +742,12 @@ export function TourTabsForm({
                     placeholder="Duration"
                   />
                 </Field>
-                <Field label="Duration days">
+                <Field
+                  label="Duration days"
+                  name="durationDays"
+                  required
+                  error={fieldErrors.durationDays}
+                >
                   <input
                     type="number"
                     min={1}
@@ -559,18 +756,30 @@ export function TourTabsForm({
                       patch("durationDays", Number(e.target.value))
                     }
                     className="!h-10"
+                    aria-invalid={Boolean(fieldErrors.durationDays)}
                   />
                 </Field>
-                <Field label="Tour min people">
+                <Field
+                  label="Tour min people"
+                  name="minPeople"
+                  required
+                  error={fieldErrors.minPeople}
+                >
                   <input
                     type="number"
                     min={1}
                     value={draft.minPeople}
                     onChange={(e) => patch("minPeople", Number(e.target.value))}
                     className="!h-10"
+                    aria-invalid={Boolean(fieldErrors.minPeople)}
                   />
                 </Field>
-                <Field label="Tour max people">
+                <Field
+                  label="Tour max people"
+                  name="maxGroupSize"
+                  required
+                  error={fieldErrors.maxGroupSize}
+                >
                   <input
                     type="number"
                     min={1}
@@ -579,6 +788,7 @@ export function TourTabsForm({
                       patch("maxGroupSize", Number(e.target.value))
                     }
                     className="!h-10"
+                    aria-invalid={Boolean(fieldErrors.maxGroupSize)}
                   />
                 </Field>
               </div>
@@ -792,69 +1002,6 @@ export function TourTabsForm({
                 ))}
               </RepeaterCard>
 
-              <ImageUploader
-                folder="tours"
-                label="Banner image"
-                required
-                value={draft.banner}
-                initialValue={draft.banner}
-                onChange={(value) => patch("banner", value)}
-                onBusyChange={setImageBusy}
-                withHiddenFields={false}
-              />
-
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between">
-                  <p className="inline-flex items-center gap-1.5 text-sm font-medium text-navy">
-                    Gallery
-                    <FieldHelp label="Gallery" />
-                  </p>
-                  <p className="text-xs text-muted">
-                    Upload images one by one
-                  </p>
-                </div>
-                <ImageUploader
-                  folder="tours"
-                  label="Add gallery image"
-                  value={null}
-                  onChange={(value) => {
-                    if (!value) return;
-                    patch("gallery", [...draft.gallery, value]);
-                  }}
-                  onBusyChange={setImageBusy}
-                  withHiddenFields={false}
-                />
-                {draft.gallery.length > 0 ? (
-                  <ul className="grid gap-2 sm:grid-cols-3">
-                    {draft.gallery.map((item, index) => (
-                      <li
-                        key={`${item.key}-${index}`}
-                        className="relative overflow-hidden rounded-lg border border-line"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={item.url}
-                          alt=""
-                          className="aspect-[4/3] w-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          className="absolute top-2 right-2 rounded bg-white/90 px-2 py-1 text-[11px] text-red-700"
-                          onClick={() =>
-                            patch(
-                              "gallery",
-                              draft.gallery.filter((_, i) => i !== index),
-                            )
-                          }
-                        >
-                          Remove
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-
               {(["education", "health", "transportation"] as const).map(
                 (group) => (
                   <RepeaterCard
@@ -943,14 +1090,103 @@ export function TourTabsForm({
             </div>
           ) : null}
 
+          {currentStepId === "images" ? (
+            <div className="grid max-w-3xl gap-6">
+              <ImageUploader
+                folder="tours"
+                label="Banner image"
+                required
+                fieldName="banner"
+                value={draft.banner}
+                initialValue={draft.banner}
+                onChange={(value) => patch("banner", value)}
+                onBusyChange={setImageBusy}
+                withHiddenFields={false}
+                error={fieldErrors.banner}
+                hint="Full-width photo at the top of the tour page. Prefer a wide landscape shot."
+              />
+
+              <ImageUploader
+                folder="tours"
+                label="Cover image"
+                required
+                fieldName="cover"
+                value={draft.cover}
+                initialValue={draft.cover}
+                onChange={(value) => patch("cover", value)}
+                onBusyChange={setImageBusy}
+                withHiddenFields={false}
+                error={fieldErrors.cover}
+                hint="Shown on tour cards in listings and destination pages."
+              />
+
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="inline-flex items-center gap-1.5 text-sm font-medium text-navy">
+                    Gallery
+                    <FieldHelp label="Gallery" />
+                  </p>
+                  <p className="text-xs text-muted">Upload images one by one</p>
+                </div>
+                <ImageUploader
+                  folder="tours"
+                  label="Add gallery image"
+                  value={null}
+                  onChange={(value) => {
+                    if (!value) return;
+                    patch("gallery", [...draft.gallery, value]);
+                  }}
+                  onBusyChange={setImageBusy}
+                  withHiddenFields={false}
+                />
+                {draft.gallery.length > 0 ? (
+                  <ul className="grid gap-2 sm:grid-cols-3">
+                    {draft.gallery.map((item, index) => (
+                      <li
+                        key={`${item.key}-${index}`}
+                        className="relative overflow-hidden rounded-lg border border-line"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={item.url}
+                          alt=""
+                          className="aspect-[4/3] w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 rounded bg-white/90 px-2 py-1 text-[11px] text-red-700"
+                          onClick={() =>
+                            patch(
+                              "gallery",
+                              draft.gallery.filter((_, i) => i !== index),
+                            )
+                          }
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
           {currentStepId === "location" ? (
             <div className="grid max-w-xl gap-3">
-              <Field label="Destination">
+              <Field
+                label="Destination"
+                name="destinationId"
+                required
+                error={fieldErrors.destinationId}
+              >
                 <SearchableSelect
                   value={draft.destinationId}
                   onChange={(value) => patch("destinationId", value)}
                   emptyLabel="Choose a destination"
                   searchPlaceholder="Search destinations"
+                  required
+                  invalid={Boolean(fieldErrors.destinationId)}
                   options={destinations.map((destination) => ({
                     value: destination.id,
                     label: destination.name,
@@ -1006,20 +1242,33 @@ export function TourTabsForm({
           {currentStepId === "pricing" ? (
             <div className="grid max-w-xl gap-3">
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Price from">
+                <Field
+                  label="Price from"
+                  name="priceFrom"
+                  required
+                  error={fieldErrors.priceFrom}
+                >
                   <input
                     type="number"
                     min={0}
                     value={draft.priceFrom}
                     onChange={(e) => patch("priceFrom", Number(e.target.value))}
                     className="!h-10"
+                    aria-invalid={Boolean(fieldErrors.priceFrom)}
                   />
                 </Field>
-                <Field label="Currency">
+                <Field
+                  label="Currency"
+                  name="currency"
+                  required
+                  error={fieldErrors.currency}
+                >
                   <SearchableSelect
                     value={draft.currency}
                     onChange={(value) => patch("currency", value)}
                     searchPlaceholder="Search currencies"
+                    required
+                    invalid={Boolean(fieldErrors.currency)}
                     options={[
                       { value: "INR", label: "INR" },
                       { value: "USD", label: "USD" },
@@ -1028,11 +1277,18 @@ export function TourTabsForm({
                     className="!h-10"
                   />
                 </Field>
-                <Field label="Difficulty">
+                <Field
+                  label="Difficulty"
+                  name="difficulty"
+                  required
+                  error={fieldErrors.difficulty}
+                >
                   <SearchableSelect
                     value={draft.difficulty}
                     onChange={(value) => patch("difficulty", value)}
                     searchPlaceholder="Search difficulty"
+                    required
+                    invalid={Boolean(fieldErrors.difficulty)}
                     options={[
                       { value: "easy", label: "Easy" },
                       { value: "moderate", label: "Moderate" },
@@ -1073,32 +1329,12 @@ export function TourTabsForm({
 
           {currentStepId === "status" ? (
             <div className="grid max-w-2xl gap-4">
-              <div className="grid gap-2">
-                <p className="inline-flex items-center gap-1.5 text-sm font-medium text-navy">
-                  Visibility
-                  <FieldHelp label="Visibility" />
-                </p>
-              <div className="flex flex-wrap gap-4">
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    checked={draft.published}
-                    onChange={() => patch("published", true)}
-                    className="accent-brand"
-                  />
-                  Publish
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    checked={!draft.published}
-                    onChange={() => patch("published", false)}
-                    className="accent-brand"
-                  />
-                  Draft
-                </label>
-              </div>
-              </div>
+              <p className="rounded-lg border border-line bg-surface px-3 py-2 text-xs text-muted">
+                <span className="font-medium text-navy">Save and continue</span>{" "}
+                stores progress. When every required field is complete,{" "}
+                <span className="font-medium text-navy">Save and publish</span>{" "}
+                makes the tour live.
+              </p>
               <label className="flex items-center gap-3 rounded-lg border border-line px-3 py-2.5 text-sm">
                 <input
                   type="checkbox"
@@ -1157,15 +1393,6 @@ export function TourTabsForm({
                 </div>
               </div>
 
-              <ImageUploader
-                folder="tours"
-                label="Feature image"
-                value={draft.featured}
-                initialValue={draft.featured}
-                onChange={(value) => patch("featured", value)}
-                onBusyChange={setImageBusy}
-                withHiddenFields={false}
-              />
             </div>
           ) : null}
 
@@ -1275,30 +1502,41 @@ export function TourTabsForm({
               {step < STEPS.length - 1 ? (
                 <Button
                   type="button"
+                  variant={isEdit && isPublishable ? "secondary" : "primary"}
                   size="sm"
                   className="w-full sm:w-auto"
-                  onClick={goNext}
-                  disabled={imageBusy}
+                  onClick={saveAndContinue}
+                  disabled={pending || imageBusy}
                 >
-                  Continue
+                  {pending && saveMode === "continue"
+                    ? "Saving…"
+                    : "Save and continue"}
                 </Button>
-              ) : (
+              ) : isEdit ? (
+                <Button
+                  type="button"
+                  variant={isPublishable ? "secondary" : "primary"}
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  onClick={saveDraft}
+                  disabled={pending || imageBusy}
+                >
+                  {pending && saveMode === "draft" ? "Saving…" : "Save draft"}
+                </Button>
+              ) : null}
+              {!isEdit && step === STEPS.length - 1 ? (
                 <Button
                   type="button"
                   size="sm"
                   className="w-full sm:w-auto"
-                  onClick={save}
+                  onClick={publish}
                   disabled={pending || imageBusy}
                 >
-                  {pending
-                    ? isEdit
-                      ? "Saving…"
-                      : "Creating…"
-                    : isEdit
-                      ? "Save changes"
-                      : "Create tour"}
+                  {pending && saveMode === "publish"
+                    ? "Publishing…"
+                    : "Publish"}
                 </Button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

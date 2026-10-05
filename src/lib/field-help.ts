@@ -253,12 +253,16 @@ const guides: Record<string, FieldGuide> = {
     why: "Walking time, transfers, and highlights belong here so travelers know the pace before they book.",
   },
   "Banner image": {
-    what: "The wide photo at the top of the tour page.",
-    why: "It is the first image travelers see. Use a photo that shows the trip, not a logo or a text graphic.",
+    what: "The full-width photo at the top of the tour page.",
+    why: "It is the first image on the tour page. Use a wide landscape shot of the trip, not a logo or text graphic.",
+  },
+  "Cover image": {
+    what: "The photo shown on tour cards in listings.",
+    why: "Travelers see this when browsing tours and destinations. Pick a clear, upright crop that reads well as a small card.",
   },
   Gallery: {
     what: "Extra photos of the tour, added one at a time.",
-    why: "A gallery shows stays, views, and the group experience beyond the single banner.",
+    why: "A gallery shows stays, views, and the group experience beyond the banner and cover.",
   },
   "Add gallery image": {
     what: "A photo to add to this tour’s gallery.",
@@ -335,10 +339,6 @@ const guides: Record<string, FieldGuide> = {
   Facilities: {
     what: "Amenities available on this tour, such as wifi or a gym.",
     why: "Tick only what this trip actually provides. Travelers treat these as promises.",
-  },
-  "Feature image": {
-    what: "The photo used when this tour is featured.",
-    why: "Highlighted placements use this image. Choose a strong photo if the tour is marked featured.",
   },
   "seo.index": {
     what: "Whether search engines may list this tour.",

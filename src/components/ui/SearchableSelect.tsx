@@ -19,6 +19,8 @@ type SearchableSelectProps = {
   searchPlaceholder?: string;
   required?: boolean;
   disabled?: boolean;
+  /** Show a red border when the field failed validation. */
+  invalid?: boolean;
   className?: string;
   wrapperClassName?: string;
   /** Accessible name when the visible text is only the current choice. */
@@ -75,6 +77,7 @@ export function SearchableSelect({
   searchPlaceholder = "Search",
   required = false,
   disabled = false,
+  invalid = false,
   className,
   wrapperClassName,
   ariaLabel,
@@ -307,13 +310,18 @@ export function SearchableSelect({
         aria-expanded={open}
         aria-controls={listId}
         aria-required={required || undefined}
+        aria-invalid={invalid || undefined}
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onTriggerKeyDown}
         className={[
           "flex h-11 w-full items-center justify-between gap-2 rounded-lg border bg-white px-3 text-left text-sm",
-          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-60",
-          open ? "border-brand" : "border-line",
+          invalid
+            ? "border-red-500 !outline-none focus:!outline-none focus-visible:!outline-none focus:!shadow-[0_0_0_2px_#ef4444] focus-visible:!shadow-[0_0_0_2px_#ef4444]"
+            : open
+              ? "border-brand focus-visible:outline-brand"
+              : "border-line focus-visible:outline-brand",
           className,
         ]
           .filter(Boolean)

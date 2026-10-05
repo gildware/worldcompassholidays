@@ -39,20 +39,20 @@ model Tour {
   id                  String          @id @default(cuid())
   slug                String          @unique
   title               String
-  summary             String
+  summary             String          @default("")
   description         String          @default("")
   category            String          @default("")
   youtubeUrl          String          @default("")
   minDayBeforeBooking Int?
-  durationDays        Int
+  durationDays        Int             @default(5)
   durationLabel       String          @default("")
   difficulty          String          @default("moderate")
   minPeople           Int             @default(1)
-  maxGroupSize        Int
-  priceFrom           Int
+  maxGroupSize        Int             @default(12)
+  priceFrom           Int             @default(0)
   currency            String          @default("INR")
-  imageUrl            String
-  imageKey            String
+  imageUrl            String          @default("")
+  imageKey            String          @default("")
   imageDriver         String          @default("local")
   featuredImageUrl    String          @default("")
   featuredImageKey    String          @default("")
@@ -82,8 +82,8 @@ model Tour {
   twitterTitle        String          @default("")
   twitterDescription  String          @default("")
   published           Boolean         @default(false)
-  destinationId       String
-  destination         Destination     @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  destinationId       String?
+  destination         Destination?    @relation(fields: [destinationId], references: [id], onDelete: SetNull)
   departures          TourDeparture[]
   days                ItineraryDay[]
   createdAt           DateTime        @default(now())

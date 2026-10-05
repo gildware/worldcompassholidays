@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { deleteDestination } from "@/actions/destinations";
@@ -91,6 +92,81 @@ function SortHeader({
         </span>
       </button>
     </th>
+  );
+}
+
+function ActionPill({
+  label,
+  tone,
+  children,
+  href,
+  onClick,
+}: {
+  label: string;
+  tone: "view" | "edit" | "delete";
+  children: React.ReactNode;
+  href?: string;
+  onClick?: () => void;
+}) {
+  const tones = {
+    view: "border-brand/30 bg-brand-soft text-brand hover:bg-brand/15",
+    edit: "border-line bg-white text-navy hover:bg-surface",
+    delete: "border-red-200 bg-white text-red-700 hover:bg-red-50",
+  };
+  const className = `inline-flex h-7 items-center gap-1 rounded-full border px-2 text-[11px] font-medium whitespace-nowrap ${tones[tone]}`;
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        {children}
+        {label}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} className={className}>
+      {children}
+      {label}
+    </button>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" aria-hidden>
+      <path
+        d="M1.5 8S3.8 3.5 8 3.5 14.5 8 14.5 8 12.2 12.5 8 12.5 1.5 8 1.5 8Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+      />
+      <circle cx="8" cy="8" r="1.8" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" aria-hidden>
+      <path
+        d="M9.2 3.2 12.8 6.8M2.5 13.5l2.7-.6 7.4-7.4a1.2 1.2 0 0 0 0-1.7L11.2 2.4a1.2 1.2 0 0 0-1.7 0L2.1 9.8l.4 3.7Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" aria-hidden>
+      <path
+        d="M3 4.5h10M6.2 4.5V3.2h3.6v1.3M4.2 4.5l.5 8.2h6.6l.5-8.2"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
@@ -403,7 +479,7 @@ export function DestinationsWorkspace({
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-line bg-white">
-        <table className="w-full min-w-[56rem] border-collapse text-sm">
+        <table className="w-full min-w-[64rem] border-collapse text-sm">
           <thead className="border-b border-line bg-surface">
             <tr>
               <th scope="col" className="w-16 px-3 py-2.5">
@@ -460,18 +536,16 @@ export function DestinationsWorkspace({
                 sortDir={sortDir}
                 onSort={toggleSort}
               />
-              {canManage ? (
-                <th scope="col" className="px-3 py-2.5 text-right">
-                  <span className="text-xs font-semibold text-navy">Actions</span>
-                </th>
-              ) : null}
+              <th scope="col" className="px-3 py-2.5 text-right">
+                <span className="text-xs font-semibold text-navy">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {destinations.length === 0 ? (
               <tr>
                 <td
-                  colSpan={canManage ? 9 : 8}
+                  colSpan={9}
                   className="px-3 py-8 text-center text-sm text-muted"
                 >
                   No destinations yet.
@@ -481,7 +555,7 @@ export function DestinationsWorkspace({
             ) : filtered.length === 0 ? (
               <tr>
                 <td
-                  colSpan={canManage ? 9 : 8}
+                  colSpan={9}
                   className="px-3 py-8 text-center text-sm text-muted"
                 >
                   No destinations match these filters.
@@ -499,7 +573,12 @@ export function DestinationsWorkspace({
                     />
                   </td>
                   <td className="px-3 py-2">
-                    <p className="font-semibold text-navy">{destination.name}</p>
+                    <Link
+                      href={`/admin/destinations/${destination.id}`}
+                      className="font-semibold text-navy hover:text-brand hover:underline"
+                    >
+                      {destination.name}
+                    </Link>
                     <p className="line-clamp-1 max-w-xs text-xs text-muted">
                       {destination.summary}
                     </p>
@@ -522,31 +601,38 @@ export function DestinationsWorkspace({
                       <Badge tone="warning">Draft</Badge>
                     )}
                   </td>
-                  {canManage ? (
-                    <td className="px-3 py-2">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
+                  <td className="px-3 py-2">
+                    <div className="flex justify-end gap-1.5">
+                      <ActionPill
+                        label="View"
+                        tone="view"
+                        href={`/admin/destinations/${destination.id}`}
+                      >
+                        <EyeIcon />
+                      </ActionPill>
+                      {canManage ? (
+                        <ActionPill
+                          label="Edit"
+                          tone="edit"
                           onClick={() => {
                             setPublished(destination.published);
                             setEditing(destination);
                           }}
                         >
-                          Edit
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="dangerOutline"
-                          size="sm"
+                          <PencilIcon />
+                        </ActionPill>
+                      ) : null}
+                      {canManage ? (
+                        <ActionPill
+                          label="Delete"
+                          tone="delete"
                           onClick={() => setDeleting(destination)}
                         >
-                          Delete
-                        </Button>
-                      </div>
-                    </td>
-                  ) : null}
+                          <TrashIcon />
+                        </ActionPill>
+                      ) : null}
+                    </div>
+                  </td>
                 </tr>
               ))
             )}

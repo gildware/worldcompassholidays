@@ -53,7 +53,7 @@ type TourRecord = {
   twitterTitle: string;
   twitterDescription: string;
   published: boolean;
-  destinationId: string;
+  destinationId: string | null;
   days: {
     dayNumber: number;
     title: string;
@@ -113,6 +113,6 @@ export function mapTourToFormValues(tour: TourRecord): TourFormValues {
     twitterTitle: tour.twitterTitle,
     twitterDescription: tour.twitterDescription,
     published: tour.published,
-    destinationId: tour.destinationId,
+    destinationId: tour.destinationId ?? "",
   };
 }

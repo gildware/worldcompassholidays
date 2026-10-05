@@ -94,6 +94,8 @@ export function ImageUploader({
   onBusyChange,
   hint,
   help,
+  error: externalError = null,
+  fieldName,
   withHiddenFields = true,
 }: {
   folder: ImageFolder;
@@ -107,6 +109,10 @@ export function ImageUploader({
   hint?: string;
   /** Catalog key when this label is shared with another image field. */
   help?: string;
+  /** Parent form validation message (shown below the drop zone). */
+  error?: string | null;
+  /** Stable key for scroll-to-error targeting (`data-field`). */
+  fieldName?: string;
   /** Write imageUrl / imageKey / imageDriver inputs for server actions. */
   withHiddenFields?: boolean;
 }) {
@@ -124,6 +130,7 @@ export function ImageUploader({
 
   const previewUrl = localPreview || current?.url || null;
   const uploading = progress !== null;
+  const shownError = externalError || error;
 
   useEffect(() => {
     onBusyChange?.(uploading);
@@ -216,11 +223,15 @@ export function ImageUploader({
   }
 
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-2" data-field={fieldName}>
       <div className="flex items-center gap-1.5">
         <label htmlFor={inputId} className="text-sm font-medium text-navy">
           {label}
-          {required ? <span className="text-red-600"> *</span> : null}
+          {required ? (
+            <span className="ml-0.5 text-red-600" aria-hidden="true">
+              *
+            </span>
+          ) : null}
         </label>
         <FieldHelp label={label} help={help} />
       </div>
@@ -272,9 +283,12 @@ export function ImageUploader({
         onDrop={onDrop}
         className={[
           "relative overflow-hidden rounded-xl border border-dashed transition-colors",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
           dragging
-            ? "border-brand bg-brand-soft"
-            : "border-line bg-surface hover:border-brand/50",
+            ? "border-brand bg-brand-soft focus-visible:outline-brand"
+            : shownError
+              ? "border-red-500 bg-surface !outline-none focus:!outline-none focus-visible:!outline-none focus:!shadow-[0_0_0_2px_#ef4444] focus-visible:!shadow-[0_0_0_2px_#ef4444]"
+              : "border-line bg-surface hover:border-brand/50 focus-visible:outline-brand",
           uploading ? "cursor-wait" : "cursor-pointer",
         ].join(" ")}
       >
@@ -333,12 +347,13 @@ export function ImageUploader({
         )}
       </div>
 
-      {error ? (
+      {shownError ? (
         <p role="alert" className="text-xs text-red-700">
-          {error}
+          {shownError}
         </p>
+      ) : hint ? (
+        <p className="text-xs text-muted">{hint}</p>
       ) : null}
-      {hint ? <p className="text-xs text-muted">{hint}</p> : null}
     </div>
   );
 }

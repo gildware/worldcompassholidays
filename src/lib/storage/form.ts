@@ -23,7 +23,12 @@ export function validateUploadedImage(
     return "Invalid image reference.";
   }
 
-  if (!image.key.startsWith(`${folder}/`)) {
+  const segments = image.key.split("/").filter(Boolean);
+  const contentFolder =
+    segments[0] === "local" || segments[0] === "dev" || segments[0] === "prod"
+      ? segments[1]
+      : segments[0];
+  if (contentFolder !== folder) {
     return "Invalid image reference.";
   }
 

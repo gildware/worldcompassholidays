@@ -3,9 +3,14 @@ import type { ZodError } from "zod";
 export type FormState = {
   error: string | null;
   success?: string | null;
+  tourId?: string | null;
 };
 
-export const initialFormState: FormState = { error: null, success: null };
+export const initialFormState: FormState = {
+  error: null,
+  success: null,
+  tourId: null,
+};
 
 export function firstIssue(error: ZodError) {
   return error.issues[0]?.message ?? "Check the form and try again.";

@@ -1,22 +1,155 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { deleteTour } from "@/actions/tours";
 import { Badge } from "@/components/ui/Card";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { formatMoney } from "@/lib/format";
 
-type TourRow = {
+type SortKey =
+  | "title"
+  | "destination"
+  | "category"
+  | "duration"
+  | "price"
+  | "status";
+
+export type TourRow = {
   id: string;
   slug: string;
   title: string;
   summary: string;
-  destinationName: string;
   imageUrl: string;
   published: boolean;
-  meta: string;
+  destinationId: string | null;
+  destinationName: string;
+  category: string;
+  durationDays: number;
+  durationLabel: string;
+  difficulty: string;
+  priceFrom: number;
+  currency: string;
 };
+
+function durationText(tour: TourRow) {
+  if (tour.durationLabel.trim()) return tour.durationLabel;
+  return `${tour.durationDays} day${tour.durationDays === 1 ? "" : "s"}`;
+}
+
+function SortHeader({
+  label,
+  column,
+  sortKey,
+  sortDir,
+  onSort,
+  align = "left",
+}: {
+  label: string;
+  column: SortKey;
+  sortKey: SortKey;
+  sortDir: "asc" | "desc";
+  onSort: (column: SortKey) => void;
+  align?: "left" | "right";
+}) {
+  const active = sortKey === column;
+  return (
+    <th
+      scope="col"
+      aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
+      className={`px-3 py-2.5 ${align === "right" ? "text-right" : "text-left"}`}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(column)}
+        className={`inline-flex items-center gap-1 text-xs font-semibold text-navy hover:text-brand ${
+          align === "right" ? "ml-auto" : ""
+        }`}
+      >
+        {label}
+        <span aria-hidden className={active ? "text-brand" : "text-muted"}>
+          {active ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
+        </span>
+      </button>
+    </th>
+  );
+}
+
+function ActionPill({
+  label,
+  tone,
+  children,
+  href,
+  onClick,
+}: {
+  label: string;
+  tone: "view" | "edit" | "delete";
+  children: React.ReactNode;
+  href?: string;
+  onClick?: () => void;
+}) {
+  const tones = {
+    view: "border-brand/30 bg-brand-soft text-brand hover:bg-brand/15",
+    edit: "border-line bg-white text-navy hover:bg-surface",
+    delete: "border-red-200 bg-white text-red-700 hover:bg-red-50",
+  };
+  const className = `inline-flex h-7 w-7 items-center justify-center rounded-full border ${tones[tone]}`;
+  if (href) {
+    return (
+      <Link href={href} aria-label={label} className={className}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" aria-label={label} onClick={onClick} className={className}>
+      {children}
+    </button>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" aria-hidden>
+      <path
+        d="M1.5 8S3.8 3.5 8 3.5 14.5 8 14.5 8 12.2 12.5 8 12.5 1.5 8 1.5 8Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+      />
+      <circle cx="8" cy="8" r="1.8" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" aria-hidden>
+      <path
+        d="M9.2 3.2 12.8 6.8M2.5 13.5l2.7-.6 7.4-7.4a1.2 1.2 0 0 0 0-1.7L11.2 2.4a1.2 1.2 0 0 0-1.7 0L2.1 9.8l.4 3.7Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" aria-hidden>
+      <path
+        d="M3 4.5h10M6.2 4.5V3.2h3.6v1.3M4.2 4.5l.5 8.2h6.6l.5-8.2"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export function ToursWorkspace({
   tours,
@@ -31,24 +164,94 @@ export function ToursWorkspace({
 }) {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 300);
+  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">(
+    "all",
+  );
+  const [destinationFilter, setDestinationFilter] = useState("all");
+  const [sortKey, setSortKey] = useState<SortKey>("title");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [deleting, setDeleting] = useState<TourRow | null>(null);
   const closeDelete = useCallback(() => setDeleting(null), []);
 
+  const hasUnassigned = tours.some((tour) => !tour.destinationId);
+
   const filtered = useMemo(() => {
     const needle = debouncedQuery.trim().toLowerCase();
-    if (!needle) return tours;
-    return tours.filter((tour) => {
+    const rows = tours.filter((tour) => {
+      if (statusFilter === "published" && !tour.published) return false;
+      if (statusFilter === "draft" && tour.published) return false;
+      if (destinationFilter === "none" && tour.destinationId) return false;
+      if (
+        destinationFilter !== "all" &&
+        destinationFilter !== "none" &&
+        tour.destinationId !== destinationFilter
+      ) {
+        return false;
+      }
+      if (!needle) return true;
       const haystack = [
         tour.title,
         tour.summary,
         tour.destinationName,
+        tour.category,
+        tour.difficulty,
         tour.slug,
       ]
         .join(" ")
         .toLowerCase();
       return haystack.includes(needle);
     });
-  }, [tours, debouncedQuery]);
+
+    const direction = sortDir === "asc" ? 1 : -1;
+    const value = (tour: TourRow) => {
+      switch (sortKey) {
+        case "destination":
+          return tour.destinationName;
+        case "category":
+          return tour.category;
+        case "duration":
+          return tour.durationDays;
+        case "price":
+          return tour.priceFrom;
+        case "status":
+          return tour.published ? "Published" : "Draft";
+        default:
+          return tour.title;
+      }
+    };
+
+    return rows.slice().sort((a, b) => {
+      const left = value(a);
+      const right = value(b);
+      const compared =
+        typeof left === "number" && typeof right === "number"
+          ? left - right
+          : String(left).localeCompare(String(right));
+      if (compared !== 0) return compared * direction;
+      return a.title.localeCompare(b.title);
+    });
+  }, [
+    debouncedQuery,
+    destinationFilter,
+    sortDir,
+    sortKey,
+    statusFilter,
+    tours,
+  ]);
+
+  const filtersActive =
+    Boolean(debouncedQuery.trim()) ||
+    statusFilter !== "all" ||
+    destinationFilter !== "all";
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(key);
+    setSortDir("asc");
+  }
 
   return (
     <div className="grid gap-4">
@@ -95,14 +298,14 @@ export function ToursWorkspace({
         </p>
       ) : null}
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <label className="relative block w-full sm:max-w-sm">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+        <label className="relative block w-full lg:max-w-xs">
           <span className="sr-only">Search tours</span>
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by title, destination, or difficulty"
+            placeholder="Search title, destination, category"
             className="!h-10 pr-9"
             autoComplete="off"
           />
@@ -117,74 +320,213 @@ export function ToursWorkspace({
             </button>
           ) : null}
         </label>
-        <p className="text-xs text-muted">
+        <SearchableSelect
+          ariaLabel="Filter by status"
+          value={statusFilter}
+          onChange={(value) =>
+            setStatusFilter(value as "all" | "published" | "draft")
+          }
+          searchPlaceholder="Search statuses"
+          options={[
+            { value: "all", label: "All statuses" },
+            { value: "published", label: "Published" },
+            { value: "draft", label: "Draft" },
+          ]}
+          className="!h-10"
+          wrapperClassName="lg:w-40"
+        />
+        <SearchableSelect
+          ariaLabel="Filter by destination"
+          value={destinationFilter}
+          onChange={setDestinationFilter}
+          searchPlaceholder="Search destinations"
+          options={[
+            { value: "all", label: "All destinations" },
+            ...(hasUnassigned
+              ? [{ value: "none", label: "No destination" }]
+              : []),
+            ...destinations.map((destination) => ({
+              value: destination.id,
+              label: destination.name,
+            })),
+          ]}
+          className="!h-10"
+          wrapperClassName="lg:w-52"
+        />
+        {filtersActive ? (
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              setStatusFilter("all");
+              setDestinationFilter("all");
+            }}
+            className="text-left text-xs font-medium text-brand hover:underline"
+          >
+            Clear filters
+          </button>
+        ) : null}
+        <p className="text-xs text-muted lg:ml-auto">
           {filtered.length} of {tours.length}
-          {debouncedQuery.trim() ? " match" : ""}
+          {filtersActive ? " match" : ""}
         </p>
       </div>
 
-      <ul className="overflow-hidden rounded-lg border border-line bg-white">
-        {tours.length === 0 ? (
-          <li className="px-3.5 py-6 text-center text-sm text-muted">
-            No tours yet.
-            {canManage && destinations.length > 0
-              ? " Add the first trek or tour."
-              : ""}
-          </li>
-        ) : filtered.length === 0 ? (
-          <li className="px-3.5 py-6 text-center text-sm text-muted">
-            No tours match “{debouncedQuery.trim()}”.
-          </li>
-        ) : (
-          filtered.map((tour) => (
-            <li
-              key={tour.id}
-              className="flex flex-col gap-3 border-b border-line px-3.5 py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex min-w-0 items-start gap-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={tour.imageUrl}
-                  alt=""
-                  className="h-12 w-16 shrink-0 rounded-md border border-line object-cover"
-                />
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-navy">{tour.title}</p>
-                    {tour.published ? null : <Badge tone="warning">Draft</Badge>}
-                  </div>
-                  <p className="mt-0.5 text-xs text-muted">{tour.meta}</p>
-                  <p className="mt-1 line-clamp-1 text-xs text-muted">
-                    {tour.summary}
-                  </p>
-                </div>
-              </div>
-
-              {canManage ? (
-                <div className="flex shrink-0 gap-2">
-                  <ButtonLink
-                    href={`/admin/tours/${tour.id}`}
-                    variant="secondary"
-                    size="sm"
-                    className="flex-1 sm:flex-none"
-                  >
-                    Edit
-                  </ButtonLink>
-                  <Button
-                    type="button"
-                    variant="dangerOutline"
-                    size="sm"
-                    className="flex-1 sm:flex-none"
-                    onClick={() => setDeleting(tour)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              ) : null}
-            </li>
-          ))
-        )}
-      </ul>
+      <div className="overflow-x-auto rounded-lg border border-line bg-white">
+        <table className="w-full min-w-[64rem] border-collapse text-sm">
+          <thead className="border-b border-line bg-surface">
+            <tr>
+              <th scope="col" className="w-16 px-3 py-2.5">
+                <span className="sr-only">Image</span>
+              </th>
+              <SortHeader
+                label="Title"
+                column="title"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label="Destination"
+                column="destination"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label="Category"
+                column="category"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label="Duration"
+                column="duration"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label="Price"
+                column="price"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onSort={toggleSort}
+                align="right"
+              />
+              <SortHeader
+                label="Status"
+                column="status"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onSort={toggleSort}
+              />
+              <th scope="col" className="px-3 py-2.5 text-right">
+                <span className="text-xs font-semibold text-navy">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {tours.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="px-3 py-8 text-center text-sm text-muted"
+                >
+                  No tours yet.
+                  {canManage && destinations.length > 0
+                    ? " Add the first trek or tour."
+                    : ""}
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="px-3 py-8 text-center text-sm text-muted"
+                >
+                  No tours match these filters.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((tour) => (
+                <tr key={tour.id} className="border-b border-line last:border-b-0">
+                  <td className="px-3 py-2">
+                    {tour.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={tour.imageUrl}
+                        alt=""
+                        className="h-10 w-14 rounded-md border border-line object-cover"
+                      />
+                    ) : (
+                      <div className="h-10 w-14 rounded-md border border-line bg-surface" />
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    <Link
+                      href={`/admin/tours/${tour.id}/view`}
+                      className="font-semibold text-navy hover:text-brand hover:underline"
+                    >
+                      {tour.title}
+                    </Link>
+                    <p className="line-clamp-1 max-w-xs text-xs text-muted">
+                      {tour.summary || "—"}
+                    </p>
+                  </td>
+                  <td className="px-3 py-2 text-navy">
+                    {tour.destinationId ? tour.destinationName : "—"}
+                  </td>
+                  <td className="px-3 py-2 text-navy">
+                    {tour.category.trim() || "—"}
+                  </td>
+                  <td className="px-3 py-2 text-navy">{durationText(tour)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-navy">
+                    {formatMoney(tour.priceFrom, tour.currency)}
+                  </td>
+                  <td className="px-3 py-2">
+                    {tour.published ? (
+                      <Badge tone="success">Published</Badge>
+                    ) : (
+                      <Badge tone="warning">Draft</Badge>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="flex justify-end gap-1.5">
+                      <ActionPill
+                        label="View"
+                        tone="view"
+                        href={`/admin/tours/${tour.id}/view`}
+                      >
+                        <EyeIcon />
+                      </ActionPill>
+                      {canManage ? (
+                        <ActionPill
+                          label="Edit"
+                          tone="edit"
+                          href={`/admin/tours/${tour.id}`}
+                        >
+                          <PencilIcon />
+                        </ActionPill>
+                      ) : null}
+                      {canManage ? (
+                        <ActionPill
+                          label="Delete"
+                          tone="delete"
+                          onClick={() => setDeleting(tour)}
+                        >
+                          <TrashIcon />
+                        </ActionPill>
+                      ) : null}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       <ConfirmDialog
         open={Boolean(deleting)}

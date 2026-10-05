@@ -50,7 +50,7 @@ export default async function ToursPage() {
                 </div>
                 <div className="p-5">
                   <p className="text-xs font-medium tracking-wide text-brand uppercase">
-                    {tour.destination.name}
+                    {tour.destination?.name ?? "Tour"}
                   </p>
                   <h2 className="mt-2 text-lg font-semibold text-navy">
                     {tour.title}

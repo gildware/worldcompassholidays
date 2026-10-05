@@ -6,7 +6,6 @@ import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { destinationChoiceLabel } from "@/lib/destinations";
 import { prisma } from "@/lib/db";
-import { formatMoney } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Tours" };
 
@@ -27,7 +26,7 @@ export default async function AdminToursPage({
     }),
     prisma.destination.findMany({
       orderBy: { name: "asc" },
-      select: { id: true, name: true },
+      select: { id: true, name: true, parent: { select: { name: true } } },
     }),
   ]);
 
@@ -35,27 +34,33 @@ export default async function AdminToursPage({
     <ToursWorkspace
       canManage={canManage}
       notice={deleted ? "deleted" : saved ? "saved" : null}
-      destinations={destinations}
+      destinations={destinations.map((destination) => ({
+        id: destination.id,
+        name: destinationChoiceLabel(
+          destination.name,
+          destination.parent?.name,
+        ),
+      }))}
       tours={tours.map((tour) => ({
         id: tour.id,
         slug: tour.slug,
         title: tour.title,
         summary: tour.summary,
-        destinationName: destinationChoiceLabel(
-          tour.destination.name,
-          tour.destination.parent?.name,
-        ),
         imageUrl: tour.imageUrl,
         published: tour.published,
-        meta: [
-          destinationChoiceLabel(
-            tour.destination.name,
-            tour.destination.parent?.name,
-          ),
-          `${tour.durationDays} days`,
-          tour.difficulty,
-          formatMoney(tour.priceFrom, tour.currency),
-        ].join(" · "),
+        destinationId: tour.destinationId,
+        destinationName: tour.destination
+          ? destinationChoiceLabel(
+              tour.destination.name,
+              tour.destination.parent?.name,
+            )
+          : "",
+        category: tour.category,
+        durationDays: tour.durationDays,
+        durationLabel: tour.durationLabel,
+        difficulty: tour.difficulty,
+        priceFrom: tour.priceFrom,
+        currency: tour.currency,
       }))}
     />
   );

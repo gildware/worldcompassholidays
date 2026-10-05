@@ -71,3 +71,23 @@ button:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 2px;
 }
+
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"],
+button[aria-invalid="true"] {
+  border-color: #ef4444 !important;
+}
+
+input[aria-invalid="true"]:focus,
+input[aria-invalid="true"]:focus-visible,
+select[aria-invalid="true"]:focus,
+select[aria-invalid="true"]:focus-visible,
+textarea[aria-invalid="true"]:focus,
+textarea[aria-invalid="true"]:focus-visible,
+button[aria-invalid="true"]:focus,
+button[aria-invalid="true"]:focus-visible {
+  border-color: #ef4444 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px #ef4444;
+}
