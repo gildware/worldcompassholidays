@@ -1,26 +1,73 @@
 @import "tailwindcss";
 
 :root {
+  --navy: #051036;
+  --blue: #3554d1;
+  --blue-soft: #e5f0fd;
+  --muted: #697488;
+  --line: #e4e7ef;
+  --surface: #f6f7fb;
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #051036;
 }
 
 @theme inline {
+  --color-navy: var(--navy);
+  --color-brand: var(--blue);
+  --color-brand-soft: var(--blue-soft);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-surface: var(--surface);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-jost), sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-jost), sans-serif;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+select,
+textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: white;
+  color: var(--foreground);
+  font: inherit;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+select {
+  height: 2.75rem;
+  padding-inline: 0.75rem;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  padding: 0;
+  border-radius: 0.25rem;
+  accent-color: var(--blue);
+}
+
+textarea {
+  min-height: 8rem;
+  padding: 0.75rem;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }

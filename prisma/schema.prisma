@@ -1,0 +1,289 @@
+// Local SQLite database for this copy of the product.
+// Point DATABASE_URL at Postgres when a client project is delivered.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Destination {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  region      String
+  country     String
+  summary     String
+  imageUrl    String
+  imageKey    String
+  imageDriver String   @default("local")
+  published   Boolean  @default(true)
+  parentId    String?
+  parent      Destination?  @relation("DestinationParent", fields: [parentId], references: [id], onDelete: Restrict)
+  children    Destination[] @relation("DestinationParent")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tours       Tour[]
+  hotels      Hotel[]
+  vehicles    Vehicle[]
+  busRoutes   BusRoute[]
+  pages       Page[]
+
+  @@index([parentId])
+}
+
+model Tour {
+  id                  String          @id @default(cuid())
+  slug                String          @unique
+  title               String
+  summary             String
+  description         String          @default("")
+  category            String          @default("")
+  youtubeUrl          String          @default("")
+  minDayBeforeBooking Int?
+  durationDays        Int
+  durationLabel       String          @default("")
+  difficulty          String          @default("moderate")
+  minPeople           Int             @default(1)
+  maxGroupSize        Int
+  priceFrom           Int
+  currency            String          @default("INR")
+  imageUrl            String
+  imageKey            String
+  imageDriver         String          @default("local")
+  featuredImageUrl    String          @default("")
+  featuredImageKey    String          @default("")
+  featuredImageDriver String          @default("local")
+  galleryJson         String          @default("[]")
+  faqsJson            String          @default("[]")
+  includesJson        String          @default("[]")
+  excludesJson        String          @default("[]")
+  surroundingsJson    String          @default("{\"education\":[],\"health\":[],\"transportation\":[]}")
+  address             String          @default("")
+  mapLat              String          @default("")
+  mapLng              String          @default("")
+  mapZoom             Int             @default(8)
+  isFeatured          Boolean         @default(false)
+  defaultState        String          @default("always")
+  travelStylesJson    String          @default("[]")
+  facilitiesJson      String          @default("[]")
+  icalImportUrl       String          @default("")
+  seoIndex            Boolean         @default(true)
+  seoTitle            String          @default("")
+  seoDescription      String          @default("")
+  seoImageUrl         String          @default("")
+  seoImageKey         String          @default("")
+  seoImageDriver      String          @default("local")
+  facebookTitle       String          @default("")
+  facebookDescription String          @default("")
+  twitterTitle        String          @default("")
+  twitterDescription  String          @default("")
+  published           Boolean         @default(false)
+  destinationId       String
+  destination         Destination     @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  departures          TourDeparture[]
+  days                ItineraryDay[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@index([destinationId])
+}
+
+model TourDeparture {
+  id         String   @id @default(cuid())
+  tourId     String
+  tour       Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  startDate  DateTime
+  endDate    DateTime
+  seatsTotal Int
+  price      Int
+  status     String   @default("open")
+
+  @@index([tourId])
+}
+
+model ItineraryDay {
+  id          String @id @default(cuid())
+  tourId      String
+  tour        Tour   @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  dayNumber   Int
+  title       String
+  description String @default("")
+
+  @@unique([tourId, dayNumber])
+}
+
+model Hotel {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  name          String
+  summary       String
+  address       String      @default("")
+  priceFrom     Int
+  currency      String      @default("INR")
+  published     Boolean     @default(false)
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  rooms         Room[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([destinationId])
+}
+
+model Room {
+  id            String @id @default(cuid())
+  hotelId       String
+  hotel         Hotel  @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  name          String
+  occupancy     Int
+  pricePerNight Int
+
+  @@index([hotelId])
+}
+
+model Vehicle {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  kind          String
+  name          String
+  summary       String
+  seats         Int
+  pricePerDay   Int
+  currency      String      @default("INR")
+  published     Boolean     @default(false)
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([destinationId, kind])
+}
+
+model BusRoute {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  name          String
+  fromCity      String
+  toCity        String
+  summary       String        @default("")
+  published     Boolean       @default(false)
+  destinationId String?
+  destination   Destination?  @relation(fields: [destinationId], references: [id])
+  schedules     BusSchedule[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model BusSchedule {
+  id         String   @id @default(cuid())
+  routeId    String
+  route      BusRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  departAt   DateTime
+  arriveAt   DateTime
+  fare       Int
+  seatsTotal Int
+
+  @@index([routeId])
+}
+
+// Bookings keep their own contact fields so guest enquiries never create
+// claimable accounts. userId is only set when a signed-in customer books.
+model Booking {
+  id           String    @id @default(cuid())
+  reference    String    @unique
+  module       String
+  status       String    @default("enquiry")
+  title        String
+  startDate    DateTime?
+  endDate      DateTime?
+  guests       Int       @default(1)
+  amount       Int       @default(0)
+  currency     String    @default("INR")
+  notes        String    @default("")
+  details      String    @default("{}")
+  contactName  String
+  contactEmail String
+  contactPhone String    @default("")
+  userId       String?
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status, module])
+  @@index([userId])
+}
+
+// scope is "staff" or "customer". allAccess roles pass every permission
+// check, including permissions added after the role was created.
+model Role {
+  id          String           @id @default(cuid())
+  key         String           @unique
+  name        String
+  scope       String
+  allAccess   Boolean          @default(false)
+  isSystem    Boolean          @default(false)
+  permissions RolePermission[]
+  users       User[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model RolePermission {
+  roleId     String
+  role       Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission String
+
+  @@id([roleId, permission])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  phone        String    @default("")
+  passwordHash String
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  roleId       String
+  role         Role      @relation(fields: [roleId], references: [id])
+  sessions     Session[]
+  bookings     Booking[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([roleId])
+}
+
+// id is the SHA-256 hash of the cookie token, never the token itself.
+model Session {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}
+
+model Page {
+  id            String       @id @default(cuid())
+  slug          String       @unique
+  title         String
+  body          String       @default("")
+  published     Boolean      @default(false)
+  destinationId String?
+  destination   Destination? @relation(fields: [destinationId], references: [id])
+  updatedAt     DateTime     @updatedAt
+}

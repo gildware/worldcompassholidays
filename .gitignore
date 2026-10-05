@@ -32,6 +32,19 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# local database
+/prisma/*.db
+/prisma/*.db-journal
+
+# uploaded images (seed placeholders are kept)
+/public/uploads/**
+!/public/uploads/.gitkeep
+!/public/uploads/destinations/
+!/public/uploads/destinations/seed-*
+!/public/uploads/tours/
+!/public/uploads/tours/seed-*
 
 # vercel
 .vercel
