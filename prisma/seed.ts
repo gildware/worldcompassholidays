@@ -272,6 +272,56 @@ async function seedRoles() {
   }
 }
 
+async function seedAdminFromEnv() {
+  const email = (process.env.SEED_ADMIN_EMAIL ?? "").trim().toLowerCase();
+  const password = process.env.SEED_ADMIN_PASSWORD ?? "";
+  const name =
+    (process.env.SEED_ADMIN_NAME ?? "Administrator").trim() || "Administrator";
+
+  if (!email || !password) {
+    console.log(
+      "No production admin created. Set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD, then run seed again.",
+    );
+    return;
+  }
+
+  if (password.length < 8) {
+    throw new Error("SEED_ADMIN_PASSWORD must be at least 8 characters.");
+  }
+
+  const role = await prisma.role.findUniqueOrThrow({
+    where: { key: "admin" },
+  });
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  const passwordHash = await hashPassword(password);
+
+  if (existing) {
+    await prisma.user.update({
+      where: { id: existing.id },
+      data: {
+        name,
+        passwordHash,
+        roleId: role.id,
+        isActive: true,
+      },
+    });
+    console.log(`Updated admin: ${email}`);
+    return;
+  }
+
+  await prisma.user.create({
+    data: {
+      name,
+      email,
+      passwordHash,
+      roleId: role.id,
+      isActive: true,
+    },
+  });
+  console.log(`Created admin: ${email}`);
+}
+
 async function seedTestUsers() {
   for (const testUser of testUsers) {
     const existing = await prisma.user.findUnique({
@@ -336,7 +386,7 @@ async function main() {
   await seedRoles();
 
   if (process.env.NODE_ENV === "production") {
-    console.log("Skipping test accounts in production.");
+    await seedAdminFromEnv();
     return;
   }
 

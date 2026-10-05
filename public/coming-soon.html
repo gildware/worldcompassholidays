@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#051036" />
+  <meta
+    name="description"
+    content="World Compass Holidays opens on 20 October 2026. Tours, hotels, cars, bikes, and buses — one atlas."
+  />
+  <title>Coming Soon · World Compass Holidays</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,620;1,9..144,520&family=Outfit:wght@300;400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --navy: #051036;
+      --blue: #3554d1;
+      --gold: #e7c98a;
+      --gold-deep: #c8963e;
+      --cream: #f7f1e6;
+      --muted: #a9b4cc;
+      --line: rgba(231, 201, 138, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100dvh;
+      color: var(--cream);
+      font-family: Outfit, "Avenir Next", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse at 50% 120%, rgba(53, 84, 209, 0.38), transparent 52%),
+        linear-gradient(180deg, #0a1833 0%, var(--navy) 42%, #020814 100%);
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .scene {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .aurora {
+      position: absolute;
+      inset: -18%;
+      background:
+        radial-gradient(ellipse at 18% 16%, rgba(53, 84, 209, 0.62), transparent 46%),
+        radial-gradient(ellipse at 82% 8%, rgba(231, 201, 138, 0.2), transparent 38%),
+        radial-gradient(ellipse at 74% 78%, rgba(53, 84, 209, 0.34), transparent 44%),
+        radial-gradient(ellipse at 8% 88%, rgba(110, 168, 255, 0.18), transparent 40%);
+      filter: blur(18px);
+      animation: aurora 18s ease-in-out infinite alternate;
+    }
+
+    .gridlines {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+      background-size: 76px 76px;
+      mask-image: radial-gradient(ellipse at 50% 45%, #000 10%, transparent 72%);
+      animation: grid-drift 36s linear infinite;
+    }
+
+    .stars, .stars-far {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow:
+        8vw 12vh 0 0 rgba(255,255,255,.8),
+        18vw 28vh 0 0 rgba(255,255,255,.45),
+        32vw 8vh 0 0 rgba(231,201,138,.8),
+        44vw 22vh 0 0 rgba(255,255,255,.55),
+        57vw 14vh 0 0 rgba(255,255,255,.35),
+        71vw 31vh 0 0 rgba(255,255,255,.7),
+        84vw 9vh 0 0 rgba(255,255,255,.4),
+        91vw 24vh 0 0 rgba(231,201,138,.65),
+        12vw 62vh 0 0 rgba(255,255,255,.3),
+        26vw 74vh 0 0 rgba(255,255,255,.55),
+        48vw 68vh 0 0 rgba(255,255,255,.25),
+        63vw 81vh 0 0 rgba(255,255,255,.5),
+        78vw 58vh 0 0 rgba(231,201,138,.45),
+        93vw 72vh 0 0 rgba(255,255,255,.35),
+        6vw 42vh 0 0 rgba(255,255,255,.6),
+        37vw 46vh 0 0 rgba(255,255,255,.28);
+      animation: twinkle 4.8s ease-in-out infinite;
+    }
+
+    .stars-far {
+      opacity: 0.55;
+      transform: scale(0.7);
+      animation-delay: -2.2s;
+      box-shadow:
+        14vw 18vh 0 0 #fff,
+        29vw 6vh 0 0 #fff,
+        52vw 36vh 0 0 rgba(231,201,138,.7),
+        66vw 16vh 0 0 #fff,
+        88vw 42vh 0 0 #fff,
+        22vw 52vh 0 0 #fff,
+        41vw 84vh 0 0 #fff,
+        73vw 66vh 0 0 rgba(231,201,138,.6),
+        96vw 54vh 0 0 #fff;
+    }
+
+    .vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(2, 6, 16, 0.72) 100%);
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: min(1120px, calc(100% - 32px));
+      margin-inline: auto;
+    }
+
+    header.shell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px 0 8px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: inherit;
+      text-decoration: none;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .brand svg {
+      width: 28px;
+      height: 28px;
+      animation: spin 28s linear infinite;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: rgba(231, 201, 138, 0.08);
+      color: var(--gold);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .pill i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 0 rgba(231, 201, 138, 0.7);
+      animation: pulse 2.2s ease-out infinite;
+    }
+
+    main.shell {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 12px 0 28px;
+    }
+
+    .layout {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .intro, .panel { max-width: 640px; }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--gold);
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      font-size: 0.74rem;
+      font-weight: 500;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Fraunces, Palatino, "Times New Roman", serif;
+      font-weight: 560;
+      font-size: clamp(2.5rem, 7vw, 5.4rem);
+      line-height: 0.92;
+      letter-spacing: -0.03em;
+    }
+
+    h1 span { display: block; }
+
+    h1 em {
+      font-style: italic;
+      font-weight: 520;
+      background: linear-gradient(100deg, #f6e7c4 0%, #e7c98a 35%, #fff6df 50%, #e7c98a 65%, #c8963e 100%);
+      background-size: 220% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shine 7s linear infinite;
+    }
+
+    .lede {
+      margin: 18px 0 0;
+      max-width: 38rem;
+      color: var(--muted);
+      font-weight: 300;
+      font-size: clamp(1rem, 2.1vw, 1.18rem);
+      line-height: 1.6;
+    }
+
+    .clock {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 28px;
+      max-width: 520px;
+    }
+
+    .unit {
+      position: relative;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 16px 40px rgba(0,0,0,0.22);
+      padding: 14px 8px 12px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .unit::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0.7;
+    }
+
+    .num {
+      display: block;
+      font-family: Fraunces, Palatino, serif;
+      font-size: clamp(1.8rem, 4.6vw, 2.8rem);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .num.tick { animation: tick 0.45s ease; }
+
+    .unit small {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-size: 0.62rem;
+    }
+
+    .when {
+      margin: 12px 0 0;
+      color: rgba(247, 241, 230, 0.62);
+      font-size: 0.86rem;
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+      max-width: 520px;
+    }
+
+    label.sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    input[type="email"] {
+      flex: 1 1 220px;
+      min-width: 0;
+      height: 52px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(5, 12, 30, 0.55);
+      color: var(--cream);
+      padding: 0 18px;
+      font: inherit;
+      font-size: 0.98rem;
+    }
+
+    input::placeholder { color: rgba(169, 180, 204, 0.75); }
+
+    input:focus-visible,
+    button:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 3px;
+    }
+
+    input[aria-invalid="true"] { border-color: #f0a3a3; }
+
+    button {
+      height: 52px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0 22px;
+      background: linear-gradient(180deg, #f0d7a2, var(--gold) 40%, var(--gold-deep));
+      color: #1b1408;
+      font: inherit;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(200, 150, 62, 0.28);
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    button:active { transform: translateY(0); }
+
+    .error {
+      flex: 1 0 100%;
+      margin: 0;
+      color: #f0b4b4;
+      font-size: 0.82rem;
+    }
+
+    .thanks {
+      margin-top: 22px;
+      max-width: 520px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(231, 201, 138, 0.08);
+      padding: 16px 18px;
+    }
+
+    .thanks strong { display: block; font-weight: 600; margin-bottom: 4px; }
+    .thanks p { margin: 0; color: var(--muted); line-height: 1.5; }
+
+    .services {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .services li {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      padding: 7px 12px;
+      color: rgba(247, 241, 230, 0.82);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .compass-stage {
+      position: relative;
+      width: min(100%, 460px);
+      margin-inline: auto;
+      aspect-ratio: 1;
+    }
+
+    .glow {
+      position: absolute;
+      inset: 12%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(53, 84, 209, 0.45), rgba(231, 201, 138, 0.08) 42%, transparent 68%);
+      filter: blur(8px);
+      animation: glow 5.5s ease-in-out infinite;
+    }
+
+    .compass {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.35));
+    }
+
+    .ring { transform-origin: 200px 200px; animation: spin 80s linear infinite; }
+    .rose { transform-origin: 200px 200px; animation: spin 46s linear infinite reverse; }
+    .needle { transform-origin: 200px 200px; animation: sway 4.6s ease-in-out infinite; }
+
+    .orbit {
+      position: absolute;
+      inset: 8%;
+      border-radius: 50%;
+      border: 1px dashed rgba(231, 201, 138, 0.28);
+      animation: spin 22s linear infinite;
+    }
+
+    .plane {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 30px;
+      height: 30px;
+      margin-left: -15px;
+    }
+
+    .orbit-b {
+      position: absolute;
+      inset: 16%;
+      border-radius: 50%;
+      animation: spin 16s linear infinite reverse;
+    }
+
+    .satellite {
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      width: 10px;
+      height: 10px;
+      margin-left: -5px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 12px var(--gold);
+    }
+
+    footer.shell { padding: 0 0 22px; }
+
+    .marquee {
+      overflow: hidden;
+      border-block: 1px solid rgba(255,255,255,0.08);
+      mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    }
+
+    .track {
+      display: flex;
+      width: max-content;
+      animation: march 32s linear infinite;
+    }
+
+    .track span {
+      padding: 14px 22px;
+      color: rgba(247, 241, 230, 0.72);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      white-space: nowrap;
+    }
+
+    .track span::before {
+      content: "✦";
+      color: var(--gold);
+      margin-right: 22px;
+    }
+
+    .reveal { animation: rise 0.9s ease both; }
+    .d1 { animation-delay: 0.05s; }
+    .d2 { animation-delay: 0.16s; }
+    .d3 { animation-delay: 0.28s; }
+    .d4 { animation-delay: 0.4s; }
+    .d5 { animation-delay: 0.52s; }
+
+    @keyframes aurora {
+      to { transform: translate3d(-3%, 2%, 0) scale(1.06) rotate(2deg); }
+    }
+    @keyframes grid-drift {
+      to { background-position: 76px 76px; }
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 1; }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes sway {
+      0%, 100% { transform: rotate(-8deg); }
+      50% { transform: rotate(8deg); }
+    }
+    @keyframes glow {
+      0%, 100% { opacity: 0.75; transform: scale(0.96); }
+      50% { opacity: 1; transform: scale(1.04); }
+    }
+    @keyframes shine {
+      to { background-position: 220% center; }
+    }
+    @keyframes pulse {
+      70% { box-shadow: 0 0 0 8px rgba(231, 201, 138, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(231, 201, 138, 0); }
+    }
+    @keyframes tick {
+      from { transform: translateY(-10px); opacity: 0.2; }
+      to { transform: none; opacity: 1; }
+    }
+    @keyframes march {
+      to { transform: translateX(-50%); }
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (max-width: 979px) {
+      .intro, .panel { margin-inline: auto; text-align: center; }
+      .lede, .clock, form, .thanks, .services { margin-inline: auto; }
+      .services, form { justify-content: center; }
+      .compass-stage { width: min(210px, 58vw); }
+      .layout { gap: 16px; }
+      header.shell { padding-top: 14px; padding-bottom: 0; }
+      .lede { margin-top: 10px; }
+      .clock { margin-top: 0; }
+    }
+
+    @media (max-width: 560px) {
+      .shell { width: min(1120px, calc(100% - 24px)); }
+      .clock { gap: 8px; }
+      .unit { border-radius: 14px; padding: 12px 4px 10px; }
+      form button { flex: 1 1 100%; }
+      h1 { font-size: clamp(2.35rem, 12vw, 3rem); }
+    }
+
+    @media (max-width: 979px) and (max-height: 700px) {
+      header.shell { padding-top: 8px; }
+      .eyebrow { margin-bottom: 6px; }
+      h1 { font-size: 2.15rem; }
+      .lede { margin-top: 6px; font-size: 0.92rem; }
+      .layout { gap: 8px; }
+      .compass-stage { width: min(132px, 40vw); }
+    }
+
+    @media (min-width: 720px) {
+      .shell { width: min(1120px, calc(100% - 56px)); }
+    }
+
+    @media (min-width: 980px) {
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr);
+        grid-template-rows: auto auto;
+        column-gap: 36px;
+        row-gap: 8px;
+        align-items: center;
+      }
+      .visual { grid-column: 2; grid-row: 1 / span 2; }
+      .compass-stage { width: min(100%, 500px); }
+    }
+
+    @media (max-height: 760px) and (min-width: 980px) {
+      h1 { font-size: clamp(2.6rem, 5vw, 4.2rem); }
+      .compass-stage { width: min(100%, 380px); }
+      header.shell { padding-top: 14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" aria-hidden="true">
+    <div class="aurora"></div>
+    <div class="gridlines"></div>
+    <div class="stars"></div>
+    <div class="stars-far"></div>
+    <div class="vignette"></div>
+  </div>
+
+  <header class="shell">
+    <a class="brand" href="#notify">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="14" fill="none" stroke="#e7c98a" stroke-width="1.2"/>
+        <path d="M16 4 L18.2 16 L16 14.2 L13.8 16 Z" fill="#e7c98a"/>
+        <path d="M16 28 L18.2 16 L16 17.8 L13.8 16 Z" fill="#8ea0c8"/>
+        <circle cx="16" cy="16" r="2" fill="#f7f1e6"/>
+      </svg>
+      World Compass
+    </a>
+    <span class="pill"><i></i> Opens 20 Oct 2026</span>
+  </header>
+
+  <main class="shell">
+    <div class="layout">
+      <div class="intro">
+        <p class="eyebrow reveal d1">Coming soon</p>
+        <h1 class="reveal d2">
+          <span>World</span>
+          <span>Compass</span>
+          <span><em>Holidays</em></span>
+        </h1>
+        <p class="lede reveal d3">
+          The heading is set. Tours, hotels, cars, bikes, and buses open in one atlas —
+          from the Himalaya to the coast, and further still.
+        </p>
+      </div>
+
+      <div class="visual" aria-hidden="true">
+        <div class="compass-stage">
+          <div class="glow"></div>
+          <div class="orbit">
+            <svg class="plane" viewBox="0 0 36 36">
+              <path fill="#e7c98a" d="M34 18c0 .4-.3.8-.8.9l-12.4 2.6 2.7 8.2c.1.3 0 .6-.3.8l-2.2 1.2c-.4.2-.8 0-1-.3L16.2 22 8.4 24.2c-.4.1-.8 0-1-.4l-1.1-2c-.2-.4 0-.9.4-1.1L14 17.2 4.6 12.4c-.4-.2-.5-.7-.3-1.1l1.2-2.1c.2-.4.7-.5 1.1-.3L18 14.6l3.2-9.8c.1-.4.6-.6 1-.4l2.1 1.1c.3.2.5.6.4.9l-2.4 8.6 11.2 2.2c.4.1.7.4.7.8z"/>
+            </svg>
+          </div>
+          <div class="orbit-b"><span class="satellite"></span></div>
+          <svg class="compass" viewBox="0 0 400 400">
+            <defs>
+              <radialGradient id="face" cx="50%" cy="42%" r="60%">
+                <stop offset="0%" stop-color="#16306a"/>
+                <stop offset="55%" stop-color="#0b1840"/>
+                <stop offset="100%" stop-color="#06102a"/>
+              </radialGradient>
+              <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f6e7c4"/>
+                <stop offset="50%" stop-color="#e7c98a"/>
+                <stop offset="100%" stop-color="#a8742e"/>
+              </linearGradient>
+            </defs>
+            <circle cx="200" cy="200" r="188" fill="none" stroke="rgba(231,201,138,.35)" stroke-width="1"/>
+            <circle cx="200" cy="200" r="176" fill="url(#face)" stroke="rgba(231,201,138,.55)" stroke-width="3"/>
+            <g class="ring" fill="none" stroke="rgba(247,241,230,.55)" stroke-width="2">
+              <circle cx="200" cy="200" r="160" stroke-dasharray="1.5 11.8"/>
+            </g>
+            <g fill="#f7f1e6" font-family="Outfit, sans-serif" font-size="15" font-weight="600" text-anchor="middle">
+              <text x="200" y="58">N</text>
+              <text x="348" y="205">E</text>
+              <text x="200" y="356">S</text>
+              <text x="54" y="205">W</text>
+            </g>
+            <g class="rose">
+              <polygon points="200,78 222,200 200,176 178,200" fill="url(#gold)"/>
+              <polygon points="200,322 222,200 200,224 178,200" fill="#7f93b8"/>
+              <polygon points="322,200 200,178 224,200 200,222" fill="#6ea8ff"/>
+              <polygon points="78,200 200,178 176,200 200,222" fill="#3554d1"/>
+              <polygon points="286,114 214,186 200,168 186,186" fill="rgba(231,201,138,.75)"/>
+              <polygon points="114,114 186,186 168,200 186,214" fill="rgba(110,168,255,.7)"/>
+              <polygon points="286,286 214,214 232,200 214,186" fill="rgba(127,147,184,.8)"/>
+              <polygon points="114,286 186,214 200,232 214,214" fill="rgba(53,84,209,.85)"/>
+            </g>
+            <g class="needle">
+              <polygon points="200,92 210,206 200,198 190,206" fill="url(#gold)"/>
+              <polygon points="200,300 210,206 200,214 190,206" fill="#d5deee"/>
+            </g>
+            <circle cx="200" cy="200" r="16" fill="#07111f" stroke="#e7c98a" stroke-width="3"/>
+            <circle cx="200" cy="200" r="5" fill="#f7f1e6"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="clock reveal d4" role="group" aria-label="Time until opening">
+          <div class="unit"><span class="num" id="days">15</span><small id="days-label">Days</small></div>
+          <div class="unit"><span class="num" id="hours">00</span><small id="hours-label">Hours</small></div>
+          <div class="unit"><span class="num" id="minutes">00</span><small id="minutes-label">Minutes</small></div>
+          <div class="unit"><span class="num" id="seconds">00</span><small id="seconds-label">Seconds</small></div>
+        </div>
+        <p class="when reveal d4" id="clock-status" aria-live="polite">Doors open 20 October 2026, 11:59 PM IST.</p>
+
+        <form id="notify" class="reveal d5" novalidate>
+          <label class="sr" for="email">Email address</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="Email for the first departure" required />
+          <button type="submit">Notify me</button>
+          <p class="error" id="error" hidden>Enter a valid email address.</p>
+        </form>
+        <div class="thanks" id="thanks" hidden>
+          <strong>You are on the list.</strong>
+          <p id="thanks-copy">We will write when the compass points open.</p>
+        </div>
+
+        <ul class="services reveal d5" aria-label="What is opening">
+          <li>Tours &amp; treks</li>
+          <li>Hotels</li>
+          <li>Car rental</li>
+          <li>Bike rental</li>
+          <li>Bus booking</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <footer class="shell">
+    <div class="marquee">
+      <div class="track">
+        <span>Kashmir</span><span>Ladakh</span><span>Gulmarg</span><span>Pahalgam</span>
+        <span>Jammu</span><span>Himachal</span><span>Goa</span><span>Kerala</span>
+        <span>Thailand</span><span>Vietnam</span>
+        <span>Kashmir</span><span>Ladakh</span><span>Gulmarg</span><span>Pahalgam</span>
+        <span>Jammu</span><span>Himachal</span><span>Goa</span><span>Kerala</span>
+        <span>Thailand</span><span>Vietnam</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 15 days from 5 October 2026. Doors open 20 October 2026, 11:59 PM IST.
+    const LAUNCH_AT = new Date("2026-10-20T23:59:59+05:30").getTime();
+
+    function pad(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    function setLabel(id, value, singular, plural) {
+      document.getElementById(id).textContent = value === 1 ? singular : plural;
+    }
+
+    function paint(id, value) {
+      const el = document.getElementById(id);
+      const text = pad(value);
+      if (el.textContent === text) return;
+      el.textContent = text;
+      el.classList.remove("tick");
+      void el.offsetWidth;
+      el.classList.add("tick");
+    }
+
+    function tick() {
+      const diff = Math.max(0, LAUNCH_AT - Date.now());
+      const total = Math.floor(diff / 1000);
+      const days = Math.floor(total / 86400);
+      const hours = Math.floor((total % 86400) / 3600);
+      const minutes = Math.floor((total % 3600) / 60);
+      const seconds = total % 60;
+      paint("days", days);
+      paint("hours", hours);
+      paint("minutes", minutes);
+      paint("seconds", seconds);
+      setLabel("days-label", days, "Day", "Days");
+      setLabel("hours-label", hours, "Hour", "Hours");
+      setLabel("minutes-label", minutes, "Minute", "Minutes");
+      setLabel("seconds-label", seconds, "Second", "Seconds");
+      const status = document.getElementById("clock-status");
+      if (seconds === 0 || status.dataset.ready !== "1") {
+        status.dataset.ready = "1";
+        status.textContent =
+          days + " days, " + hours + " hours, " + minutes +
+          " minutes until World Compass Holidays opens on 20 October 2026.";
+      }
+    }
+
+    tick();
+    setInterval(tick, 1000);
+
+    const form = document.getElementById("notify");
+    const email = document.getElementById("email");
+    const error = document.getElementById("error");
+    const thanks = document.getElementById("thanks");
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const value = email.value.trim();
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+      email.setAttribute("aria-invalid", valid ? "false" : "true");
+      error.hidden = valid;
+      if (!valid) {
+        email.focus();
+        return;
+      }
+      document.getElementById("thanks-copy").textContent =
+        "We will write to " + value + " when the compass points open.";
+      form.hidden = true;
+      thanks.hidden = false;
+    });
+  </script>
+</body>
+</html>
