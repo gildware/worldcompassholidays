@@ -4,23 +4,41 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { keepCatalogIds, keepFaqEntries } from "@/lib/catalog-query";
 import { firstIssue, type FormState } from "@/lib/forms";
 import { requirePermission } from "@/lib/auth/guards";
 import { deleteImage } from "@/lib/storage";
 import { readUploadedImage, validateUploadedImage } from "@/lib/storage/form";
 import { uniqueSlug } from "@/lib/slug";
-import { parseJsonArray, type GalleryItem, type ItineraryItem } from "@/lib/tours/json";
+import { sanitizeTourHtml } from "@/lib/tours/html";
+import {
+  formatTourDuration,
+  parseDurationUnit,
+  parseJsonArray,
+  type GalleryItem,
+  type ItineraryItem,
+  type PriceDiscount,
+} from "@/lib/tours/json";
 
 const difficultyEnum = z.enum(["easy", "moderate", "challenging"]);
+const durationUnitEnum = z.enum(["hours", "days", "weeks"]);
+
+const discountSchema = z.object({
+  kind: z.enum(["single", "group"]),
+  minPeople: z.number().int().min(1).max(40),
+  mode: z.enum(["percent", "amount"]),
+  value: z.number().min(0).max(1_000_000),
+});
 
 const draftTourSchema = z.object({
   title: z.string().trim().min(2, "Enter a title").max(160),
   summary: z.string().trim().max(400).default(""),
-  description: z.string().trim().max(20000).default(""),
+  description: z.string().trim().max(100000).default(""),
   category: z.string().trim().max(80).default(""),
   youtubeUrl: z.string().trim().max(300).default(""),
   minDayBeforeBooking: z.coerce.number().int().min(0).optional().nullable(),
-  durationDays: z.coerce.number().int().min(1).max(60).default(5),
+  durationDays: z.coerce.number().int().min(1).max(240).default(5),
+  durationUnit: durationUnitEnum.default("days"),
   durationLabel: z.string().trim().max(40).default(""),
   difficulty: difficultyEnum.default("moderate"),
   minPeople: z.coerce.number().int().min(1).max(40).default(1),
@@ -50,10 +68,22 @@ const draftTourSchema = z.object({
 });
 
 const publishTourSchema = draftTourSchema
-  .omit({ published: true, summary: true, destinationId: true })
+  .omit({
+    published: true,
+    summary: true,
+    destinationId: true,
+    seoTitle: true,
+    seoDescription: true,
+  })
   .extend({
     summary: z.string().trim().min(10, "Add a short description").max(400),
     destinationId: z.string().trim().min(1, "Choose a destination"),
+    seoTitle: z.string().trim().min(2, "Add an SEO title").max(160),
+    seoDescription: z
+      .string()
+      .trim()
+      .min(10, "Add an SEO description")
+      .max(400),
     published: z.literal(true),
   });
 
@@ -62,8 +92,49 @@ type TourParsed = Omit<z.infer<typeof draftTourSchema>, "published" | "destinati
   published: boolean;
 };
 
+function readDestinationIds(formData: FormData) {
+  const ids = parseJsonArray<string>(
+    String(formData.get("destinationIdsJson") ?? "[]"),
+  )
+    .map((id) => id.trim())
+    .filter(Boolean);
+  return [...new Set(ids)];
+}
+
+function readDiscounts(
+  raw: string,
+): { ok: true; items: PriceDiscount[] } | { ok: false; error: string } {
+  let parsed: unknown;
+  try {
+    parsed = raw.trim() ? JSON.parse(raw) : [];
+  } catch {
+    return { ok: false, error: "Check the discount rules." };
+  }
+  if (!Array.isArray(parsed)) return { ok: true, items: [] };
+
+  const items: PriceDiscount[] = [];
+  for (const row of parsed) {
+    const result = discountSchema.safeParse(row);
+    if (!result.success) return { ok: false, error: "Check the discount rules." };
+    if (result.data.mode === "percent" && result.data.value > 100) {
+      return { ok: false, error: "A percent discount cannot be more than 100." };
+    }
+    if (result.data.kind === "group" && result.data.minPeople < 2) {
+      return { ok: false, error: "A group discount needs at least 2 people." };
+    }
+    items.push({
+      kind: result.data.kind,
+      minPeople: result.data.kind === "single" ? 1 : result.data.minPeople,
+      mode: result.data.mode,
+      value: result.data.value,
+    });
+  }
+  return { ok: true, items };
+}
+
 function readTourRaw(formData: FormData) {
   const minRaw = formData.get("minDayBeforeBooking");
+  const destinationIds = readDestinationIds(formData);
   return {
     title: formData.get("title"),
     summary: formData.get("summary") ?? "",
@@ -75,13 +146,15 @@ function readTourRaw(formData: FormData) {
         ? null
         : Number(minRaw),
     durationDays: formData.get("durationDays") || 5,
+    durationUnit: parseDurationUnit(String(formData.get("durationUnit") ?? "")),
     durationLabel: formData.get("durationLabel") ?? "",
     difficulty: formData.get("difficulty") || "moderate",
     minPeople: formData.get("minPeople") || 1,
     maxGroupSize: formData.get("maxGroupSize") || 12,
     priceFrom: formData.get("priceFrom") || 0,
     currency: formData.get("currency") || "INR",
-    destinationId: String(formData.get("destinationId") ?? "").trim(),
+    destinationId:
+      destinationIds[0] ?? String(formData.get("destinationId") ?? "").trim(),
     address: formData.get("address") ?? "",
     mapLat: formData.get("mapLat") ?? "",
     mapLng: formData.get("mapLng") ?? "",
@@ -147,11 +220,47 @@ function revalidateTourPaths(destinationSlug?: string | null) {
   if (destinationSlug) revalidatePath(`/destinations/${destinationSlug}`);
 }
 
-async function loadDestination(destinationId: string | null) {
-  if (!destinationId) return null;
-  return prisma.destination.findUnique({
-    where: { id: destinationId },
+async function loadDestinations(ids: string[]) {
+  if (ids.length === 0) return [];
+  return prisma.destination.findMany({
+    where: { id: { in: ids } },
     select: { id: true, slug: true },
+  });
+}
+
+function durationError(days: number, unit: "hours" | "days" | "weeks") {
+  if (unit === "hours" && days > 240) return "Hours cannot be more than 240.";
+  if (unit === "days" && days > 60) return "Days cannot be more than 60.";
+  if (unit === "weeks" && days > 52) return "Weeks cannot be more than 52.";
+  return null;
+}
+
+async function prepareLinks(
+  formData: FormData,
+  publishing: boolean,
+  durationDays: number,
+  durationUnit: "hours" | "days" | "weeks",
+) {
+  const invalidDuration = durationError(durationDays, durationUnit);
+  if (invalidDuration) return { error: invalidDuration };
+  const destinationIds = readDestinationIds(formData);
+  const discounts = readDiscounts(String(formData.get("discountsJson") ?? "[]"));
+  if (!discounts.ok) return { error: discounts.error };
+  if (publishing && destinationIds.length === 0) {
+    return { error: "Choose at least one destination" };
+  }
+  const destinations = await loadDestinations(destinationIds);
+  if (destinations.length !== destinationIds.length) {
+    return { error: "Choose a destination" };
+  }
+  return { destinationIds, discounts: discounts.items, destinations };
+}
+
+async function syncDestinations(tourId: string, ids: string[]) {
+  await prisma.tourDestination.deleteMany({ where: { tourId } });
+  if (ids.length === 0) return;
+  await prisma.tourDestination.createMany({
+    data: ids.map((destinationId) => ({ tourId, destinationId })),
   });
 }
 
@@ -162,13 +271,54 @@ async function syncItinerary(tourId: string, items: ItineraryItem[]) {
     data: items.map((item, index) => ({
       tourId,
       dayNumber: item.dayNumber || index + 1,
-      title: item.title.trim() || `Day ${index + 1}`,
+      title: item.title.trim(),
       description: item.description.trim(),
+      imageUrl: item.imageUrl?.trim() ?? "",
+      imageKey: item.imageKey?.trim() ?? "",
+      imageDriver: item.imageDriver === "cloudinary" ? "cloudinary" : "local",
     })),
   });
 }
 
-function tourPayload(formData: FormData, parsed: TourParsed) {
+async function applyCatalog(data: {
+  category: string;
+  categoryId: string;
+  travelStylesJson: string;
+  facilitiesJson: string;
+  faqsJson: string;
+  includesJson: string;
+  excludesJson: string;
+}) {
+  const categoryId = data.category.trim();
+  const category = categoryId
+    ? await prisma.catalogItem.findFirst({
+        where: { id: categoryId, kind: "category" },
+        select: { id: true, title: true },
+      })
+    : null;
+  data.category = category?.title ?? "";
+  data.categoryId = category?.id ?? "";
+  data.travelStylesJson = JSON.stringify(
+    await keepCatalogIds("style", data.travelStylesJson),
+  );
+  data.facilitiesJson = JSON.stringify(
+    await keepCatalogIds("facility", data.facilitiesJson),
+  );
+  data.faqsJson = JSON.stringify(await keepFaqEntries(data.faqsJson));
+  data.includesJson = JSON.stringify(
+    await keepCatalogIds("include", data.includesJson),
+  );
+  data.excludesJson = JSON.stringify(
+    await keepCatalogIds("exclude", data.excludesJson),
+  );
+}
+
+function tourPayload(
+  formData: FormData,
+  parsed: TourParsed,
+  destinationIds: string[],
+  discounts: PriceDiscount[],
+) {
   const cover = readUploadedImage(formData);
   const banner = readOptionalImage(formData, "featured");
   const seoImage = readOptionalImage(formData, "seo");
@@ -185,16 +335,23 @@ function tourPayload(formData: FormData, parsed: TourParsed) {
     seoImage,
     gallery,
     itinerary,
-    destinationId: parsed.destinationId,
+    destinationIds,
     data: {
       title: parsed.title,
       summary: parsed.summary,
-      description: parsed.description,
+      description: sanitizeTourHtml(parsed.description),
       category: parsed.category,
+      categoryId: "",
       youtubeUrl: parsed.youtubeUrl,
       minDayBeforeBooking: parsed.minDayBeforeBooking ?? null,
       durationDays: parsed.durationDays,
-      durationLabel: parsed.durationLabel || String(parsed.durationDays),
+      durationUnit: parsed.durationUnit,
+      durationLabel: formatTourDuration(
+        parsed.durationDays,
+        parsed.durationUnit,
+      ),
+      discountsJson: JSON.stringify(discounts),
+      destinationIdsJson: JSON.stringify(destinationIds),
       difficulty: parsed.difficulty,
       minPeople: parsed.minPeople,
       maxGroupSize: parsed.maxGroupSize,
@@ -247,8 +404,24 @@ export async function createTour(
   const parsed = readTour(formData);
   if (!parsed.success) return { error: firstIssue(parsed.error) };
 
-  const payload = tourPayload(formData, parsed.data);
   const publishing = parsed.data.published;
+  const links = await prepareLinks(
+    formData,
+    publishing,
+    parsed.data.durationDays,
+    parsed.data.durationUnit,
+  );
+  if ("error" in links) {
+    return { error: links.error ?? "Check the form and try again." };
+  }
+
+  const payload = tourPayload(
+    formData,
+    parsed.data,
+    links.destinationIds,
+    links.discounts,
+  );
+  await applyCatalog(payload.data);
 
   const coverError = validateUploadedImage(payload.cover, "tours", {
     required: publishing,
@@ -267,15 +440,6 @@ export async function createTour(
     };
   }
 
-  if (publishing && !parsed.data.destinationId) {
-    return { error: "Choose a destination" };
-  }
-
-  const destination = await loadDestination(parsed.data.destinationId);
-  if (parsed.data.destinationId && !destination) {
-    return { error: "Choose a destination" };
-  }
-
   const slug = await uniqueSlug(parsed.data.title, async (candidate) =>
     Boolean(
       await prisma.tour.findUnique({
@@ -288,16 +452,19 @@ export async function createTour(
   try {
     const data = {
       ...payload.data,
+      isFeatured: false,
       slug,
-      ...(payload.destinationId
-        ? { destinationId: payload.destinationId }
-        : {}),
+      destinationId: links.destinationIds[0] ?? null,
     };
 
     const tour = await prisma.tour.create({ data });
 
     await syncItinerary(tour.id, payload.itinerary);
-    revalidateTourPaths(destination?.slug);
+    await syncDestinations(tour.id, links.destinationIds);
+    for (const destination of links.destinations) {
+      revalidateTourPaths(destination.slug);
+    }
+    if (links.destinations.length === 0) revalidateTourPaths();
     return {
       error: null,
       success: publishing ? "Tour published." : "Draft saved.",
@@ -324,12 +491,33 @@ export async function updateTour(
 
   const existing = await prisma.tour.findUnique({
     where: { id: tourId },
-    include: { destination: { select: { slug: true } } },
+    include: {
+      destination: { select: { slug: true } },
+      destinationLinks: {
+        select: { destination: { select: { slug: true } } },
+      },
+    },
   });
   if (!existing) return { error: "Tour not found." };
 
   const publishing = parsed.data.published;
-  const payload = tourPayload(formData, parsed.data);
+  const links = await prepareLinks(
+    formData,
+    publishing,
+    parsed.data.durationDays,
+    parsed.data.durationUnit,
+  );
+  if ("error" in links) {
+    return { error: links.error ?? "Check the form and try again." };
+  }
+
+  const payload = tourPayload(
+    formData,
+    parsed.data,
+    links.destinationIds,
+    links.discounts,
+  );
+  await applyCatalog(payload.data);
 
   const coverError = validateUploadedImage(payload.cover, "tours", {
     required: publishing,
@@ -346,15 +534,6 @@ export async function updateTour(
     return {
       error: publishing ? "Upload a banner image." : bannerError,
     };
-  }
-
-  if (publishing && !parsed.data.destinationId) {
-    return { error: "Choose a destination" };
-  }
-
-  const destination = await loadDestination(parsed.data.destinationId);
-  if (parsed.data.destinationId && !destination) {
-    return { error: "Choose a destination" };
   }
 
   const titleChanged = existing.title !== parsed.data.title;
@@ -384,12 +563,14 @@ export async function updateTour(
     where: { id: tourId },
     data: {
       ...payload.data,
+      isFeatured: existing.isFeatured,
       slug,
-      destinationId: payload.destinationId,
+      destinationId: links.destinationIds[0] ?? null,
     },
   });
 
   await syncItinerary(tourId, payload.itinerary);
+  await syncDestinations(tourId, links.destinationIds);
 
   if (replacedCover) {
     await deleteImage({
@@ -405,8 +586,14 @@ export async function updateTour(
     });
   }
 
-  revalidateTourPaths(existing.destination?.slug);
-  revalidateTourPaths(destination?.slug);
+  const slugs = new Set<string>();
+  if (existing.destination?.slug) slugs.add(existing.destination.slug);
+  for (const link of existing.destinationLinks) {
+    if (link.destination.slug) slugs.add(link.destination.slug);
+  }
+  for (const destination of links.destinations) slugs.add(destination.slug);
+  if (slugs.size === 0) revalidateTourPaths();
+  for (const slug of slugs) revalidateTourPaths(slug);
   return {
     error: null,
     success: publishing ? "Tour published." : "Draft saved.",
@@ -421,6 +608,26 @@ export async function saveTour(
   const tourId = String(formData.get("tourId") ?? "").trim();
   if (tourId) return updateTour(previous, formData);
   return createTour(previous, formData);
+}
+
+export async function setTourFeatured(tourId: string, featured: boolean) {
+  await requirePermission("tours.manage");
+  const tour = await prisma.tour.findUnique({
+    where: { id: tourId },
+    select: {
+      id: true,
+      destination: { select: { slug: true } },
+    },
+  });
+  if (!tour) return { error: "Tour not found." };
+
+  await prisma.tour.update({
+    where: { id: tourId },
+    data: { isFeatured: featured },
+  });
+  revalidateTourPaths(tour.destination?.slug);
+  revalidatePath(`/admin/tours/${tourId}/view`);
+  return { error: null as string | null };
 }
 
 export async function deleteTour(formData: FormData) {

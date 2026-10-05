@@ -7,12 +7,13 @@ import { FormMessage } from "@/components/forms/FormMessage";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { initialFormState } from "@/lib/forms";
 
-export function SignupForm() {
+export function SignupForm({ next }: { next?: string }) {
   const [state, formAction] = useActionState(customerSignup, initialFormState);
 
   return (
     <form action={formAction} className="grid gap-4">
       <FormMessage state={state} />
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <Field label="Full name">
         <input name="name" autoComplete="name" required />
       </Field>

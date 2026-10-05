@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { firstIssue, safeRedirectPath, type FormState } from "@/lib/forms";
+import { customerReturnPath, firstIssue, safeRedirectPath, type FormState } from "@/lib/forms";
 import { getDummyHash, hashPassword, verifyPassword } from "@/lib/auth/password";
 import type { RoleScope } from "@/lib/auth/permissions";
 import {
@@ -86,7 +86,7 @@ export async function customerLogin(
 ): Promise<FormState> {
   const result = await signIn("customer", formData);
   if (result) return result;
-  redirect(safeRedirectPath(formData.get("next"), "/account", "/account"));
+  redirect(customerReturnPath(formData.get("next")));
 }
 
 export async function customerSignup(
@@ -125,7 +125,7 @@ export async function customerSignup(
   });
 
   await createSession(user.id, "customer");
-  redirect("/account");
+  redirect(customerReturnPath(formData.get("next")));
 }
 
 export async function logout(formData: FormData) {

@@ -4,6 +4,7 @@ import type { StaffPermission } from "@/lib/auth/permissions";
 export type NavItem = {
   href: string;
   label: string;
+  children?: { href: string; label: string }[];
 };
 
 const moduleHrefs: Record<ModuleKey, string> = {
@@ -49,16 +50,34 @@ const adminNav: (NavItem & { permission?: StaffPermission; enabled: boolean })[]
       enabled: modules.tours,
     },
     {
+      href: "/admin/configuration",
+      label: "Configuration",
+      permission: "tours.manage",
+      enabled: modules.tours,
+    },
+    {
       href: "/admin/hotels",
       label: "Hotels",
       permission: "hotels.view",
       enabled: modules.hotels,
     },
     {
-      href: "/admin/vehicles",
-      label: "Vehicles",
+      href: "/admin/rentals",
+      label: "Rentals",
       permission: "vehicles.view",
       enabled: modules.cars || modules.bikes,
+      children: [
+        { href: "/admin/rentals", label: "Overview" },
+        { href: "/admin/rentals/fleet", label: "Fleet" },
+        { href: "/admin/rentals/bookings", label: "Bookings" },
+        { href: "/admin/rentals/customers", label: "Customers" },
+        { href: "/admin/rentals/maintenance", label: "Maintenance" },
+        { href: "/admin/rentals/payments", label: "Payments" },
+        { href: "/admin/rentals/reports", label: "Reports" },
+        { href: "/admin/rentals/locations", label: "Locations" },
+        { href: "/admin/rentals/configuration", label: "Configuration" },
+        { href: "/admin/rentals/policies", label: "Rules" },
+      ],
     },
     {
       href: "/admin/buses",
@@ -97,7 +116,7 @@ export function getAdminNav(
 ): NavItem[] {
   return adminNav
     .filter((item) => item.enabled && (!item.permission || allowed(item.permission)))
-    .map(({ href, label }) => ({ href, label }));
+    .map(({ href, label, children }) => ({ href, label, children }));
 }
 
 export function enquiryInterests() {

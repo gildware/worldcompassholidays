@@ -9,8 +9,10 @@ import {
   type DragEvent,
 } from "react";
 import { FieldHelp } from "@/components/forms/FieldHelp";
+import { ImageCropDialog } from "@/components/ui/ImageCropDialog";
 import type { ImageFolder } from "@/lib/storage/folders";
 import type { UploadedImage } from "@/lib/storage/types";
+import type { ImageFrame } from "@/lib/tours/image-frames";
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -24,7 +26,7 @@ function validateClientFile(file: File | null | undefined): string | null {
   return null;
 }
 
-function uploadWithProgress(
+function uploadOnce(
   file: File,
   folder: ImageFolder,
   onProgress: (percent: number) => void,
@@ -43,7 +45,6 @@ function uploadWithProgress(
     signal.addEventListener("abort", onAbort);
 
     xhr.open("POST", "/api/admin/uploads");
-    xhr.responseType = "json";
 
     xhr.upload.onprogress = (event) => {
       if (!event.lengthComputable) return;
@@ -52,9 +53,14 @@ function uploadWithProgress(
 
     xhr.onload = () => {
       signal.removeEventListener("abort", onAbort);
-      const payload = xhr.response as
-        | (UploadedImage & { error?: string })
-        | null;
+      let payload: (UploadedImage & { error?: string }) | null = null;
+      try {
+        payload = JSON.parse(xhr.responseText) as UploadedImage & {
+          error?: string;
+        };
+      } catch {
+        payload = null;
+      }
       if (xhr.status >= 200 && xhr.status < 300 && payload?.url && payload.key) {
         resolve({
           url: payload.url,
@@ -65,14 +71,25 @@ function uploadWithProgress(
       }
       reject(
         new Error(
-          payload?.error || `Upload failed (${xhr.status || "network"}).`,
+          payload?.error ||
+            (xhr.status
+              ? `Upload failed (${xhr.status}).`
+              : "The upload did not reach the server. Try again."),
         ),
       );
     };
 
     xhr.onerror = () => {
       signal.removeEventListener("abort", onAbort);
-      reject(new Error("Network error while uploading."));
+      if (signal.aborted) {
+        reject(new Error("Upload cancelled."));
+        return;
+      }
+      reject(
+        new Error(
+          "The upload did not reach the server. Check your connection and try again.",
+        ),
+      );
     };
 
     xhr.onabort = () => {
@@ -81,6 +98,23 @@ function uploadWithProgress(
     };
 
     xhr.send(body);
+  });
+}
+
+function uploadWithProgress(
+  file: File,
+  folder: ImageFolder,
+  onProgress: (percent: number) => void,
+  signal: AbortSignal,
+): Promise<UploadedImage> {
+  return uploadOnce(file, folder, onProgress, signal).catch(async (error: unknown) => {
+    const message = error instanceof Error ? error.message : "";
+    if (signal.aborted || !message.includes("did not reach the server")) {
+      throw error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    if (signal.aborted) throw new Error("Upload cancelled.");
+    return uploadOnce(file, folder, onProgress, signal);
   });
 }
 
@@ -97,6 +131,11 @@ export function ImageUploader({
   error: externalError = null,
   fieldName,
   withHiddenFields = true,
+  compact = false,
+  tile = false,
+  multiple = false,
+  frame,
+  className,
 }: {
   folder: ImageFolder;
   label?: string;
@@ -115,6 +154,18 @@ export function ImageUploader({
   fieldName?: string;
   /** Write imageUrl / imageKey / imageDriver inputs for server actions. */
   withHiddenFields?: boolean;
+  /** Square drop zone for a side-by-side row. */
+  compact?: boolean;
+  /** Smaller empty state, for a tile inside a gallery grid. */
+  tile?: boolean;
+  /** Let the file picker accept more than one image. Each one is uploaded in order. */
+  multiple?: boolean;
+  /**
+   * Shape this photo is shown in. Turns on cropping to that ratio and
+   * sizes the drop zone to match.
+   */
+  frame?: ImageFrame;
+  className?: string;
 }) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -127,14 +178,18 @@ export function ImageUploader({
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const [cropQueue, setCropQueue] = useState<File[]>([]);
+  const batchId = useRef(0);
+  const batch = useRef({ total: 0, done: 0 });
 
   const previewUrl = localPreview || current?.url || null;
+  const aspectRatio = frame?.aspect ?? 16 / 10;
   const uploading = progress !== null;
   const shownError = externalError || error;
 
   useEffect(() => {
-    onBusyChange?.(uploading);
-  }, [onBusyChange, uploading]);
+    onBusyChange?.(uploading || cropQueue.length > 0);
+  }, [onBusyChange, uploading, cropQueue.length]);
 
   useEffect(() => {
     return () => {
@@ -196,10 +251,48 @@ export function ImageUploader({
     [folder, localPreview, setValue],
   );
 
-  function onFiles(files: FileList | null) {
-    const file = files?.[0];
-    if (!file) return;
-    void startUpload(file);
+  const acceptFile = useCallback(
+    async (file: File) => {
+      const id = batchId.current;
+      const rest = cropQueue.slice(1);
+      batch.current.done += 1;
+      setCropQueue([]);
+      await startUpload(file);
+      if (batchId.current !== id) return;
+      if (rest.length > 0) setCropQueue(rest);
+    },
+    [cropQueue, startUpload],
+  );
+
+  function cancelCrop() {
+    batchId.current += 1;
+    batch.current = { total: 0, done: 0 };
+    setCropQueue([]);
+  }
+
+  async function onFiles(files: FileList | null) {
+    const chosen = Array.from(files ?? []);
+    if (chosen.length === 0 || uploading || cropQueue.length > 0) return;
+    const list = multiple ? chosen : chosen.slice(0, 1);
+    const croppable: File[] = [];
+
+    for (const file of list) {
+      const validationError = validateClientFile(file);
+      if (validationError) {
+        setError(validationError);
+        continue;
+      }
+      if (!frame || file.type === "image/gif") {
+        await startUpload(file);
+      } else {
+        croppable.push(file);
+      }
+    }
+
+    if (croppable.length === 0) return;
+    batchId.current += 1;
+    batch.current = { total: croppable.length, done: 0 };
+    setCropQueue(croppable);
   }
 
   function onDragOver(event: DragEvent<HTMLDivElement>) {
@@ -223,18 +316,27 @@ export function ImageUploader({
   }
 
   return (
-    <div className="grid gap-2" data-field={fieldName}>
-      <div className="flex items-center gap-1.5">
-        <label htmlFor={inputId} className="text-sm font-medium text-navy">
-          {label}
-          {required ? (
-            <span className="ml-0.5 text-red-600" aria-hidden="true">
-              *
-            </span>
-          ) : null}
-        </label>
-        <FieldHelp label={label} help={help} />
-      </div>
+    <div
+      className={[
+        "flex flex-col gap-2",
+        compact ? "w-44 self-start" : "w-full",
+        className ?? "",
+      ].join(" ")}
+      data-field={fieldName}
+    >
+      {label ? (
+        <div className="flex items-center gap-1.5">
+          <label htmlFor={inputId} className="text-sm font-medium text-navy">
+            {label}
+            {required ? (
+              <span className="ml-0.5 text-red-600" aria-hidden="true">
+                *
+              </span>
+            ) : null}
+          </label>
+          <FieldHelp label={label} help={help} />
+        </div>
+      ) : null}
 
       {withHiddenFields ? (
         <>
@@ -253,6 +355,7 @@ export function ImageUploader({
         ref={inputRef}
         type="file"
         accept={ACCEPT}
+        multiple={multiple}
         className="sr-only"
         disabled={uploading}
         onChange={(event) => {
@@ -270,12 +373,12 @@ export function ImageUploader({
             : "Upload image. Click or drop a file."
         }
         onClick={() => {
-          if (!uploading) inputRef.current?.click();
+          if (!uploading && cropQueue.length === 0) inputRef.current?.click();
         }}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            if (!uploading) inputRef.current?.click();
+            if (!uploading && cropQueue.length === 0) inputRef.current?.click();
           }
         }}
         onDragOver={onDragOver}
@@ -290,15 +393,25 @@ export function ImageUploader({
               ? "border-red-500 bg-surface !outline-none focus:!outline-none focus-visible:!outline-none focus:!shadow-[0_0_0_2px_#ef4444] focus-visible:!shadow-[0_0_0_2px_#ef4444]"
               : "border-line bg-surface hover:border-brand/50 focus-visible:outline-brand",
           uploading ? "cursor-wait" : "cursor-pointer",
+          compact ? "size-44" : "w-full",
         ].join(" ")}
       >
+        {compact ? null : (
+          <div aria-hidden className="w-full" style={{ aspectRatio: String(aspectRatio) }} />
+        )}
+        <div className="absolute inset-0">
+        {frame && !tile ? (
+          <span className="absolute top-2 left-2 z-10 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-navy">
+            {frame.label}
+          </span>
+        ) : null}
         {previewUrl ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewUrl}
               alt=""
-              className="aspect-[16/10] w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
             />
             {uploading ? (
               <div className="absolute inset-0 flex flex-col justify-end bg-navy/55 p-4">
@@ -322,11 +435,21 @@ export function ImageUploader({
             ) : null}
           </>
         ) : (
-          <div className="flex aspect-[16/10] flex-col items-center justify-center gap-2 px-4 text-center">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-brand shadow-sm ring-1 ring-line">
+          <div
+            className={[
+              "absolute inset-0 flex flex-col items-center overflow-hidden px-2 text-center",
+              compact || tile ? "justify-center gap-1" : "justify-start gap-2 px-3 pt-8",
+            ].join(" ")}
+          >
+            <span
+              className={[
+                "flex items-center justify-center rounded-full bg-white text-brand shadow-sm ring-1 ring-line",
+                tile ? "h-6 w-6" : "h-10 w-10",
+              ].join(" ")}
+            >
               <svg
                 viewBox="0 0 24 24"
-                className="h-5 w-5"
+                className={tile ? "h-3.5 w-3.5" : "h-5 w-5"}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.8"
@@ -339,12 +462,29 @@ export function ImageUploader({
                 />
               </svg>
             </span>
-            <p className="text-sm font-medium text-navy">
-              {dragging ? "Drop image to upload" : "Drag & drop an image here"}
+            <p className={compact || tile ? "text-xs font-medium text-navy" : "text-sm font-medium text-navy"}>
+              {dragging
+                ? "Drop image"
+                : tile
+                  ? "Add"
+                  : compact
+                    ? "Add image"
+                    : "Drag & drop an image here"}
             </p>
-            <p className="text-xs text-muted">or click to browse · max 5 MB</p>
+            {compact || tile ? null : (
+              <p className="text-xs text-muted">
+                {tile
+                  ? frame
+                    ? `Crop to ${frame.label} · max 5 MB`
+                    : "Click or drop · max 5 MB"
+                  : frame
+                    ? `or click to browse · crop to ${frame.label} · max 5 MB`
+                    : "or click to browse · max 5 MB"}
+              </p>
+            )}
           </div>
         )}
+        </div>
       </div>
 
       {shownError ? (
@@ -353,6 +493,26 @@ export function ImageUploader({
         </p>
       ) : hint ? (
         <p className="text-xs text-muted">{hint}</p>
+      ) : null}
+
+      {frame && cropQueue[0] ? (
+        <ImageCropDialog
+          file={cropQueue[0]}
+          aspect={frame.aspect}
+          outputWidth={frame.outputWidth}
+          ratioLabel={frame.label}
+          positionLabel={
+            batch.current.total > 1
+              ? `Photo ${batch.current.done + 1} of ${batch.current.total}`
+              : undefined
+          }
+          onConfirm={(file) => void acceptFile(file)}
+          onUseOriginal={() => {
+            const original = cropQueue[0];
+            if (original) void acceptFile(original);
+          }}
+          onCancel={cancelCrop}
+        />
       ) : null}
     </div>
   );

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { DestinationView } from "@/components/admin/DestinationView";
 import { requirePermission } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
+import { mapApiKey } from "@/lib/map-key";
 
 export const metadata: Metadata = { title: "View destination" };
 
@@ -36,6 +37,7 @@ export default async function AdminDestinationViewPage({
           summary: true,
           published: true,
           durationDays: true,
+          durationLabel: true,
           priceFrom: true,
           currency: true,
           imageUrl: true,
@@ -82,8 +84,31 @@ export default async function AdminDestinationViewPage({
 
   if (!destination) notFound();
 
+  const linkedTours = await prisma.tour.findMany({
+    where: {
+      destinationLinks: { some: { destinationId: destination.id } },
+      NOT: { destinationId: destination.id },
+    },
+    orderBy: { title: "asc" },
+    select: {
+      id: true,
+      title: true,
+      summary: true,
+      published: true,
+      durationDays: true,
+      durationLabel: true,
+      priceFrom: true,
+      currency: true,
+      imageUrl: true,
+    },
+  });
+  const tours = [...destination.tours, ...linkedTours].sort((a, b) =>
+    a.title.localeCompare(b.title),
+  );
+
   return (
     <DestinationView
+      mapApiKey={mapApiKey()}
       destination={{
         id: destination.id,
         name: destination.name,
@@ -91,11 +116,14 @@ export default async function AdminDestinationViewPage({
         region: destination.region,
         country: destination.country,
         summary: destination.summary,
+        mapLat: destination.mapLat,
+        mapLng: destination.mapLng,
+        mapZoom: destination.mapZoom,
         imageUrl: destination.imageUrl,
         published: destination.published,
         parent: destination.parent,
         children: destination.children,
-        tours: destination.tours,
+        tours,
         hotels: destination.hotels.map((hotel) => ({
           id: hotel.id,
           name: hotel.name,

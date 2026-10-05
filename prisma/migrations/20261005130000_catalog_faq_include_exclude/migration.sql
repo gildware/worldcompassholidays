@@ -1,0 +1,1 @@
+ALTER TABLE "CatalogItem" ADD COLUMN "content" TEXT NOT NULL DEFAULT '';

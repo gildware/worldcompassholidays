@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { TourTabsForm } from "@/components/admin/TourTabsForm";
 import { modules } from "@/config/modules";
 import { requirePermission } from "@/lib/auth/guards";
+import { loadTourCatalog } from "@/lib/catalog-query";
 import { destinationChoiceLabel } from "@/lib/destinations";
 import { prisma } from "@/lib/db";
 import { mapTourToFormValues } from "@/lib/tours/map-form";
@@ -19,7 +20,7 @@ export default async function EditTourPage({
   await requirePermission("tours.manage");
   const { id } = await params;
 
-  const [tour, destinations] = await Promise.all([
+  const [tour, destinations, catalog] = await Promise.all([
     prisma.tour.findUnique({
       where: { id },
       include: {
@@ -28,8 +29,16 @@ export default async function EditTourPage({
     }),
     prisma.destination.findMany({
       orderBy: { name: "asc" },
-      select: { id: true, name: true, parent: { select: { name: true } } },
+      select: {
+        id: true,
+        name: true,
+        mapLat: true,
+        mapLng: true,
+        mapZoom: true,
+        parent: { select: { name: true } },
+      },
     }),
+    loadTourCatalog(),
   ]);
 
   if (!tour) notFound();
@@ -56,8 +65,12 @@ export default async function EditTourPage({
             destination.name,
             destination.parent?.name,
           ),
+          mapLat: destination.mapLat,
+          mapLng: destination.mapLng,
+          mapZoom: destination.mapZoom,
         }))}
         tour={mapTourToFormValues(tour)}
+        catalog={catalog}
       />
     </div>
   );

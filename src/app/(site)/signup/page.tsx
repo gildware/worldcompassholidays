@@ -3,12 +3,19 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignupForm } from "@/components/auth/SignupForm";
 import { getCurrentUser } from "@/lib/auth/session";
+import { customerReturnPath } from "@/lib/forms";
 
 export const metadata: Metadata = { title: "Create account" };
 
-export default async function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const returnPath = customerReturnPath(next);
   const user = await getCurrentUser();
-  if (user?.scope === "customer") redirect("/account");
+  if (user?.scope === "customer") redirect(returnPath);
 
   return (
     <div className="mx-auto w-full max-w-md px-5 py-16">
@@ -17,11 +24,14 @@ export default async function SignupPage() {
         Track enquiries and bookings, and update them before they are confirmed.
       </p>
       <div className="mt-8">
-        <SignupForm />
+        <SignupForm next={returnPath} />
       </div>
       <p className="mt-6 text-sm text-muted">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-brand">
+        <Link
+          href={returnPath === "/account" ? "/login" : `/login?next=${encodeURIComponent(returnPath)}`}
+          className="font-medium text-brand"
+        >
           Sign in
         </Link>
       </p>

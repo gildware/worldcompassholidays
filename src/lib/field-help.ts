@@ -20,6 +20,18 @@ const guides: Record<string, FieldGuide> = {
     what: "The country this destination is in.",
     why: "Country keeps listings, maps, and search accurate, especially when several regions share a similar name.",
   },
+  "destination.latitude": {
+    what: "The north–south position of this destination.",
+    why: "The public map and linked tours use this with longitude to drop the pin on the real place.",
+  },
+  "destination.longitude": {
+    what: "The east–west position of this destination.",
+    why: "It pairs with latitude so the destination sits in the right place on the map.",
+  },
+  "destination.zoom": {
+    what: "How close the destination map opens, from a wide region to a town.",
+    why: "A higher number shows the place itself. A lower number shows the surrounding area.",
+  },
   Summary: {
     what: "A short description of the destination, shown on website cards.",
     why: "A sentence or two helps someone decide whether to open the page. Keep it specific to this place.",
@@ -28,9 +40,9 @@ const guides: Record<string, FieldGuide> = {
     what: "The main photo for this destination.",
     why: "Cards and the destination page use this image. A clear photo makes the place recognizable at a glance.",
   },
-  Published: {
+  Active: {
     what: "Whether this destination is visible on the public website.",
-    why: "Turn it off while the page is incomplete. Turn it on when travelers should be able to find and open it.",
+    why: "Leave it inactive while the page is incomplete. Mark it active when travelers should be able to find and open it.",
   },
   "staff.name": {
     what: "The staff member’s full name.",
@@ -254,19 +266,19 @@ const guides: Record<string, FieldGuide> = {
   },
   "Banner image": {
     what: "The full-width photo at the top of the tour page.",
-    why: "It is the first image on the tour page. Use a wide landscape shot of the trip, not a logo or text graphic.",
+    why: "It fills a wide 21:9 banner. Crop to that shape, about 1920×823 px, so the edges are not cut off unexpectedly.",
   },
   "Cover image": {
-    what: "The photo shown on tour cards in listings.",
-    why: "Travelers see this when browsing tours and destinations. Pick a clear, upright crop that reads well as a small card.",
+    what: "The photo shown on tour cards in listings and on destination pages.",
+    why: "Those cards crop it to 16:10. A 1600×1000 px photo stays sharp when someone is browsing tours.",
   },
   Gallery: {
-    what: "Extra photos of the tour, added one at a time.",
-    why: "A gallery shows stays, views, and the group experience beyond the banner and cover.",
+    what: "Extra photos of the tour. You can add several at once.",
+    why: "They sit in a 4:3 grid beside the banner and cover. Crop each one to about 1200×900 px so the row lines up.",
   },
   "Add gallery image": {
-    what: "A photo to add to this tour’s gallery.",
-    why: "Each upload becomes another image on the tour page. Add the pictures that help someone picture the trip.",
+    what: "One or more photos to add to this tour’s gallery.",
+    why: "Each photo is cropped to 4:3 before it is saved, matching the gallery tiles on the tour.",
   },
   "tour.surroundings": {
     what: "Nearby education, health, or transport points around the tour.",

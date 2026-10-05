@@ -41,8 +41,8 @@ const stats: Stat[] = [
     count: () => prisma.hotel.count(),
   },
   {
-    label: "Vehicles",
-    href: "/admin/vehicles",
+    label: "Rentals",
+    href: "/admin/rentals",
     permission: "vehicles.view",
     enabled: modules.cars || modules.bikes,
     count: () => prisma.vehicle.count(),

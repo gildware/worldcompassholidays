@@ -4,7 +4,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { modules } from "@/config/modules";
 import { DestinationGrid } from "@/components/site/DestinationGrid";
+import { MapEmbed } from "@/components/site/MapEmbed";
 import { prisma } from "@/lib/db";
+import { mapApiKey } from "@/lib/map-key";
+import { parseMapPoint } from "@/lib/maps";
 import { formatMoney } from "@/lib/format";
 
 type Props = {
@@ -44,6 +47,20 @@ export default async function DestinationPage({ params }: Props) {
 
   if (!destination || !destination.published) notFound();
 
+  const apiKey = mapApiKey();
+
+  const linkedTours = await prisma.tour.findMany({
+    where: {
+      published: true,
+      destinationLinks: { some: { destinationId: destination.id } },
+      NOT: { destinationId: destination.id },
+    },
+    orderBy: { title: "asc" },
+  });
+  const tours = [...destination.tours, ...linkedTours].sort((a, b) =>
+    a.title.localeCompare(b.title),
+  );
+
   return (
     <div className="mx-auto max-w-6xl px-5 py-14">
       <div className="relative mb-8 aspect-[21/9] overflow-hidden rounded-2xl bg-surface">
@@ -80,6 +97,26 @@ export default async function DestinationPage({ params }: Props) {
         {destination.summary}
       </p>
 
+      {apiKey &&
+      parseMapPoint(
+        destination.mapLat,
+        destination.mapLng,
+        destination.mapZoom,
+      ) ? (
+        <section className="mt-8">
+          <h2 className="text-xl font-semibold">Map</h2>
+          <div className="mt-4">
+            <MapEmbed
+              apiKey={apiKey}
+              lat={destination.mapLat}
+              lng={destination.mapLng}
+              zoom={destination.mapZoom}
+              title={`Map of ${destination.name}`}
+            />
+          </div>
+        </section>
+      ) : null}
+
       {destination.children.length > 0 ? (
         <section className="mt-12">
           <h2 className="text-xl font-semibold">Places in {destination.name}</h2>
@@ -92,7 +129,7 @@ export default async function DestinationPage({ params }: Props) {
       <div className="mt-12 grid gap-10">
         {modules.tours ? (
           <CatalogBlock title="Tours and treks" empty="No tours published here yet.">
-            {destination.tours.map((tour) => (
+            {tours.map((tour) => (
               <article
                 key={tour.id}
                 className="overflow-hidden rounded-xl border border-line bg-white"
@@ -110,7 +147,9 @@ export default async function DestinationPage({ params }: Props) {
                   <h3 className="font-semibold text-navy">{tour.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted">{tour.summary}</p>
                   <p className="mt-3 text-sm">
-                    {tour.durationDays} days · {tour.difficulty} ·{" "}
+                    {tour.durationLabel.trim() ||
+                      `${tour.durationDays} days`}{" "}
+                    ·{" "}
                     {formatMoney(tour.priceFrom, tour.currency)}
                   </p>
                 </div>
@@ -132,8 +171,12 @@ export default async function DestinationPage({ params }: Props) {
           <CatalogBlock title="Rentals" empty="No vehicles published here yet.">
             {destination.vehicles.map((vehicle) => (
               <article key={vehicle.id} className="rounded-xl border border-line bg-white p-5">
-                <h3 className="font-semibold">{vehicle.name}</h3>
-                <p className="mt-2 text-sm capitalize text-muted">{vehicle.kind}</p>
+                <h3 className="font-semibold">
+                  <Link href={`/rentals/${vehicle.slug}`}>{vehicle.name}</Link>
+                </h3>
+                <p className="mt-2 text-sm capitalize text-muted">
+                  {vehicle.kind} · {formatMoney(vehicle.pricePerDay, vehicle.currency)} / day
+                </p>
               </article>
             ))}
           </CatalogBlock>

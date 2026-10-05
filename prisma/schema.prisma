@@ -17,6 +17,9 @@ model Destination {
   region      String
   country     String
   summary     String
+  mapLat      String   @default("")
+  mapLng      String   @default("")
+  mapZoom     Int      @default(8)
   imageUrl    String
   imageKey    String
   imageDriver String   @default("local")
@@ -26,11 +29,13 @@ model Destination {
   children    Destination[] @relation("DestinationParent")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  tours       Tour[]
-  hotels      Hotel[]
-  vehicles    Vehicle[]
-  busRoutes   BusRoute[]
-  pages       Page[]
+  tours           Tour[]
+  tourLinks       TourDestination[]
+  hotels          Hotel[]
+  vehicles        Vehicle[]
+  busRoutes       BusRoute[]
+  pages           Page[]
+  rentalLocations RentalLocation[]
 
   @@index([parentId])
 }
@@ -42,10 +47,14 @@ model Tour {
   summary             String          @default("")
   description         String          @default("")
   category            String          @default("")
+  categoryId          String          @default("")
   youtubeUrl          String          @default("")
   minDayBeforeBooking Int?
   durationDays        Int             @default(5)
+  durationUnit        String          @default("days")
   durationLabel       String          @default("")
+  discountsJson       String          @default("[]")
+  destinationIdsJson  String          @default("[]")
   difficulty          String          @default("moderate")
   minPeople           Int             @default(1)
   maxGroupSize        Int             @default(12)
@@ -84,11 +93,38 @@ model Tour {
   published           Boolean         @default(false)
   destinationId       String?
   destination         Destination?    @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  destinationLinks    TourDestination[]
   departures          TourDeparture[]
   days                ItineraryDay[]
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 
+  @@index([destinationId])
+}
+
+model CatalogItem {
+  id         String   @id @default(cuid())
+  kind       String
+  title      String
+  content    String   @default("")
+  iconUrl    String   @default("")
+  iconKey    String   @default("")
+  iconDriver String   @default("local")
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([kind, title])
+  @@index([kind])
+}
+
+model TourDestination {
+  tourId        String
+  destinationId String
+  tour          Tour        @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@id([tourId, destinationId])
   @@index([destinationId])
 }
 
@@ -112,6 +148,9 @@ model ItineraryDay {
   dayNumber   Int
   title       String
   description String @default("")
+  imageUrl    String @default("")
+  imageKey    String @default("")
+  imageDriver String @default("local")
 
   @@unique([tourId, dayNumber])
 }
@@ -146,21 +185,341 @@ model Room {
 }
 
 model Vehicle {
-  id            String      @id @default(cuid())
-  slug          String      @unique
-  kind          String
-  name          String
-  summary       String
-  seats         Int
-  pricePerDay   Int
-  currency      String      @default("INR")
-  published     Boolean     @default(false)
-  destinationId String
-  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id                 String      @id @default(cuid())
+  slug               String      @unique
+  kind               String
+  name               String
+  summary            String
+  description        String      @default("")
+  brand              String      @default("")
+  modelName          String      @default("")
+  year               Int?
+  seats              Int
+  doors              Int?
+  luggage            Int?
+  includedKmPerDay   Int         @default(0)
+  pricePerDay        Int
+  pricePerWeek       Int         @default(0)
+  pricePerMonth      Int         @default(0)
+  securityDeposit    Int         @default(0)
+  extraKmCharge      Int         @default(0)
+  lateReturnCharge   Int         @default(0)
+  discountType       String      @default("none")
+  discountValue      Int         @default(0)
+  currency           String      @default("INR")
+  status             String      @default("available")
+  published          Boolean     @default(false)
+  allowCounterPickup Boolean     @default(true)
+  allowHomeDelivery  Boolean     @default(false)
+  destinationId      String
+  destination        Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  vehicleTypeId      String?
+  vehicleType        RentalConfig? @relation("VehicleType", fields: [vehicleTypeId], references: [id], onDelete: SetNull)
+  fuelTypeId         String?
+  fuelType           RentalConfig? @relation("VehicleFuel", fields: [fuelTypeId], references: [id], onDelete: SetNull)
+  transmissionId     String?
+  transmission       RentalConfig? @relation("VehicleTransmission", fields: [transmissionId], references: [id], onDelete: SetNull)
+  images             VehicleImage[]
+  features           VehicleFeature[]
+  addonLinks         VehicleAddon[]
+  locationLinks      VehicleLocation[]
+  documents          VehicleDocument[]
+  blocks             VehicleBlock[]
+  maintenance        MaintenanceRecord[]
+  rentalBookings     RentalBooking[]
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
   @@index([destinationId, kind])
+  @@index([kind, published, status])
+}
+
+// Shared rental lists. Cars store selections, not copies of these names.
+model RentalConfig {
+  id                String   @id @default(cuid())
+  kind              String
+  name              String
+  slug              String
+  description       String   @default("")
+  appliesTo         String   @default("all")
+  active            Boolean  @default(true)
+  sortOrder         Int      @default(0)
+  price             Int      @default(0)
+  priceUnit         String   @default("flat")
+  requiresNumber    Boolean  @default(false)
+  requiresIssueDate Boolean  @default(false)
+  requiresExpiry    Boolean  @default(false)
+  typedVehicles     Vehicle[] @relation("VehicleType")
+  fueledVehicles    Vehicle[] @relation("VehicleFuel")
+  gearedVehicles    Vehicle[] @relation("VehicleTransmission")
+  featureLinks      VehicleFeature[]
+  addonLinks        VehicleAddon[]
+  vehicleDocuments  VehicleDocument[]
+  bookingDocuments  RentalBookingDocument[]
+  bookingAddons     RentalBookingAddon[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([kind, slug])
+  @@index([kind, active])
+}
+
+model RentalSettings {
+  id                 String   @id @default("default")
+  allowCounterPickup Boolean  @default(true)
+  allowHomeDelivery  Boolean  @default(true)
+  taxPercent         Int      @default(0)
+  currency           String   @default("INR")
+  updatedAt          DateTime @updatedAt
+}
+
+model RentalLocation {
+  id            String       @id @default(cuid())
+  name          String
+  slug          String       @unique
+  address       String       @default("")
+  active        Boolean      @default(true)
+  destinationId String?
+  destination   Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  vehicleLinks  VehicleLocation[]
+  pickups       RentalBooking[] @relation("PickupLocation")
+  returns       RentalBooking[] @relation("ReturnLocation")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([destinationId])
+}
+
+model RentalPolicy {
+  id                String   @id @default(cuid())
+  kind              String
+  name              String
+  slug              String   @unique
+  description       String   @default("")
+  active            Boolean  @default(true)
+  sortOrder         Int      @default(0)
+  hoursBeforePickup Int?
+  refundPercent     Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([kind, active])
+}
+
+model VehicleImage {
+  id        String  @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  url       String
+  key       String  @default("")
+  driver    String  @default("local")
+  sortOrder Int     @default(0)
+
+  @@index([vehicleId])
+}
+
+model VehicleFeature {
+  vehicleId String
+  configId  String
+  vehicle   Vehicle      @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  config    RentalConfig @relation(fields: [configId], references: [id], onDelete: Restrict)
+
+  @@id([vehicleId, configId])
+  @@index([configId])
+}
+
+model VehicleAddon {
+  vehicleId String
+  configId  String
+  vehicle   Vehicle      @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  config    RentalConfig @relation(fields: [configId], references: [id], onDelete: Restrict)
+
+  @@id([vehicleId, configId])
+  @@index([configId])
+}
+
+model VehicleLocation {
+  vehicleId  String
+  locationId String
+  vehicle    Vehicle        @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  location   RentalLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([vehicleId, locationId])
+  @@index([locationId])
+}
+
+model VehicleDocument {
+  id           String    @id @default(cuid())
+  vehicleId    String
+  vehicle      Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  configId     String?
+  config       RentalConfig? @relation(fields: [configId], references: [id], onDelete: SetNull)
+  typeName     String
+  fileUrl      String    @default("")
+  fileKey      String    @default("")
+  fileDriver   String    @default("local")
+  fileResource String    @default("image")
+  number       String    @default("")
+  issueDate    DateTime?
+  expiryDate   DateTime?
+  status       String    @default("pending")
+  note         String    @default("")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([vehicleId])
+  @@index([expiryDate])
+}
+
+model VehicleBlock {
+  id            String    @id @default(cuid())
+  vehicleId     String
+  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  kind          String
+  startAt       DateTime
+  endAt         DateTime
+  reason        String    @default("")
+  maintenanceId String?   @unique
+  maintenance   MaintenanceRecord? @relation(fields: [maintenanceId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+
+  @@index([vehicleId, startAt, endAt])
+}
+
+model MaintenanceRecord {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  title     String
+  notes     String   @default("")
+  startAt   DateTime
+  endAt     DateTime
+  status    String   @default("scheduled")
+  cost      Int      @default(0)
+  block     VehicleBlock?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vehicleId])
+  @@index([status])
+}
+
+model RentalBooking {
+  id                 String    @id @default(cuid())
+  reference          String    @unique
+  vehicleId          String
+  vehicle            Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  userId             String?
+  user               User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  status             String    @default("pending")
+  pickupAt           DateTime
+  returnAt           DateTime
+  pickupMode         String
+  returnMode         String
+  pickupLocationId   String?
+  pickupLocation     RentalLocation? @relation("PickupLocation", fields: [pickupLocationId], references: [id], onDelete: SetNull)
+  returnLocationId   String?
+  returnLocation     RentalLocation? @relation("ReturnLocation", fields: [returnLocationId], references: [id], onDelete: SetNull)
+  deliveryAddress    String    @default("")
+  returnAddress      String    @default("")
+  currency           String    @default("INR")
+  rentalDays         Int
+  baseAmount         Int
+  addonsAmount       Int
+  discountAmount     Int
+  taxAmount          Int
+  securityDeposit    Int
+  totalAmount        Int
+  amountDue          Int
+  pricingSnapshot    String    @default("{}")
+  contactName        String
+  contactEmail       String
+  contactPhone       String    @default("")
+  notes              String    @default("")
+  cancellationReason String    @default("")
+  rejectionReason    String    @default("")
+  cancelledAt        DateTime?
+  documents          RentalBookingDocument[]
+  addons             RentalBookingAddon[]
+  payments           RentalPayment[]
+  events             RentalBookingEvent[]
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([vehicleId, status])
+  @@index([userId])
+  @@index([status])
+  @@index([pickupAt])
+}
+
+model RentalBookingDocument {
+  id              String    @id @default(cuid())
+  bookingId       String
+  booking         RentalBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  configId        String?
+  config          RentalConfig? @relation(fields: [configId], references: [id], onDelete: SetNull)
+  typeName        String
+  fileUrl         String    @default("")
+  fileKey         String    @default("")
+  fileDriver      String    @default("local")
+  fileResource    String    @default("image")
+  number          String    @default("")
+  issueDate       DateTime?
+  expiryDate      DateTime?
+  status          String    @default("pending")
+  rejectionReason String    @default("")
+  verifiedAt      DateTime?
+  verifiedById    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([bookingId])
+  @@index([status])
+}
+
+model RentalBookingAddon {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   RentalBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  configId  String?
+  config    RentalConfig? @relation(fields: [configId], references: [id], onDelete: SetNull)
+  name      String
+  priceUnit String
+  unitPrice Int
+  quantity  Int      @default(1)
+  amount    Int
+
+  @@index([bookingId])
+}
+
+model RentalPayment {
+  id            String   @id @default(cuid())
+  bookingId     String
+  booking       RentalBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  kind          String
+  status        String   @default("unpaid")
+  amount        Int
+  method        String   @default("pending_gateway")
+  gatewayRef    String   @default("")
+  note          String   @default("")
+  recordedById  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([status])
+}
+
+model RentalBookingEvent {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   RentalBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  status    String
+  message   String
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  @@index([bookingId])
 }
 
 model BusRoute {
@@ -250,9 +609,10 @@ model User {
   lastLoginAt  DateTime?
   roleId       String
   role         Role      @relation(fields: [roleId], references: [id])
-  sessions     Session[]
-  bookings     Booking[]
-  createdAt    DateTime  @default(now())
+  sessions       Session[]
+  bookings       Booking[]
+  rentalBookings RentalBooking[]
+  createdAt      DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   @@index([roleId])

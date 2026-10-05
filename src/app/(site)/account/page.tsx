@@ -28,6 +28,9 @@ export default async function AccountPage() {
           <p className="mt-2 text-sm text-muted">{user.email}</p>
         </div>
         <div className="flex items-center gap-4 text-sm font-medium">
+          <Link href="/account/rentals" className="rounded-md border border-line bg-white px-4 py-2">
+            My rentals
+          </Link>
           <Link href="/contact" className="rounded-md bg-brand px-4 py-2 text-white">
             New enquiry
           </Link>

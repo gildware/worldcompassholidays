@@ -15,7 +15,12 @@ export default async function AdminPanelLayout({
     <AdminShell
       items={getAdminNav((permission) => can(user, permission))}
       user={{ name: user.name, roleName: user.roleName }}
-      signOut={<LogoutButton to="admin" />}
+      signOut={
+        <LogoutButton
+          to="admin"
+          className="block w-full px-3 py-2 text-left text-sm text-navy hover:bg-surface"
+        />
+      }
     >
       {children}
     </AdminShell>

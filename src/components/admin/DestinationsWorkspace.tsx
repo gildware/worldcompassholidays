@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { deleteDestination } from "@/actions/destinations";
 import {
   DestinationForm,
@@ -35,11 +34,26 @@ type DestinationRow = DestinationFormValues & {
   meta: string;
 };
 
+function toastMessage(
+  notice?: "deleted" | "children" | "listings" | "added" | "saved" | null,
+) {
+  if (notice === "added") return "Destination added.";
+  if (notice === "saved") return "Destination saved.";
+  return null;
+}
+
 function destinationMatchesSearch(item: DestinationRow, needle: string) {
   const tokens = needle.toLowerCase().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return true;
 
-  const identity = [item.name, item.parentName, item.summary, item.slug]
+  const identity = [
+    item.name,
+    item.parentName,
+    item.summary,
+    item.slug,
+    item.mapLat,
+    item.mapLng,
+  ]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
@@ -173,16 +187,17 @@ function TrashIcon() {
 export function DestinationsWorkspace({
   destinations,
   canManage,
+  mapApiKey,
   notice,
 }: {
   destinations: DestinationRow[];
   canManage: boolean;
-  notice?: "deleted" | "children" | "listings" | null;
+  mapApiKey: string;
+  notice?: "deleted" | "children" | "listings" | "added" | "saved" | null;
 }) {
-  const router = useRouter();
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 300);
-  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">(
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
     "all",
   );
   const [parentFilter, setParentFilter] = useState("all");
@@ -193,18 +208,27 @@ export function DestinationsWorkspace({
   const [editing, setEditing] = useState<DestinationRow | null>(null);
   const [published, setPublished] = useState(true);
   const [deleting, setDeleting] = useState<DestinationRow | null>(null);
+  const [toast, setToast] = useState<string | null>(() => toastMessage(notice));
 
   const closeCreate = useCallback(() => setCreateOpen(false), []);
   const closeEdit = useCallback(() => setEditing(null), []);
   const closeDelete = useCallback(() => setDeleting(null), []);
 
-  const afterSave = useCallback(
-    (close: () => void) => {
-      close();
-      router.refresh();
-    },
-    [router],
-  );
+  const afterSave = useCallback((close: () => void, message: string) => {
+    close();
+    setToast(message);
+  }, []);
+
+  useEffect(() => {
+    const message = toastMessage(notice);
+    if (!message) return;
+    setToast(message);
+    document.cookie = "destination_toast=; Max-Age=0; path=/admin/destinations";
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("saved")) return;
+    url.searchParams.delete("saved");
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}`);
+  }, [notice]);
 
   const parentChoices = useMemo(() => {
     const used = new Set(
@@ -229,8 +253,8 @@ export function DestinationsWorkspace({
   const filtered = useMemo(() => {
     const needle = debouncedQuery.trim().toLowerCase();
     const rows = destinations.filter((item) => {
-      if (statusFilter === "published" && !item.published) return false;
-      if (statusFilter === "draft" && item.published) return false;
+      if (statusFilter === "active" && !item.published) return false;
+      if (statusFilter === "inactive" && item.published) return false;
       if (parentFilter === "top" && item.parentId) return false;
       if (
         parentFilter !== "all" &&
@@ -257,7 +281,7 @@ export function DestinationsWorkspace({
         case "listings":
           return item.linkedCount;
         case "status":
-          return item.published ? "Published" : "Draft";
+          return item.published ? "Active" : "Inactive";
         default:
           return item.name;
       }
@@ -416,13 +440,13 @@ export function DestinationsWorkspace({
           ariaLabel="Filter by status"
           value={statusFilter}
           onChange={(value) =>
-            setStatusFilter(value as "all" | "published" | "draft")
+            setStatusFilter(value as "all" | "active" | "inactive")
           }
           searchPlaceholder="Search statuses"
           options={[
             { value: "all", label: "All statuses" },
-            { value: "published", label: "Published" },
-            { value: "draft", label: "Draft" },
+            { value: "active", label: "Active" },
+            { value: "inactive", label: "Inactive" },
           ]}
           className="!h-10"
           wrapperClassName="lg:w-40"
@@ -596,9 +620,9 @@ export function DestinationsWorkspace({
                   </td>
                   <td className="px-3 py-2">
                     {destination.published ? (
-                      <Badge tone="success">Published</Badge>
+                      <Badge tone="success">Active</Badge>
                     ) : (
-                      <Badge tone="warning">Draft</Badge>
+                      <Badge tone="warning">Inactive</Badge>
                     )}
                   </td>
                   <td className="px-3 py-2">
@@ -646,11 +670,13 @@ export function DestinationsWorkspace({
         title="Add destination"
         description="Add a top-level place, or put it inside another destination."
         size="xl"
+        fill
       >
         <DestinationForm
           parentOptions={parentOptionsFor()}
+          mapApiKey={mapApiKey}
           onCancel={closeCreate}
-          onSuccess={() => afterSave(closeCreate)}
+          onSuccess={(message) => afterSave(closeCreate, message)}
         />
       </Modal>
 
@@ -660,16 +686,17 @@ export function DestinationsWorkspace({
         title="Edit destination"
         description="Changes show on the public site as soon as you save."
         size="xl"
+        fill
         headerExtra={
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1 text-sm font-medium text-navy">
-              Published
-              <FieldHelp label="Published" />
+              Active
+              <FieldHelp label="Active" />
             </span>
             <Toggle
               checked={published}
               onChange={setPublished}
-              label={published ? "Published" : "Unpublished"}
+              label={published ? "Active" : "Inactive"}
               size="md"
             />
           </div>
@@ -679,9 +706,10 @@ export function DestinationsWorkspace({
           <DestinationForm
             destination={editing}
             parentOptions={parentOptionsFor(editing.id)}
+            mapApiKey={mapApiKey}
             published={published}
             onCancel={closeEdit}
-            onSuccess={() => afterSave(closeEdit)}
+            onSuccess={(message) => afterSave(closeEdit, message)}
           />
         ) : null}
       </Modal>
@@ -711,6 +739,34 @@ export function DestinationsWorkspace({
         action={deleteBlockedReason || !deleting ? undefined : deleteDestination}
         fields={deleting ? { destinationId: deleting.id } : undefined}
       />
+      {toast ? <SuccessToast message={toast} onDone={() => setToast(null)} /> : null}
+    </div>
+  );
+}
+
+function SuccessToast({
+  message,
+  onDone,
+}: {
+  message: string;
+  onDone: () => void;
+}) {
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => onDoneRef.current(), 4000);
+    return () => window.clearTimeout(timer);
+  }, [message]);
+
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[60] flex justify-center px-4">
+      <p
+        role="status"
+        className="pointer-events-auto rounded-lg border border-green-200 bg-green-50 px-4 py-2.5 text-sm font-medium text-green-800 shadow-lg"
+      >
+        {message}
+      </p>
     </div>
   );
 }

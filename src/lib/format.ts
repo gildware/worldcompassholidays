@@ -13,3 +13,13 @@ export function formatDate(value: Date) {
     year: "numeric",
   }).format(value);
 }
+
+export function formatDateTime(value: Date) {
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(value);
+}

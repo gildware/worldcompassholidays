@@ -1,9 +1,10 @@
 import type {
+  DurationUnit,
   FaqItem,
   GalleryItem,
   ItineraryItem,
+  PriceDiscount,
   Surroundings,
-  TitleItem,
 } from "@/lib/tours/json";
 import type { UploadedImage } from "@/lib/storage/types";
 
@@ -13,10 +14,14 @@ export type TourFormValues = {
   summary: string;
   description: string;
   category: string;
+  categoryId: string;
   youtubeUrl: string;
   minDayBeforeBooking: number | null;
   durationDays: number;
+  durationUnit: DurationUnit;
   durationLabel: string;
+  discounts: PriceDiscount[];
+  destinationIds: string[];
   difficulty: string;
   minPeople: number;
   maxGroupSize: number;
@@ -29,9 +34,10 @@ export type TourFormValues = {
   featuredImageKey: string;
   featuredImageDriver: string;
   gallery: GalleryItem[];
-  faqs: FaqItem[];
-  includes: TitleItem[];
-  excludes: TitleItem[];
+  faqs: string[];
+  extraFaqs: FaqItem[];
+  includes: string[];
+  excludes: string[];
   itinerary: ItineraryItem[];
   surroundings: Surroundings;
   address: string;

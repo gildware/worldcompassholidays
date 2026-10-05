@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Card";
+import { MapEmbed } from "@/components/site/MapEmbed";
 import { modules } from "@/config/modules";
 import { formatMoney } from "@/lib/format";
+import { parseMapPoint } from "@/lib/maps";
 
 type Place = {
   id: string;
@@ -20,6 +22,7 @@ type TourItem = {
   summary: string;
   published: boolean;
   durationDays: number;
+  durationLabel: string;
   priceFrom: number;
   currency: string;
   imageUrl: string;
@@ -62,6 +65,9 @@ export type DestinationViewData = {
   region: string;
   country: string;
   summary: string;
+  mapLat: string;
+  mapLng: string;
+  mapZoom: number;
   imageUrl: string;
   published: boolean;
   parent: { id: string; name: string } | null;
@@ -84,10 +90,17 @@ type TabId = (typeof tabs)[number]["id"];
 
 export function DestinationView({
   destination,
+  mapApiKey,
 }: {
   destination: DestinationViewData;
+  mapApiKey: string;
 }) {
   const [tab, setTab] = useState<TabId>("places");
+  const mapPoint = parseMapPoint(
+    destination.mapLat,
+    destination.mapLng,
+    destination.mapZoom,
+  );
   const counts: Record<string, number> = {
     places: destination.children.length,
     tours: destination.tours.length,
@@ -106,7 +119,7 @@ export function DestinationView({
       </Link>
 
       <section className="rounded-xl border border-line bg-white p-3 sm:p-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-start gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={destination.imageUrl}
@@ -119,13 +132,13 @@ export function DestinationView({
                 {destination.name}
               </h1>
               {destination.published ? (
-                <Badge tone="success">Published</Badge>
+                <Badge tone="success">Active</Badge>
               ) : (
-                <Badge tone="warning">Draft</Badge>
+                <Badge tone="warning">Inactive</Badge>
               )}
             </div>
             <p className="mt-1 line-clamp-1 text-sm text-muted">{destination.summary}</p>
-            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line pt-3 sm:grid-cols-5">
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line pt-3 sm:grid-cols-3 lg:grid-cols-6">
               <Fact
                 label="Parent"
                 value={destination.parent?.name ?? "Top-level"}
@@ -137,10 +150,28 @@ export function DestinationView({
               />
               <Fact label="Region" value={destination.region} />
               <Fact label="Country" value={destination.country} />
+              <Fact
+                label="Coordinates"
+                value={
+                  mapPoint
+                    ? `${destination.mapLat}, ${destination.mapLng}`
+                    : "Not set"
+                }
+              />
               <Fact label="Places" value={String(destination.children.length)} />
               <Fact label="Listings" value={String(listingCount(destination))} />
             </dl>
           </div>
+          {mapPoint && mapApiKey ? (
+            <MapEmbed
+              apiKey={mapApiKey}
+              lat={destination.mapLat}
+              lng={destination.mapLng}
+              zoom={destination.mapZoom}
+              title={`Map of ${destination.name}`}
+              className="min-h-24 w-36 shrink-0 self-stretch overflow-hidden rounded-lg border border-line sm:min-h-[6.5rem] sm:w-48"
+            />
+          ) : null}
         </div>
       </section>
 
@@ -182,6 +213,8 @@ export function DestinationView({
             {tab === "places" ? (
               <RecordList
                 empty="No places sit inside this destination."
+                activeLabel="Active"
+                inactiveLabel="Inactive"
                 items={destination.children.map((place) => ({
                   id: place.id,
                   href: `/admin/destinations/${place.id}`,
@@ -200,7 +233,7 @@ export function DestinationView({
                   href: `/admin/tours/${tour.id}/view`,
                   imageUrl: tour.imageUrl,
                   title: tour.title,
-                  detail: `${tour.durationDays} days · ${formatMoney(tour.priceFrom, tour.currency)}`,
+                  detail: `${tour.durationLabel.trim() || `${tour.durationDays} days`} · ${formatMoney(tour.priceFrom, tour.currency)}`,
                   published: tour.published,
                 }))}
               />
@@ -283,8 +316,12 @@ function Fact({
 function RecordList({
   items,
   empty,
+  activeLabel = "Published",
+  inactiveLabel = "Draft",
 }: {
   empty: string;
+  activeLabel?: string;
+  inactiveLabel?: string;
   items: {
     id: string;
     title: string;
@@ -328,9 +365,9 @@ function RecordList({
               body
             )}
             {item.published ? (
-              <Badge tone="success">Published</Badge>
+              <Badge tone="success">{activeLabel}</Badge>
             ) : (
-              <Badge tone="warning">Draft</Badge>
+              <Badge tone="warning">{inactiveLabel}</Badge>
             )}
           </li>
         );

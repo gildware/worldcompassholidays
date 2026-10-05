@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 export type SelectOption = {
   value: string;
   label: string;
+  iconUrl?: string;
 };
 
 type SearchableSelectProps = {
@@ -281,7 +282,10 @@ export function SearchableSelect({
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() => commit(option.value)}
                       >
-                        <span className="min-w-0 truncate">{option.label}</span>
+                        <span className="flex min-w-0 flex-1 items-center gap-2">
+                          {option.iconUrl ? <OptionIcon option={option} /> : null}
+                          <span className="min-w-0 truncate">{option.label}</span>
+                        </span>
                         {chosen ? (
                           <span className="shrink-0 text-brand" aria-hidden>
                             ✓
@@ -327,8 +331,14 @@ export function SearchableSelect({
           .filter(Boolean)
           .join(" ")}
       >
-        <span className={["min-w-0 flex-1 truncate", muted ? "text-muted" : ""].join(" ")}>
-          {shown}
+        <span
+          className={[
+            "flex min-w-0 flex-1 items-center gap-2",
+            muted ? "text-muted" : "",
+          ].join(" ")}
+        >
+          {selectedOption?.iconUrl ? <OptionIcon option={selectedOption} /> : null}
+          <span className="min-w-0 truncate">{shown}</span>
         </span>
         <svg
           viewBox="0 0 20 20"
@@ -359,5 +369,329 @@ export function SearchableSelect({
       ) : null}
       {menu}
     </div>
+  );
+}
+
+export function MultiSearchableSelect({
+  options,
+  values,
+  onChange,
+  placeholder = "Choose",
+  searchPlaceholder = "Search",
+  disabled = false,
+  invalid = false,
+  className,
+  ariaLabel,
+}: {
+  options: readonly SelectOption[];
+  values: string[];
+  onChange: (values: string[]) => void;
+  placeholder?: string;
+  searchPlaceholder?: string;
+  disabled?: boolean;
+  invalid?: boolean;
+  className?: string;
+  ariaLabel?: string;
+}) {
+  const listId = useId();
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [box, setBox] = useState<MenuBox | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  const items = options.filter((option) => matches(query, option.label, option.value));
+  const safeIndex = items.length === 0 ? -1 : Math.min(activeIndex, items.length - 1);
+  const selectedOptions = values
+    .map((value) => options.find((option) => option.value === value))
+    .filter((option): option is SelectOption => Boolean(option));
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function update() {
+      if (!triggerRef.current) return;
+      setBox(measure(triggerRef.current));
+    }
+
+    update();
+    const frame = requestAnimationFrame(() => searchRef.current?.focus());
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+
+    function onPointerDown(event: MouseEvent) {
+      const target = event.target as Node;
+      if (triggerRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setOpen(false);
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setOpen(false);
+      triggerRef.current?.focus();
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown, true);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown, true);
+    };
+  }, [open]);
+
+  function toggle(value: string) {
+    onChange(
+      values.includes(value) ? values.filter((item) => item !== value) : [...values, value],
+    );
+  }
+
+  function openMenu() {
+    if (disabled) return;
+    setQuery("");
+    setActiveIndex(0);
+    if (triggerRef.current) setBox(measure(triggerRef.current));
+    setOpen(true);
+  }
+
+  function onSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveIndex((index) => Math.min(index + 1, Math.max(items.length - 1, 0)));
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveIndex((index) => Math.max(index - 1, 0));
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      const item = items[safeIndex];
+      if (item) toggle(item.value);
+    } else if (event.key === "Tab") {
+      setOpen(false);
+    }
+  }
+
+  const menu =
+    mounted && open && box
+      ? createPortal(
+          <div
+            ref={menuRef}
+            className="fixed z-[80] overflow-hidden rounded-lg border border-line bg-white shadow-lg"
+            style={{
+              top: box.top,
+              left: box.left,
+              width: box.width,
+              maxHeight: box.maxHeight,
+              transform: box.placement === "top" ? "translateY(-100%)" : undefined,
+            }}
+          >
+            <div className="border-b border-line px-2 py-1.5">
+              <input
+                ref={searchRef}
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setActiveIndex(0);
+                }}
+                onKeyDown={onSearchKeyDown}
+                placeholder={searchPlaceholder}
+                autoComplete="off"
+                spellCheck={false}
+                aria-label={searchPlaceholder}
+                aria-controls={listId}
+                className="!h-8 !text-sm"
+              />
+            </div>
+            <ul
+              id={listId}
+              role="listbox"
+              aria-multiselectable="true"
+              className="overflow-y-auto overscroll-contain py-1"
+              style={{ maxHeight: box.maxHeight - 44 }}
+            >
+              {items.length === 0 ? (
+                <li className="px-3 py-2 text-sm text-muted">No matches</li>
+              ) : (
+                items.map((option, index) => {
+                  const active = index === safeIndex;
+                  const chosen = values.includes(option.value);
+                  return (
+                    <li key={option.value} role="presentation">
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={chosen}
+                        className={[
+                          "flex w-full items-center gap-2 px-3 py-2 text-left text-sm",
+                          active ? "bg-brand-soft" : "hover:bg-surface",
+                          chosen ? "font-medium text-navy" : "text-foreground",
+                        ].join(" ")}
+                        onMouseEnter={() => setActiveIndex(index)}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => toggle(option.value)}
+                      >
+                        <span
+                          className={[
+                            "flex size-4 shrink-0 items-center justify-center rounded border text-[10px]",
+                            chosen
+                              ? "border-brand bg-brand text-white"
+                              : "border-line bg-white",
+                          ].join(" ")}
+                          aria-hidden
+                        >
+                          {chosen ? "✓" : ""}
+                        </span>
+                        <OptionIcon option={option} />
+                        <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                      </button>
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          </div>,
+          document.body,
+        )
+      : null;
+
+  return (
+    <div className="relative min-w-0">
+      <div
+        ref={triggerRef}
+        role="combobox"
+        tabIndex={disabled ? -1 : 0}
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listId}
+        aria-disabled={disabled || undefined}
+        aria-invalid={invalid || undefined}
+        onClick={() => (open ? setOpen(false) : openMenu())}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            if (open) setOpen(false);
+            else openMenu();
+          }
+        }}
+        className={[
+          "flex min-h-10 w-full cursor-pointer items-center gap-2 rounded-lg border bg-white px-2 py-1.5 text-left text-sm",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
+          invalid
+            ? "border-red-500"
+            : open
+              ? "border-brand focus-visible:outline-brand"
+              : "border-line focus-visible:outline-brand",
+          disabled ? "cursor-not-allowed opacity-60" : "",
+          className,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+          {selectedOptions.length === 0 ? (
+            <span className="px-1 text-muted">{placeholder}</span>
+          ) : (
+            selectedOptions.map((option) => (
+              <span
+                key={option.value}
+                className="inline-flex max-w-full items-center gap-1 rounded-full bg-brand-soft py-0.5 pr-1 pl-1.5 text-xs font-medium text-navy"
+              >
+                <OptionIcon option={option} small />
+                <span className="truncate">{option.label}</span>
+                <button
+                  type="button"
+                  className="rounded-full px-1 text-muted hover:text-navy"
+                  aria-label={`Remove ${option.label}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    toggle(option.value);
+                  }}
+                >
+                  ×
+                </button>
+              </span>
+            ))
+          )}
+        </span>
+        <svg
+          viewBox="0 0 20 20"
+          className={["h-4 w-4 shrink-0 text-muted", open ? "rotate-180" : ""].join(" ")}
+          aria-hidden
+        >
+          <path
+            d="M5 7.5 10 12.5 15 7.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+      {menu}
+    </div>
+  );
+}
+
+/** Multi select that posts one hidden input per chosen value. */
+export function NamedMultiSelect({
+  name,
+  options,
+  defaultValues = [],
+  placeholder = "Choose",
+  searchPlaceholder = "Search",
+  ariaLabel,
+}: {
+  name: string;
+  options: readonly SelectOption[];
+  defaultValues?: string[];
+  placeholder?: string;
+  searchPlaceholder?: string;
+  ariaLabel?: string;
+}) {
+  const [values, setValues] = useState(defaultValues);
+  return (
+    <>
+      {values.map((value) => (
+        <input key={value} type="hidden" name={name} value={value} />
+      ))}
+      <MultiSearchableSelect
+        values={values}
+        onChange={setValues}
+        options={options}
+        placeholder={placeholder}
+        searchPlaceholder={searchPlaceholder}
+        ariaLabel={ariaLabel}
+      />
+    </>
+  );
+}
+
+function OptionIcon({ option, small = false }: { option: SelectOption; small?: boolean }) {
+  const size = small ? "size-4" : "size-6";
+  if (option.iconUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={option.iconUrl} alt="" className={`${size} shrink-0 rounded object-cover`} />
+    );
+  }
+  return (
+    <span
+      className={`flex ${size} shrink-0 items-center justify-center rounded bg-surface text-[10px] font-semibold text-muted`}
+    >
+      {option.label.slice(0, 1).toUpperCase()}
+    </span>
   );
 }

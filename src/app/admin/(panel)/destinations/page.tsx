@@ -1,18 +1,21 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { DestinationsWorkspace } from "@/components/admin/DestinationsWorkspace";
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { mapApiKey } from "@/lib/map-key";
 
 export const metadata: Metadata = { title: "Destinations" };
 
 export default async function AdminDestinationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ deleted?: string; blocked?: string }>;
+  searchParams: Promise<{ deleted?: string; blocked?: string; saved?: string }>;
 }) {
   const user = await requirePermission("destinations.view");
   const params = await searchParams;
+  const toastKind = (await cookies()).get("destination_toast")?.value;
 
   const destinations = await prisma.destination.findMany({
     orderBy: { name: "asc" },
@@ -36,11 +39,16 @@ export default async function AdminDestinationsPage({
       ? "children"
       : params.blocked
         ? "listings"
-        : null;
+        : params.saved === "added" || toastKind === "added"
+          ? "added"
+          : params.saved === "updated" || toastKind === "updated"
+            ? "saved"
+            : null;
 
   return (
     <DestinationsWorkspace
       canManage={can(user, "destinations.manage")}
+      mapApiKey={mapApiKey()}
       notice={notice}
       destinations={destinations.map((destination) => {
         const linkedCount =
@@ -74,6 +82,9 @@ export default async function AdminDestinationsPage({
           region: destination.region,
           country: destination.country,
           summary: destination.summary,
+          mapLat: destination.mapLat,
+          mapLng: destination.mapLng,
+          mapZoom: destination.mapZoom,
           imageUrl: destination.imageUrl,
           imageKey: destination.imageKey,
           imageDriver: destination.imageDriver,

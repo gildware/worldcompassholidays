@@ -26,6 +26,12 @@ export async function uploadCloudinaryImage({
     secure_url: string;
     public_id: string;
   }>((resolve, reject) => {
+    let settled = false;
+    const fail = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      reject(error instanceof Error ? error : new Error("Cloudinary upload failed."));
+    };
     const stream = cloudinary.uploader.upload_stream(
       {
         folder: targetFolder,
@@ -33,15 +39,18 @@ export async function uploadCloudinaryImage({
       },
       (error, uploaded) => {
         if (error || !uploaded) {
-          reject(error ?? new Error("Cloudinary upload failed."));
+          fail(error ?? new Error("Cloudinary upload failed."));
           return;
         }
+        if (settled) return;
+        settled = true;
         resolve({
           secure_url: uploaded.secure_url,
           public_id: uploaded.public_id,
         });
       },
     );
+    stream.on("error", fail);
     stream.end(buffer);
   });
 

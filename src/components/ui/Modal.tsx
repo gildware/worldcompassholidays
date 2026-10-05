@@ -18,6 +18,8 @@ type ModalProps = {
   description?: string;
   children: ReactNode;
   headerExtra?: ReactNode;
+  /** The dialog body fills the panel and does not scroll. The child owns scrolling. */
+  fill?: boolean;
   size?: "sm" | "md" | "lg" | "xl";
   /** When true, Escape and backdrop click do not close (use for destructive confirm while submitting). */
   preventClose?: boolean;
@@ -37,6 +39,7 @@ export function Modal({
   description,
   children,
   headerExtra,
+  fill = false,
   size = "md",
   preventClose = false,
 }: ModalProps) {
@@ -153,7 +156,11 @@ export function Modal({
             </Button>
           </div>
         </div>
-        <div className="overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
+        {fill ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
+        ) : (
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
+        )}
       </div>
     </div>,
     document.body,

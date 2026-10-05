@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { customerLogin } from "@/actions/auth";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { getCurrentUser } from "@/lib/auth/session";
-import { safeRedirectPath } from "@/lib/forms";
+import { customerReturnPath } from "@/lib/forms";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -13,10 +13,10 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const user = await getCurrentUser();
-  if (user?.scope === "customer") redirect("/account");
-
   const { next } = await searchParams;
+  const returnPath = customerReturnPath(next);
+  const user = await getCurrentUser();
+  if (user?.scope === "customer") redirect(returnPath);
 
   return (
     <div className="mx-auto w-full max-w-md px-5 py-16">
@@ -28,11 +28,14 @@ export default async function LoginPage({
         </p>
       ) : null}
       <div className="mt-8">
-        <LoginForm action={customerLogin} next={safeRedirectPath(next, "/account", "/account")} />
+        <LoginForm action={customerLogin} next={returnPath} />
       </div>
       <p className="mt-6 text-sm text-muted">
         New here?{" "}
-        <Link href="/signup" className="font-medium text-brand">
+        <Link
+          href={returnPath === "/account" ? "/signup" : `/signup?next=${encodeURIComponent(returnPath)}`}
+          className="font-medium text-brand"
+        >
           Create an account
         </Link>
       </p>

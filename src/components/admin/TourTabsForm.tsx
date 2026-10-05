@@ -3,13 +3,14 @@
 import {
   useActionState,
   useEffect,
-  useMemo,
   useRef,
   useState,
   useTransition,
 } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveTour } from "@/actions/tours";
+import { HtmlEditor } from "@/components/admin/HtmlEditor";
 import {
   imageFromFields,
   type TourFormValues,
@@ -19,18 +20,23 @@ import { FieldHelp } from "@/components/forms/FieldHelp";
 import { FormMessage } from "@/components/forms/FormMessage";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { ImageUploader } from "@/components/ui/ImageUploader";
-import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { tourImageFrames } from "@/lib/tours/image-frames";
+import { MultiSearchableSelect, SearchableSelect } from "@/components/ui/SearchableSelect";
 import {
-  defaultStateOptions,
-  tourCategories,
-  tourFacilities,
-  travelStyles,
-} from "@/lib/data/tour-options";
+  packFaqs,
+  resolveCatalogId,
+  resolveCatalogIds,
+  type CatalogOption,
+} from "@/lib/catalog";
+import type { TourCatalog } from "@/lib/catalog-query";
 import { initialFormState } from "@/lib/forms";
-import type {
-  GalleryItem,
-  SurroundingItem,
-  Surroundings,
+import {
+  formatTourDuration,
+  type DurationUnit,
+  type GalleryItem,
+  type ItineraryItem,
+  type PriceDiscount,
+  type Surroundings,
 } from "@/lib/tours/json";
 import type { UploadedImage } from "@/lib/storage/types";
 
@@ -38,7 +44,27 @@ const STEPS = [
   {
     id: "general",
     title: "General",
-    description: "Content, FAQs, and itinerary",
+    description: "Title, duration, and group size",
+  },
+  {
+    id: "itinerary",
+    title: "Itinerary",
+    description: "Destinations and the day or week plan",
+  },
+  {
+    id: "content",
+    title: "Content",
+    description: "Rich story, including pasted HTML",
+  },
+  {
+    id: "pricing",
+    title: "Pricing",
+    description: "Price per person and discounts",
+  },
+  {
+    id: "details",
+    title: "Tour details",
+    description: "FAQs, includes, styles, and facilities",
   },
   {
     id: "images",
@@ -46,33 +72,49 @@ const STEPS = [
     description: "Banner, cover, and gallery",
   },
   {
-    id: "location",
-    title: "Location",
-    description: "Destination, address, and map",
-  },
-  {
-    id: "pricing",
-    title: "Pricing",
-    description: "Price, currency, and difficulty",
-  },
-  {
-    id: "availability",
-    title: "Availability",
-    description: "Default state and calendar import",
-  },
-  {
-    id: "status",
-    title: "Status",
-    description: "Featured and attributes",
-  },
-  {
     id: "seo",
     title: "SEO",
-    description: "Search and social sharing",
+    description: "Required search details",
   },
 ] as const;
 
+const DURATION_UNITS: { value: DurationUnit; label: string }[] = [
+  { value: "hours", label: "Hours" },
+  { value: "days", label: "Days" },
+  { value: "weeks", label: "Weeks" },
+];
+
 type StepId = (typeof STEPS)[number]["id"];
+
+export type TourDestinationOption = {
+  id: string;
+  name: string;
+  mapLat: string;
+  mapLng: string;
+  mapZoom: number;
+};
+
+function destinationPin(
+  current: { mapLat: string; mapLng: string; mapZoom: number; destinationId: string },
+  destinationId: string,
+  destinations: TourDestinationOption[],
+) {
+  const next = destinations.find((item) => item.id === destinationId);
+  if (!next?.mapLat || !next.mapLng) return null;
+  const previous = destinations.find((item) => item.id === current.destinationId);
+  const blank = !current.mapLat.trim() && !current.mapLng.trim();
+  const inherited = Boolean(
+    previous &&
+      current.mapLat.trim() === previous.mapLat &&
+      current.mapLng.trim() === previous.mapLng,
+  );
+  if (!blank && !inherited) return null;
+  return {
+    mapLat: next.mapLat,
+    mapLng: next.mapLng,
+    mapZoom: next.mapZoom || current.mapZoom,
+  };
+}
 
 function Stepper({
   current,
@@ -121,7 +163,22 @@ function Stepper({
 
 type Draft = Omit<
   TourFormValues,
-  "id" | "imageUrl" | "imageKey" | "imageDriver" | "featuredImageUrl" | "featuredImageKey" | "featuredImageDriver" | "seoImageUrl" | "seoImageKey" | "seoImageDriver" | "gallery"
+  | "id"
+  | "categoryId"
+  | "imageUrl"
+  | "imageKey"
+  | "imageDriver"
+  | "featuredImageUrl"
+  | "featuredImageKey"
+  | "featuredImageDriver"
+  | "seoImageUrl"
+  | "seoImageKey"
+  | "seoImageDriver"
+  | "gallery"
+  | "durationDays"
+  | "durationUnit"
+  | "minPeople"
+  | "maxGroupSize"
 > & {
   /** Full-width top banner on the tour page → featuredImage* */
   banner: UploadedImage | null;
@@ -129,13 +186,32 @@ type Draft = Omit<
   cover: UploadedImage | null;
   seoImage: UploadedImage | null;
   gallery: GalleryItem[];
+  durationDays: number | null;
+  durationUnit: DurationUnit | "";
+  minPeople: number | null;
+  maxGroupSize: number | null;
 };
+
+function optionalCount(raw: string): number | null {
+  if (raw.trim() === "") return null;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : null;
+}
 
 function emptySurroundings(): Surroundings {
   return { education: [], health: [], transportation: [] };
 }
 
-function buildDraft(tour?: TourFormValues): Draft {
+function linkedText(value: string, source: string) {
+  return value.trim() === source.trim();
+}
+
+function sameImage(left: UploadedImage | null, right: UploadedImage | null) {
+  if (!left || !right) return false;
+  return left.key === right.key && left.url === right.url;
+}
+
+function buildDraft(tour: TourFormValues | undefined, catalog: TourCatalog): Draft {
   if (!tour) {
     return {
       title: "",
@@ -144,14 +220,18 @@ function buildDraft(tour?: TourFormValues): Draft {
       category: "",
       youtubeUrl: "",
       minDayBeforeBooking: null,
-      durationDays: 5,
-      durationLabel: "5",
+      durationDays: null,
+      durationUnit: "",
+      durationLabel: "",
+      discounts: [],
+      destinationIds: [],
       difficulty: "moderate",
-      minPeople: 1,
-      maxGroupSize: 12,
+      minPeople: null,
+      maxGroupSize: null,
       priceFrom: 0,
       currency: "INR",
       faqs: [],
+      extraFaqs: [],
       includes: [],
       excludes: [],
       itinerary: [],
@@ -185,19 +265,25 @@ function buildDraft(tour?: TourFormValues): Draft {
     title: tour.title,
     summary: tour.summary,
     description: tour.description,
-    category: tour.category,
+    category: resolveCatalogId(tour.categoryId || tour.category, catalog.categories),
     youtubeUrl: tour.youtubeUrl,
     minDayBeforeBooking: tour.minDayBeforeBooking,
     durationDays: tour.durationDays,
-    durationLabel: tour.durationLabel || String(tour.durationDays),
+    durationUnit: tour.durationUnit,
+    durationLabel:
+      tour.durationLabel ||
+      formatTourDuration(tour.durationDays, tour.durationUnit),
+    discounts: tour.discounts,
+    destinationIds: tour.destinationIds,
     difficulty: tour.difficulty,
     minPeople: tour.minPeople,
     maxGroupSize: tour.maxGroupSize,
     priceFrom: tour.priceFrom,
     currency: tour.currency,
-    faqs: tour.faqs,
-    includes: tour.includes,
-    excludes: tour.excludes,
+    faqs: resolveCatalogIds(tour.faqs, catalog.faqs),
+    extraFaqs: tour.extraFaqs,
+    includes: resolveCatalogIds(tour.includes, catalog.includes),
+    excludes: resolveCatalogIds(tour.excludes, catalog.excludes),
     itinerary: tour.itinerary,
     surroundings: tour.surroundings,
     address: tour.address,
@@ -206,16 +292,16 @@ function buildDraft(tour?: TourFormValues): Draft {
     mapZoom: tour.mapZoom,
     isFeatured: tour.isFeatured,
     defaultState: tour.defaultState,
-    travelStyles: tour.travelStyles,
-    facilities: tour.facilities,
+    travelStyles: resolveCatalogIds(tour.travelStyles, catalog.styles),
+    facilities: resolveCatalogIds(tour.facilities, catalog.facilities),
     icalImportUrl: tour.icalImportUrl,
     seoIndex: tour.seoIndex,
-    seoTitle: tour.seoTitle,
-    seoDescription: tour.seoDescription,
-    facebookTitle: tour.facebookTitle,
-    facebookDescription: tour.facebookDescription,
-    twitterTitle: tour.twitterTitle,
-    twitterDescription: tour.twitterDescription,
+    seoTitle: tour.seoTitle.trim() || tour.title,
+    seoDescription: tour.seoDescription.trim() || tour.summary,
+    facebookTitle: tour.facebookTitle.trim() || tour.title,
+    facebookDescription: tour.facebookDescription.trim() || tour.summary,
+    twitterTitle: tour.twitterTitle.trim() || tour.title,
+    twitterDescription: tour.twitterDescription.trim() || tour.summary,
     published: tour.published,
     destinationId: tour.destinationId,
     banner:
@@ -225,11 +311,14 @@ function buildDraft(tour?: TourFormValues): Draft {
         tour.featuredImageDriver,
       ) ?? imageFromFields(tour.imageUrl, tour.imageKey, tour.imageDriver),
     cover: imageFromFields(tour.imageUrl, tour.imageKey, tour.imageDriver),
-    seoImage: imageFromFields(
-      tour.seoImageUrl,
-      tour.seoImageKey,
-      tour.seoImageDriver,
-    ),
+    seoImage:
+      imageFromFields(tour.seoImageUrl, tour.seoImageKey, tour.seoImageDriver) ??
+      imageFromFields(tour.imageUrl, tour.imageKey, tour.imageDriver) ??
+      imageFromFields(
+        tour.featuredImageUrl,
+        tour.featuredImageKey,
+        tour.featuredImageDriver,
+      ),
     gallery: tour.gallery,
   };
 }
@@ -261,17 +350,72 @@ function RepeaterCard({
   );
 }
 
+function CatalogMultiSelect({
+  items,
+  values,
+  placeholder,
+  searchPlaceholder,
+  emptyLabel,
+  onChange,
+}: {
+  items: CatalogOption[];
+  values: string[];
+  placeholder: string;
+  searchPlaceholder: string;
+  emptyLabel: string;
+  onChange: (values: string[]) => void;
+}) {
+  if (items.length === 0) {
+    return (
+      <p className="text-xs font-normal text-muted">
+        {emptyLabel}{" "}
+        <Link href="/admin/configuration" className="font-medium text-brand hover:underline">
+          Add them in Configuration
+        </Link>
+      </p>
+    );
+  }
+
+  return (
+    <MultiSearchableSelect
+      values={values}
+      onChange={onChange}
+      placeholder={placeholder}
+      searchPlaceholder={searchPlaceholder}
+      ariaLabel={placeholder}
+      options={items.map((item) => ({
+        value: item.id,
+        label: item.title,
+        iconUrl: item.iconUrl,
+      }))}
+    />
+  );
+}
+
 export function TourTabsForm({
   tour,
   destinations,
+  catalog,
 }: {
   tour?: TourFormValues;
-  destinations: { id: string; name: string }[];
+  destinations: TourDestinationOption[];
+  catalog: TourCatalog;
 }) {
   const isEdit = Boolean(tour);
+  const seoImageEdited = useRef(
+    Boolean(
+      tour?.seoImageKey &&
+        tour.seoImageKey !== tour.imageKey &&
+        tour.seoImageKey !== tour.featuredImageKey,
+    ),
+  );
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState<Draft>(() => buildDraft(tour));
+  const [draft, setDraft] = useState<Draft>(() => {
+    const initial = buildDraft(tour, catalog);
+    const pin = destinationPin(initial, initial.destinationId, destinations);
+    return pin ? { ...initial, ...pin } : initial;
+  });
   const [tourId, setTourId] = useState<string | null>(tour?.id ?? null);
   const [imageBusy, setImageBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -323,12 +467,6 @@ export function TourTabsForm({
     return () => window.clearTimeout(timer);
   }, [step, fieldErrors]);
 
-  const destinationName = useMemo(
-    () =>
-      destinations.find((item) => item.id === draft.destinationId)?.name ?? "—",
-    [destinations, draft.destinationId],
-  );
-
   function clearFieldError(name: string) {
     setFieldErrors((current) => {
       if (!current[name]) return current;
@@ -338,19 +476,108 @@ export function TourTabsForm({
     });
   }
 
+  function applyDuration(count: number | null, unit: DurationUnit | "") {
+    setDraft((current) => ({
+      ...current,
+      durationDays: count,
+      durationUnit: unit,
+      durationLabel:
+        count != null && unit ? formatTourDuration(count, unit) : "",
+    }));
+    clearFieldError("durationDays");
+  }
+
   function patch<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
     clearFieldError(String(key));
   }
 
-  function toggleList(key: "travelStyles" | "facilities", value: string) {
+  function patchTitle(value: string) {
+    setDraft((current) => ({
+      ...current,
+      title: value,
+      seoTitle: linkedText(current.seoTitle, current.title) ? value : current.seoTitle,
+      facebookTitle: linkedText(current.facebookTitle, current.title)
+        ? value
+        : current.facebookTitle,
+      twitterTitle: linkedText(current.twitterTitle, current.title)
+        ? value
+        : current.twitterTitle,
+    }));
+    clearFieldError("title");
+  }
+
+  function patchSummary(value: string) {
+    setDraft((current) => ({
+      ...current,
+      summary: value,
+      seoDescription: linkedText(current.seoDescription, current.summary)
+        ? value
+        : current.seoDescription,
+      facebookDescription: linkedText(current.facebookDescription, current.summary)
+        ? value
+        : current.facebookDescription,
+      twitterDescription: linkedText(current.twitterDescription, current.summary)
+        ? value
+        : current.twitterDescription,
+    }));
+    clearFieldError("summary");
+  }
+
+  function patchTourImage(slot: "banner" | "cover", value: UploadedImage | null) {
     setDraft((current) => {
-      const list = current[key];
+      const next = { ...current, [slot]: value };
+      if (seoImageEdited.current) return next;
+      const previous = current.cover ?? current.banner;
+      const upcoming = slot === "cover" ? (value ?? current.banner) : (current.cover ?? value);
+      if (!current.seoImage || sameImage(current.seoImage, previous)) {
+        next.seoImage = upcoming;
+      }
+      return next;
+    });
+    clearFieldError(slot);
+  }
+
+  function appendGallery(value: UploadedImage) {
+    setDraft((current) => ({
+      ...current,
+      gallery: [...current.gallery, value],
+    }));
+  }
+
+  function addDestination(destinationId: string) {
+    setDraft((current) => {
+      if (!destinationId || current.destinationIds.includes(destinationId)) {
+        return current;
+      }
+      const destinationIds = [...current.destinationIds, destinationId];
+      const pin =
+        current.destinationIds.length === 0
+          ? destinationPin(
+              { ...current, destinationId: "" },
+              destinationId,
+              destinations,
+            )
+          : null;
       return {
         ...current,
-        [key]: list.includes(value)
-          ? list.filter((item) => item !== value)
-          : [...list, value],
+        destinationIds,
+        destinationId: destinationIds[0] ?? "",
+        ...(pin ?? {}),
+      };
+    });
+    clearFieldError("destinationIds");
+  }
+
+  function removeDestination(destinationId: string) {
+    setDraft((current) => {
+      const destinationIds = current.destinationIds.filter(
+        (id) => id !== destinationId,
+      );
+      return {
+        ...current,
+        destinationIds,
+        destinationId: destinationIds[0] ?? "",
       };
     });
   }
@@ -366,16 +593,26 @@ export function TourTabsForm({
       if (draft.summary.trim().length < 10) {
         errors.summary = "Add a short description (at least 10 characters).";
       }
-      if (!Number.isInteger(draft.durationDays) || draft.durationDays < 1) {
-        errors.durationDays = "Duration days must be at least 1.";
+      if (draft.durationDays == null || !Number.isInteger(draft.durationDays) || draft.durationDays < 1) {
+        errors.durationDays = "Enter a duration.";
+      } else if (!draft.durationUnit) {
+        errors.durationDays = "Choose hours, days, or weeks.";
+      } else if (draft.durationUnit === "hours" && draft.durationDays > 240) {
+        errors.durationDays = "Hours cannot be more than 240.";
+      } else if (draft.durationUnit === "days" && draft.durationDays > 60) {
+        errors.durationDays = "Days cannot be more than 60.";
+      } else if (draft.durationUnit === "weeks" && draft.durationDays > 52) {
+        errors.durationDays = "Weeks cannot be more than 52.";
       }
-      if (!Number.isInteger(draft.minPeople) || draft.minPeople < 1) {
-        errors.minPeople = "Minimum people must be at least 1.";
+      if (draft.minPeople == null || !Number.isInteger(draft.minPeople) || draft.minPeople < 1) {
+        errors.minPeople = "Enter the minimum number of people.";
       }
-      if (!Number.isInteger(draft.maxGroupSize) || draft.maxGroupSize < 1) {
-        errors.maxGroupSize = "Max people must be at least 1.";
+      if (draft.maxGroupSize == null || !Number.isInteger(draft.maxGroupSize) || draft.maxGroupSize < 1) {
+        errors.maxGroupSize = "Enter the maximum number of people.";
       }
       if (
+        draft.minPeople != null &&
+        draft.maxGroupSize != null &&
         Number.isInteger(draft.minPeople) &&
         Number.isInteger(draft.maxGroupSize) &&
         draft.maxGroupSize < draft.minPeople
@@ -389,19 +626,37 @@ export function TourTabsForm({
       if (!draft.cover) errors.cover = "Upload a cover image for cards.";
     }
 
-    if (id === "location") {
-      if (!draft.destinationId) {
-        errors.destinationId = "Choose a destination.";
+    if (id === "itinerary") {
+      if (draft.destinationIds.length === 0) {
+        errors.destinationIds = "Choose at least one destination.";
       }
     }
 
     if (id === "pricing") {
       if (!Number.isInteger(draft.priceFrom) || draft.priceFrom < 0) {
-        errors.priceFrom = "Price must be zero or more.";
+        errors.priceFrom = "Price per person must be zero or more.";
       }
       if (!draft.currency.trim()) errors.currency = "Choose a currency.";
-      if (!draft.difficulty.trim()) {
-        errors.difficulty = "Choose a difficulty.";
+      draft.discounts.forEach((discount, index) => {
+        if (discount.mode === "percent" && discount.value > 100) {
+          errors[`discount-${index}`] = "Percent cannot be more than 100.";
+        }
+        if (discount.kind === "group" && discount.minPeople < 2) {
+          errors[`discount-${index}`] =
+            "A group discount needs at least 2 people.";
+        }
+        if (!Number.isFinite(discount.value) || discount.value < 0) {
+          errors[`discount-${index}`] = "Enter a discount of zero or more.";
+        }
+      });
+    }
+
+    if (id === "seo") {
+      if (draft.seoTitle.trim().length < 2) {
+        errors.seoTitle = "Add an SEO title.";
+      }
+      if (draft.seoDescription.trim().length < 10) {
+        errors.seoDescription = "Add an SEO description (at least 10 characters).";
       }
     }
 
@@ -449,6 +704,7 @@ export function TourTabsForm({
     if (draft.title.trim().length < 2) {
       errors.title = "Enter a title to save and continue.";
     }
+    Object.assign(errors, validateStepFields(0));
     return errors;
   }
 
@@ -477,14 +733,26 @@ export function TourTabsForm({
     if (draft.minDayBeforeBooking != null) {
       formData.set("minDayBeforeBooking", String(draft.minDayBeforeBooking));
     }
-    formData.set("durationDays", String(draft.durationDays));
-    formData.set("durationLabel", draft.durationLabel.trim());
+    if (draft.durationDays != null && draft.durationUnit) {
+      formData.set("durationDays", String(draft.durationDays));
+      formData.set("durationUnit", draft.durationUnit);
+      formData.set(
+        "durationLabel",
+        formatTourDuration(draft.durationDays, draft.durationUnit),
+      );
+    }
     formData.set("difficulty", draft.difficulty);
-    formData.set("minPeople", String(draft.minPeople));
-    formData.set("maxGroupSize", String(draft.maxGroupSize));
+    if (draft.minPeople != null) {
+      formData.set("minPeople", String(draft.minPeople));
+    }
+    if (draft.maxGroupSize != null) {
+      formData.set("maxGroupSize", String(draft.maxGroupSize));
+    }
     formData.set("priceFrom", String(draft.priceFrom));
     formData.set("currency", draft.currency);
-    formData.set("destinationId", draft.destinationId);
+    formData.set("destinationId", draft.destinationIds[0] ?? "");
+    formData.set("destinationIdsJson", JSON.stringify(draft.destinationIds));
+    formData.set("discountsJson", JSON.stringify(draft.discounts));
     formData.set("address", draft.address.trim());
     formData.set("mapLat", draft.mapLat.trim());
     formData.set("mapLng", draft.mapLng.trim());
@@ -497,7 +765,7 @@ export function TourTabsForm({
     formData.set("facebookDescription", draft.facebookDescription.trim());
     formData.set("twitterTitle", draft.twitterTitle.trim());
     formData.set("twitterDescription", draft.twitterDescription.trim());
-    formData.set("faqsJson", JSON.stringify(draft.faqs));
+    formData.set("faqsJson", JSON.stringify(packFaqs(draft.faqs, draft.extraFaqs)));
     formData.set("includesJson", JSON.stringify(draft.includes));
     formData.set("excludesJson", JSON.stringify(draft.excludes));
     formData.set("itineraryJson", JSON.stringify(draft.itinerary));
@@ -506,7 +774,6 @@ export function TourTabsForm({
     formData.set("travelStylesJson", JSON.stringify(draft.travelStyles));
     formData.set("facilitiesJson", JSON.stringify(draft.facilities));
     if (publish) formData.set("published", "on");
-    if (draft.isFeatured) formData.set("isFeatured", "on");
     if (draft.seoIndex) formData.set("seoIndex", "on");
 
     if (draft.cover) {
@@ -535,7 +802,9 @@ export function TourTabsForm({
     }
     const errors = validateDraftFields();
     if (Object.keys(errors).length > 0) {
-      showFieldErrors(errors, 0);
+      setFormError(null);
+      setFieldErrors({});
+      setStep((current) => Math.min(current + 1, STEPS.length - 1));
       return;
     }
 
@@ -594,21 +863,47 @@ export function TourTabsForm({
     startTransition(() => action(buildFormData(true)));
   }
 
-  function updateSurrounding(
-    group: keyof Surroundings,
-    index: number,
-    key: keyof SurroundingItem,
-    value: string,
-  ) {
-    setDraft((current) => {
-      const next = current.surroundings[group].map((item, i) =>
-        i === index ? { ...item, [key]: value } : item,
-      );
-      return {
-        ...current,
-        surroundings: { ...current.surroundings, [group]: next },
-      };
-    });
+  function updateItinerary(index: number, next: Partial<ItineraryItem>) {
+    patch(
+      "itinerary",
+      draft.itinerary.map((row, i) => (i === index ? { ...row, ...next } : row)),
+    );
+  }
+
+  function addItineraryItem() {
+    patch(
+      "itinerary",
+      [
+        {
+          dayNumber: 1,
+          title: "",
+          description: "",
+          clientId: crypto.randomUUID(),
+        },
+        ...draft.itinerary,
+      ].map((row, index) => ({
+        ...row,
+        dayNumber: index + 1,
+        clientId: row.clientId ?? `saved-${index}`,
+      })),
+    );
+  }
+
+  function removeItineraryItem(index: number) {
+    patch(
+      "itinerary",
+      draft.itinerary
+        .filter((_, i) => i !== index)
+        .map((row, i) => ({ ...row, dayNumber: i + 1 })),
+    );
+  }
+
+  function updateDiscount(index: number, next: PriceDiscount) {
+    patch(
+      "discounts",
+      draft.discounts.map((row, i) => (i === index ? next : row)),
+    );
+    clearFieldError(`discount-${index}`);
   }
 
   return (
@@ -652,7 +947,7 @@ export function TourTabsForm({
           ) : null}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
         {currentStepId === "general" ? (
             <div className="grid gap-4">
               <Field
@@ -663,18 +958,10 @@ export function TourTabsForm({
               >
                 <input
                   value={draft.title}
-                  onChange={(e) => patch("title", e.target.value)}
+                  onChange={(e) => patchTitle(e.target.value)}
                   className="!h-10"
                   placeholder="Title"
                   aria-invalid={Boolean(fieldErrors.title)}
-                />
-              </Field>
-              <Field label="Content" hint="Longer tour description.">
-                <textarea
-                  value={draft.description}
-                  onChange={(e) => patch("description", e.target.value)}
-                  rows={8}
-                  className="!min-h-0 resize-y"
                 />
               </Field>
               <Field
@@ -686,79 +973,76 @@ export function TourTabsForm({
               >
                 <textarea
                   value={draft.summary}
-                  onChange={(e) => patch("summary", e.target.value)}
+                  onChange={(e) => patchSummary(e.target.value)}
                   rows={3}
                   className="!min-h-0 resize-y"
                   aria-invalid={Boolean(fieldErrors.summary)}
                 />
               </Field>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Category">
+              <Field label="Category">
+                {catalog.categories.length === 0 ? (
+                  <p className="text-xs text-muted">
+                    No tour categories yet.{" "}
+                    <Link href="/admin/configuration" className="font-medium text-brand hover:underline">
+                      Add them in Configuration
+                    </Link>
+                  </p>
+                ) : (
                   <SearchableSelect
                     value={draft.category}
                     onChange={(value) => patch("category", value)}
                     emptyLabel="Choose a category"
                     searchPlaceholder="Search categories"
-                    options={tourCategories.map((item) => ({
-                      value: item,
-                      label: item,
+                    ariaLabel="Category"
+                    className="!h-10"
+                    options={catalog.categories.map((item) => ({
+                      value: item.id,
+                      label: item.title,
+                      iconUrl: item.iconUrl,
                     }))}
-                    className="!h-10"
                   />
-                </Field>
-                <Field label="Youtube video">
-                  <input
-                    value={draft.youtubeUrl}
-                    onChange={(e) => patch("youtubeUrl", e.target.value)}
-                    className="!h-10"
-                    placeholder="Youtube link video"
-                  />
-                </Field>
+                )}
+              </Field>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="sm:col-span-2">
                 <Field
-                  label="Minimum advance reservations"
-                  hint="Leave blank if not needed."
-                >
-                  <input
-                    type="number"
-                    min={0}
-                    value={draft.minDayBeforeBooking ?? ""}
-                    onChange={(e) =>
-                      patch(
-                        "minDayBeforeBooking",
-                        e.target.value === ""
-                          ? null
-                          : Number(e.target.value),
-                      )
-                    }
-                    className="!h-10"
-                    placeholder="Ex: 3"
-                  />
-                </Field>
-                <Field label="Duration (hours / label)">
-                  <input
-                    value={draft.durationLabel}
-                    onChange={(e) => patch("durationLabel", e.target.value)}
-                    className="!h-10"
-                    placeholder="Duration"
-                  />
-                </Field>
-                <Field
-                  label="Duration days"
+                  label="Duration"
                   name="durationDays"
                   required
                   error={fieldErrors.durationDays}
                 >
-                  <input
-                    type="number"
-                    min={1}
-                    value={draft.durationDays}
-                    onChange={(e) =>
-                      patch("durationDays", Number(e.target.value))
-                    }
-                    className="!h-10"
-                    aria-invalid={Boolean(fieldErrors.durationDays)}
-                  />
+                  <div className="grid grid-cols-[minmax(0,1fr)_8.5rem] gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      value={draft.durationDays ?? ""}
+                      onChange={(e) =>
+                        applyDuration(optionalCount(e.target.value), draft.durationUnit)
+                      }
+                      className="!h-10"
+                      placeholder="Duration"
+                      aria-invalid={Boolean(fieldErrors.durationDays)}
+                    />
+                    <SearchableSelect
+                      value={draft.durationUnit}
+                      onChange={(value) =>
+                        applyDuration(
+                          draft.durationDays,
+                          value === "hours" || value === "days" || value === "weeks"
+                            ? value
+                            : "",
+                        )
+                      }
+                      emptyLabel="Unit"
+                      searchPlaceholder="Search units"
+                      options={DURATION_UNITS}
+                      className="!h-10"
+                      ariaLabel="Duration unit"
+                      invalid={Boolean(fieldErrors.durationDays)}
+                    />
+                  </div>
                 </Field>
+                </div>
                 <Field
                   label="Tour min people"
                   name="minPeople"
@@ -768,8 +1052,8 @@ export function TourTabsForm({
                   <input
                     type="number"
                     min={1}
-                    value={draft.minPeople}
-                    onChange={(e) => patch("minPeople", Number(e.target.value))}
+                    value={draft.minPeople ?? ""}
+                    onChange={(e) => patch("minPeople", optionalCount(e.target.value))}
                     className="!h-10"
                     aria-invalid={Boolean(fieldErrors.minPeople)}
                   />
@@ -783,467 +1067,188 @@ export function TourTabsForm({
                   <input
                     type="number"
                     min={1}
-                    value={draft.maxGroupSize}
+                    value={draft.maxGroupSize ?? ""}
                     onChange={(e) =>
-                      patch("maxGroupSize", Number(e.target.value))
+                      patch("maxGroupSize", optionalCount(e.target.value))
                     }
                     className="!h-10"
                     aria-invalid={Boolean(fieldErrors.maxGroupSize)}
                   />
                 </Field>
               </div>
+            </div>
+          ) : null}
 
-              <RepeaterCard
-                title="FAQs"
-                onAdd={() =>
-                  patch("faqs", [...draft.faqs, { title: "", content: "" }])
-                }
+          {currentStepId === "itinerary" ? (
+            <div className="grid gap-4">
+              <Field
+                label="Destinations"
+                name="destinationIds"
+                required
+                hint="Add every place this tour visits."
+                error={fieldErrors.destinationIds}
               >
-                {draft.faqs.length === 0 ? (
-                  <p className="text-xs text-muted">No FAQ items yet.</p>
-                ) : (
-                  draft.faqs.map((item, index) => (
-                    <div key={index} className="grid gap-3 rounded-md border border-line p-3">
-                      <Field label="Question" help="tour.faq.question">
-                        <input
-                          value={item.title}
-                          placeholder="Eg: When and where does the tour end?"
-                          className="!h-10"
-                          onChange={(e) => {
-                            const faqs = draft.faqs.map((row, i) =>
-                              i === index ? { ...row, title: e.target.value } : row,
-                            );
-                            patch("faqs", faqs);
-                          }}
-                        />
-                      </Field>
-                      <Field label="Answer" help="tour.faq.answer">
-                        <textarea
-                          value={item.content}
-                          rows={3}
-                          className="!min-h-0 resize-y"
-                          onChange={(e) => {
-                            const faqs = draft.faqs.map((row, i) =>
-                              i === index
-                                ? { ...row, content: e.target.value }
-                                : row,
-                            );
-                            patch("faqs", faqs);
-                          }}
-                        />
-                      </Field>
-                      <button
-                        type="button"
-                        className="justify-self-start text-xs text-red-700"
-                        onClick={() =>
-                          patch(
-                            "faqs",
-                            draft.faqs.filter((_, i) => i !== index),
-                          )
-                        }
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))
-                )}
-              </RepeaterCard>
-
-              <div className="grid gap-4 lg:grid-cols-2">
-                <RepeaterCard
-                  title="Include"
-                  onAdd={() =>
-                    patch("includes", [...draft.includes, { title: "" }])
-                  }
-                >
-                  {draft.includes.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <FieldHelp label="Included item" help="Include" />
-                      <input
-                        value={item.title}
-                        placeholder="Eg: Specialized bilingual guide"
-                        className="!h-10"
-                        onChange={(e) => {
-                          const includes = draft.includes.map((row, i) =>
-                            i === index ? { title: e.target.value } : row,
-                          );
-                          patch("includes", includes);
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="dangerOutline"
-                        onClick={() =>
-                          patch(
-                            "includes",
-                            draft.includes.filter((_, i) => i !== index),
-                          )
-                        }
-                      >
-                        ✕
-                      </Button>
-                    </div>
-                  ))}
-                </RepeaterCard>
-                <RepeaterCard
-                  title="Exclude"
-                  onAdd={() =>
-                    patch("excludes", [...draft.excludes, { title: "" }])
-                  }
-                >
-                  {draft.excludes.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <FieldHelp label="Excluded item" help="Exclude" />
-                      <input
-                        value={item.title}
-                        placeholder="Eg: Additional services"
-                        className="!h-10"
-                        onChange={(e) => {
-                          const excludes = draft.excludes.map((row, i) =>
-                            i === index ? { title: e.target.value } : row,
-                          );
-                          patch("excludes", excludes);
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="dangerOutline"
-                        onClick={() =>
-                          patch(
-                            "excludes",
-                            draft.excludes.filter((_, i) => i !== index),
-                          )
-                        }
-                      >
-                        ✕
-                      </Button>
-                    </div>
-                  ))}
-                </RepeaterCard>
-              </div>
-
-              <RepeaterCard
-                title="Itinerary"
-                onAdd={() =>
-                  patch("itinerary", [
-                    ...draft.itinerary,
-                    {
-                      dayNumber: draft.itinerary.length + 1,
-                      title: "",
-                      description: "",
-                    },
-                  ])
-                }
-              >
-                {draft.itinerary.map((item, index) => (
-                  <div key={index} className="grid gap-3 rounded-md border border-line p-3">
-                    <div className="grid gap-3 sm:grid-cols-[8rem_1fr]">
-                      <Field label="Day" help="tour.day.number">
-                        <input
-                          type="number"
-                          min={1}
-                          value={item.dayNumber}
-                          className="!h-10"
-                          onChange={(e) => {
-                            const itinerary = draft.itinerary.map((row, i) =>
-                              i === index
-                                ? { ...row, dayNumber: Number(e.target.value) }
-                                : row,
-                            );
-                            patch("itinerary", itinerary);
-                          }}
-                        />
-                      </Field>
-                      <Field label="Day title" help="tour.day.title">
-                        <input
-                          value={item.title}
-                          placeholder="Title: Day 1"
-                          className="!h-10"
-                          onChange={(e) => {
-                            const itinerary = draft.itinerary.map((row, i) =>
-                              i === index ? { ...row, title: e.target.value } : row,
-                            );
-                            patch("itinerary", itinerary);
-                          }}
-                        />
-                      </Field>
-                    </div>
-                    <Field label="Day description" help="tour.day.description">
-                      <textarea
-                        value={item.description}
-                        rows={3}
-                        placeholder="Day description"
-                        className="!min-h-0 resize-y"
-                        onChange={(e) => {
-                          const itinerary = draft.itinerary.map((row, i) =>
-                            i === index
-                              ? { ...row, description: e.target.value }
-                              : row,
-                          );
-                          patch("itinerary", itinerary);
-                        }}
-                      />
-                    </Field>
-                    <button
-                      type="button"
-                      className="justify-self-start text-xs text-red-700"
-                      onClick={() =>
-                        patch(
-                          "itinerary",
-                          draft.itinerary.filter((_, i) => i !== index),
-                        )
-                      }
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </RepeaterCard>
-
-              {(["education", "health", "transportation"] as const).map(
-                (group) => (
-                  <RepeaterCard
-                    key={group}
-                    title={`Surroundings · ${group[0].toUpperCase()}${group.slice(1)}`}
-                    help="tour.surroundings"
-                    onAdd={() =>
-                      patch("surroundings", {
-                        ...draft.surroundings,
-                        [group]: [
-                          ...draft.surroundings[group],
-                          { name: "", content: "", distance: "" },
-                        ],
-                      })
-                    }
-                  >
-                    {draft.surroundings[group].map((item, index) => (
-                      <div
-                        key={index}
-                        className="grid gap-3 rounded-md border border-line p-3 sm:grid-cols-3"
-                      >
-                        <Field label="Name" help="tour.surroundings.name">
-                          <input
-                            value={item.name}
-                            placeholder="Name"
-                            className="!h-10"
-                            onChange={(e) =>
-                              updateSurrounding(group, index, "name", e.target.value)
-                            }
-                          />
-                        </Field>
-                        <Field label="Detail" help="tour.surroundings.content">
-                          <input
-                            value={item.content}
-                            placeholder="Content"
-                            className="!h-10"
-                            onChange={(e) =>
-                              updateSurrounding(
-                                group,
-                                index,
-                                "content",
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </Field>
-                        <div className="flex items-end gap-2">
-                          <div className="min-w-0 flex-1">
-                            <Field label="Distance" help="tour.surroundings.distance">
-                              <input
-                                value={item.distance}
-                                placeholder="Distance"
-                                className="!h-10"
-                                onChange={(e) =>
-                                  updateSurrounding(
-                                    group,
-                                    index,
-                                    "distance",
-                                    e.target.value,
-                                  )
-                                }
-                              />
-                            </Field>
-                          </div>
-                          <Button
+                <div className="grid gap-2">
+                  {draft.destinationIds.length > 0 ? (
+                    <ul className="flex flex-wrap gap-2">
+                      {draft.destinationIds.map((id) => (
+                        <li key={id}>
+                          <button
                             type="button"
-                            size="sm"
-                            variant="dangerOutline"
-                            onClick={() =>
-                              patch("surroundings", {
-                                ...draft.surroundings,
-                                [group]: draft.surroundings[group].filter(
-                                  (_, i) => i !== index,
-                                ),
-                              })
-                            }
+                            className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-medium text-navy"
+                            onClick={() => removeDestination(id)}
                           >
-                            ✕
-                          </Button>
+                            {destinations.find((item) => item.id === id)?.name ??
+                              "Destination"}
+                            <span aria-hidden="true">×</span>
+                            <span className="sr-only">Remove</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-muted">No destinations yet.</p>
+                  )}
+                  <SearchableSelect
+                    value=""
+                    onChange={(value) => {
+                      if (value) addDestination(value);
+                    }}
+                    emptyLabel="Add a destination"
+                    searchPlaceholder="Search destinations"
+                    invalid={Boolean(fieldErrors.destinationIds)}
+                    options={destinations
+                      .filter((item) => !draft.destinationIds.includes(item.id))
+                      .map((destination) => ({
+                        value: destination.id,
+                        label: destination.name,
+                      }))}
+                    className="!h-10"
+                  />
+                </div>
+              </Field>
+
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs text-muted">
+                    Add as many stops as you need. The number does not have to match the duration.
+                  </p>
+                  <Button type="button" size="sm" variant="secondary" onClick={addItineraryItem}>
+                    Add new itinerary item
+                  </Button>
+                </div>
+                {draft.itinerary.length === 0 ? (
+                  <p className="rounded-md border border-dashed border-line px-3 py-6 text-center text-xs text-muted">
+                    No itinerary items yet.
+                  </p>
+                ) : (
+                  draft.itinerary.map((item, index) => {
+                    const image =
+                      item.imageUrl && item.imageKey
+                        ? {
+                            url: item.imageUrl,
+                            key: item.imageKey,
+                            driver:
+                              item.imageDriver === "cloudinary"
+                                ? ("cloudinary" as const)
+                                : ("local" as const),
+                          }
+                        : null;
+                    return (
+                      <div
+                        key={item.clientId ?? item.dayNumber}
+                        className="rounded-md border border-line"
+                      >
+                        <div className="flex justify-end px-3 pt-3">
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+                            onClick={() => removeItineraryItem(index)}
+                          >
+                            <svg
+                              viewBox="0 0 16 16"
+                              className="h-3.5 w-3.5"
+                              fill="none"
+                              aria-hidden
+                            >
+                              <path
+                                d="M3 4.5h10M6.2 4.5V3.2h3.6v1.3M4.2 4.5l.5 8.2h6.6l.5-8.2"
+                                stroke="currentColor"
+                                strokeWidth="1.3"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            Remove itinerary item
+                          </button>
+                        </div>
+                        <div className="grid items-start gap-4 p-3 sm:grid-cols-[11rem_minmax(0,1fr)]">
+                        <ImageUploader
+                          folder="tours"
+                          label=""
+                          compact
+                          value={image}
+                          onChange={(value) =>
+                            updateItinerary(index, {
+                              imageUrl: value?.url ?? "",
+                              imageKey: value?.key ?? "",
+                              imageDriver: value?.driver ?? "",
+                            })
+                          }
+                          onBusyChange={setImageBusy}
+                          withHiddenFields={false}
+                        />
+                        <div className="grid content-start gap-3">
+                          <Field label="Title">
+                            <input
+                              value={item.title}
+                              placeholder="Title"
+                              className="!h-10"
+                              onChange={(e) =>
+                                updateItinerary(index, { title: e.target.value })
+                              }
+                            />
+                          </Field>
+                          <Field label="Description">
+                            <textarea
+                              value={item.description}
+                              rows={4}
+                              placeholder="What happens on this part of the tour"
+                              className="!min-h-0 resize-y"
+                              onChange={(e) =>
+                                updateItinerary(index, {
+                                  description: e.target.value,
+                                })
+                              }
+                            />
+                          </Field>
+                        </div>
                         </div>
                       </div>
-                    ))}
-                  </RepeaterCard>
-                ),
-              )}
-            </div>
-          ) : null}
-
-          {currentStepId === "images" ? (
-            <div className="grid max-w-3xl gap-6">
-              <ImageUploader
-                folder="tours"
-                label="Banner image"
-                required
-                fieldName="banner"
-                value={draft.banner}
-                initialValue={draft.banner}
-                onChange={(value) => patch("banner", value)}
-                onBusyChange={setImageBusy}
-                withHiddenFields={false}
-                error={fieldErrors.banner}
-                hint="Full-width photo at the top of the tour page. Prefer a wide landscape shot."
-              />
-
-              <ImageUploader
-                folder="tours"
-                label="Cover image"
-                required
-                fieldName="cover"
-                value={draft.cover}
-                initialValue={draft.cover}
-                onChange={(value) => patch("cover", value)}
-                onBusyChange={setImageBusy}
-                withHiddenFields={false}
-                error={fieldErrors.cover}
-                hint="Shown on tour cards in listings and destination pages."
-              />
-
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="inline-flex items-center gap-1.5 text-sm font-medium text-navy">
-                    Gallery
-                    <FieldHelp label="Gallery" />
-                  </p>
-                  <p className="text-xs text-muted">Upload images one by one</p>
-                </div>
-                <ImageUploader
-                  folder="tours"
-                  label="Add gallery image"
-                  value={null}
-                  onChange={(value) => {
-                    if (!value) return;
-                    patch("gallery", [...draft.gallery, value]);
-                  }}
-                  onBusyChange={setImageBusy}
-                  withHiddenFields={false}
-                />
-                {draft.gallery.length > 0 ? (
-                  <ul className="grid gap-2 sm:grid-cols-3">
-                    {draft.gallery.map((item, index) => (
-                      <li
-                        key={`${item.key}-${index}`}
-                        className="relative overflow-hidden rounded-lg border border-line"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={item.url}
-                          alt=""
-                          className="aspect-[4/3] w-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          className="absolute top-2 right-2 rounded bg-white/90 px-2 py-1 text-[11px] text-red-700"
-                          onClick={() =>
-                            patch(
-                              "gallery",
-                              draft.gallery.filter((_, i) => i !== index),
-                            )
-                          }
-                        >
-                          Remove
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
+                    );
+                  })
+                )}
               </div>
             </div>
           ) : null}
 
-          {currentStepId === "location" ? (
-            <div className="grid max-w-xl gap-3">
-              <Field
-                label="Destination"
-                name="destinationId"
-                required
-                error={fieldErrors.destinationId}
-              >
-                <SearchableSelect
-                  value={draft.destinationId}
-                  onChange={(value) => patch("destinationId", value)}
-                  emptyLabel="Choose a destination"
-                  searchPlaceholder="Search destinations"
-                  required
-                  invalid={Boolean(fieldErrors.destinationId)}
-                  options={destinations.map((destination) => ({
-                    value: destination.id,
-                    label: destination.name,
-                  }))}
-                  className="!h-10"
-                />
-              </Field>
-              <Field label="Real tour address">
-                <input
-                  value={draft.address}
-                  onChange={(e) => patch("address", e.target.value)}
-                  className="!h-10"
-                  placeholder="Real tour address"
-                />
-              </Field>
-              <p className="text-xs text-muted">
-                Geographic coordinates for map display.
+          {currentStepId === "content" ? (
+            <div className="flex min-h-full flex-1 flex-col gap-3">
+              <p className="shrink-0 text-xs text-muted">
+                Format the story with the editor, or use Source to paste HTML and styles.
               </p>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <Field label="Map latitude">
-                  <input
-                    value={draft.mapLat}
-                    onChange={(e) => patch("mapLat", e.target.value)}
-                    className="!h-10"
-                  />
-                </Field>
-                <Field label="Map longitude">
-                  <input
-                    value={draft.mapLng}
-                    onChange={(e) => patch("mapLng", e.target.value)}
-                    className="!h-10"
-                  />
-                </Field>
-                <Field label="Map zoom">
-                  <input
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={draft.mapZoom}
-                    onChange={(e) => patch("mapZoom", Number(e.target.value))}
-                    className="!h-10"
-                  />
-                </Field>
-              </div>
-              {destinationName !== "—" ? (
-                <p className="text-xs text-muted">
-                  Linked destination: {destinationName}
-                </p>
-              ) : null}
+              <HtmlEditor
+                value={draft.description}
+                onChange={(html) => patch("description", html)}
+              />
             </div>
           ) : null}
 
           {currentStepId === "pricing" ? (
-            <div className="grid max-w-xl gap-3">
+            <div className="grid gap-4">
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field
-                  label="Price from"
+                  label="Price per person"
                   name="priceFrom"
                   required
                   error={fieldErrors.priceFrom}
@@ -1277,127 +1282,379 @@ export function TourTabsForm({
                     className="!h-10"
                   />
                 </Field>
-                <Field
-                  label="Difficulty"
-                  name="difficulty"
-                  required
-                  error={fieldErrors.difficulty}
-                >
-                  <SearchableSelect
-                    value={draft.difficulty}
-                    onChange={(value) => patch("difficulty", value)}
-                    searchPlaceholder="Search difficulty"
-                    required
-                    invalid={Boolean(fieldErrors.difficulty)}
-                    options={[
-                      { value: "easy", label: "Easy" },
-                      { value: "moderate", label: "Moderate" },
-                      { value: "challenging", label: "Challenging" },
-                    ]}
-                    className="!h-10"
+              </div>
+
+              <RepeaterCard
+                title="Discounts"
+                help="Optional. A solo traveler discount, or a lower price when more people book."
+                onAdd={() =>
+                  patch("discounts", [
+                    ...draft.discounts,
+                    {
+                      kind: "single",
+                      minPeople: 1,
+                      mode: "percent",
+                      value: 10,
+                    },
+                  ])
+                }
+              >
+                {draft.discounts.length === 0 ? (
+                  <p className="text-xs text-muted">
+                    No discounts. Everyone pays the price per person.
+                  </p>
+                ) : (
+                  draft.discounts.map((discount, index) => (
+                    <div
+                      key={index}
+                      className="grid gap-3 rounded-md border border-line p-3"
+                    >
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Field label="Applies when">
+                          <SearchableSelect
+                            value={discount.kind}
+                            onChange={(value) =>
+                              updateDiscount(index, {
+                                ...discount,
+                                kind: value === "group" ? "group" : "single",
+                                minPeople:
+                                  value === "group"
+                                    ? Math.max(2, discount.minPeople)
+                                    : 1,
+                              })
+                            }
+                            searchPlaceholder="Search"
+                            options={[
+                              { value: "single", label: "Single person" },
+                              { value: "group", label: "More people" },
+                            ]}
+                            className="!h-10"
+                          />
+                        </Field>
+                        {discount.kind === "group" ? (
+                          <Field label="From this many people">
+                            <input
+                              type="number"
+                              min={2}
+                              value={discount.minPeople}
+                              className="!h-10"
+                              onChange={(e) =>
+                                updateDiscount(index, {
+                                  ...discount,
+                                  minPeople: Number(e.target.value),
+                                })
+                              }
+                            />
+                          </Field>
+                        ) : (
+                          <Field label="Discount type">
+                            <SearchableSelect
+                              value={discount.mode}
+                              onChange={(value) =>
+                                updateDiscount(index, {
+                                  ...discount,
+                                  mode: value === "amount" ? "amount" : "percent",
+                                })
+                              }
+                              searchPlaceholder="Search"
+                              options={[
+                                { value: "percent", label: "Percent off" },
+                                { value: "amount", label: "Fixed amount off" },
+                              ]}
+                              className="!h-10"
+                            />
+                          </Field>
+                        )}
+                        {discount.kind === "group" ? (
+                          <Field label="Discount type">
+                            <SearchableSelect
+                              value={discount.mode}
+                              onChange={(value) =>
+                                updateDiscount(index, {
+                                  ...discount,
+                                  mode: value === "amount" ? "amount" : "percent",
+                                })
+                              }
+                              searchPlaceholder="Search"
+                              options={[
+                                { value: "percent", label: "Percent off" },
+                                { value: "amount", label: "Fixed amount off" },
+                              ]}
+                              className="!h-10"
+                            />
+                          </Field>
+                        ) : null}
+                        <Field
+                          label={
+                            discount.mode === "percent"
+                              ? "Percent off"
+                              : `Amount off (${draft.currency})`
+                          }
+                          name={`discount-${index}`}
+                          error={fieldErrors[`discount-${index}`]}
+                        >
+                          <input
+                            type="number"
+                            min={0}
+                            max={discount.mode === "percent" ? 100 : undefined}
+                            value={discount.value}
+                            className="!h-10"
+                            onChange={(e) =>
+                              updateDiscount(index, {
+                                ...discount,
+                                value: Number(e.target.value),
+                              })
+                            }
+                          />
+                        </Field>
+                      </div>
+                      <button
+                        type="button"
+                        className="justify-self-start text-xs text-red-700"
+                        onClick={() =>
+                          patch(
+                            "discounts",
+                            draft.discounts.filter((_, i) => i !== index),
+                          )
+                        }
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))
+                )}
+              </RepeaterCard>
+            </div>
+          ) : null}
+
+          {currentStepId === "details" ? (
+            <div className="grid gap-4">
+              <Field label="FAQs">
+                <CatalogMultiSelect
+                  items={catalog.faqs}
+                  values={draft.faqs}
+                  placeholder="Choose FAQs"
+                  searchPlaceholder="Search FAQs"
+                  emptyLabel="No shared FAQs yet."
+                  onChange={(values) => patch("faqs", values)}
+                />
+              </Field>
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-navy">FAQs for this tour</p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() =>
+                      patch("extraFaqs", [
+                        { title: "", content: "" },
+                        ...draft.extraFaqs,
+                      ])
+                    }
+                  >
+                    Add FAQ
+                  </Button>
+                </div>
+                {draft.extraFaqs.length === 0 ? (
+                  <p className="text-xs text-muted">
+                    Shared FAQs come from the list above. Add a question here when it only applies to this tour.
+                  </p>
+                ) : (
+                  draft.extraFaqs.map((item, index) => (
+                    <div key={index} className="grid gap-3 rounded-lg border border-line p-3">
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-red-700"
+                          onClick={() =>
+                            patch(
+                              "extraFaqs",
+                              draft.extraFaqs.filter((_, itemIndex) => itemIndex !== index),
+                            )
+                          }
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <Field label="Question">
+                        <input
+                          value={item.title}
+                          onChange={(event) =>
+                            patch(
+                              "extraFaqs",
+                              draft.extraFaqs.map((faq, itemIndex) =>
+                                itemIndex === index
+                                  ? { ...faq, title: event.target.value }
+                                  : faq,
+                              ),
+                            )
+                          }
+                          className="!h-10"
+                          placeholder="Question"
+                        />
+                      </Field>
+                      <Field label="Answer">
+                        <textarea
+                          value={item.content}
+                          onChange={(event) =>
+                            patch(
+                              "extraFaqs",
+                              draft.extraFaqs.map((faq, itemIndex) =>
+                                itemIndex === index
+                                  ? { ...faq, content: event.target.value }
+                                  : faq,
+                              ),
+                            )
+                          }
+                          rows={3}
+                          className="!min-h-0 resize-y"
+                          placeholder="Answer"
+                        />
+                      </Field>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Field label="Include">
+                  <CatalogMultiSelect
+                    items={catalog.includes}
+                    values={draft.includes}
+                    placeholder="Choose included items"
+                    searchPlaceholder="Search included items"
+                    emptyLabel="No included items yet."
+                    onChange={(values) => patch("includes", values)}
+                  />
+                </Field>
+                <Field label="Exclude">
+                  <CatalogMultiSelect
+                    items={catalog.excludes}
+                    values={draft.excludes}
+                    placeholder="Choose excluded items"
+                    searchPlaceholder="Search excluded items"
+                    emptyLabel="No excluded items yet."
+                    onChange={(values) => patch("excludes", values)}
                   />
                 </Field>
               </div>
+
+              <Field label="Travel styles">
+                <CatalogMultiSelect
+                  items={catalog.styles}
+                  values={draft.travelStyles}
+                  placeholder="Choose travel styles"
+                  searchPlaceholder="Search travel styles"
+                  emptyLabel="No travel styles yet."
+                  onChange={(values) => patch("travelStyles", values)}
+                />
+              </Field>
+
+              <Field label="Facilities">
+                <CatalogMultiSelect
+                  items={catalog.facilities}
+                  values={draft.facilities}
+                  placeholder="Choose facilities"
+                  searchPlaceholder="Search facilities"
+                  emptyLabel="No facilities yet."
+                  onChange={(values) => patch("facilities", values)}
+                />
+              </Field>
             </div>
           ) : null}
 
-          {currentStepId === "availability" ? (
-            <div className="grid max-w-xl gap-3">
-              <Field label="Default state">
-                <SearchableSelect
-                  value={draft.defaultState}
-                  onChange={(value) => patch("defaultState", value)}
-                  searchPlaceholder="Search states"
-                  options={defaultStateOptions}
-                  className="!h-10"
-                />
-              </Field>
-              <Field label="iCal import URL">
-                <input
-                  value={draft.icalImportUrl}
-                  onChange={(e) => patch("icalImportUrl", e.target.value)}
-                  className="!h-10"
-                  placeholder="Import url"
-                />
-              </Field>
-              <p className="rounded-lg border border-line bg-surface px-3 py-2 text-xs text-muted">
-                Departure dates and seat inventory can be managed next from the
-                tour departures calendar.
-              </p>
-            </div>
-          ) : null}
 
-          {currentStepId === "status" ? (
-            <div className="grid max-w-2xl gap-4">
-              <p className="rounded-lg border border-line bg-surface px-3 py-2 text-xs text-muted">
-                <span className="font-medium text-navy">Save and continue</span>{" "}
-                stores progress. When every required field is complete,{" "}
-                <span className="font-medium text-navy">Save and publish</span>{" "}
-                makes the tour live.
-              </p>
-              <label className="flex items-center gap-3 rounded-lg border border-line px-3 py-2.5 text-sm">
-                <input
-                  type="checkbox"
-                  checked={draft.isFeatured}
-                  onChange={(e) => patch("isFeatured", e.target.checked)}
-                  className="h-4 w-4 accent-brand"
+          {currentStepId === "images" ? (
+            <div className="grid gap-4">
+              <div className="grid grid-cols-[minmax(0,1.46fr)_minmax(0,1fr)] items-start gap-3">
+                <ImageUploader
+                  folder="tours"
+                  label="Banner image"
+                  required
+                  fieldName="banner"
+                  frame={tourImageFrames.banner}
+                  value={draft.banner}
+                  initialValue={draft.banner}
+                  onChange={(value) => patchTourImage("banner", value)}
+                  onBusyChange={setImageBusy}
+                  withHiddenFields={false}
+                  error={fieldErrors.banner}
+                  hint="21:9 · 1920×823 px"
                 />
-                <span>
-                  <span className="inline-flex items-center gap-1.5 font-medium text-navy">
-                    Featured tour
-                    <FieldHelp label="Featured tour" />
-                  </span>
-                  <span className="mt-0.5 block text-xs text-muted">
-                    Highlight this tour on listing pages.
-                  </span>
-                </span>
-              </label>
-
-              <div>
-                <p className="mb-2 inline-flex items-center gap-1.5 text-sm font-medium text-navy">
-                  Travel styles
-                  <FieldHelp label="Travel styles" />
-                </p>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {travelStyles.map((item) => (
-                    <label key={item} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={draft.travelStyles.includes(item)}
-                        onChange={() => toggleList("travelStyles", item)}
-                        className="accent-brand"
-                      />
-                      {item}
-                    </label>
-                  ))}
-                </div>
+                <ImageUploader
+                  folder="tours"
+                  label="Cover image"
+                  required
+                  fieldName="cover"
+                  frame={tourImageFrames.cover}
+                  value={draft.cover}
+                  initialValue={draft.cover}
+                  onChange={(value) => patchTourImage("cover", value)}
+                  onBusyChange={setImageBusy}
+                  withHiddenFields={false}
+                  error={fieldErrors.cover}
+                  hint="16:10 · 1600×1000 px"
+                />
               </div>
 
-              <div>
-                <p className="mb-2 inline-flex items-center gap-1.5 text-sm font-medium text-navy">
-                  Facilities
-                  <FieldHelp label="Facilities" />
-                </p>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {tourFacilities.map((item) => (
-                    <label key={item} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={draft.facilities.includes(item)}
-                        onChange={() => toggleList("facilities", item)}
-                        className="accent-brand"
-                      />
-                      {item}
-                    </label>
-                  ))}
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="inline-flex items-center gap-1.5 text-sm font-medium text-navy">
+                    Gallery
+                    <FieldHelp label="Gallery" />
+                  </p>
+                  <p className="text-xs text-muted">4:3 · 1200×900 px</p>
                 </div>
+                <ul className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                  {draft.gallery.map((item, index) => (
+                    <li
+                      key={`${item.key}-${index}`}
+                      className="relative overflow-hidden rounded-lg border border-line"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={item.url}
+                        alt=""
+                        className="aspect-[4/3] w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        aria-label="Remove photo"
+                        className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-white/90 text-xs text-red-700"
+                        onClick={() =>
+                          patch(
+                            "gallery",
+                            draft.gallery.filter((_, i) => i !== index),
+                          )
+                        }
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                  <li>
+                    <ImageUploader
+                      folder="tours"
+                      label=""
+                      tile
+                      multiple
+                      frame={tourImageFrames.gallery}
+                      value={null}
+                      onChange={(value) => {
+                        if (!value) return;
+                        appendGallery(value);
+                      }}
+                      onBusyChange={setImageBusy}
+                      withHiddenFields={false}
+                    />
+                  </li>
+                </ul>
               </div>
-
             </div>
           ) : null}
 
           {currentStepId === "seo" ? (
-            <div className="grid max-w-xl gap-3">
+            <div className="grid gap-3">
               <label className="flex items-center gap-3 rounded-lg border border-line px-3 py-2.5 text-sm">
                 <input
                   type="checkbox"
@@ -1413,31 +1670,51 @@ export function TourTabsForm({
                   />
                 </span>
               </label>
-              <Field label="SEO title">
-                <input
-                  value={draft.seoTitle}
-                  onChange={(e) => patch("seoTitle", e.target.value)}
-                  className="!h-10"
-                  placeholder="Leave blank to use tour title"
+              <div className="flex items-start gap-4">
+                <ImageUploader
+                  folder="tours"
+                  label="Featured SEO image"
+                  compact
+                  value={draft.seoImage}
+                  initialValue={draft.seoImage}
+                  onChange={(value) => {
+                    seoImageEdited.current = true;
+                    patch("seoImage", value);
+                  }}
+                  onBusyChange={setImageBusy}
+                  withHiddenFields={false}
                 />
-              </Field>
-              <Field label="SEO description">
-                <textarea
-                  value={draft.seoDescription}
-                  onChange={(e) => patch("seoDescription", e.target.value)}
-                  rows={3}
-                  className="!min-h-0 resize-y"
-                />
-              </Field>
-              <ImageUploader
-                folder="tours"
-                label="Featured SEO image"
-                value={draft.seoImage}
-                initialValue={draft.seoImage}
-                onChange={(value) => patch("seoImage", value)}
-                onBusyChange={setImageBusy}
-                withHiddenFields={false}
-              />
+                <div className="grid min-w-0 flex-1 gap-3">
+                  <Field
+                    label="SEO title"
+                    name="seoTitle"
+                    required
+                    error={fieldErrors.seoTitle}
+                  >
+                    <input
+                      value={draft.seoTitle}
+                      onChange={(e) => patch("seoTitle", e.target.value)}
+                      className="!h-10"
+                      placeholder="Title shown in search results"
+                      aria-invalid={Boolean(fieldErrors.seoTitle)}
+                    />
+                  </Field>
+                  <Field
+                    label="SEO description"
+                    name="seoDescription"
+                    required
+                    error={fieldErrors.seoDescription}
+                  >
+                    <textarea
+                      value={draft.seoDescription}
+                      onChange={(e) => patch("seoDescription", e.target.value)}
+                      rows={3}
+                      className="!min-h-0 resize-y"
+                      aria-invalid={Boolean(fieldErrors.seoDescription)}
+                    />
+                  </Field>
+                </div>
+              </div>
               <Field label="Facebook title">
                 <input
                   value={draft.facebookTitle}

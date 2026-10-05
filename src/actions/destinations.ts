@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { isKnownCountry } from "@/lib/data/countries";
@@ -10,6 +11,7 @@ import { requirePermission } from "@/lib/auth/guards";
 import { deleteImage } from "@/lib/storage";
 import { readUploadedImage, validateUploadedImage } from "@/lib/storage/form";
 import { parentAssignmentError } from "@/lib/destinations";
+import { readMapFields } from "@/lib/maps";
 import { uniqueSlug } from "@/lib/slug";
 
 const destinationSchema = z.object({
@@ -23,17 +25,34 @@ const destinationSchema = z.object({
   summary: z.string().trim().min(10, "Add a short summary").max(280),
   published: z.boolean(),
   parentId: z.string().trim(),
+  mapLat: z.string(),
+  mapLng: z.string(),
+  mapZoom: z.number().int(),
 });
 
 function readDestination(formData: FormData) {
-  return destinationSchema.safeParse({
+  const map = readMapFields(
+    formData.get("mapLat"),
+    formData.get("mapLng"),
+    formData.get("mapZoom"),
+  );
+  if (!map.ok) return { success: false as const, error: map.error };
+
+  const parsed = destinationSchema.safeParse({
     name: formData.get("name"),
     region: formData.get("region"),
     country: formData.get("country"),
     summary: formData.get("summary"),
     published: formData.get("published") === "on",
     parentId: String(formData.get("parentId") ?? ""),
+    mapLat: map.mapLat,
+    mapLng: map.mapLng,
+    mapZoom: map.mapZoom,
   });
+  if (!parsed.success) {
+    return { success: false as const, error: firstIssue(parsed.error) };
+  }
+  return { success: true as const, data: parsed.data };
 }
 
 async function resolveParentId(parentId: string, destinationId?: string) {
@@ -43,6 +62,16 @@ async function resolveParentId(parentId: string, destinationId?: string) {
   const error = parentAssignmentError(rows, parentId, destinationId);
   if (error) return { error, parentId: null };
   return { error: null, parentId: parentId || null };
+}
+
+async function rememberDestinationToast(kind: "added" | "updated") {
+  const jar = await cookies();
+  jar.set("destination_toast", kind, {
+    path: "/admin/destinations",
+    maxAge: 30,
+    sameSite: "lax",
+    httpOnly: false,
+  });
 }
 
 function revalidateDestinationPaths(slug?: string) {
@@ -59,7 +88,7 @@ export async function createDestination(
   await requirePermission("destinations.manage");
 
   const parsed = readDestination(formData);
-  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  if (!parsed.success) return { error: parsed.error };
 
   const uploaded = readUploadedImage(formData);
   const imageError = validateUploadedImage(uploaded, "destinations", {
@@ -85,6 +114,9 @@ export async function createDestination(
       region: parsed.data.region,
       country: parsed.data.country,
       summary: parsed.data.summary,
+      mapLat: parsed.data.mapLat,
+      mapLng: parsed.data.mapLng,
+      mapZoom: parsed.data.mapZoom,
       published: parsed.data.published,
       parentId: parent.parentId,
       slug,
@@ -102,7 +134,8 @@ export async function createDestination(
     });
     if (parentRow) revalidateDestinationPaths(parentRow.slug);
   }
-  return { error: null, success: "Destination added." };
+  await rememberDestinationToast("added");
+  redirect("/admin/destinations?saved=added");
 }
 
 export async function updateDestination(
@@ -113,7 +146,7 @@ export async function updateDestination(
 
   const destinationId = String(formData.get("destinationId") ?? "");
   const parsed = readDestination(formData);
-  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  if (!parsed.success) return { error: parsed.error };
 
   const existing = await prisma.destination.findUnique({
     where: { id: destinationId },
@@ -162,6 +195,9 @@ export async function updateDestination(
       region: parsed.data.region,
       country: parsed.data.country,
       summary: parsed.data.summary,
+      mapLat: parsed.data.mapLat,
+      mapLng: parsed.data.mapLng,
+      mapZoom: parsed.data.mapZoom,
       published: parsed.data.published,
       parentId: parent.parentId,
       slug,
@@ -190,7 +226,8 @@ export async function updateDestination(
     });
     for (const row of parents) revalidateDestinationPaths(row.slug);
   }
-  return { error: null, success: "Destination saved." };
+  await rememberDestinationToast("updated");
+  redirect("/admin/destinations?saved=updated");
 }
 
 export async function deleteDestination(formData: FormData) {

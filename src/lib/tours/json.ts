@@ -1,3 +1,12 @@
+export type DurationUnit = "hours" | "days" | "weeks";
+
+export type PriceDiscount = {
+  kind: "single" | "group";
+  minPeople: number;
+  mode: "percent" | "amount";
+  value: number;
+};
+
 export type FaqItem = { title: string; content: string };
 export type TitleItem = { title: string };
 export type ItineraryItem = {
@@ -5,6 +14,10 @@ export type ItineraryItem = {
   title: string;
   description: string;
   imageUrl?: string;
+  imageKey?: string;
+  imageDriver?: "local" | "cloudinary" | "";
+  /** Stable row key in the form. Not stored. */
+  clientId?: string;
 };
 export type SurroundingItem = { name: string; content: string; distance: string };
 export type Surroundings = {
@@ -13,6 +26,17 @@ export type Surroundings = {
   transportation: SurroundingItem[];
 };
 export type GalleryItem = { url: string; key: string; driver: "local" | "cloudinary" };
+
+export function parseDurationUnit(value: string | null | undefined): DurationUnit {
+  if (value === "hours" || value === "weeks" || value === "days") return value;
+  return "days";
+}
+
+export function formatTourDuration(count: number, unit: DurationUnit) {
+  const noun = unit === "hours" ? "hour" : unit === "weeks" ? "week" : "day";
+  const amount = Number.isFinite(count) ? count : 0;
+  return `${amount} ${noun}${amount === 1 ? "" : "s"}`;
+}
 
 export function parseJsonArray<T>(value: string | null | undefined, fallback: T[] = []): T[] {
   if (!value) return fallback;

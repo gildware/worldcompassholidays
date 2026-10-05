@@ -91,3 +91,127 @@ button[aria-invalid="true"]:focus-visible {
   outline: none !important;
   box-shadow: 0 0 0 2px #ef4444;
 }
+
+.tour-html-editor {
+  --ck-font-face: var(--font-jost), sans-serif;
+  --ck-content-font-family: var(--font-jost), sans-serif;
+  --ck-content-font-size: 1rem;
+  --ck-content-font-color: var(--foreground);
+  --ck-content-line-height: 1.6;
+  --ck-color-base-border: transparent;
+  --ck-color-toolbar-border: var(--line);
+  --ck-color-base-background: #fff;
+  --ck-border-radius: 0px;
+  --ck-focus-ring: 0;
+  --ck-inner-shadow: none;
+  --ck-color-focus-border: transparent;
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  width: calc(100% + 2rem);
+  min-height: 0;
+  margin-inline: -1rem;
+  margin-bottom: -1rem;
+}
+
+.tour-html-editor .ck.ck-editor {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+  border: 0;
+}
+
+.tour-html-editor .ck.ck-editor__top .ck-sticky-panel .ck-sticky-panel__content,
+.tour-html-editor .ck.ck-editor__top .ck-sticky-panel .ck-sticky-panel__content.ck-sticky-panel__content_sticky {
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+.tour-html-editor .ck.ck-toolbar {
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+}
+
+.tour-html-editor .ck.ck-editor__main {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  background: #fff;
+}
+
+.tour-html-editor .ck.ck-editor__main > .ck-editor__editable,
+.tour-html-editor .ck.ck-editor__editable:not(.ck-editor__nested-editable),
+.tour-html-editor .ck.ck-editor__editable:not(.ck-editor__nested-editable).ck-focused {
+  flex: 1 0 auto;
+  height: auto !important;
+  max-height: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #fff;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.tour-html-editor .ck.ck-editor__editable_inline,
+.tour-html-editor .ck-content {
+  min-height: 16rem;
+  overflow: visible;
+  padding: 1rem 1rem 1.5rem;
+  font-family: var(--font-jost), sans-serif;
+  color: var(--foreground);
+}
+
+.tour-html-editor .ck-source-editing-area {
+  flex: 1 0 auto;
+  min-height: 16rem;
+  overflow: hidden;
+  border: 0;
+  background: #fff;
+}
+
+.tour-html-editor .ck-source-editing-area textarea,
+.tour-html-editor .ck.ck-input {
+  height: 100%;
+  min-height: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #fff;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.tour-html-editor .ck-source-editing-area textarea {
+  padding: 1rem 1rem 1.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: none;
+}
+
+.tour-html-editor .ck-source-editing-area textarea:focus,
+.tour-html-editor .ck-source-editing-area textarea:focus-visible {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+@media (min-width: 640px) {
+  .tour-html-editor {
+    width: calc(100% + 2.5rem);
+    margin-inline: -1.25rem;
+  }
+
+  .tour-html-editor .ck.ck-editor__editable_inline,
+  .tour-html-editor .ck-content,
+  .tour-html-editor .ck-source-editing-area textarea {
+    padding-right: 1.25rem;
+    padding-left: 1.25rem;
+  }
+}

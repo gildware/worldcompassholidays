@@ -22,7 +22,7 @@ export default async function ToursPage() {
       <PageIntro
         eyebrow="Tours"
         title="Tours and treks"
-        description="Guided trips by destination — days, difficulty, group size, and starting price."
+        description="Guided trips by destination — duration, group size, and price per person."
       />
       <div className="mt-10">
         {tours.length === 0 ? (
@@ -59,8 +59,9 @@ export default async function ToursPage() {
                     {tour.summary}
                   </p>
                   <p className="mt-4 text-sm text-navy">
-                    {tour.durationDays} days · {tour.difficulty} · up to{" "}
-                    {tour.maxGroupSize} ·{" "}
+                    {tour.durationLabel.trim() ||
+                      `${tour.durationDays} days`}{" "}
+                    · up to {tour.maxGroupSize} ·{" "}
                     {formatMoney(tour.priceFrom, tour.currency)}
                   </p>
                 </div>

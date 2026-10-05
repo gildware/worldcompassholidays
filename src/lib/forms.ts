@@ -4,6 +4,7 @@ export type FormState = {
   error: string | null;
   success?: string | null;
   tourId?: string | null;
+  vehicleId?: string | null;
 };
 
 export const initialFormState: FormState = {
@@ -20,4 +21,12 @@ export function safeRedirectPath(value: unknown, prefix: string, fallback: strin
   if (typeof value !== "string") return fallback;
   if (!value.startsWith(prefix) || value.startsWith("//")) return fallback;
   return value;
+}
+
+export function customerReturnPath(value: unknown, fallback = "/account") {
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
+    return fallback;
+  }
+  if (value.startsWith("/account") || value.startsWith("/rentals")) return value;
+  return fallback;
 }

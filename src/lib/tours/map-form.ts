@@ -1,10 +1,11 @@
 import type { TourFormValues } from "@/components/admin/TourForm";
+import { localFaqs, selectionKeys } from "@/lib/catalog";
 import {
+  parseDurationUnit,
   parseJsonArray,
   parseSurroundings,
-  type FaqItem,
   type GalleryItem,
-  type TitleItem,
+  type PriceDiscount,
 } from "@/lib/tours/json";
 
 type TourRecord = {
@@ -13,10 +14,14 @@ type TourRecord = {
   summary: string;
   description: string;
   category: string;
+  categoryId?: string;
   youtubeUrl: string;
   minDayBeforeBooking: number | null;
   durationDays: number;
+  durationUnit: string;
   durationLabel: string;
+  discountsJson: string;
+  destinationIdsJson: string;
   difficulty: string;
   minPeople: number;
   maxGroupSize: number;
@@ -58,20 +63,51 @@ type TourRecord = {
     dayNumber: number;
     title: string;
     description: string;
+    imageUrl: string;
+    imageKey: string;
+    imageDriver: string;
   }[];
 };
 
+function itineraryTitle(title: string) {
+  return /^(Day|Week) \d+$|^Itinerary$/.test(title.trim()) ? "" : title;
+}
+
 export function mapTourToFormValues(tour: TourRecord): TourFormValues {
+  const durationUnit = parseDurationUnit(tour.durationUnit);
+  const storedIds = parseJsonArray<string>(tour.destinationIdsJson).filter(
+    (id) => id.trim(),
+  );
+  const destinationIds =
+    storedIds.length > 0
+      ? storedIds
+      : tour.destinationId
+        ? [tour.destinationId]
+        : [];
+  const itinerary = tour.days.map((day) => ({
+    dayNumber: day.dayNumber,
+    title: itineraryTitle(day.title),
+    description: day.description,
+    imageUrl: day.imageUrl,
+    imageKey: day.imageKey,
+    imageDriver:
+      day.imageDriver === "cloudinary" ? ("cloudinary" as const) : ("local" as const),
+  }));
+
   return {
     id: tour.id,
     title: tour.title,
     summary: tour.summary,
     description: tour.description,
     category: tour.category,
+    categoryId: tour.categoryId ?? "",
     youtubeUrl: tour.youtubeUrl,
     minDayBeforeBooking: tour.minDayBeforeBooking,
     durationDays: tour.durationDays,
+    durationUnit,
     durationLabel: tour.durationLabel,
+    discounts: parseJsonArray<PriceDiscount>(tour.discountsJson),
+    destinationIds,
     difficulty: tour.difficulty,
     minPeople: tour.minPeople,
     maxGroupSize: tour.maxGroupSize,
@@ -84,14 +120,12 @@ export function mapTourToFormValues(tour: TourRecord): TourFormValues {
     featuredImageKey: tour.featuredImageKey,
     featuredImageDriver: tour.featuredImageDriver,
     gallery: parseJsonArray<GalleryItem>(tour.galleryJson),
-    faqs: parseJsonArray<FaqItem>(tour.faqsJson),
-    includes: parseJsonArray<TitleItem>(tour.includesJson),
-    excludes: parseJsonArray<TitleItem>(tour.excludesJson),
-    itinerary: tour.days.map((day) => ({
-      dayNumber: day.dayNumber,
-      title: day.title,
-      description: day.description,
-    })),
+    faqs: selectionKeys(parseJsonArray<unknown>(tour.faqsJson)),
+    extraFaqs: localFaqs(parseJsonArray<unknown>(tour.faqsJson)),
+    includes: selectionKeys(parseJsonArray<unknown>(tour.includesJson)),
+    excludes: selectionKeys(parseJsonArray<unknown>(tour.excludesJson)),
+    itinerary,
+    destinationId: destinationIds[0] ?? tour.destinationId ?? "",
     surroundings: parseSurroundings(tour.surroundingsJson),
     address: tour.address,
     mapLat: tour.mapLat,
@@ -113,6 +147,5 @@ export function mapTourToFormValues(tour: TourRecord): TourFormValues {
     twitterTitle: tour.twitterTitle,
     twitterDescription: tour.twitterDescription,
     published: tour.published,
-    destinationId: tour.destinationId ?? "",
   };
 }
