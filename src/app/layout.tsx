@@ -1,15 +1,36 @@
 import type { Metadata } from "next";
-import { Jost } from "next/font/google";
+import localFont from "next/font/local";
 import { theme } from "@/config/theme";
 import "./globals.css";
 
 // Pages read the live database. A production image must not freeze that data at build time.
 export const dynamic = "force-dynamic";
 
-const jost = Jost({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const jost = localFont({
+  src: [
+    {
+      path: "./fonts/jost-latin-400-normal.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/jost-latin-500-normal.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "./fonts/jost-latin-600-normal.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "./fonts/jost-latin-700-normal.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   variable: "--font-jost",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
