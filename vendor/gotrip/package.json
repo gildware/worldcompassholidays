@@ -1,0 +1,36 @@
+{
+  "name": "gotrip-next",
+  "version": "2.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^9.8.0",
+    "@popperjs/core": "2.11.8",
+    "@reduxjs/toolkit": "^2.8.2",
+    "aos": "^2.3.4",
+    "bootstrap": "^5.3.6",
+    "chart.js": "^4.4.9",
+    "leaflet": "^1.9.4",
+    "leaflet-defaulticon-compatibility": "^0.1.2",
+    "next": "16.2.3",
+    "photoswipe": "^5.4.4",
+    "rc-slider": "^11.1.8",
+    "react": "19.1.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "19.1.0",
+    "react-leaflet": "^5.0.0",
+    "react-multi-date-picker": "^4.5.2",
+    "react-parallax": "^3.5.2",
+    "react-photoswipe-gallery": "^3.1.1",
+    "react-pro-sidebar": "^1.1.0",
+    "react-redux": "^9.2.0",
+    "react-tabs": "^6.1.0",
+    "sass": "^1.89.0",
+    "swiper": "^12.1.3"
+  }
+}

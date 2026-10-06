@@ -1,0 +1,77 @@
+
+
+@import "bootstrap/dist/css/bootstrap.min.css";
+
+@import "./abstracts/tools";
+@import "./abstracts/variables";
+
+@import "./animations/easings.scss";
+@import "./animations/animations.scss";
+@import "./animations/core.scss";
+
+@import "./base/base";
+@import "./base/button";
+@import "./base/form";
+@import "./base/typography";
+
+@import "./components/404.scss";
+@import "./components/sectionTitle.scss";
+@import "./components/masthead.scss";
+@import "./components/citiesCard.scss";
+@import "./components/ctaCard.scss";
+@import "./components/tabs.scss";
+@import "./components/accordion.scss";
+@import "./components/header.scss";
+@import "./components/cardImage.scss";
+@import "./components/footer.scss";
+@import "./components/mainSearch.scss";
+@import "./components/featureIcon.scss";
+@import "./components/testimonials.scss";
+@import "./components/pagination.scss";
+@import "./components/dashboard.scss";
+@import "./components/blogCard.scss";
+@import "./components/dragSlider.scss";
+@import "./components/niceSelect.scss";
+@import "./components/mapFilter.scss";
+@import "./components/hotelsCard.scss";
+
+@import "./components/preloader.scss";
+
+@import "./utilities/spacing";
+@import "./utilities/utilities";
+
+@import "./vendors/icons.scss";
+
+// custom scss for all site & slick
+@import "./custom/custom-slick";
+@import "./custom/price-range-slider";
+@import "./custom/custom-next";
+
+.rc-slider {
+  margin-bottom: 20px;
+  margin-left: 10px;
+  margin-right: 10px;
+  max-width: 100%;
+  box-sizing: border-box;
+  width: fit-content;
+  margin-left: 0 !important;
+}
+.rc-slider .rc-slider-handle {
+  border: solid 2px var(--color-blue-1);
+  opacity: 1 !important;
+  background-color: #fff !important;
+  width: 16px;
+  height: 16px;
+  margin-top: -7px;
+}
+.rc-slider .rc-slider-handle:hover {
+  border-color: var(--color-blue-1);
+}
+.rc-slider .rc-slider-handle-dragging {
+  border-color: var(--color-blue-1) !important;
+  box-shadow: none !important;
+}
+.rc-slider .rc-slider-track,
+.rc-slider .rc-slider-tracks {
+  background-color: var(--color-blue-1);
+}

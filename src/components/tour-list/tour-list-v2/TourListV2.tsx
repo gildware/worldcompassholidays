@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { DateObject } from "react-multi-date-picker";
 import "rc-slider/assets/index.css";
 import "swiper/css";
@@ -11,51 +12,56 @@ import DefaultFooter from "@/components/footer/default";
 import { GoTripFrame } from "@/components/gotrip/GoTripFrame";
 import type { GuestCounts } from "@/components/hotel-list/common/GuestSearch";
 import { Pagination } from "@/components/hotel-list/common/Pagination";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { MainFilterSearchBox } from "@/components/tour-list/tour-list-v2/MainFilterSearchBox";
+import { durationChoices, readTourQuery, tourQueryString, type TourListQueryInput } from "@/components/tour-list/tour-list-v2/query";
 import { Sidebar, type TourListFilters } from "@/components/tour-list/tour-list-v2/Sidebar";
 import { TopHeaderFilter } from "@/components/tour-list/tour-list-v2/TopHeaderFilter";
 import { TourProperties } from "@/components/tour-list/tour-list-v2/TourProperties";
 import type { TourListCard, TourListLocation, TourSort } from "@/components/tour-list/types";
 
-const PAGE_SIZE = 9;
-
-const languageNames = ["English", "Spanish", "French", "Turkish"];
-const durationNames = ["Up to 1 hour", "1 to 4 hours", "4 hours to 1 day", "1 to 3 days", "3 days or more"];
-
-function counts(labels: string[], tours: TourListCard[], match: (tour: TourListCard, label: string) => boolean) {
-  return labels.map((label) => ({
-    label,
-    count: tours.filter((tour) => match(tour, label)).length,
-  }));
-}
+const PAGE_SIZE = 12;
 
 export function TourListV2({
   tours,
   locations,
-  initialLocation = "",
+  query = {},
+  priceMin: catalogMin,
+  priceMax: catalogMax,
 }: {
   tours: TourListCard[];
   locations: TourListLocation[];
-  initialLocation?: string;
+  query?: TourListQueryInput;
+  priceMin: number;
+  priceMax: number;
 }) {
+  const router = useRouter();
   const currency = tours[0]?.currency || "INR";
-  const priceMax = Math.max(1000, ...tours.map((tour) => tour.price), 0);
-  const [location, setLocation] = useState(initialLocation);
+  const priceMin = catalogMin;
+  const priceMax = Math.max(catalogMin, catalogMax);
+  const priceStep = 1;
+  const initialQuery = readTourQuery(query, { priceMin, priceMax });
+  const [location, setLocation] = useState(initialQuery.location);
   const [dates, setDates] = useState<DateObject[]>(() => [
     new DateObject().setDay(15),
     new DateObject().setDay(14).add(1, "month"),
   ]);
   const [guests, setGuests] = useState<GuestCounts>({ Adults: 2, Children: 1, Rooms: 1 });
-  const [page, setPage] = useState(1);
-  const [sort, setSort] = useState<TourSort>("recommended");
+  const [page, setPage] = useState(initialQuery.page);
+  const [sort, setSort] = useState<TourSort>(initialQuery.sort);
+  const [nameQuery, setNameQuery] = useState(initialQuery.name);
+  const debouncedName = useDebouncedValue(nameQuery, 300);
   const [filters, setFilters] = useState<TourListFilters>({
-    query: "",
-    categories: [],
-    other: [],
-    price: [0, priceMax],
-    durations: [],
-    languages: [],
+    query: initialQuery.name,
+    categories: initialQuery.types,
+    price: initialQuery.price,
+    durations: initialQuery.days,
   });
+  const nameReady = useRef(false);
+  const appliedQuery = useRef<string | null>(null);
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+  const incomingKey = tourQueryString(initialQuery, { priceMin, priceMax });
 
   const categoryLabels = useMemo(() => {
     return [...new Set(tours.map((tour) => tour.category).filter(Boolean))].sort((a, b) =>
@@ -63,30 +69,18 @@ export function TourListV2({
     );
   }, [tours]);
 
-  const visibleDurations = durationNames.filter(
-    (label) =>
-      label === "Up to 1 hour" ||
-      label === "1 to 4 hours" ||
-      label === "4 hours to 1 day" ||
-      tours.some((tour) => tour.durationBucket === label),
-  );
-
-  const categories = counts(categoryLabels, tours, (tour, label) => tour.category === label);
-  const others = counts(["Free Cancellation"], tours, (tour) => tour.freeCancellation);
-  const durations = counts(visibleDurations, tours, (tour, label) => tour.durationBucket === label);
-  const languages = counts(languageNames, tours, (tour, label) => tour.languages.includes(label));
-
   const filtered = useMemo(() => {
     const place = location.trim().toLowerCase();
-    const query = filters.query.trim().toLowerCase();
+    const queryText = filters.query.trim().toLowerCase();
     const matched = tours.filter((tour) => {
       if (place && !`${tour.location} ${tour.address}`.toLowerCase().includes(place)) return false;
-      if (query && !tour.title.toLowerCase().includes(query)) return false;
+      if (queryText && !tour.title.toLowerCase().includes(queryText)) return false;
       if (tour.price < filters.price[0] || tour.price > filters.price[1]) return false;
       if (filters.categories.length > 0 && !filters.categories.includes(tour.category)) return false;
-      if (filters.other.includes("Free Cancellation") && !tour.freeCancellation) return false;
-      if (filters.durations.length > 0 && !filters.durations.includes(tour.durationBucket)) return false;
-      if (filters.languages.length > 0 && !filters.languages.some((language) => tour.languages.includes(language))) {
+      if (
+        filters.durations.length > 0 &&
+        !durationChoices.some((choice) => filters.durations.includes(choice.value) && choice.match(tour.durationDays))
+      ) {
         return false;
       }
       return true;
@@ -102,100 +96,197 @@ export function TourListV2({
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const toursScrollRef = useRef<HTMLDivElement>(null);
+  const locationRef = useRef(location);
+  const sortRef = useRef(sort);
+  locationRef.current = location;
+  sortRef.current = sort;
+
+  const writeQuery = (state: {
+    location: string;
+    name: string;
+    types: string[];
+    days: string[];
+    price: [number, number];
+    sort: TourSort;
+    page: number;
+  }) => {
+    const next = tourQueryString(state, { priceMin, priceMax });
+    appliedQuery.current = next;
+    const current = new URLSearchParams(window.location.search).toString();
+    if (current === next) return;
+    router.replace(next ? `/tours?${next}` : "/tours", { scroll: false });
+  };
+
+  useEffect(() => {
+    if (appliedQuery.current === incomingKey) return;
+    appliedQuery.current = incomingKey;
+    const next = readTourQuery(query, { priceMin, priceMax });
+    setLocation(next.location);
+    setNameQuery(next.name);
+    setSort(next.sort);
+    setPage(next.page);
+    setFilters({
+      query: next.name,
+      categories: next.types,
+      price: next.price,
+      durations: next.days,
+    });
+  }, [incomingKey, priceMax, priceMin, query]);
+
+  useEffect(() => {
+    if (!nameReady.current) {
+      nameReady.current = true;
+      return;
+    }
+    if (filtersRef.current.query === debouncedName) return;
+    const nextFilters = { ...filtersRef.current, query: debouncedName };
+    setFilters(nextFilters);
+    setPage(1);
+    writeQuery({
+      location: locationRef.current,
+      name: debouncedName,
+      types: nextFilters.categories,
+      days: nextFilters.durations,
+      price: nextFilters.price,
+      sort: sortRef.current,
+      page: 1,
+    });
+  }, [debouncedName, priceMax, priceMin, router]);
+
+  useEffect(() => {
+    toursScrollRef.current?.scrollTo({ top: 0 });
+  }, [currentPage, filters, location, sort]);
 
   const updateFilters = (next: TourListFilters) => {
     setFilters(next);
     setPage(1);
+    writeQuery({
+      location,
+      name: next.query,
+      types: next.categories,
+      days: next.durations,
+      price: next.price,
+      sort,
+      page: 1,
+    });
   };
 
   const sidebarProps = {
     filters,
     onChange: updateFilters,
+    priceMin,
     priceMax,
+    priceStep,
     currency,
-    categories,
-    others,
-    durations,
-    languages,
+    categories: categoryLabels.map((label) => ({ value: label, label })),
+    durations: durationChoices.map(({ value, label }) => ({ value, label })),
   };
 
   return (
     <GoTripFrame>
-      <div className="tour-list-v2">
-        <section className="pt-40 pb-40 bg-light-2">
-          <div className="container">
-            <div className="row">
-              <div className="col-12">
-                <div className="text-center">
-                  <h1 className="text-30 fw-600">Find Your Dream Tour</h1>
-                </div>
-                <MainFilterSearchBox
-                  locations={locations}
-                  location={location}
-                  onLocation={(value) => {
-                    setLocation(value);
-                    setPage(1);
-                  }}
-                  dates={dates}
-                  onDates={setDates}
-                  guests={guests}
-                  onGuests={setGuests}
-                />
+      <div className="tour-list-v2 tour-workspace">
+        <div className="tour-workspace__stage">
+          <section className="tour-workspace__mast">
+            <h1 className="tour-workspace__title">Find Your Dream Tour</h1>
+            <MainFilterSearchBox
+              locations={locations}
+              location={location}
+              onLocation={(value) => {
+                setLocation(value);
+                setPage(1);
+                writeQuery({
+                  location: value,
+                  name: filters.query,
+                  types: filters.categories,
+                  days: filters.durations,
+                  price: filters.price,
+                  sort,
+                  page: 1,
+                });
+              }}
+              dates={dates}
+              onDates={setDates}
+              guests={guests}
+              onGuests={setGuests}
+            />
+          </section>
+
+          <section className="tour-workspace__panes">
+          <aside className="tour-workspace__filters xl:d-none">
+            <div className="tour-workspace__filters-scroll sidebar">
+              <Sidebar {...sidebarProps} />
+            </div>
+          </aside>
+
+          <div className="tour-workspace__results">
+            <div className="tour-workspace__toolbar">
+              <TopHeaderFilter
+                count={filtered.length}
+                place={location.trim()}
+                name={nameQuery}
+                onName={setNameQuery}
+                sort={sort}
+                onSort={(next) => {
+                  setSort(next);
+                  setPage(1);
+                  writeQuery({
+                    location,
+                    name: filters.query,
+                    types: filters.categories,
+                    days: filters.durations,
+                    price: filters.price,
+                    sort: next,
+                    page: 1,
+                  });
+                }}
+              />
+            </div>
+            <div className="tour-workspace__tours" ref={toursScrollRef}>
+              <div className="tour-workspace__grid">
+                <TourProperties tours={visible} />
               </div>
+              <Pagination
+                page={currentPage}
+                pageSize={PAGE_SIZE}
+                total={filtered.length}
+                onPage={(next) => {
+                  setPage(next);
+                  writeQuery({
+                    location,
+                    name: filters.query,
+                    types: filters.categories,
+                    days: filters.durations,
+                    price: filters.price,
+                    sort,
+                    page: next,
+                  });
+                }}
+                itemLabel="tours"
+              />
             </div>
           </div>
-        </section>
+          </section>
+        </div>
 
-        <section className="layout-pt-md layout-pb-lg">
-          <div className="container">
-            <div className="row y-gap-30">
-              <div className="col-xl-3">
-                <aside className="sidebar y-gap-40 xl:d-none">
-                  <Sidebar {...sidebarProps} />
-                </aside>
+        <div className="tour-workspace__footer">
+          <CallToActions />
+          <DefaultFooter />
+        </div>
 
-                <div className="offcanvas offcanvas-start" tabIndex={-1} id="listingSidebar">
-                  <div className="offcanvas-header">
-                    <h5 className="offcanvas-title" id="offcanvasLabel">
-                      Filter Tours
-                    </h5>
-                    <button
-                      type="button"
-                      className="btn-close"
-                      data-bs-dismiss="offcanvas"
-                      aria-label="Close"
-                    />
-                  </div>
-                  <div className="offcanvas-body">
-                    <aside className="sidebar y-gap-40 xl:d-block">
-                      <Sidebar {...sidebarProps} />
-                    </aside>
-                  </div>
-                </div>
-              </div>
-
-              <div className="col-xl-9">
-                <TopHeaderFilter
-                  count={filtered.length}
-                  place={location.trim()}
-                  sort={sort}
-                  onSort={(next) => {
-                    setSort(next);
-                    setPage(1);
-                  }}
-                />
-                <div className="mt-30" />
-                <div className="row y-gap-30">
-                  <TourProperties tours={visible} />
-                </div>
-                <Pagination page={currentPage} pageSize={PAGE_SIZE} total={filtered.length} onPage={setPage} />
-              </div>
-            </div>
+        <div className="offcanvas offcanvas-start" tabIndex={-1} id="listingSidebar">
+          <div className="offcanvas-header">
+            <h5 className="offcanvas-title" id="offcanvasLabel">
+              Filter Tours
+            </h5>
+            <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close" />
           </div>
-        </section>
-
-        <CallToActions />
-        <DefaultFooter />
+          <div className="offcanvas-body">
+            <aside className="sidebar y-gap-20">
+              <Sidebar {...sidebarProps} />
+            </aside>
+          </div>
+        </div>
       </div>
     </GoTripFrame>
   );

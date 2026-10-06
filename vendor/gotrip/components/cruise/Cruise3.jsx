@@ -1,0 +1,207 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import cruiseData from "../../data/cruise";
+import isTextMatched from "../../utils/isTextMatched";
+import { useRef } from "react";
+
+const Cruise3 = () => {
+  const outerSwiperRef = useRef(null);
+
+  return (
+    <>
+      <Swiper
+        spaceBetween={30}
+        modules={[Pagination]}
+        onSwiper={(swiper) => (outerSwiperRef.current = swiper)}
+        pagination={{ el: ".js-car-pag_active", clickable: true }}
+        breakpoints={{
+          500: { slidesPerView: 2, spaceBetween: 20 },
+          768: { slidesPerView: 2, spaceBetween: 22 },
+          1024: { slidesPerView: 3 },
+          1200: { slidesPerView: 4 },
+        }}
+      >
+        {cruiseData.map((item) => (
+          <SwiperSlide key={item.id}>
+            <div data-aos="fade" data-aos-delay={item?.delayAnimation}>
+              <Link
+                href={`/cruise-single/${item.id}`}
+                className="cruiseCard -type-1 rounded-4 hover-inside-slider"
+              >
+                <div className="cruiseCard__image position-relative">
+                  <div className="inside-slider">
+                    {/* ✅ Inner Swiper uses CSS selector — same pattern as Cruise2 */}
+                    <Swiper
+                      className="mySwiper"
+                      modules={[Navigation, Pagination]}
+                      pagination={{
+                        el: `.js-pagination-${item.id}`,
+                        clickable: true,
+                      }}
+                      navigation={{
+                        nextEl: `.js-next-${item.id}`,
+                        prevEl: `.js-prev-${item.id}`,
+                      }}
+                      loop={item?.slideImg?.length > 1}
+                    >
+                      {item?.slideImg?.map((slide, i) => (
+                        <SwiperSlide key={i}>
+                          <div className="cardImage ratio ratio-6:5">
+                            <div className="cardImage__content">
+                              <Image
+                                width={300}
+                                height={300}
+                                className="rounded-4 col-12 js-lazy"
+                                src={slide}
+                                alt="image"
+                              />
+                            </div>
+                          </div>
+                        </SwiperSlide>
+                      ))}
+                    </Swiper>
+
+                    {item?.slideImg?.length > 1 && (
+                      <>
+                        {/* ✅ Buttons with matching classnames — identical to Cruise2 */}
+                        <div className="custom_inside-slider">
+                          <button
+                            className={`slick_arrow-between slick_arrow -prev arrow-md flex-center button -blue-1 bg-white shadow-1 size-30 rounded-full sm:d-none js-prev-${item.id}`}
+                            onClick={(e) => e.preventDefault()}
+                          >
+                            <span className="icon icon-chevron-left text-12"></span>
+                          </button>
+                          <button
+                            className={`slick_arrow-between slick_arrow -next arrow-md flex-center button -blue-1 bg-white shadow-1 size-30 rounded-full sm:d-none js-next-${item.id}`}
+                            onClick={(e) => e.preventDefault()}
+                          >
+                            <i className="icon icon-chevron-right text-12"></i>
+                          </button>
+                        </div>
+                        <div
+                          className="text-center"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          <div className={`js-pagination-${item.id}`}></div>
+                        </div>
+                      </>
+                    )}
+
+                    <div className="cardImage__wishlist">
+                      <button className="button -blue-1 bg-white size-30 rounded-full shadow-2">
+                        <i className="icon-heart text-12" />
+                      </button>
+                    </div>
+
+                    <div className="cardImage__leftBadge">
+                      <div
+                        className={`py-5 px-15 rounded-right-4 text-12 lh-16 fw-500 uppercase ${
+                          isTextMatched(item?.tag, "cruise only")
+                            ? "bg-dark-1 text-white"
+                            : ""
+                        } ${
+                          isTextMatched(item?.tag, "best seller")
+                            ? "bg-blue-1 text-white"
+                            : ""
+                        } ${
+                          isTextMatched(item?.tag, "top rated")
+                            ? "bg-yellow-1 text-dark-1"
+                            : ""
+                        }`}
+                      >
+                        {item.tag}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="cruiseCard__content mt-10">
+                  <div className="text-14 lh-14 text-light-1 mb-5">
+                    {item?.ship}
+                  </div>
+                  <h4 className="cruiseCard__title text-dark-1 text-18 lh-16 fw-500">
+                    <span>{item?.title}</span>
+                  </h4>
+                  <p className="text-light-1 lh-14 text-14 mt-5" />
+                  <div className="row y-gap-10 justify-between items-center">
+                    <div className="col-auto">
+                      <div className="text-14 text-dark-1 fw-500">
+                        Sailing Date
+                      </div>
+                      <div className="text-14 text-light-1">{item?.date}</div>
+                    </div>
+                    <div className="col-auto">
+                      <div className="text-14 text-dark-1 fw-500">Departs</div>
+                      <div className="text-14 text-light-1">{item.departs}</div>
+                    </div>
+                    <div className="col-auto">
+                      <div className="text-14 text-dark-1 fw-500">
+                        Ports ({item.portsNumber})
+                      </div>
+                      <div className="text-14 text-light-1">
+                        {item?.portsName}...
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="row y-gap-20 justify-between items-center pt-5">
+                    <div className="col-auto">
+                      <div className="d-flex items-center">
+                        <div className="icon-star text-yellow-1 text-10 mr-5" />
+                        <div className="text-14 text-light-1">
+                          <span className="text-15 text-dark-1 fw-500">
+                            {item?.ratings}
+                          </span>
+                          {item?.numberOfReviews} reviews
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-auto">
+                      <div className="text-14 text-light-1">
+                        From{" "}
+                        <span className="text-16 fw-500 text-dark-1">
+                          US${item?.price}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+
+      {/* ✅ Outer swiper still uses useRef since buttons are outside Swiper */}
+      <div className="d-flex x-gap-15 items-center justify-center pt-40 sm:pt-20">
+        <div className="col-auto">
+          <button
+            className="d-flex items-center text-24 arrow-left-hover"
+            onClick={() => outerSwiperRef.current?.slidePrev()}
+          >
+            <i className="icon icon-arrow-left" />
+          </button>
+        </div>
+
+        <div className="col-auto">
+          <div className="pagination -dots text-border js-car-pag_active" />
+        </div>
+
+        <div className="col-auto">
+          <button
+            className="d-flex items-center text-24 arrow-right-hover"
+            onClick={() => outerSwiperRef.current?.slideNext()}
+          >
+            <i className="icon icon-arrow-right" />
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Cruise3;

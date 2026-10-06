@@ -18,25 +18,20 @@ function tagClass(tag: string) {
 export function TourProperties({ tours }: { tours: TourListCard[] }) {
   if (tours.length === 0) {
     return (
-      <div className="col-12">
-        <h3 className="text-18 lh-16 fw-500">No tours match these filters</h3>
-        <p className="text-15 text-light-1 mt-10">Try another destination, price, or category.</p>
+      <div className="tour-workspace__empty">
+        <h3 className="text-16 lh-16 fw-500">No tours match these filters</h3>
+        <p className="text-14 text-light-1 mt-5">Try another destination, price, or category.</p>
       </div>
     );
   }
 
   return (
     <>
-      {tours.map((item, index) => (
-        <div
-          className="col-lg-4 col-sm-6"
-          key={item.id}
-          data-aos="fade"
-          data-aos-delay={(index % 9) * 100 + 100}
-        >
-          <Link href={item.href} className="tourCard -type-1 rounded-4 position-relative">
+      {tours.map((item) => (
+        <div key={item.id}>
+          <Link href={item.href} className="tourCard -type-1 rounded-4 position-relative d-block">
             <div className="tourCard__image">
-              <div className="cardImage ratio ratio-1:1">
+              <div className="cardImage ratio ratio-3:2">
                 <div className="cardImage__content">
                   <div className="cardImage-slider rounded-4 overflow-hidden custom_inside-slider">
                     <Swiper
@@ -90,18 +85,18 @@ export function TourProperties({ tours }: { tours: TourListCard[] }) {
               ) : null}
             </div>
 
-            <div className="tourCard__content mt-10">
+            <div className="tourCard__content mt-5">
               <div className="d-flex items-center lh-14 mb-5">
-                <div className="text-14 text-light-1">{item.durationLabel}</div>
+                <div className="text-13 text-light-1">{item.durationLabel}</div>
                 <div className="size-3 bg-light-1 rounded-full ml-10 mr-10" />
-                <div className="text-14 text-light-1">{item.category}</div>
+                <div className="text-13 text-light-1">{item.category}</div>
               </div>
-              <h4 className="tourCard__title text-dark-1 text-18 lh-16 fw-500">
+              <h4 className="tourCard__title text-dark-1 text-16 lh-14 fw-500">
                 <span>{item.title}</span>
               </h4>
-              <p className="text-light-1 lh-14 text-14 mt-5">{item.location}</p>
+              <p className="text-light-1 lh-14 text-13 mt-5">{item.location}</p>
 
-              <div className="row justify-between items-center pt-15">
+              <div className="row justify-between items-center pt-5">
                 <div className="col-auto">
                   <div className="d-flex items-center">
                     <div className="d-flex items-center x-gap-5">

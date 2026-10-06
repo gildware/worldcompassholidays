@@ -1,11 +1,6 @@
-import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // GoTrip home components are symlinked from the sibling template folder.
-  turbopack: {
-    root: path.resolve(process.cwd(), ".."),
-  },
   env: {
     NEXT_PUBLIC_MAP_API_KEY: process.env.MAP_API_KEY ?? "",
   },

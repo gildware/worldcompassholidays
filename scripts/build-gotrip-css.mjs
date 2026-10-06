@@ -6,11 +6,10 @@ import prefixSelector from "postcss-prefix-selector";
 import * as sass from "sass";
 
 const travelRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const templateRoot = path.resolve(travelRoot, "..");
-const gotripRoot = path.join(templateRoot, "gotrip");
+const gotripRoot = path.join(travelRoot, "vendor/gotrip");
 
 const compiled = sass.compile(path.join(gotripRoot, "styles/index.scss"), {
-  loadPaths: [path.join(gotripRoot, "node_modules"), path.join(travelRoot, "node_modules")],
+  loadPaths: [path.join(travelRoot, "node_modules")],
   silenceDeprecations: ["import", "legacy-js-api", "global-builtin", "slash-div"],
   style: "expanded",
 });

@@ -172,14 +172,15 @@ export function BookingCheckout({
                       setFiles((prev) => ({
                         ...prev,
                         [document.id]: {
-                          url: "",
-                          key: "",
-                          driver: "local",
-                          resourceType: "image",
-                          number: "",
-                          expiryDate: "",
-                          ...prev[document.id],
-                          configId: document.id,
+                          ...(prev[document.id] ?? {
+                            url: "",
+                            key: "",
+                            driver: "local",
+                            resourceType: "image",
+                            configId: document.id,
+                            number: "",
+                            expiryDate: "",
+                          }),
                           issueDate: event.target.value,
                         },
                       }))
@@ -196,14 +197,15 @@ export function BookingCheckout({
                       setFiles((prev) => ({
                         ...prev,
                         [document.id]: {
-                          url: "",
-                          key: "",
-                          driver: "local",
-                          resourceType: "image",
-                          number: "",
-                          issueDate: "",
-                          ...prev[document.id],
-                          configId: document.id,
+                          ...(prev[document.id] ?? {
+                            url: "",
+                            key: "",
+                            driver: "local",
+                            resourceType: "image",
+                            configId: document.id,
+                            number: "",
+                            issueDate: "",
+                          }),
                           expiryDate: event.target.value,
                         },
                       }))

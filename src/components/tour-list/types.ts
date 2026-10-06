@@ -6,7 +6,7 @@ export type TourListCard = {
   location: string;
   address: string;
   durationLabel: string;
-  durationBucket: string;
+  durationDays: number;
   category: string;
   images: string[];
   price: number;

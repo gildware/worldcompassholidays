@@ -41,6 +41,8 @@ RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
+# public/img and public/fonts are symlinks into this tree.
+COPY --from=builder --chown=nextjs:nodejs /app/vendor/gotrip/public ./vendor/gotrip/public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma

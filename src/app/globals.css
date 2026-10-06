@@ -295,6 +295,521 @@ body {
   height: 100%;
 }
 
+@media (min-width: 1200px) {
+  .public-header-offset:has(.tour-workspace) .gotrip-page > main {
+    overflow: visible;
+  }
+
+  .tour-workspace__stage {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+  }
+
+  .tour-workspace__mast {
+    position: relative;
+    top: auto;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 240px;
+  }
+
+  .tour-workspace__panes {
+    flex: none;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    align-items: flex-start;
+  }
+
+  .tour-workspace__filters {
+    position: sticky;
+    top: 106px;
+    max-height: none;
+  }
+
+  .tour-workspace__results,
+  .tour-workspace__tours {
+    overflow: visible;
+    height: auto;
+  }
+}
+
+.tour-workspace {
+  background: #fff;
+}
+
+.tour-workspace__mast {
+  position: relative;
+  z-index: 20;
+  flex: none;
+  padding: 28px 24px 24px;
+  background:
+    linear-gradient(180deg, rgba(5, 16, 54, 0.42), rgba(5, 16, 54, 0.28)),
+    url("/img/tours/header-bg.jpg") center 42% / cover no-repeat;
+}
+
+.gotrip-page .tour-workspace__title {
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 600;
+  text-shadow: 0 1px 10px rgba(5, 16, 54, 0.45);
+}
+
+.gotrip-page .tour-workspace__mast .mainSearch {
+  width: min(900px, 100%);
+  margin: 12px auto 0;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+.gotrip-page .tour-workspace__mast .mainSearch.-fields-3 .button-grid {
+  grid-template-columns: 1.2fr 1.05fr 1.15fr auto;
+}
+
+.gotrip-page .tour-workspace__mast .searchMenu-guests .lh-16 {
+  white-space: nowrap;
+}
+
+.tour-workspace__mast .searchMenu-loc .dropdown-menu {
+  max-height: min(420px, calc(100dvh - 220px));
+  overflow-y: auto;
+}
+
+.tour-workspace__mast .searchMenu-loc,
+.tour-workspace__mast .searchMenu-date,
+.tour-workspace__mast .searchMenu-guests {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.tour-workspace__panes {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 16px;
+  min-height: 0;
+  padding: 16px 20px;
+  overflow: hidden;
+}
+
+.tour-workspace__filters {
+  display: flex;
+  flex: 0 0 268px;
+  flex-direction: column;
+  width: 268px;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(5, 16, 54, 0.06);
+}
+
+.tour-workspace__filters-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  padding: 4px 16px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #c5cad6 transparent;
+}
+
+.tour-workspace__filters .sidebar__item {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.tour-workspace__filters .y-gap-10 {
+  margin-top: -3px;
+  margin-bottom: -3px;
+}
+
+.tour-workspace__filters .y-gap-10 > * {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+.tour-workspace__filters .single-field {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.tour-workspace__filters .single-field input {
+  height: 42px;
+}
+
+.tour-workspace__filters .js-price-rangeSlider .mb-20 {
+  margin-bottom: 8px;
+}
+
+.gotrip-page .tour-workspace .rc-slider {
+  width: 100% !important;
+  max-width: 100%;
+  margin: 8px 0 0 !important;
+}
+
+.gotrip-page .tour-workspace__filters [role="combobox"] {
+  display: flex !important;
+  align-items: center;
+  min-height: 42px;
+  border: 1px solid var(--line, #e4e7ef);
+  border-radius: 8px;
+  background: #fff;
+  padding: 6px 8px;
+}
+
+.app-select-menu {
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid #e4e7ef;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(5, 16, 54, 0.12);
+  color: #051036;
+}
+
+.app-select-menu > div:first-child {
+  padding: 6px 8px;
+  border-bottom: 1px solid #e4e7ef;
+}
+
+.app-select-menu input {
+  width: 100%;
+  height: 32px !important;
+  margin: 0;
+  padding: 0 8px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #051036;
+  font-size: 14px !important;
+  box-shadow: none !important;
+}
+
+.app-select-menu ul {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.app-select-menu button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: #051036;
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tour-select-menu button > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border: 1px solid #c5cad6;
+  border-radius: 4px;
+  background: #fff;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.tour-select-menu button[aria-selected="true"] > span:first-child {
+  border-color: #3554d1;
+  background: #3554d1;
+}
+
+.tour-select-menu button > span:nth-child(2) {
+  display: none;
+}
+
+.gotrip-page .tour-workspace__filters [role="combobox"] svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex: none;
+}
+
+.gotrip-page .tour-workspace__filters [role="combobox"] span span > span:first-child {
+  display: none;
+}
+
+.tour-select-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.tour-select-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  height: 22px;
+  padding: 0 2px 0 8px;
+  border-radius: 100px;
+  background: #eef2ff;
+  color: #051036;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.tour-select-pill button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 100px;
+  background: transparent;
+  color: #697488;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tour-price-range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.tour-price-range__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-light-1, #697488);
+}
+
+.gotrip-page .tour-price-range__field input {
+  width: 100%;
+  height: 40px !important;
+  padding: 0 10px !important;
+  border: 1px solid var(--line, #e7e6e6) !important;
+  border-radius: 8px;
+  background: #fff !important;
+  color: var(--color-dark-1, #051036);
+  font-size: 14px !important;
+}
+
+.tour-workspace__results {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tour-workspace__toolbar {
+  flex: none;
+  padding-bottom: 10px;
+}
+
+.tour-workspace__toolbar .text-18 {
+  font-size: 16px;
+}
+
+.gotrip-page .tour-toolbar-search {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 280px;
+  height: 40px;
+  margin: 0;
+  padding: 0 16px;
+  overflow: hidden;
+  border: 1px solid var(--line, #e4e7ef);
+  border-radius: 100px;
+  background: #fff;
+  line-height: 1;
+}
+
+.gotrip-page .tour-toolbar-search .icon-search {
+  flex: none;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.gotrip-page .tour-toolbar-search input {
+  flex: 1 1 auto;
+  width: 100% !important;
+  min-width: 0;
+  height: 24px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--color-dark-1, #051036);
+  font-size: 14px !important;
+  line-height: 24px !important;
+  box-shadow: none !important;
+  vertical-align: middle;
+}
+
+.tour-workspace__tours {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #c5cad6 transparent;
+}
+
+@media (min-width: 1200px) {
+  .tour-workspace__panes,
+  .tour-workspace__results,
+  .tour-workspace__tours,
+  .tour-workspace__filters,
+  .tour-workspace__filters-scroll {
+    overflow: visible;
+    max-height: none;
+  }
+
+  .tour-workspace__panes {
+    min-height: 0;
+  }
+}
+
+.tour-workspace__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 14px;
+}
+
+.tour-workspace__empty {
+  grid-column: 1 / -1;
+  padding: 24px 8px;
+}
+
+.tour-workspace .tourCard {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tour-workspace .tourCard__content {
+  margin-top: 6px;
+}
+
+.tour-workspace .tourCard__title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.tour-workspace .tourCard.-type-1 .tourCard__title span {
+  background-image: linear-gradient(transparent calc(100% - 1px), currentColor 1px);
+}
+
+.tour-workspace__tours .row {
+  --bs-gutter-x: 12px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.tour-workspace__tours .border-top-light {
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.tour-workspace__footer {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .tour-workspace__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .tour-workspace__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 991px) {
+  .gotrip-page .tour-workspace__mast .searchMenu-loc,
+  .gotrip-page .tour-workspace__mast .searchMenu-date,
+  .gotrip-page .tour-workspace__mast .searchMenu-guests {
+    padding: 6px 14px !important;
+  }
+}
+
+@media (max-width: 1199px) {
+  .public-header-offset:has(.tour-workspace) .gotrip-page > main {
+    overflow: visible;
+  }
+
+  .tour-workspace__mast {
+    position: relative;
+    top: auto;
+  }
+
+  .tour-workspace__panes,
+  .tour-workspace__results,
+  .tour-workspace__tours {
+    display: block;
+    overflow: visible;
+    min-height: 0;
+  }
+
+  .tour-workspace__panes {
+    padding: 16px;
+  }
+
+  .tour-workspace__tours {
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .tour-workspace__mast {
+    padding: 20px 16px;
+  }
+
+  .gotrip-page .tour-workspace__title {
+    font-size: 20px;
+  }
+
+  .tour-workspace__panes {
+    padding: 12px 12px 20px;
+  }
+
+  .tour-workspace__grid {
+    gap: 14px 10px;
+  }
+}
+
 .car-list-v1 .cardImage img {
   width: 100%;
   height: 100%;

@@ -5,32 +5,44 @@ import { formatMoney } from "@/lib/format";
 
 export function PriceSlider({
   price,
+  min = 0,
   max,
+  step = 1,
   currency,
   onChange,
   title = "",
+  showReadout = true,
 }: {
   price: [number, number];
+  min?: number;
   max: number;
+  step?: number;
   currency: string;
   onChange: (price: [number, number]) => void;
   title?: string;
+  showReadout?: boolean;
 }) {
+  const low = Math.min(price[0], price[1]);
+  const high = Math.max(price[0], price[1]);
+
   return (
     <div className="js-price-rangeSlider">
-      <div className="text-14 fw-500">{title}</div>
-      <div className="d-flex justify-between mb-20">
-        <div className="text-15 text-dark-1">
-          <span className="js-lower mx-1">{formatMoney(price[0], currency)}</span>-
-          <span className="js-upper mx-1">{formatMoney(price[1], currency)}</span>
+      {title ? <div className="text-14 fw-500">{title}</div> : null}
+      {showReadout ? (
+        <div className="d-flex justify-between mb-20">
+          <div className="text-15 text-dark-1">
+            <span className="js-lower mx-1">{formatMoney(low, currency)}</span>-
+            <span className="js-upper mx-1">{formatMoney(high, currency)}</span>
+          </div>
         </div>
-      </div>
+      ) : null}
       <div className="px-5">
         <Slider
           range
-          min={0}
+          min={min}
           max={max}
-          value={price}
+          step={step}
+          value={[low, high]}
           onChange={(value) => {
             if (Array.isArray(value) && value.length === 2) {
               onChange([value[0], value[1]]);

@@ -24,7 +24,7 @@ export function MainFilterSearchBox({
   onGuests: (counts: GuestCounts) => void;
 }) {
   return (
-    <div className="mainSearch -col-3-big bg-white px-10 py-10 lg:px-20 lg:pt-5 lg:pb-20 rounded-4 mt-30">
+    <div className="mainSearch -fields-3 -w-900 bg-white px-10 lg:px-20 rounded-100">
       <div className="button-grid items-center">
         <LocationSearch locations={locations} value={location} onChange={onLocation} />
 
@@ -37,10 +37,10 @@ export function MainFilterSearchBox({
 
         <GuestSearch guestCounts={guests} onChange={onGuests} />
 
-        <div className="button-item h-full">
+        <div className="button-item">
           <button
             type="button"
-            className="button -dark-1 py-15 px-40 h-full col-12 rounded-0 bg-blue-1 text-white"
+            className="mainSearch__submit button -dark-1 h-60 px-35 col-12 rounded-100 bg-blue-1 text-white"
           >
             <i className="icon-search text-20 mr-10" />
             Search

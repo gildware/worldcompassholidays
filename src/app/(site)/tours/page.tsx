@@ -12,27 +12,15 @@ export const metadata: Metadata = { title: "Tours" };
 
 const languageNames = ["English", "Spanish", "French", "Turkish"];
 
-function one(value: string | string[] | undefined) {
-  return (Array.isArray(value) ? value[0] : value) ?? "";
-}
-
 function plainText(value: string) {
   return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function durationHours(count: number, unit: string) {
-  const amount = Number.isFinite(count) ? count : 0;
-  if (unit === "hours") return amount;
-  if (unit === "weeks") return amount * 24 * 7;
-  return amount * 24;
-}
-
-function durationBucket(hours: number) {
-  if (hours <= 1) return "Up to 1 hour";
-  if (hours <= 4) return "1 to 4 hours";
-  if (hours <= 24) return "4 hours to 1 day";
-  if (hours <= 72) return "1 to 3 days";
-  return "3 days or more";
+function durationInDays(count: number, unit: string) {
+  const amount = Number.isFinite(count) && count > 0 ? count : 0;
+  if (unit === "hours") return Math.max(1, Math.ceil(amount / 24));
+  if (unit === "weeks") return Math.round(amount * 7);
+  return Math.round(amount);
 }
 
 function durationText(count: number, unit: string, label: string) {
@@ -48,9 +36,8 @@ export default async function ToursPage({
 }) {
   if (!modules.tours) notFound();
   const params = await searchParams;
-  const locationQuery = one(params.q).trim();
 
-  const [rows, catalog, destinations] = await Promise.all([
+  const [rows, catalog, destinations, priceBounds] = await Promise.all([
     prisma.tour.findMany({
       where: { published: true },
       include: {
@@ -80,6 +67,11 @@ export default async function ToursPage({
       select: { id: true, name: true, region: true, country: true },
       orderBy: { name: "asc" },
     }),
+    prisma.tour.aggregate({
+      where: { published: true, priceFrom: { gt: 0 } },
+      _min: { priceFrom: true },
+      _max: { priceFrom: true },
+    }),
   ]);
 
   const tours: TourListCard[] = rows.map((tour) => {
@@ -89,7 +81,6 @@ export default async function ToursPage({
     );
     const images = [...new Set([tour.imageUrl, tour.featuredImageUrl, ...gallery].filter(Boolean))];
     const includes = resolveTitles(tour.includesJson, catalog.includes);
-    const hours = durationHours(tour.durationDays, tour.durationUnit);
     const unit = parseDurationUnit(tour.durationUnit);
     const haystack = `${tour.title} ${tour.summary} ${plainText(tour.description)} ${includes.join(" ")}`;
     const languages = languageNames.filter((name) => haystack.toLowerCase().includes(name.toLowerCase()));
@@ -107,7 +98,7 @@ export default async function ToursPage({
       location: place?.name ?? "",
       address: tour.address,
       durationLabel: durationText(tour.durationDays, unit, tour.durationLabel),
-      durationBucket: durationBucket(hours),
+      durationDays: durationInDays(tour.durationDays, unit),
       category: tour.category.trim() || "Tours",
       images,
       price: tour.priceFrom,
@@ -125,5 +116,16 @@ export default async function ToursPage({
     address: [destination.region, destination.country].filter(Boolean).join(", "),
   }));
 
-  return <TourListV2 tours={tours} locations={locations} initialLocation={locationQuery} />;
+  const priceMin = priceBounds._min.priceFrom ?? 0;
+  const priceMax = Math.max(priceMin, priceBounds._max.priceFrom ?? priceMin);
+
+  return (
+    <TourListV2
+      tours={tours}
+      locations={locations}
+      query={params}
+      priceMin={priceMin}
+      priceMax={priceMax}
+    />
+  );
 }

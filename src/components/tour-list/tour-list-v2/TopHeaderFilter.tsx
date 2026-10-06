@@ -10,15 +10,19 @@ const sortOptions: { value: TourSort; label: string }[] = [
 export function TopHeaderFilter({
   count,
   place,
+  name,
+  onName,
   sort,
   onSort,
 }: {
   count: number;
   place: string;
+  name: string;
+  onName: (name: string) => void;
   sort: TourSort;
   onSort: (sort: TourSort) => void;
 }) {
-  const label = count === 1 ? "property" : "properties";
+  const label = count === 1 ? "tour" : "tours";
 
   return (
     <div className="row y-gap-10 items-center justify-between">
@@ -32,7 +36,20 @@ export function TopHeaderFilter({
       </div>
 
       <div className="col-auto">
-        <div className="row x-gap-20 y-gap-20">
+        <div className="row x-gap-10 y-gap-10 items-center">
+          <div className="col-auto">
+            <label className="tour-toolbar-search">
+              <i className="icon-search text-16 text-light-1" />
+              <input
+                type="search"
+                value={name}
+                placeholder="Search tours"
+                aria-label="Search tours"
+                onChange={(event) => onName(event.target.value)}
+              />
+            </label>
+          </div>
+
           <div className="col-auto">
             <div className="dropdown">
               <button

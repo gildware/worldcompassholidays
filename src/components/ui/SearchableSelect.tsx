@@ -224,8 +224,10 @@ export function SearchableSelect({
       ? createPortal(
           <div
             ref={menuRef}
-            className="fixed z-[80] overflow-hidden rounded-lg border border-line bg-white shadow-lg"
+            className="app-select-menu fixed z-[80] overflow-hidden rounded-lg border border-line bg-white shadow-lg"
             style={{
+              position: "fixed",
+              zIndex: 1200,
               top: box.top,
               left: box.left,
               width: box.width,
@@ -381,7 +383,9 @@ export function MultiSearchableSelect({
   disabled = false,
   invalid = false,
   className,
+  menuClassName,
   ariaLabel,
+  hideChips = false,
 }: {
   options: readonly SelectOption[];
   values: string[];
@@ -391,7 +395,10 @@ export function MultiSearchableSelect({
   disabled?: boolean;
   invalid?: boolean;
   className?: string;
+  menuClassName?: string;
   ariaLabel?: string;
+  /** Keep the field as a single control. Selected values are shown by the parent. */
+  hideChips?: boolean;
 }) {
   const listId = useId();
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -487,8 +494,12 @@ export function MultiSearchableSelect({
       ? createPortal(
           <div
             ref={menuRef}
-            className="fixed z-[80] overflow-hidden rounded-lg border border-line bg-white shadow-lg"
+            className={["app-select-menu fixed z-[80] overflow-hidden rounded-lg border border-line bg-white shadow-lg", menuClassName]
+              .filter(Boolean)
+              .join(" ")}
             style={{
+              position: "fixed",
+              zIndex: 1200,
               top: box.top,
               left: box.left,
               width: box.width,
@@ -600,7 +611,7 @@ export function MultiSearchableSelect({
           .join(" ")}
       >
         <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-          {selectedOptions.length === 0 ? (
+          {hideChips || selectedOptions.length === 0 ? (
             <span className="px-1 text-muted">{placeholder}</span>
           ) : (
             selectedOptions.map((option) => (
