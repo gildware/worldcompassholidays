@@ -16,6 +16,7 @@ import {
   catalogKindLabel,
   type CatalogKind,
 } from "@/lib/catalog";
+import { ConfigWorkspace, type ConfigRow } from "@/components/admin/rentals/ConfigWorkspace";
 import { initialFormState } from "@/lib/forms";
 import type { UploadedImage } from "@/lib/storage/types";
 
@@ -54,18 +55,70 @@ const KIND_HINTS: Record<CatalogKind, { label: string; hint: string }> = {
     label: "Excludes",
     hint: "Items a tour can list as excluded. Each one has an icon and a title.",
   },
+  hotel_amenity: {
+    label: "Hotel amenities",
+    hint: "Shared by the whole property, such as a pool, parking, or a restaurant.",
+  },
+  room_feature: {
+    label: "Room features",
+    hint: "What makes a room different, such as a sea view, balcony, or bathtub.",
+  },
+  room_amenity: {
+    label: "Room amenities",
+    hint: "Items inside a room, such as air conditioning, a safe, or a kettle.",
+  },
+  hotel_faq: {
+    label: "Hotel FAQs",
+    hint: "Questions and answers a hotel can reuse.",
+  },
 };
 
-export function CatalogWorkspace({ items }: { items: CatalogRow[] }) {
+export function CatalogWorkspace({
+  items,
+  rentalItems,
+  initialSection = "tours",
+  sections,
+}: {
+  items: CatalogRow[];
+  rentalItems?: ConfigRow[];
+  initialSection?: string;
+  sections?: string[];
+}) {
   const router = useRouter();
-  const [groupId, setGroupId] = useState<(typeof catalogGroups)[number]["id"]>("tours");
+  const groups = [
+    ...catalogGroups.map((item) => ({
+      id: item.id,
+      label: item.label,
+      description: item.description,
+      kinds: [...item.kinds] as CatalogKind[],
+    })),
+    ...(rentalItems
+      ? [
+          {
+            id: "rentals",
+            label: "Rentals",
+            description:
+              "Vehicle types, fuels, features, documents, and add-ons. Add each one once, then select it on a car or bike.",
+            kinds: [] as CatalogKind[],
+          },
+        ]
+      : []),
+  ];
+  const visibleGroups = sections
+    ? groups.filter((item) => sections.includes(item.id))
+    : groups;
+  const starting =
+    visibleGroups.find((item) => item.id === initialSection)?.id ??
+    visibleGroups[0]?.id ??
+    "tours";
+  const [groupId, setGroupId] = useState(starting);
   const [kind, setKind] = useState<CatalogKind>("category");
   const [editing, setEditing] = useState<CatalogRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [removing, setRemoving] = useState<CatalogRow | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const group = catalogGroups.find((item) => item.id === groupId) ?? catalogGroups[0];
-  const kinds = [...group.kinds] as CatalogKind[];
+  const group = visibleGroups.find((item) => item.id === groupId) ?? visibleGroups[0];
+  const kinds = group.kinds;
   const activeKind = kinds.includes(kind) ? kind : kinds[0];
   const tab = activeKind ? KIND_HINTS[activeKind] : null;
   const rows = activeKind ? items.filter((item) => item.kind === activeKind) : [];
@@ -77,12 +130,12 @@ export function CatalogWorkspace({ items }: { items: CatalogRow[] }) {
           Configuration
         </h1>
         <p className="mt-1 text-sm text-muted">
-          Shared lists for tours. Hotel settings will be added separately.
+          Shared lists for tours, hotels, and rentals.
         </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {catalogGroups.map((item) => {
+        {visibleGroups.map((item) => {
           const selected = item.id === group.id;
           return (
             <button
@@ -108,7 +161,9 @@ export function CatalogWorkspace({ items }: { items: CatalogRow[] }) {
 
       <p className="text-sm text-muted">{group.description}</p>
 
-      {kinds.length > 0 ? (
+      {group.id === "rentals" && rentalItems ? (
+        <ConfigWorkspace items={rentalItems} />
+      ) : kinds.length > 0 ? (
       <div className="flex flex-wrap gap-2">
         {kinds.map((item) => {
           const selected = item === activeKind;
@@ -141,7 +196,7 @@ export function CatalogWorkspace({ items }: { items: CatalogRow[] }) {
       </div>
       ) : (
         <section className="rounded-lg border border-dashed border-line bg-white px-4 py-8 text-sm text-muted">
-          No hotel settings yet.
+          Nothing to configure in this section yet.
         </section>
       )}
 

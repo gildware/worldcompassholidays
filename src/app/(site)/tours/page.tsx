@@ -1,75 +1,129 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
-import { EmptyState, PageIntro } from "@/components/site/PageIntro";
+import { TourListV2 } from "@/components/tour-list/tour-list-v2/TourListV2";
+import type { TourListCard, TourListLocation } from "@/components/tour-list/types";
 import { modules } from "@/config/modules";
+import { loadTourCatalog } from "@/lib/catalog-query";
 import { prisma } from "@/lib/db";
-import { formatMoney } from "@/lib/format";
+import { resolveTitles } from "@/lib/hotels/labels";
+import { formatTourDuration, parseDurationUnit, parseJsonArray, type GalleryItem } from "@/lib/tours/json";
 
-export const metadata: Metadata = { title: "Tours and treks" };
+export const metadata: Metadata = { title: "Tours" };
 
-export default async function ToursPage() {
+const languageNames = ["English", "Spanish", "French", "Turkish"];
+
+function one(value: string | string[] | undefined) {
+  return (Array.isArray(value) ? value[0] : value) ?? "";
+}
+
+function plainText(value: string) {
+  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function durationHours(count: number, unit: string) {
+  const amount = Number.isFinite(count) ? count : 0;
+  if (unit === "hours") return amount;
+  if (unit === "weeks") return amount * 24 * 7;
+  return amount * 24;
+}
+
+function durationBucket(hours: number) {
+  if (hours <= 1) return "Up to 1 hour";
+  if (hours <= 4) return "1 to 4 hours";
+  if (hours <= 24) return "4 hours to 1 day";
+  if (hours <= 72) return "1 to 3 days";
+  return "3 days or more";
+}
+
+function durationText(count: number, unit: string, label: string) {
+  if (label.trim()) return label.trim();
+  if (unit === "hours") return `${count}+ hours`;
+  return formatTourDuration(count, parseDurationUnit(unit));
+}
+
+export default async function ToursPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   if (!modules.tours) notFound();
+  const params = await searchParams;
+  const locationQuery = one(params.q).trim();
 
-  const tours = await prisma.tour.findMany({
-    where: { published: true },
-    include: { destination: true },
-    orderBy: { title: "asc" },
+  const [rows, catalog, destinations] = await Promise.all([
+    prisma.tour.findMany({
+      where: { published: true },
+      include: {
+        destination: {
+          select: { name: true, slug: true, region: true, country: true },
+        },
+        destinationLinks: {
+          include: {
+            destination: {
+              select: { name: true, slug: true, region: true, country: true },
+            },
+          },
+          take: 1,
+        },
+      },
+      orderBy: [{ isFeatured: "desc" }, { title: "asc" }],
+    }),
+    loadTourCatalog(),
+    prisma.destination.findMany({
+      where: {
+        published: true,
+        OR: [
+          { tours: { some: { published: true } } },
+          { tourLinks: { some: { tour: { published: true } } } },
+        ],
+      },
+      select: { id: true, name: true, region: true, country: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  const tours: TourListCard[] = rows.map((tour) => {
+    const place = tour.destination ?? tour.destinationLinks[0]?.destination ?? null;
+    const gallery = parseJsonArray<GalleryItem>(tour.galleryJson).flatMap((item) =>
+      item?.url ? [item.url] : [],
+    );
+    const images = [...new Set([tour.imageUrl, tour.featuredImageUrl, ...gallery].filter(Boolean))];
+    const includes = resolveTitles(tour.includesJson, catalog.includes);
+    const hours = durationHours(tour.durationDays, tour.durationUnit);
+    const unit = parseDurationUnit(tour.durationUnit);
+    const haystack = `${tour.title} ${tour.summary} ${plainText(tour.description)} ${includes.join(" ")}`;
+    const languages = languageNames.filter((name) => haystack.toLowerCase().includes(name.toLowerCase()));
+    const tag = tour.isFeatured
+      ? "best seller"
+      : tour.maxGroupSize > 0 && tour.maxGroupSize <= 8
+        ? "likely to sell out*"
+        : "";
+
+    return {
+      id: tour.id,
+      slug: tour.slug,
+      title: tour.title,
+      summary: tour.summary,
+      location: place?.name ?? "",
+      address: tour.address,
+      durationLabel: durationText(tour.durationDays, unit, tour.durationLabel),
+      durationBucket: durationBucket(hours),
+      category: tour.category.trim() || "Tours",
+      images,
+      price: tour.priceFrom,
+      currency: tour.currency || "INR",
+      tag,
+      freeCancellation: /free cancellation/i.test(haystack),
+      languages,
+      href: place?.slug ? `/destinations/${place.slug}#tours` : "/tours",
+    };
   });
 
-  return (
-    <div className="mx-auto max-w-6xl px-5 py-14">
-      <PageIntro
-        eyebrow="Tours"
-        title="Tours and treks"
-        description="Guided trips by destination — duration, group size, and price per person."
-      />
-      <div className="mt-10">
-        {tours.length === 0 ? (
-          <EmptyState
-            title="No tours yet"
-            body="Publish a tour from the admin and it will show up here and on its destination."
-            href="/admin/tours"
-            action="Add a tour"
-          />
-        ) : (
-          <ul className="grid gap-4 md:grid-cols-2">
-            {tours.map((tour) => (
-              <li
-                key={tour.id}
-                className="overflow-hidden rounded-xl border border-line bg-white"
-              >
-                <div className="relative aspect-[16/10] bg-surface">
-                  <Image
-                    src={tour.imageUrl}
-                    alt={tour.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
-                </div>
-                <div className="p-5">
-                  <p className="text-xs font-medium tracking-wide text-brand uppercase">
-                    {tour.destination?.name ?? "Tour"}
-                  </p>
-                  <h2 className="mt-2 text-lg font-semibold text-navy">
-                    {tour.title}
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-muted">
-                    {tour.summary}
-                  </p>
-                  <p className="mt-4 text-sm text-navy">
-                    {tour.durationLabel.trim() ||
-                      `${tour.durationDays} days`}{" "}
-                    · up to {tour.maxGroupSize} ·{" "}
-                    {formatMoney(tour.priceFrom, tour.currency)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
+  const locations: TourListLocation[] = destinations.map((destination) => ({
+    id: destination.id,
+    name: destination.name,
+    address: [destination.region, destination.country].filter(Boolean).join(", "),
+  }));
+
+  return <TourListV2 tours={tours} locations={locations} initialLocation={locationQuery} />;
 }

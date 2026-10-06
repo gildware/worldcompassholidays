@@ -5,6 +5,10 @@ export const catalogKinds = [
   "faq",
   "include",
   "exclude",
+  "hotel_amenity",
+  "room_feature",
+  "room_amenity",
+  "hotel_faq",
 ] as const;
 
 export type CatalogKind = (typeof catalogKinds)[number];
@@ -26,8 +30,9 @@ export const catalogGroups = [
   {
     id: "hotels",
     label: "Hotels",
-    description: "Hotel settings will be added here.",
-    kinds: [],
+    description:
+      "Lists used when adding a hotel. Property amenities belong to the hotel. Room features and room amenities belong to each room.",
+    kinds: ["hotel_amenity", "room_feature", "room_amenity", "hotel_faq"],
   },
 ] as const;
 
@@ -41,7 +46,20 @@ export function catalogKindLabel(kind: CatalogKind) {
   if (kind === "facility") return "Facility";
   if (kind === "faq") return "FAQ";
   if (kind === "include") return "Include";
-  return "Exclude";
+  if (kind === "exclude") return "Exclude";
+  if (kind === "hotel_amenity") return "Hotel amenity";
+  if (kind === "room_feature") return "Room feature";
+  if (kind === "room_amenity") return "Room amenity";
+  return "Hotel FAQ";
+}
+
+export function isHotelCatalogKind(kind: CatalogKind) {
+  return (
+    kind === "hotel_amenity" ||
+    kind === "room_feature" ||
+    kind === "room_amenity" ||
+    kind === "hotel_faq"
+  );
 }
 
 export function catalogKindHasIcon(kind: CatalogKind) {
@@ -50,12 +68,15 @@ export function catalogKindHasIcon(kind: CatalogKind) {
     kind === "style" ||
     kind === "facility" ||
     kind === "include" ||
-    kind === "exclude"
+    kind === "exclude" ||
+    kind === "hotel_amenity" ||
+    kind === "room_feature" ||
+    kind === "room_amenity"
   );
 }
 
 export function catalogKindHasAnswer(kind: CatalogKind) {
-  return kind === "faq";
+  return kind === "faq" || kind === "hotel_faq";
 }
 
 /** Question and answer stored on one tour, not in the shared FAQ list. */

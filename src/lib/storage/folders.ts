@@ -3,6 +3,7 @@ export const IMAGE_FOLDERS = [
   "tours",
   "hotels",
   "vehicles",
+  "locations",
   "buses",
   "catalog",
 ] as const;

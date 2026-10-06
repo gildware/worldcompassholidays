@@ -89,6 +89,7 @@ export default async function AdminDestinationsPage({
           imageKey: destination.imageKey,
           imageDriver: destination.imageDriver,
           published: destination.published,
+          popular: destination.popular,
           parentId: destination.parentId,
           parentName: destination.parent?.name ?? null,
           childCount: destination._count.children,

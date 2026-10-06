@@ -15,13 +15,12 @@ export default async function RentalDashboardPage() {
   const soon = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   const week = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const [fleet, active, pendingDocs, unpaid, expiring, pickups, maintenance] = await Promise.all([
+  const [fleet, active, pendingDocs, expiring, pickups] = await Promise.all([
     prisma.vehicle.count(),
     prisma.rentalBooking.count({ where: { status: { in: ["active", "return_pending"] } } }),
     prisma.rentalBooking.count({
       where: { status: { in: ["documents_required", "documents_under_review", "pending"] } },
     }),
-    prisma.rentalPayment.count({ where: { status: "unpaid" } }),
     prisma.vehicleDocument.findMany({
       where: { expiryDate: { lte: soon } },
       include: { vehicle: { select: { id: true, name: true } } },
@@ -33,21 +32,16 @@ export default async function RentalDashboardPage() {
         status: { in: [...blockingBookingStatuses] },
         pickupAt: { gte: now, lte: week },
       },
-      include: { vehicle: { select: { name: true } } },
+      include: { vehicle: { select: { name: true, registrationNumber: true } } },
       orderBy: { pickupAt: "asc" },
       take: 6,
-    }),
-    prisma.maintenanceRecord.count({
-      where: { status: { in: ["scheduled", "in_progress"] } },
     }),
   ]);
 
   const stats = [
     ["Fleet", fleet, "/admin/rentals/fleet"],
-    ["On rent", active, "/admin/rentals/bookings?status=active"],
+    ["On rent", active, "/admin/rentals/bookings"],
     ["Needs review", pendingDocs, "/admin/rentals/bookings"],
-    ["Unpaid", unpaid, "/admin/rentals/payments"],
-    ["Open maintenance", maintenance, "/admin/rentals/maintenance"],
   ] as const;
 
   return (
@@ -55,10 +49,10 @@ export default async function RentalDashboardPage() {
       <div>
         <h1 className="text-2xl font-semibold">Rental desk</h1>
         <p className="mt-2 text-sm text-muted">
-          Cars and bikes, bookings, documents, and payments. Online checkout can be attached to the unpaid payment records later.
+          Cars and bikes, and their bookings.
         </p>
       </div>
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <ul className="grid gap-3 sm:grid-cols-3">
         {stats.map(([label, count, href]) => (
           <li key={label}>
             <Link href={href} className="block rounded-xl border border-line bg-white p-4">
@@ -77,6 +71,7 @@ export default async function RentalDashboardPage() {
               <li key={booking.id} className="flex justify-between gap-3 py-3">
                 <Link href={`/admin/rentals/bookings/${booking.id}`} className="font-medium">
                   {booking.vehicle.name}
+                  <span className="font-normal text-muted"> · {booking.vehicle.registrationNumber}</span>
                 </Link>
                 <span className="text-muted">{rentalStatusLabel(booking.status)}</span>
               </li>

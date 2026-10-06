@@ -6,6 +6,7 @@ import {
   catalogKindHasAnswer,
   catalogKindLabel,
   isCatalogKind,
+  isHotelCatalogKind,
   mapStoredSelection,
   selectionKeys,
   type CatalogKind,
@@ -26,16 +27,19 @@ function revalidateCatalog() {
   revalidatePath("/admin/configuration");
   revalidatePath("/admin/tours");
   revalidatePath("/admin/tours/new");
+  revalidatePath("/admin/hotels");
+  revalidatePath("/admin/hotels/new");
 }
 
 export async function saveCatalogItem(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  await requirePermission("tours.manage");
-
   const kindValue = String(formData.get("kind") ?? "");
   if (!isCatalogKind(kindValue)) return { error: "Choose a configuration type." };
+  await requirePermission(
+    isHotelCatalogKind(kindValue) ? "hotels.manage" : "tours.manage",
+  );
 
   const parsed = itemSchema.safeParse({
     title: formData.get("title"),
@@ -88,7 +92,11 @@ export async function saveCatalogItem(
       });
     }
 
-    await bindTours(kindValue, id, existing.title, title);
+    if (isHotelCatalogKind(kindValue)) {
+      await bindHotels(kindValue, id, existing.title);
+    } else {
+      await bindTours(kindValue, id, existing.title, title);
+    }
   } else {
     const count = await prisma.catalogItem.count({ where: { kind: kindValue } });
     await prisma.catalogItem.create({
@@ -109,15 +117,19 @@ export async function saveCatalogItem(
 }
 
 export async function deleteCatalogItem(id: string): Promise<FormState> {
-  await requirePermission("tours.manage");
   const item = await prisma.catalogItem.findUnique({ where: { id } });
   if (!item || !isCatalogKind(item.kind)) return { error: "That item was not found." };
+  const hotelKind = isHotelCatalogKind(item.kind);
+  await requirePermission(hotelKind ? "hotels.manage" : "tours.manage");
 
-  const used = await toursUsing(item.kind, item.id, item.title);
+  const used = hotelKind
+    ? await hotelsUsing(item.kind, item.id, item.title)
+    : await toursUsing(item.kind, item.id, item.title);
   if (used > 0) {
     const noun = catalogKindLabel(item.kind).toLowerCase();
+    const place = hotelKind ? "hotel" : "tour";
     return {
-      error: `This ${noun} is used by ${used} tour${used === 1 ? "" : "s"}. Remove it from those tours first.`,
+      error: `This ${noun} is used by ${used} ${place}${used === 1 ? "" : "s"}. Remove it from those ${place}s first.`,
     };
   }
 
@@ -207,4 +219,67 @@ function listField(kind: CatalogKind) {
   if (kind === "include") return "includesJson" as const;
   if (kind === "exclude") return "excludesJson" as const;
   return null;
+}
+
+function usesSelection(raw: string, id: string, title: string) {
+  const values = selectionKeys(parseJsonArray<unknown>(raw));
+  return values.includes(id) || values.includes(title);
+}
+
+function rewritten(raw: string, id: string, previousTitle: string) {
+  const parsed = parseJsonArray<unknown>(raw);
+  const current = selectionKeys(parsed);
+  if (!current.some((value) => value === previousTitle || value === id)) return null;
+  return JSON.stringify(
+    mapStoredSelection(parsed, (value) =>
+      value === previousTitle || value === id ? id : value,
+    ),
+  );
+}
+
+async function bindHotels(kind: CatalogKind, id: string, previousTitle: string) {
+  if (kind === "hotel_amenity" || kind === "hotel_faq") {
+    const field = kind === "hotel_amenity" ? "amenitiesJson" : "faqsJson";
+    const hotels = await prisma.hotel.findMany({
+      select: { id: true, amenitiesJson: true, faqsJson: true },
+    });
+    for (const hotel of hotels) {
+      const next = rewritten(hotel[field], id, previousTitle);
+      if (!next) continue;
+      await prisma.hotel.update({ where: { id: hotel.id }, data: { [field]: next } });
+    }
+    return;
+  }
+
+  if (kind !== "room_feature" && kind !== "room_amenity") return;
+  const field = kind === "room_feature" ? "featuresJson" : "amenitiesJson";
+  const rooms = await prisma.room.findMany({
+    select: { id: true, featuresJson: true, amenitiesJson: true },
+  });
+  for (const room of rooms) {
+    const next = rewritten(room[field], id, previousTitle);
+    if (!next) continue;
+    await prisma.room.update({ where: { id: room.id }, data: { [field]: next } });
+  }
+}
+
+async function hotelsUsing(kind: CatalogKind, id: string, title: string) {
+  if (kind === "hotel_amenity" || kind === "hotel_faq") {
+    const field = kind === "hotel_amenity" ? "amenitiesJson" : "faqsJson";
+    const hotels = await prisma.hotel.findMany({
+      select: { amenitiesJson: true, faqsJson: true },
+    });
+    return hotels.filter((hotel) => usesSelection(hotel[field], id, title)).length;
+  }
+
+  if (kind !== "room_feature" && kind !== "room_amenity") return 0;
+  const field = kind === "room_feature" ? "featuresJson" : "amenitiesJson";
+  const rooms = await prisma.room.findMany({
+    select: { hotelId: true, featuresJson: true, amenitiesJson: true },
+  });
+  const hotels = new Set<string>();
+  for (const room of rooms) {
+    if (usesSelection(room[field], id, title)) hotels.add(room.hotelId);
+  }
+  return hotels.size;
 }

@@ -34,7 +34,11 @@ export function getPublicNav(): NavItem[] {
   return items;
 }
 
-const adminNav: (NavItem & { permission?: StaffPermission; enabled: boolean })[] =
+const adminNav: (NavItem & {
+  permission?: StaffPermission;
+  anyOf?: StaffPermission[];
+  enabled: boolean;
+})[] =
   [
     { href: "/admin", label: "Overview", enabled: true },
     {
@@ -52,8 +56,12 @@ const adminNav: (NavItem & { permission?: StaffPermission; enabled: boolean })[]
     {
       href: "/admin/configuration",
       label: "Configuration",
-      permission: "tours.manage",
-      enabled: modules.tours,
+      anyOf: [
+        ...(modules.tours ? (["tours.manage"] as const) : []),
+        ...(modules.hotels ? (["hotels.manage"] as const) : []),
+        ...(modules.cars || modules.bikes ? (["vehicles.manage"] as const) : []),
+      ],
+      enabled: modules.tours || modules.hotels || modules.cars || modules.bikes,
     },
     {
       href: "/admin/hotels",
@@ -69,13 +77,9 @@ const adminNav: (NavItem & { permission?: StaffPermission; enabled: boolean })[]
       children: [
         { href: "/admin/rentals", label: "Overview" },
         { href: "/admin/rentals/fleet", label: "Fleet" },
+        { href: "/admin/rentals/availability", label: "Availability" },
         { href: "/admin/rentals/bookings", label: "Bookings" },
-        { href: "/admin/rentals/customers", label: "Customers" },
-        { href: "/admin/rentals/maintenance", label: "Maintenance" },
-        { href: "/admin/rentals/payments", label: "Payments" },
-        { href: "/admin/rentals/reports", label: "Reports" },
         { href: "/admin/rentals/locations", label: "Locations" },
-        { href: "/admin/rentals/configuration", label: "Configuration" },
         { href: "/admin/rentals/policies", label: "Rules" },
       ],
     },
@@ -115,7 +119,11 @@ export function getAdminNav(
   allowed: (permission: StaffPermission) => boolean,
 ): NavItem[] {
   return adminNav
-    .filter((item) => item.enabled && (!item.permission || allowed(item.permission)))
+    .filter((item) => {
+      if (!item.enabled) return false;
+      if (item.anyOf?.length) return item.anyOf.some((permission) => allowed(permission));
+      return !item.permission || allowed(item.permission);
+    })
     .map(({ href, label, children }) => ({ href, label, children }));
 }
 

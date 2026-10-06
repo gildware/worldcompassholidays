@@ -25,7 +25,7 @@ export default async function MyRentalsPage({
   const selected = groups.some((group) => group.id === view) ? view! : "upcoming";
   const bookings = await prisma.rentalBooking.findMany({
     where: { userId: user.id },
-    include: { vehicle: { select: { name: true, slug: true } } },
+    include: { vehicle: { select: { name: true, slug: true, registrationNumber: true } } },
     orderBy: { pickupAt: "desc" },
   });
   const visible = bookings.filter((booking) => rentalListGroup(booking.status) === selected);
@@ -59,6 +59,7 @@ export default async function MyRentalsPage({
               <Link href={`/account/rentals/${booking.reference}`} className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 text-sm">
                 <div>
                   <p className="font-medium">{booking.vehicle.name}</p>
+                  <p className="text-xs font-medium tracking-wide">{booking.vehicle.registrationNumber}</p>
                   <p className="text-muted">
                     {booking.reference} · {formatDateTime(booking.pickupAt)} – {formatDateTime(booking.returnAt)}
                   </p>

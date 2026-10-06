@@ -25,6 +25,7 @@ type ImageItem = { url: string; key: string; driver: "local" | "cloudinary" };
 export type VehicleFormValues = {
   id?: string;
   name: string;
+  registrationNumber: string;
   kind: "car" | "bike";
   brand: string;
   modelName: string;
@@ -214,6 +215,9 @@ export function VehicleForm({
     const id = steps[index]?.id;
     if (id === "vehicle") {
       if (fieldValue(form, "name").trim().length < 2) errors.name = "Enter the vehicle name.";
+      if (fieldValue(form, "registrationNumber").replace(/[\s-]/g, "").length < 4) {
+        errors.registrationNumber = "Enter the registration number.";
+      }
       if (!destinationId) errors.destinationId = "Choose a destination.";
     }
     if (id === "specs") {
@@ -260,7 +264,7 @@ export function VehicleForm({
       const errors = validateStep(0);
       if (intent === "continue" && dataStep) Object.assign(errors, validateStep(step));
       if (Object.keys(errors).length > 0) {
-        const index = errors.name || errors.destinationId ? 0 : step;
+        const index = errors.name || errors.destinationId || errors.registrationNumber ? 0 : step;
         showErrors(errors, index);
         return;
       }
@@ -351,6 +355,15 @@ export function VehicleForm({
           <div className={current.id === "vehicle" ? "grid gap-4 md:grid-cols-2" : "hidden"}>
             <Field label="Name" name="name" required error={fieldErrors.name}>
               <input name="name" defaultValue={values.name} className="!h-10" />
+            </Field>
+            <Field label="Registration number" name="registrationNumber" required error={fieldErrors.registrationNumber}>
+              <input
+                name="registrationNumber"
+                defaultValue={values.registrationNumber}
+                className="!h-10 uppercase"
+                autoCapitalize="characters"
+                placeholder="JK01AB1234"
+              />
             </Field>
             <Field label="Fleet" required>
               <SearchableSelect

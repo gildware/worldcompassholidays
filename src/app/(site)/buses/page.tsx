@@ -6,12 +6,29 @@ import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = { title: "Buses" };
 
-export default async function BusesPage() {
-  if (!modules.buses) notFound();
+function one(value: string | string[] | undefined) {
+  return (Array.isArray(value) ? value[0] : value) ?? "";
+}
 
-  const routes = await prisma.busRoute.findMany({
-    where: { published: true },
-    orderBy: { name: "asc" },
+export default async function BusesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  if (!modules.buses) notFound();
+  const params = await searchParams;
+  const from = one(params.from).trim().toLowerCase();
+  const to = one(params.to).trim().toLowerCase();
+
+  const routes = (
+    await prisma.busRoute.findMany({
+      where: { published: true },
+      orderBy: { name: "asc" },
+    })
+  ).filter((route) => {
+    if (from && !route.fromCity.toLowerCase().includes(from)) return false;
+    if (to && !route.toCity.toLowerCase().includes(to)) return false;
+    return true;
   });
 
   return (
@@ -24,8 +41,14 @@ export default async function BusesPage() {
       <div className="mt-10">
         {routes.length === 0 ? (
           <EmptyState
-            title="No routes yet"
-            body="Bus booking is the last module. The tables are ready for routes and seats."
+            title={from || to ? "No routes match this search" : "No routes yet"}
+            body={
+              from || to
+                ? "Try another city pair, or browse every published route."
+                : "Bus booking is the last module. The tables are ready for routes and seats."
+            }
+            href={from || to ? "/buses" : undefined}
+            action={from || to ? "Show all routes" : undefined}
           />
         ) : (
           <ul className="grid gap-4">

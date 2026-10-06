@@ -159,6 +159,7 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
       <div className="grid gap-6">
         <div>
           <p className="text-sm text-brand">Book {vehicle.name}</p>
+          <p className="mt-1 text-sm font-medium tracking-wide text-navy">{vehicle.registrationNumber}</p>
           <h1 className="mt-2 text-3xl font-semibold">Trip details</h1>
         </div>
         <form method="get" className="grid gap-4 rounded-2xl border border-line bg-white p-5">

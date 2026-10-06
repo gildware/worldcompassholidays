@@ -1,8 +1,7 @@
-import { Suspense } from "react";
-import { AccountLink } from "@/components/site/AccountLink";
-import { SiteFooter } from "@/components/site/SiteFooter";
-import { SiteHeader } from "@/components/site/SiteHeader";
+import { PublicHeader } from "@/components/gotrip/PublicHeader";
+import { SiteFooterGate } from "@/components/site/SiteFooterGate";
 import { getPublicNav } from "@/lib/navigation";
+import "@/styles/gotrip-home.css";
 
 export default function SiteLayout({
   children,
@@ -13,16 +12,9 @@ export default function SiteLayout({
 
   return (
     <div className="flex flex-1 flex-col">
-      <SiteHeader
-        items={items}
-        account={
-          <Suspense fallback={null}>
-            <AccountLink />
-          </Suspense>
-        }
-      />
-      <main className="flex-1">{children}</main>
-      <SiteFooter items={items} />
+      <PublicHeader />
+      <main className="public-header-offset flex-1">{children}</main>
+      <SiteFooterGate items={items} />
     </div>
   );
 }

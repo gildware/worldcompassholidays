@@ -49,7 +49,7 @@ export default async function RentalBookingAdminPage({ params }: Props) {
           <StatusPill status={booking.status} label={rentalStatusLabel(booking.status)} />
         </div>
         <p className="mt-2 text-sm text-muted">
-          {booking.vehicle.name} · {booking.contactName} · {booking.contactEmail}
+          {booking.vehicle.name} · {booking.vehicle.registrationNumber} · {booking.contactName} · {booking.contactEmail}
           {booking.contactPhone ? ` · ${booking.contactPhone}` : ""}
         </p>
       </div>

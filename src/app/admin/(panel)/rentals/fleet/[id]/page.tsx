@@ -119,6 +119,7 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
           values={{
             id: vehicle.id,
             name: vehicle.name,
+            registrationNumber: vehicle.registrationNumber,
             kind: fleetKinds().includes(vehicle.kind as "car" | "bike") ? (vehicle.kind as "car" | "bike") : "car",
             brand: vehicle.brand,
             modelName: vehicle.modelName,

@@ -9,14 +9,15 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { formatMoney } from "@/lib/format";
-import { fleetLabel, vehicleStatusLabel } from "@/lib/rentals/labels";
+import { fleetLabel } from "@/lib/rentals/labels";
 
-type SortKey = "name" | "destination" | "type" | "seats" | "price" | "status";
+type SortKey = "name" | "destination" | "type" | "seats" | "price" | "listing";
 
 export type FleetRow = {
   id: string;
   slug: string;
   name: string;
+  registrationNumber: string;
   summary: string;
   imageUrl: string;
   kind: string;
@@ -29,7 +30,6 @@ export type FleetRow = {
   pricePerDay: number;
   currency: string;
   published: boolean;
-  status: string;
   documentWarning: "" | "soon" | "expired";
 };
 
@@ -144,14 +144,6 @@ function TrashIcon() {
   );
 }
 
-function statusTone(status: string): "success" | "warning" | "brand" | "neutral" | "danger" {
-  if (status === "available") return "success";
-  if (status === "booked" || status === "active") return "brand";
-  if (status === "maintenance" || status === "on_hold") return "warning";
-  if (status === "inactive") return "neutral";
-  return "neutral";
-}
-
 export function FleetWorkspace({
   vehicles,
   destinations,
@@ -170,16 +162,10 @@ export function FleetWorkspace({
   const [listingFilter, setListingFilter] = useState<"all" | "published" | "draft">("all");
   const [fleetFilter, setFleetFilter] = useState("all");
   const [destinationFilter, setDestinationFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [deleting, setDeleting] = useState<FleetRow | null>(null);
   const closeDelete = useCallback(() => setDeleting(null), []);
-
-  const statuses = useMemo(() => {
-    const values = [...new Set(vehicles.map((vehicle) => vehicle.status))];
-    return values.sort((a, b) => vehicleStatusLabel(a).localeCompare(vehicleStatusLabel(b)));
-  }, [vehicles]);
 
   const filtered = useMemo(() => {
     const needle = debouncedQuery.trim().toLowerCase();
@@ -188,10 +174,10 @@ export function FleetWorkspace({
       if (listingFilter === "draft" && vehicle.published) return false;
       if (fleetFilter !== "all" && vehicle.kind !== fleetFilter) return false;
       if (destinationFilter !== "all" && vehicle.destinationId !== destinationFilter) return false;
-      if (statusFilter !== "all" && vehicle.status !== statusFilter) return false;
       if (!needle) return true;
       const haystack = [
         vehicle.name,
+        vehicle.registrationNumber,
         vehicle.summary,
         vehicle.destinationName,
         vehicle.typeName,
@@ -216,8 +202,8 @@ export function FleetWorkspace({
           return vehicle.seats;
         case "price":
           return vehicle.pricePerDay;
-        case "status":
-          return vehicleStatusLabel(vehicle.status);
+        case "listing":
+          return `${vehicle.published ? "Published" : "Draft"} ${vehicle.documentWarning}`;
         default:
           return vehicle.name;
       }
@@ -233,14 +219,13 @@ export function FleetWorkspace({
       if (compared !== 0) return compared * direction;
       return a.name.localeCompare(b.name);
     });
-  }, [debouncedQuery, destinationFilter, fleetFilter, listingFilter, sortDir, sortKey, statusFilter, vehicles]);
+  }, [debouncedQuery, destinationFilter, fleetFilter, listingFilter, sortDir, sortKey, vehicles]);
 
   const filtersActive =
     Boolean(debouncedQuery.trim()) ||
     listingFilter !== "all" ||
     fleetFilter !== "all" ||
-    destinationFilter !== "all" ||
-    statusFilter !== "all";
+    destinationFilter !== "all";
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -346,21 +331,6 @@ export function FleetWorkspace({
           className="!h-10"
           wrapperClassName="lg:w-48"
         />
-        <SearchableSelect
-          ariaLabel="Filter by status"
-          value={statusFilter}
-          onChange={setStatusFilter}
-          searchPlaceholder="Search statuses"
-          options={[
-            { value: "all", label: "All statuses" },
-            ...statuses.map((status) => ({
-              value: status,
-              label: vehicleStatusLabel(status),
-            })),
-          ]}
-          className="!h-10"
-          wrapperClassName="lg:w-40"
-        />
         {filtersActive ? (
           <button
             type="button"
@@ -369,7 +339,6 @@ export function FleetWorkspace({
               setListingFilter("all");
               setFleetFilter("all");
               setDestinationFilter("all");
-              setStatusFilter("all");
             }}
             className="text-left text-xs font-medium text-brand hover:underline"
           >
@@ -394,7 +363,7 @@ export function FleetWorkspace({
               <SortHeader label="Type" column="type" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               <SortHeader label="Seats" column="seats" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               <SortHeader label="Price" column="price" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" />
-              <SortHeader label="Status" column="status" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+              <SortHeader label="Listing" column="listing" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               <th scope="col" className="px-3 py-2.5 text-right">
                 <span className="text-xs font-semibold text-navy">Actions</span>
               </th>
@@ -428,6 +397,7 @@ export function FleetWorkspace({
                     <Link href={`/admin/rentals/fleet/${vehicle.id}`} className="font-semibold text-navy hover:text-brand hover:underline">
                       {vehicle.name}
                     </Link>
+                    <p className="text-xs font-medium tracking-wide text-navy">{vehicle.registrationNumber}</p>
                     <p className="line-clamp-1 max-w-xs text-xs text-muted">
                       {fleetLabel(vehicle.kind)}
                       {vehicle.summary ? ` · ${vehicle.summary}` : ""}
@@ -447,7 +417,6 @@ export function FleetWorkspace({
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <Badge tone={statusTone(vehicle.status)}>{vehicleStatusLabel(vehicle.status)}</Badge>
                       {vehicle.published ? <Badge tone="success">Published</Badge> : <Badge tone="warning">Draft</Badge>}
                       {vehicle.documentWarning === "expired" ? <Badge tone="danger">Document expired</Badge> : null}
                       {vehicle.documentWarning === "soon" ? <Badge tone="warning">Expires soon</Badge> : null}

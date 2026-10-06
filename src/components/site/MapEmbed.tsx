@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { googleMapsEmbedUrl, parseMapPoint } from "@/lib/maps";
 
 export function MapEmbed({
@@ -7,6 +8,7 @@ export function MapEmbed({
   zoom = 8,
   title,
   className,
+  style,
 }: {
   apiKey: string;
   lat: string;
@@ -14,6 +16,7 @@ export function MapEmbed({
   zoom?: number;
   title: string;
   className?: string;
+  style?: CSSProperties;
 }) {
   const point = parseMapPoint(lat, lng, zoom);
   if (!point || !apiKey) return null;
@@ -23,6 +26,7 @@ export function MapEmbed({
       title={title}
       src={googleMapsEmbedUrl(point, apiKey)}
       className={className ?? "h-64 w-full rounded-xl border border-line"}
+      style={style}
       loading="lazy"
       referrerPolicy="no-referrer-when-downgrade"
       allowFullScreen

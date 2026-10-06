@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { setDestinationPopular } from "@/actions/destinations";
 import { Badge } from "@/components/ui/Card";
 import { MapEmbed } from "@/components/site/MapEmbed";
 import { modules } from "@/config/modules";
@@ -70,6 +71,7 @@ export type DestinationViewData = {
   mapZoom: number;
   imageUrl: string;
   published: boolean;
+  popular: boolean;
   parent: { id: string; name: string } | null;
   children: Place[];
   tours: TourItem[];
@@ -91,11 +93,16 @@ type TabId = (typeof tabs)[number]["id"];
 export function DestinationView({
   destination,
   mapApiKey,
+  canManage,
 }: {
   destination: DestinationViewData;
   mapApiKey: string;
+  canManage: boolean;
 }) {
   const [tab, setTab] = useState<TabId>("places");
+  const [popular, setPopular] = useState(destination.popular);
+  const [popularError, setPopularError] = useState<string | null>(null);
+  const [popularPending, startPopular] = useTransition();
   const mapPoint = parseMapPoint(
     destination.mapLat,
     destination.mapLng,
@@ -136,7 +143,53 @@ export function DestinationView({
               ) : (
                 <Badge tone="warning">Inactive</Badge>
               )}
+              {canManage ? (
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={popular}
+                  disabled={popularPending}
+                  onClick={() => {
+                    const next = !popular;
+                    setPopular(next);
+                    setPopularError(null);
+                    startPopular(async () => {
+                      const result = await setDestinationPopular(destination.id, next);
+                      if (result.error) {
+                        setPopular(!next);
+                        setPopularError(result.error);
+                      }
+                    });
+                  }}
+                  className={[
+                    "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                    popular
+                      ? "border-brand/30 bg-brand-soft text-brand"
+                      : "border-line bg-white text-muted",
+                  ].join(" ")}
+                >
+                  <span
+                    className={[
+                      "h-3.5 w-6 rounded-full p-0.5",
+                      popular ? "bg-brand" : "bg-slate-300",
+                    ].join(" ")}
+                  >
+                    <span
+                      className={[
+                        "block h-2.5 w-2.5 rounded-full bg-white transition-transform",
+                        popular ? "translate-x-2.5" : "translate-x-0",
+                      ].join(" ")}
+                    />
+                  </span>
+                  Popular
+                </button>
+              ) : popular ? (
+                <Badge tone="brand">Popular</Badge>
+              ) : null}
             </div>
+            {popularError ? (
+              <p className="mt-2 text-xs text-red-700">{popularError}</p>
+            ) : null}
             <p className="mt-1 line-clamp-1 text-sm text-muted">{destination.summary}</p>
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line pt-3 sm:grid-cols-3 lg:grid-cols-6">
               <Fact
@@ -243,6 +296,7 @@ export function DestinationView({
                 empty="No hotels are attached to this destination."
                 items={destination.hotels.map((hotel) => ({
                   id: hotel.id,
+                  href: `/admin/hotels/${hotel.id}/view`,
                   title: hotel.name,
                   detail: `${hotel.roomCount} room${hotel.roomCount === 1 ? "" : "s"} · ${formatMoney(hotel.priceFrom, hotel.currency)}`,
                   published: hotel.published,

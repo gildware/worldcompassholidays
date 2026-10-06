@@ -24,6 +24,7 @@ model Destination {
   imageKey    String
   imageDriver String   @default("local")
   published   Boolean  @default(true)
+  popular     Boolean  @default(false)
   parentId    String?
   parent      Destination?  @relation("DestinationParent", fields: [parentId], references: [id], onDelete: Restrict)
   children    Destination[] @relation("DestinationParent")
@@ -156,30 +157,69 @@ model ItineraryDay {
 }
 
 model Hotel {
-  id            String      @id @default(cuid())
-  slug          String      @unique
-  name          String
-  summary       String
-  address       String      @default("")
-  priceFrom     Int
-  currency      String      @default("INR")
-  published     Boolean     @default(false)
-  destinationId String
-  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
-  rooms         Room[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id                  String       @id @default(cuid())
+  slug                String       @unique
+  name                String
+  summary             String       @default("")
+  description         String       @default("")
+  propertyType        String       @default("hotel")
+  starRating          Int          @default(0)
+  checkIn             String       @default("14:00")
+  checkOut            String       @default("11:00")
+  priceFrom           Int          @default(0)
+  currency            String       @default("INR")
+  imageUrl            String       @default("")
+  imageKey            String       @default("")
+  imageDriver         String       @default("local")
+  featuredImageUrl    String       @default("")
+  featuredImageKey    String       @default("")
+  featuredImageDriver String       @default("local")
+  galleryJson         String       @default("[]")
+  amenitiesJson       String       @default("[]")
+  faqsJson            String       @default("[]")
+  cancellationPolicy  String       @default("")
+  houseRules          String       @default("")
+  address             String       @default("")
+  mapLat              String       @default("")
+  mapLng              String       @default("")
+  mapZoom             Int          @default(14)
+  isFeatured          Boolean      @default(false)
+  seoIndex            Boolean      @default(true)
+  seoTitle            String       @default("")
+  seoDescription      String       @default("")
+  seoImageUrl         String       @default("")
+  seoImageKey         String       @default("")
+  seoImageDriver      String       @default("local")
+  published           Boolean      @default(false)
+  destinationId       String?
+  destination         Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  rooms               Room[]
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   @@index([destinationId])
 }
 
 model Room {
-  id            String @id @default(cuid())
-  hotelId       String
-  hotel         Hotel  @relation(fields: [hotelId], references: [id], onDelete: Cascade)
-  name          String
-  occupancy     Int
-  pricePerNight Int
+  id              String  @id @default(cuid())
+  hotelId         String
+  hotel           Hotel   @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  name            String
+  summary         String  @default("")
+  occupancy       Int     @default(2)
+  bedType         String  @default("")
+  sizeSqm         Int?
+  quantity        Int     @default(1)
+  pricePerNight   Int     @default(0)
+  extraGuestPrice Int     @default(0)
+  mealPlan        String  @default("room_only")
+  featuresJson    String  @default("[]")
+  amenitiesJson   String  @default("[]")
+  imageUrl        String  @default("")
+  imageKey        String  @default("")
+  imageDriver     String  @default("local")
+  active          Boolean @default(true)
+  sortOrder       Int     @default(0)
 
   @@index([hotelId])
 }
@@ -187,6 +227,7 @@ model Room {
 model Vehicle {
   id                 String      @id @default(cuid())
   slug               String      @unique
+  registrationNumber String      @unique
   kind               String
   name               String
   summary            String
@@ -278,6 +319,12 @@ model RentalLocation {
   name          String
   slug          String       @unique
   address       String       @default("")
+  mapLat        String       @default("")
+  mapLng        String       @default("")
+  mapZoom       Int          @default(14)
+  imageUrl      String       @default("")
+  imageKey      String       @default("")
+  imageDriver   String       @default("local")
   active        Boolean      @default(true)
   destinationId String?
   destination   Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)

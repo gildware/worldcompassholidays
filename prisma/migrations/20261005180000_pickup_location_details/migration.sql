@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "RentalLocation" ADD COLUMN "mapLat" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "RentalLocation" ADD COLUMN "mapLng" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "RentalLocation" ADD COLUMN "mapZoom" INTEGER NOT NULL DEFAULT 14;
+ALTER TABLE "RentalLocation" ADD COLUMN "imageUrl" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "RentalLocation" ADD COLUMN "imageKey" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "RentalLocation" ADD COLUMN "imageDriver" TEXT NOT NULL DEFAULT 'local';

@@ -77,7 +77,9 @@ export default async function RentalBookingPage({ params }: Props) {
           <h1 className="text-3xl font-semibold">{booking.vehicle.name}</h1>
           <StatusPill status={booking.status} label={rentalStatusLabel(booking.status)} />
         </div>
-        <p className="mt-2 text-sm text-muted">{booking.reference}</p>
+        <p className="mt-2 text-sm text-muted">
+          {booking.vehicle.registrationNumber} · {booking.reference}
+        </p>
       </div>
 
       <section className="grid gap-3 rounded-xl border border-line bg-white p-5 text-sm md:grid-cols-2">

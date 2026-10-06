@@ -29,6 +29,7 @@ export type DestinationFormValues = {
   imageKey: string;
   imageDriver: string;
   published: boolean;
+  popular: boolean;
   parentId: string | null;
 };
 
@@ -42,6 +43,7 @@ export function DestinationForm({
   parentOptions,
   mapApiKey,
   published = true,
+  popular = false,
   onCancel,
   onSuccess,
 }: {
@@ -49,6 +51,7 @@ export function DestinationForm({
   parentOptions: DestinationParentOption[];
   mapApiKey: string;
   published?: boolean;
+  popular?: boolean;
   onCancel?: () => void;
   onSuccess?: (message: string) => void;
 }) {
@@ -84,6 +87,7 @@ export function DestinationForm({
       mapLng.trim() !== destination.mapLng.trim() ||
       mapZoom !== destination.mapZoom ||
       published !== destination.published ||
+      popular !== destination.popular ||
       image?.url !== initialImage?.url ||
       image?.key !== initialImage?.key ||
       image?.driver !== initialImage?.driver
@@ -112,6 +116,7 @@ export function DestinationForm({
         <input type="hidden" name="destinationId" value={destination.id} />
       ) : null}
       {published ? <input type="hidden" name="published" value="on" /> : null}
+      {popular ? <input type="hidden" name="popular" value="on" /> : null}
       {state.error ? <FormMessage state={state} /> : null}
 
       <div className="grid items-start gap-5 sm:grid-cols-[minmax(0,1fr)_16rem]">

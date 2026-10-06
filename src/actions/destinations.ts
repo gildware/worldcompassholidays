@@ -24,6 +24,7 @@ const destinationSchema = z.object({
     .refine(isKnownCountry, "Choose a country from the list"),
   summary: z.string().trim().min(10, "Add a short summary").max(280),
   published: z.boolean(),
+  popular: z.boolean(),
   parentId: z.string().trim(),
   mapLat: z.string(),
   mapLng: z.string(),
@@ -44,6 +45,7 @@ function readDestination(formData: FormData) {
     country: formData.get("country"),
     summary: formData.get("summary"),
     published: formData.get("published") === "on",
+    popular: formData.get("popular") === "on",
     parentId: String(formData.get("parentId") ?? ""),
     mapLat: map.mapLat,
     mapLng: map.mapLng,
@@ -118,6 +120,7 @@ export async function createDestination(
       mapLng: parsed.data.mapLng,
       mapZoom: parsed.data.mapZoom,
       published: parsed.data.published,
+      popular: parsed.data.popular,
       parentId: parent.parentId,
       slug,
       imageUrl: uploaded!.url,
@@ -199,6 +202,7 @@ export async function updateDestination(
       mapLng: parsed.data.mapLng,
       mapZoom: parsed.data.mapZoom,
       published: parsed.data.published,
+      popular: parsed.data.popular,
       parentId: parent.parentId,
       slug,
       imageUrl,
@@ -228,6 +232,29 @@ export async function updateDestination(
   }
   await rememberDestinationToast("updated");
   redirect("/admin/destinations?saved=updated");
+}
+
+export async function setDestinationPopular(
+  destinationId: string,
+  popular: boolean,
+) {
+  await requirePermission("destinations.manage");
+  const destination = await prisma.destination.findUnique({
+    where: { id: destinationId },
+    select: { id: true, slug: true },
+  });
+  if (!destination) return { error: "Destination not found." };
+
+  try {
+    await prisma.destination.update({
+      where: { id: destinationId },
+      data: { popular },
+    });
+  } catch {
+    return { error: "Could not update this destination. Try again." };
+  }
+  revalidateDestinationPaths(destination.slug);
+  return { error: null as string | null };
 }
 
 export async function deleteDestination(formData: FormData) {

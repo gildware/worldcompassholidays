@@ -9,6 +9,7 @@ export const metadata: Metadata = { title: "Add vehicle" };
 
 const blank: VehicleFormValues = {
   name: "",
+  registrationNumber: "",
   kind: "car",
   brand: "",
   modelName: "",

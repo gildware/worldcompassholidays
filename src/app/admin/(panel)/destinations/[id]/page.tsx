@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DestinationView } from "@/components/admin/DestinationView";
 import { requirePermission } from "@/lib/auth/guards";
+import { can } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { mapApiKey } from "@/lib/map-key";
 
@@ -12,7 +13,7 @@ export default async function AdminDestinationViewPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requirePermission("destinations.view");
+  const user = await requirePermission("destinations.view");
   const { id } = await params;
 
   const destination = await prisma.destination.findUnique({
@@ -109,6 +110,7 @@ export default async function AdminDestinationViewPage({
   return (
     <DestinationView
       mapApiKey={mapApiKey()}
+      canManage={can(user, "destinations.manage")}
       destination={{
         id: destination.id,
         name: destination.name,
@@ -121,6 +123,7 @@ export default async function AdminDestinationViewPage({
         mapZoom: destination.mapZoom,
         imageUrl: destination.imageUrl,
         published: destination.published,
+        popular: destination.popular,
         parent: destination.parent,
         children: destination.children,
         tours,

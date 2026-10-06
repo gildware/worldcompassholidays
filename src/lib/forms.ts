@@ -5,6 +5,7 @@ export type FormState = {
   success?: string | null;
   tourId?: string | null;
   vehicleId?: string | null;
+  hotelId?: string | null;
 };
 
 export const initialFormState: FormState = {

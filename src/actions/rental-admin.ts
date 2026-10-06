@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
@@ -12,7 +13,6 @@ import { parseDateOnly, parseDateTimeLocal } from "@/lib/rentals/dates";
 import {
   fleetKinds,
   isRentalConfigKind,
-  maintenanceStatuses,
   vehicleBaseStatuses,
 } from "@/lib/rentals/labels";
 import { blockingBookingStatuses } from "@/lib/rentals/labels";
@@ -22,18 +22,13 @@ function fail(error: unknown): FormState {
   return { error: "Something went wrong. Try again." };
 }
 
-function wholeNumber(value: unknown, label: string, min = 0) {
-  const parsed = z.coerce.number().int().min(min, `${label} must be at least ${min}.`);
-  return parsed.parse(value === "" || value === null || value === undefined ? 0 : value);
-}
-
 function revalidateFleet(slug?: string) {
   revalidatePath("/admin/rentals");
   revalidatePath("/admin/rentals/fleet");
   revalidatePath("/admin/rentals/configuration");
+  revalidatePath("/admin/configuration");
   revalidatePath("/admin/rentals/locations");
   revalidatePath("/admin/rentals/policies");
-  revalidatePath("/admin/rentals/maintenance");
   revalidatePath("/rentals");
   revalidatePath("/destinations");
   if (slug) revalidatePath(`/rentals/${slug}`);
@@ -141,8 +136,6 @@ export async function saveRentalSettings(
   formData: FormData,
 ): Promise<FormState> {
   await requirePermission("vehicles.manage");
-  const taxPercent = z.coerce.number().int().min(0).max(100).safeParse(formData.get("taxPercent") || 0);
-  if (!taxPercent.success) return { error: "Tax percent must be between 0 and 100." };
   const allowCounterPickup = formData.get("allowCounterPickup") === "on";
   const allowHomeDelivery = formData.get("allowHomeDelivery") === "on";
   if (!allowCounterPickup && !allowHomeDelivery) {
@@ -153,7 +146,6 @@ export async function saveRentalSettings(
     data: {
       allowCounterPickup,
       allowHomeDelivery,
-      taxPercent: taxPercent.data,
     },
   });
   revalidateFleet();
@@ -238,24 +230,47 @@ export async function saveRentalLocation(
   await requirePermission("vehicles.manage");
   const name = String(formData.get("name") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
-  const destinationId = String(formData.get("destinationId") ?? "") || null;
+  const mapLat = String(formData.get("mapLat") ?? "").trim();
+  const mapLng = String(formData.get("mapLng") ?? "").trim();
+  const zoom = Number(formData.get("mapZoom") ?? 14);
+  const mapZoom = Number.isInteger(zoom) ? Math.min(20, Math.max(1, zoom)) : 14;
+  const imageUrl = String(formData.get("imageUrl") ?? "").trim();
+  const imageKey = String(formData.get("imageKey") ?? "").trim();
+  const imageDriver = String(formData.get("imageDriver") ?? "") === "cloudinary" ? "cloudinary" : "local";
   const id = String(formData.get("id") ?? "");
   const active = formData.get("active") === "on";
   if (name.length < 2) return { error: "Enter a location name." };
+  if (address.length < 2) return { error: "Enter the address." };
+  if (!imageUrl) return { error: "Add an image." };
+  if ((mapLat && Number.isNaN(Number(mapLat))) || (mapLng && Number.isNaN(Number(mapLng)))) {
+    return { error: "Enter a valid map location." };
+  }
+  if (Boolean(mapLat) !== Boolean(mapLng)) return { error: "Enter both latitude and longitude." };
   const slug = await uniqueSlug(name, async (candidate) => {
     const existing = await prisma.rentalLocation.findUnique({ where: { slug: candidate } });
     return Boolean(existing && existing.id !== id);
   });
+  const data = {
+    name,
+    address,
+    mapLat,
+    mapLng,
+    mapZoom,
+    imageUrl,
+    imageKey,
+    imageDriver,
+    active,
+  };
   if (id) {
     const current = await prisma.rentalLocation.findUnique({ where: { id } });
     if (!current) return { error: "Location not found." };
     await prisma.rentalLocation.update({
       where: { id },
-      data: { name, address, destinationId, active },
+      data,
     });
   } else {
     await prisma.rentalLocation.create({
-      data: { name, address, destinationId, active, slug },
+      data: { ...data, slug },
     });
   }
   revalidateFleet();
@@ -277,6 +292,11 @@ export async function deleteRentalLocation(
   return { error: null, success: "Location deleted." };
 }
 
+export async function removePickupLocation(formData: FormData) {
+  const result = await deleteRentalLocation({ error: null }, formData);
+  if (result.error) redirect("/admin/rentals/locations?blocked=used");
+}
+
 const imageSchema = z.array(
   z.object({
     url: z.string().min(1),
@@ -288,6 +308,13 @@ const imageSchema = z.array(
 const vehicleSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(2, "Enter the vehicle name.").max(120),
+  registrationNumber: z
+    .string()
+    .trim()
+    .min(4, "Enter the registration number.")
+    .max(16)
+    .transform((value) => value.replace(/[\s-]/g, "").toUpperCase())
+    .refine((value) => /^[A-Z0-9]{4,16}$/.test(value), "Use letters and numbers only."),
   kind: z.enum(["car", "bike"]),
   brand: z.string().trim().max(80).optional().default(""),
   modelName: z.string().trim().max(80).optional().default(""),
@@ -328,6 +355,7 @@ export async function saveVehicle(
   const parsed = vehicleSchema.safeParse({
     id: String(formData.get("id") ?? "") || undefined,
     name: formData.get("name"),
+    registrationNumber: formData.get("registrationNumber"),
     kind: formData.get("kind"),
     brand: formData.get("brand") ?? "",
     modelName: formData.get("modelName") ?? "",
@@ -434,6 +462,7 @@ export async function saveVehicle(
 
   const record = {
     name: data.name,
+    registrationNumber: data.registrationNumber,
     kind: data.kind,
     brand: data.brand,
     modelName: data.modelName,
@@ -470,6 +499,14 @@ export async function saveVehicle(
       })
     : null;
   if (data.id && !existing) return { error: "Vehicle not found." };
+
+  const registrationTaken = await prisma.vehicle.findUnique({
+    where: { registrationNumber: data.registrationNumber },
+    select: { id: true },
+  });
+  if (registrationTaken && registrationTaken.id !== existing?.id) {
+    return { error: "That registration number is already used by another vehicle." };
+  }
 
   const slug = existing
     ? existing.slug
@@ -709,89 +746,4 @@ export async function deleteVehicleBlock(
   await prisma.vehicleBlock.delete({ where: { id: block.id } });
   revalidateFleet();
   return { error: null, success: "Block removed." };
-}
-
-export async function saveMaintenance(
-  _previous: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  await requirePermission("vehicles.manage");
-  const id = String(formData.get("id") ?? "");
-  const vehicleId = String(formData.get("vehicleId") ?? "");
-  const title = String(formData.get("title") ?? "").trim();
-  const status = String(formData.get("status") ?? "scheduled");
-  const startAt = parseDateTimeLocal(String(formData.get("startAt") ?? ""));
-  const endAt = parseDateTimeLocal(String(formData.get("endAt") ?? ""));
-  if (title.length < 2) return { error: "Enter a maintenance title." };
-  if (!maintenanceStatuses.includes(status as (typeof maintenanceStatuses)[number])) {
-    return { error: "Choose a maintenance status." };
-  }
-  if (!startAt || !endAt || endAt <= startAt) {
-    return { error: "Enter a start and an end, with the end after the start." };
-  }
-  const cost = wholeNumber(formData.get("cost") || 0, "Cost");
-  const notes = String(formData.get("notes") ?? "").trim();
-  const blocksCalendar = status === "scheduled" || status === "in_progress";
-  if (blocksCalendar) {
-    const clash = await prisma.rentalBooking.findFirst({
-      where: {
-        vehicleId,
-        status: { in: [...blockingBookingStatuses] },
-        pickupAt: { lt: endAt },
-        returnAt: { gt: startAt },
-      },
-      select: { reference: true },
-    });
-    if (clash) return { error: `Those dates overlap booking ${clash.reference}.` };
-  }
-
-  if (id) {
-    const current = await prisma.maintenanceRecord.findUnique({ where: { id } });
-    if (!current) return { error: "Maintenance record not found." };
-    await prisma.maintenanceRecord.update({
-      where: { id },
-      data: { vehicleId, title, notes, startAt, endAt, status, cost },
-    });
-    if (blocksCalendar) {
-      await prisma.vehicleBlock.upsert({
-        where: { maintenanceId: id },
-        update: { vehicleId, kind: "maintenance", startAt, endAt, reason: title },
-        create: { vehicleId, kind: "maintenance", startAt, endAt, reason: title, maintenanceId: id },
-      });
-    } else {
-      await prisma.vehicleBlock.deleteMany({ where: { maintenanceId: id } });
-    }
-  } else {
-    const created = await prisma.maintenanceRecord.create({
-      data: { vehicleId, title, notes, startAt, endAt, status, cost },
-    });
-    if (blocksCalendar) {
-      await prisma.vehicleBlock.create({
-        data: {
-          vehicleId,
-          kind: "maintenance",
-          startAt,
-          endAt,
-          reason: title,
-          maintenanceId: created.id,
-        },
-      });
-    }
-  }
-
-  revalidateFleet();
-  revalidatePath("/admin/rentals/maintenance");
-  return { error: null, success: "Maintenance saved." };
-}
-
-export async function deleteMaintenance(
-  _previous: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  await requirePermission("vehicles.manage");
-  await prisma.maintenanceRecord.delete({
-    where: { id: String(formData.get("id") ?? "") },
-  });
-  revalidateFleet();
-  return { error: null, success: "Maintenance record deleted." };
 }

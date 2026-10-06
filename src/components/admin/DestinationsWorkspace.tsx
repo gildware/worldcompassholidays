@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { deleteDestination } from "@/actions/destinations";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { deleteDestination, setDestinationPopular } from "@/actions/destinations";
 import {
   DestinationForm,
   type DestinationFormValues,
@@ -24,6 +24,7 @@ type SortKey =
   | "country"
   | "places"
   | "listings"
+  | "popular"
   | "status";
 
 type DestinationRow = DestinationFormValues & {
@@ -207,6 +208,13 @@ export function DestinationsWorkspace({
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<DestinationRow | null>(null);
   const [published, setPublished] = useState(true);
+  const [formPopular, setFormPopular] = useState(false);
+  const [popularState, setPopularState] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(destinations.map((item) => [item.id, item.popular])),
+  );
+  const [popularError, setPopularError] = useState<string | null>(null);
+  const [pendingPopularId, setPendingPopularId] = useState<string | null>(null);
+  const [, startPopular] = useTransition();
   const [deleting, setDeleting] = useState<DestinationRow | null>(null);
   const [toast, setToast] = useState<string | null>(() => toastMessage(notice));
 
@@ -218,6 +226,12 @@ export function DestinationsWorkspace({
     close();
     setToast(message);
   }, []);
+
+  useEffect(() => {
+    setPopularState(
+      Object.fromEntries(destinations.map((item) => [item.id, item.popular])),
+    );
+  }, [destinations]);
 
   useEffect(() => {
     const message = toastMessage(notice);
@@ -280,6 +294,8 @@ export function DestinationsWorkspace({
           return item.childCount;
         case "listings":
           return item.linkedCount;
+        case "popular":
+          return popularState[item.id] ? 1 : 0;
         case "status":
           return item.published ? "Active" : "Inactive";
         default:
@@ -303,6 +319,7 @@ export function DestinationsWorkspace({
     destinations,
     parentFilter,
     sortDir,
+    popularState,
     sortKey,
     statusFilter,
   ]);
@@ -312,6 +329,21 @@ export function DestinationsWorkspace({
     statusFilter !== "all" ||
     parentFilter !== "all" ||
     countryFilter !== "all";
+
+  function togglePopular(destination: DestinationRow) {
+    const next = !(popularState[destination.id] ?? destination.popular);
+    setPopularError(null);
+    setPopularState((current) => ({ ...current, [destination.id]: next }));
+    setPendingPopularId(destination.id);
+    startPopular(async () => {
+      const result = await setDestinationPopular(destination.id, next);
+      setPendingPopularId(null);
+      if (result.error) {
+        setPopularState((current) => ({ ...current, [destination.id]: !next }));
+        setPopularError(result.error);
+      }
+    });
+  }
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -371,7 +403,8 @@ export function DestinationsWorkspace({
             Destinations
           </h1>
           <p className="mt-0.5 text-xs text-muted">
-            Places on the site. A destination can sit inside another, such as
+            Places on the site. Mark a destination as popular to feature it on
+            the home page. A destination can sit inside another, such as
             Pahalgam inside Kashmir.
           </p>
         </div>
@@ -380,7 +413,10 @@ export function DestinationsWorkspace({
             type="button"
             size="sm"
             className="w-full shrink-0 sm:w-auto"
-            onClick={() => setCreateOpen(true)}
+            onClick={() => {
+              setFormPopular(false);
+              setCreateOpen(true);
+            }}
           >
             Add destination
           </Button>
@@ -411,6 +447,14 @@ export function DestinationsWorkspace({
         >
           That destination still has tours, hotels, rentals, or bus routes. Move
           or remove them first.
+        </p>
+      ) : null}
+      {popularError ? (
+        <p
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800"
+        >
+          {popularError}
         </p>
       ) : null}
 
@@ -503,7 +547,7 @@ export function DestinationsWorkspace({
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-line bg-white">
-        <table className="w-full min-w-[64rem] border-collapse text-sm">
+        <table className="w-full min-w-[72rem] border-collapse text-sm">
           <thead className="border-b border-line bg-surface">
             <tr>
               <th scope="col" className="w-16 px-3 py-2.5">
@@ -554,6 +598,13 @@ export function DestinationsWorkspace({
                 align="right"
               />
               <SortHeader
+                label="Popular"
+                column="popular"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortHeader
                 label="Status"
                 column="status"
                 sortKey={sortKey}
@@ -569,7 +620,7 @@ export function DestinationsWorkspace({
             {destinations.length === 0 ? (
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={10}
                   className="px-3 py-8 text-center text-sm text-muted"
                 >
                   No destinations yet.
@@ -579,7 +630,7 @@ export function DestinationsWorkspace({
             ) : filtered.length === 0 ? (
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={10}
                   className="px-3 py-8 text-center text-sm text-muted"
                 >
                   No destinations match these filters.
@@ -619,6 +670,24 @@ export function DestinationsWorkspace({
                     {destination.linkedCount}
                   </td>
                   <td className="px-3 py-2">
+                    {canManage ? (
+                      <Toggle
+                        checked={Boolean(popularState[destination.id])}
+                        disabled={pendingPopularId === destination.id}
+                        onChange={() => togglePopular(destination)}
+                        label={
+                          popularState[destination.id]
+                            ? `${destination.name} is popular`
+                            : `Mark ${destination.name} as popular`
+                        }
+                      />
+                    ) : popularState[destination.id] ? (
+                      <Badge tone="brand">Popular</Badge>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
                     {destination.published ? (
                       <Badge tone="success">Active</Badge>
                     ) : (
@@ -640,6 +709,7 @@ export function DestinationsWorkspace({
                           tone="edit"
                           onClick={() => {
                             setPublished(destination.published);
+                            setFormPopular(Boolean(popularState[destination.id]));
                             setEditing(destination);
                           }}
                         >
@@ -671,10 +741,25 @@ export function DestinationsWorkspace({
         description="Add a top-level place, or put it inside another destination."
         size="xl"
         fill
+        headerExtra={
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 text-sm font-medium text-navy">
+              Popular
+              <FieldHelp label="Popular" />
+            </span>
+            <Toggle
+              checked={formPopular}
+              onChange={setFormPopular}
+              label={formPopular ? "Popular" : "Not popular"}
+              size="md"
+            />
+          </div>
+        }
       >
         <DestinationForm
           parentOptions={parentOptionsFor()}
           mapApiKey={mapApiKey}
+          popular={formPopular}
           onCancel={closeCreate}
           onSuccess={(message) => afterSave(closeCreate, message)}
         />
@@ -688,17 +773,31 @@ export function DestinationsWorkspace({
         size="xl"
         fill
         headerExtra={
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-sm font-medium text-navy">
-              Active
-              <FieldHelp label="Active" />
-            </span>
-            <Toggle
-              checked={published}
-              onChange={setPublished}
-              label={published ? "Active" : "Inactive"}
-              size="md"
-            />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-navy">
+                Popular
+                <FieldHelp label="Popular" />
+              </span>
+              <Toggle
+                checked={formPopular}
+                onChange={setFormPopular}
+                label={formPopular ? "Popular" : "Not popular"}
+                size="md"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-navy">
+                Active
+                <FieldHelp label="Active" />
+              </span>
+              <Toggle
+                checked={published}
+                onChange={setPublished}
+                label={published ? "Active" : "Inactive"}
+                size="md"
+              />
+            </div>
           </div>
         }
       >
@@ -708,6 +807,7 @@ export function DestinationsWorkspace({
             parentOptions={parentOptionsFor(editing.id)}
             mapApiKey={mapApiKey}
             published={published}
+            popular={formPopular}
             onCancel={closeEdit}
             onSuccess={(message) => afterSave(closeEdit, message)}
           />

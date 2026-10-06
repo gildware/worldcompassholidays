@@ -44,6 +44,10 @@ const guides: Record<string, FieldGuide> = {
     what: "Whether this destination is visible on the public website.",
     why: "Leave it inactive while the page is incomplete. Mark it active when travelers should be able to find and open it.",
   },
+  Popular: {
+    what: "Whether this destination appears in Popular Destinations on the home page.",
+    why: "Use it for the places you want travelers to see first. It only shows on the home page when the destination is also active.",
+  },
   "staff.name": {
     what: "The staff member’s full name.",
     why: "It is how they appear in the admin and on their account. Use the name the rest of the team will recognize.",

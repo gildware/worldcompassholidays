@@ -137,8 +137,8 @@ export async function keepCatalogIds(kind: CatalogKind, raw: string) {
   return keepIds(kind, requested);
 }
 
-/** Shared FAQ ids plus questions that belong only to this tour. */
-export async function keepFaqEntries(raw: string) {
+/** Shared FAQ ids plus questions that belong only to this listing. */
+export async function keepFaqEntries(raw: string, kind: CatalogKind = "faq") {
   let parsed: unknown = [];
   try {
     parsed = JSON.parse(raw);
@@ -146,8 +146,43 @@ export async function keepFaqEntries(raw: string) {
     parsed = [];
   }
   if (!Array.isArray(parsed)) return [];
-  const ids = await keepIds("faq", selectionKeys(parsed));
+  const ids = await keepIds(kind, selectionKeys(parsed));
   return packFaqs(ids, localFaqs(parsed));
+}
+
+export type HotelCatalog = {
+  amenities: CatalogOption[];
+  features: CatalogOption[];
+  roomAmenities: CatalogOption[];
+  faqs: CatalogOption[];
+};
+
+export async function loadHotelCatalog(): Promise<HotelCatalog> {
+  const rows = await prisma.catalogItem.findMany({
+    where: {
+      kind: { in: ["hotel_amenity", "room_feature", "room_amenity", "hotel_faq"] },
+    },
+    orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
+    select: { id: true, kind: true, title: true, iconUrl: true, content: true },
+  });
+
+  function pick(kind: string): CatalogOption[] {
+    return rows
+      .filter((row) => row.kind === kind)
+      .map((row) => ({
+        id: row.id,
+        title: row.title,
+        iconUrl: row.iconUrl,
+        content: row.content,
+      }));
+  }
+
+  return {
+    amenities: pick("hotel_amenity"),
+    features: pick("room_feature"),
+    roomAmenities: pick("room_amenity"),
+    faqs: pick("hotel_faq"),
+  };
 }
 
 async function keepIds(kind: CatalogKind, requested: string[]) {
