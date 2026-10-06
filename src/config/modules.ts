@@ -3,7 +3,7 @@ export const modules = {
   hotels: true,
   cars: true,
   bikes: true,
-  buses: true,
+  buses: false,
 } as const;
 
 export type ModuleKey = keyof typeof modules;

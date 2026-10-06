@@ -445,7 +445,7 @@ export function DestinationsWorkspace({
           role="alert"
           className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
         >
-          That destination still has tours, hotels, rentals, or bus routes. Move
+          That destination still has tours, hotels, or rentals. Move
           or remove them first.
         </p>
       ) : null}

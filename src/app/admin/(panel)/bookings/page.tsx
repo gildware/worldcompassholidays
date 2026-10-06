@@ -21,7 +21,7 @@ export default async function AdminBookingsPage() {
     <div>
       <h1 className="text-2xl font-semibold">Bookings</h1>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-        Tours, hotels, cars, bikes, and buses share this list. Website messages
+        Tours, hotels, cars, and bikes share this list. Website messages
         arrive as enquiries.
         {canManage ? "" : " Your role can view bookings but not change them."}
       </p>

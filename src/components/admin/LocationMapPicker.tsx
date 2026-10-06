@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { loadGoogleMaps } from "@/lib/google-maps";
 import { parseMapPoint } from "@/lib/maps";
 
 type LatLng = { lat: number; lng: number };
@@ -17,7 +18,7 @@ type MapHandle = {
 };
 
 type MarkerHandle = {
-  setMap: (map: MapHandle | null) => void;
+  setMap: (map: object | null) => void;
   setPosition: (position: LatLng) => void;
 };
 
@@ -48,55 +49,7 @@ type GeocoderService = {
   ) => void;
 };
 
-type MapsApi = {
-  importLibrary: (name: string) => Promise<Record<string, unknown>>;
-  Marker: new (options: object) => MarkerHandle;
-  event: {
-    addListenerOnce: (instance: object, event: string, handler: () => void) => void;
-  };
-};
-
-declare global {
-  interface Window {
-    google?: { maps: MapsApi };
-  }
-}
-
 const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629, zoom: 4 };
-const loads = new Map<string, Promise<void>>();
-
-function mapsReady() {
-  return Boolean(
-    window.google?.maps?.importLibrary && typeof window.google.maps.Marker === "function",
-  );
-}
-
-function loadGoogleMaps(apiKey: string) {
-  if (mapsReady()) return Promise.resolve();
-  const pending = loads.get(apiKey);
-  if (pending) return pending;
-
-  const promise = new Promise<void>((resolve, reject) => {
-    const callback = `__initGoogleMaps_${Date.now()}`;
-    const win = window as Window & Record<string, (() => void) | undefined>;
-    win[callback] = () => {
-      delete win[callback];
-      if (mapsReady()) resolve();
-      else reject(new Error("Google Maps did not finish loading."));
-    };
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&v=weekly&callback=${callback}`;
-    script.async = true;
-    script.onerror = () => {
-      delete win[callback];
-      loads.delete(apiKey);
-      reject(new Error("Google Maps failed to load."));
-    };
-    document.head.appendChild(script);
-  });
-  loads.set(apiKey, promise);
-  return promise;
-}
 
 export function LocationMapPicker({
   apiKey,

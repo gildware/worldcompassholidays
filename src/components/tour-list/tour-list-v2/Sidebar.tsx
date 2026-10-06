@@ -2,11 +2,11 @@
 
 import { CountFilter } from "@/components/hotel-list/sidebar/Filters";
 import { PriceSlider } from "@/components/hotel-list/sidebar/PriceSlider";
-import { MainFilterSearchBox } from "@/components/tour-list/tour-list-v2/MainFilterSearchBox";
-import type { TourListLocation } from "@/components/tour-list/types";
-import type { DateObject } from "react-multi-date-picker";
+import { SearchBox } from "@/components/hotel-list/sidebar/SearchBox";
+import type { CountOption } from "@/components/hotel-list/types";
 
 export type TourListFilters = {
+  query: string;
   categories: string[];
   other: string[];
   price: [number, number];
@@ -19,11 +19,6 @@ export function Sidebar({
   onChange,
   priceMax,
   currency,
-  locations,
-  location,
-  onLocation,
-  dates,
-  onDates,
   categories,
   others,
   durations,
@@ -33,33 +28,22 @@ export function Sidebar({
   onChange: (next: TourListFilters) => void;
   priceMax: number;
   currency: string;
-  locations: TourListLocation[];
-  location: string;
-  onLocation: (value: string) => void;
-  dates: DateObject[];
-  onDates: (dates: DateObject[]) => void;
-  categories: { label: string; count: number }[];
-  others: { label: string; count: number }[];
-  durations: { label: string; count: number }[];
-  languages: { label: string; count: number }[];
+  categories: CountOption[];
+  others: CountOption[];
+  durations: CountOption[];
+  languages: CountOption[];
 }) {
   const patch = (next: Partial<TourListFilters>) => onChange({ ...filters, ...next });
 
   return (
     <>
       <div className="sidebar__item -no-border">
-        <div className="px-20 py-20 bg-light-2 rounded-4">
-          <h5 className="text-18 fw-500 mb-10">Search Tours</h5>
-          <div className="row y-gap-20 pt-20">
-            <MainFilterSearchBox
-              locations={locations}
-              location={location}
-              onLocation={onLocation}
-              dates={dates}
-              onDates={onDates}
-            />
-          </div>
-        </div>
+        <h5 className="text-18 fw-500 mb-10">Search by tour name</h5>
+        <SearchBox
+          value={filters.query}
+          onChange={(query) => patch({ query })}
+          placeholder="e.g. Dal Lake"
+        />
       </div>
 
       <div className="sidebar__item -no-border">

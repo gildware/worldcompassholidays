@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { DestinationsWorkspace } from "@/components/admin/DestinationsWorkspace";
+import { modules } from "@/config/modules";
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
@@ -55,7 +56,7 @@ export default async function AdminDestinationsPage({
           destination._count.tours +
           destination._count.hotels +
           destination._count.vehicles +
-          destination._count.busRoutes;
+          (modules.buses ? destination._count.busRoutes : 0);
 
         const parts = [
           destination.parent ? `In ${destination.parent.name}` : null,
@@ -69,7 +70,7 @@ export default async function AdminDestinationsPage({
           destination._count.vehicles
             ? `${destination._count.vehicles} rental${destination._count.vehicles === 1 ? "" : "s"}`
             : null,
-          destination._count.busRoutes
+          modules.buses && destination._count.busRoutes
             ? `${destination._count.busRoutes} bus route${destination._count.busRoutes === 1 ? "" : "s"}`
             : null,
           linkedCount === 0 ? "No listings yet" : null,

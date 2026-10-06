@@ -1,6 +1,7 @@
 "use client";
 
 import { DateSearch } from "@/components/hotel-list/common/DateSearch";
+import { GuestSearch, type GuestCounts } from "@/components/hotel-list/common/GuestSearch";
 import { LocationSearch } from "@/components/tour-list/tour-list-v2/LocationSearch";
 import type { TourListLocation } from "@/components/tour-list/types";
 import type { DateObject } from "react-multi-date-picker";
@@ -11,32 +12,31 @@ export function MainFilterSearchBox({
   onLocation,
   dates,
   onDates,
+  guests,
+  onGuests,
 }: {
   locations: TourListLocation[];
   location: string;
   onLocation: (value: string) => void;
   dates: DateObject[];
   onDates: (dates: DateObject[]) => void;
+  guests: GuestCounts;
+  onGuests: (counts: GuestCounts) => void;
 }) {
   return (
-    <>
-      <div className="col-12">
+    <div className="mainSearch -col-3-big bg-white px-10 py-10 lg:px-20 lg:pt-5 lg:pb-20 rounded-4 mt-30">
+      <div className="button-grid items-center">
         <LocationSearch locations={locations} value={location} onChange={onLocation} />
-      </div>
 
-      <div className="col-12">
-        <div className="searchMenu-date px-20 py-10 bg-white rounded-4 -left js-form-dd js-calendar">
-          <div className="d-flex">
-            <i className="icon-calendar-2 text-20 text-light-1 mt-5"></i>
-            <div className="ml-10 flex-grow-1">
-              <h4 className="text-15 fw-500 ls-2 lh-16">Check in - Check out</h4>
-              <DateSearch dates={dates} onChange={onDates} />
-            </div>
+        <div className="searchMenu-date px-30 lg:py-20 sm:px-20 js-form-dd js-calendar">
+          <div>
+            <h4 className="text-15 fw-500 ls-2 lh-16">Check in - Check out</h4>
+            <DateSearch dates={dates} onChange={onDates} />
           </div>
         </div>
-      </div>
 
-      <div className="col-12">
+        <GuestSearch guestCounts={guests} onChange={onGuests} />
+
         <div className="button-item h-full">
           <button
             type="button"
@@ -47,6 +47,6 @@ export function MainFilterSearchBox({
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

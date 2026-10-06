@@ -5,11 +5,13 @@ export function Pagination({
   pageSize,
   total,
   onPage,
+  itemLabel = "properties",
 }: {
   page: number;
   pageSize: number;
   total: number;
   onPage: (page: number) => void;
+  itemLabel?: string;
 }) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -63,7 +65,7 @@ export function Pagination({
 
           <div className="text-center mt-30 md:mt-10">
             <div className="text-14 text-light-1">
-              {start} – {end} of {total} properties found
+              {start} – {end} of {total} {itemLabel} found
             </div>
           </div>
         </div>

@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(process.cwd(), ".."),
   },
+  env: {
+    NEXT_PUBLIC_MAP_API_KEY: process.env.MAP_API_KEY ?? "",
+  },
   output: "standalone",
   transpilePackages: ["ckeditor5", "@ckeditor/ckeditor5-react"],
   serverExternalPackages: ["@prisma/client", "prisma"],

@@ -9,7 +9,9 @@ import "swiper/css/pagination";
 import CallToActions from "@/components/common/CallToActions";
 import DefaultFooter from "@/components/footer/default";
 import { GoTripFrame } from "@/components/gotrip/GoTripFrame";
+import type { GuestCounts } from "@/components/hotel-list/common/GuestSearch";
 import { Pagination } from "@/components/hotel-list/common/Pagination";
+import { MainFilterSearchBox } from "@/components/tour-list/tour-list-v2/MainFilterSearchBox";
 import { Sidebar, type TourListFilters } from "@/components/tour-list/tour-list-v2/Sidebar";
 import { TopHeaderFilter } from "@/components/tour-list/tour-list-v2/TopHeaderFilter";
 import { TourProperties } from "@/components/tour-list/tour-list-v2/TourProperties";
@@ -43,9 +45,11 @@ export function TourListV2({
     new DateObject().setDay(15),
     new DateObject().setDay(14).add(1, "month"),
   ]);
+  const [guests, setGuests] = useState<GuestCounts>({ Adults: 2, Children: 1, Rooms: 1 });
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<TourSort>("recommended");
   const [filters, setFilters] = useState<TourListFilters>({
+    query: "",
     categories: [],
     other: [],
     price: [0, priceMax],
@@ -74,15 +78,10 @@ export function TourListV2({
 
   const filtered = useMemo(() => {
     const place = location.trim().toLowerCase();
+    const query = filters.query.trim().toLowerCase();
     const matched = tours.filter((tour) => {
-      if (
-        place &&
-        !`${tour.title} ${tour.summary} ${tour.location} ${tour.address} ${tour.category}`
-          .toLowerCase()
-          .includes(place)
-      ) {
-        return false;
-      }
+      if (place && !`${tour.location} ${tour.address}`.toLowerCase().includes(place)) return false;
+      if (query && !tour.title.toLowerCase().includes(query)) return false;
       if (tour.price < filters.price[0] || tour.price > filters.price[1]) return false;
       if (filters.categories.length > 0 && !filters.categories.includes(tour.category)) return false;
       if (filters.other.includes("Free Cancellation") && !tour.freeCancellation) return false;
@@ -114,14 +113,6 @@ export function TourListV2({
     onChange: updateFilters,
     priceMax,
     currency,
-    locations,
-    location,
-    onLocation: (value: string) => {
-      setLocation(value);
-      setPage(1);
-    },
-    dates,
-    onDates: setDates,
     categories,
     others,
     durations,
@@ -131,6 +122,30 @@ export function TourListV2({
   return (
     <GoTripFrame>
       <div className="tour-list-v2">
+        <section className="pt-40 pb-40 bg-light-2">
+          <div className="container">
+            <div className="row">
+              <div className="col-12">
+                <div className="text-center">
+                  <h1 className="text-30 fw-600">Find Your Dream Tour</h1>
+                </div>
+                <MainFilterSearchBox
+                  locations={locations}
+                  location={location}
+                  onLocation={(value) => {
+                    setLocation(value);
+                    setPage(1);
+                  }}
+                  dates={dates}
+                  onDates={setDates}
+                  guests={guests}
+                  onGuests={setGuests}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="layout-pt-md layout-pb-lg">
           <div className="container">
             <div className="row y-gap-30">

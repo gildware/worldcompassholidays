@@ -12,10 +12,12 @@ export function EnquiryForm({
   interests,
   sent,
   customer,
+  compact = false,
 }: {
   interests: { value: string; label: string }[];
   sent: boolean;
   customer: { name: string; email: string; phone: string } | null;
+  compact?: boolean;
 }) {
   const [state, action] = useActionState(submitEnquiry, initialFormState);
 
@@ -31,8 +33,17 @@ export function EnquiryForm({
     );
   }
 
+  const fieldClass = compact ? "!gap-1.5 text-[15px]" : "";
+
   return (
-    <form action={action} className="grid gap-4">
+    <form
+      action={action}
+      className={
+        compact
+          ? "grid gap-3 [&_input]:!h-11 [&_textarea]:!min-h-24 [&_[aria-haspopup=listbox]]:!h-11"
+          : "grid gap-4"
+      }
+    >
       <FormMessage state={state} />
       {customer ? (
         <p className="rounded-md bg-surface px-3 py-2 text-sm text-muted">
@@ -40,35 +51,39 @@ export function EnquiryForm({
           appear in your account.
         </p>
       ) : (
-        <>
-          <Field label="Name" help="enquiry.name">
+        <div className={compact ? "grid gap-3 sm:grid-cols-2" : "contents"}>
+          <Field label="Name" help="enquiry.name" className={fieldClass}>
             <input name="name" autoComplete="name" required />
           </Field>
-          <Field label="Email" help="enquiry.email">
+          <Field label="Email" help="enquiry.email" className={fieldClass}>
             <input name="email" type="email" autoComplete="email" required />
           </Field>
-        </>
+        </div>
       )}
-      <Field label="Phone" help="enquiry.phone">
-        <input
-          name="phone"
-          type="tel"
-          autoComplete="tel"
-          defaultValue={customer?.phone}
-        />
+      <div className={compact ? "grid gap-3 sm:grid-cols-2" : "contents"}>
+        <Field label="Phone" help="enquiry.phone" className={fieldClass}>
+          <input
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            defaultValue={customer?.phone}
+          />
+        </Field>
+        <Field label="Interest" className={fieldClass}>
+          <SearchableSelect
+            name="interest"
+            defaultValue={interests[0]?.value ?? ""}
+            searchPlaceholder="Search interests"
+            options={interests}
+          />
+        </Field>
+      </div>
+      <Field label="Message" className={fieldClass}>
+        <textarea name="message" required rows={compact ? 3 : undefined} />
       </Field>
-      <Field label="Interest">
-        <SearchableSelect
-          name="interest"
-          defaultValue={interests[0]?.value ?? ""}
-          searchPlaceholder="Search interests"
-          options={interests}
-        />
-      </Field>
-      <Field label="Message">
-        <textarea name="message" required />
-      </Field>
-      <SubmitButton pendingLabel="Sending">Send enquiry</SubmitButton>
+      <SubmitButton pendingLabel="Sending" className={compact ? "!h-11 text-base" : ""}>
+        Send enquiry
+      </SubmitButton>
     </form>
   );
 }

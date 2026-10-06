@@ -3,9 +3,11 @@
 export function SearchBox({
   value,
   onChange,
+  placeholder = "e.g. Best Western",
 }: {
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
 }) {
   return (
     <form
@@ -17,7 +19,7 @@ export function SearchBox({
         <input
           className="pl-50 border-light text-dark-1 h-50 rounded-8"
           type="search"
-          placeholder="e.g. Best Western"
+          placeholder={placeholder}
           value={value}
           onChange={(event) => onChange(event.target.value)}
         />

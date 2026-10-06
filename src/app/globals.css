@@ -39,8 +39,154 @@ body {
 
 .gotrip-page:has(.hotel-list-v1),
 .gotrip-page:has(.hotel-single-v2),
-.gotrip-page:has(.tour-list-v2) {
+.gotrip-page:has(.tour-list-v2),
+.gotrip-page:has(.car-list-v1),
+.gotrip-page:has(.destination-list-v3) {
   min-height: 0;
+}
+
+.gotrip-page .halfMap.destination-list-v3 {
+  margin-top: 0;
+}
+
+.gotrip-page .destination-list-v3 .mainSearch .button-grid {
+  grid-template-columns: minmax(160px, 1.4fr) minmax(140px, 1fr) minmax(140px, 1fr) 60px;
+}
+
+.gotrip-page .destination-list-v3 .mainSearch .button-grid > * {
+  min-width: 0;
+}
+
+.gotrip-page .halfMap.destination-list-v3 .halfMap__map {
+  top: 90px;
+  height: calc(100vh - 90px);
+  min-height: calc(100vh - 90px);
+  z-index: 1;
+  overflow: hidden;
+}
+
+.gotrip-page .halfMap.destination-list-v3 .destination-google-map-wrap,
+.gotrip-page .halfMap.destination-list-v3 .destination-google-map {
+  height: 100%;
+  width: 100%;
+  min-height: calc(100vh - 90px);
+}
+
+.gotrip-page .destination-google-map-wrap {
+  position: relative;
+}
+
+.gotrip-page .destination-google-map__status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.gotrip-page .destination-google-map .gm-style-iw-c {
+  padding: 0 !important;
+  border-radius: 12px !important;
+}
+
+.gotrip-page .destination-google-map .gm-style-iw-d {
+  overflow: hidden !important;
+  max-height: none !important;
+}
+
+.gotrip-page .destination-google-map .gm-style-iw-chr {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  height: auto;
+}
+
+.gotrip-page .destination-google-map .gm-style-iw-ch {
+  padding: 0;
+}
+
+.gotrip-page .destination-list-v3 .cardImage__content img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gotrip-page .destination-list-v3 .searchMenu-loc input,
+.gotrip-page .destination-list-v3 .js-search {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-light-1);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.gotrip-page .destination-list-v3 .-link:hover,
+.gotrip-page .destination-list-v3 .-link.active {
+  background-color: rgba(53, 84, 209, 0.05);
+}
+
+.gotrip-page .destination-list-v3 .destination-card {
+  cursor: pointer;
+  border-radius: 8px;
+  margin-left: -12px;
+  margin-right: -12px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.gotrip-page .destination-list-v3 .destination-card.is-selected {
+  background: rgba(53, 84, 209, 0.08);
+  box-shadow: inset 3px 0 0 #3554d1;
+}
+
+.gotrip-page .destination-pin {
+  background: transparent;
+  border: 0;
+}
+
+.gotrip-page .destination-pin__dot {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #3554d1;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 6px rgba(53, 84, 209, 0.28);
+}
+
+.gotrip-page .destination-map-card {
+  width: 260px;
+}
+
+.gotrip-page .destination-map-card img {
+  display: block;
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+
+.gotrip-page .destination-map-card__body {
+  padding: 12px 14px 14px;
+}
+
+.gotrip-page .destination-map-card__body .button {
+  display: inline-flex;
+}
+
+@media (max-width: 767px) {
+  .gotrip-page .halfMap.destination-list-v3 .halfMap__map {
+    top: 80px;
+    height: calc(100vh - 80px);
+    min-height: calc(100vh - 80px);
+  }
+
+  .gotrip-page .halfMap.destination-list-v3 .destination-google-map-wrap,
+  .gotrip-page .halfMap.destination-list-v3 .destination-google-map {
+    min-height: calc(100vh - 80px);
+  }
 }
 
 .gotrip-page .hotel-single-v2 .galleryGrid.-type-2 {
@@ -83,9 +229,21 @@ body {
   object-fit: cover;
 }
 
-.gotrip-page .hotel-single-v2 .hotel-overview:not(.is-open) {
+.gotrip-page .hotel-single-v2 .hotel-overview:not(.is-open),
+.gotrip-page .tour-single .tour-overview:not(.is-open) {
   max-height: 7.5rem;
   overflow: hidden;
+}
+
+.gotrip-page .tour-single .tour-hero-slide {
+  width: 100%;
+  height: 501px;
+  object-fit: cover;
+}
+
+.gotrip-page .tour-single .itinerary-map {
+  min-height: 450px;
+  height: 100%;
 }
 
 @media (max-width: 767px) {
@@ -135,6 +293,12 @@ body {
 .tour-list-v2 .cardImage-slider .swiper-wrapper,
 .tour-list-v2 .cardImage-slider .swiper-slide {
   height: 100%;
+}
+
+.car-list-v1 .cardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .public-header-offset {

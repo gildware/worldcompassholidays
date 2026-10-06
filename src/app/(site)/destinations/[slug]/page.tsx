@@ -309,7 +309,7 @@ export default async function DestinationPage({ params }: Props) {
           <TourCards
             tours={tours.map((tour) => ({
               id: tour.id,
-              href: `/tours?q=${encodeURIComponent(tour.title)}`,
+              href: `/tours/${tour.slug}`,
               title: tour.title,
               location: placeLabel,
               duration: tour.durationLabel.trim() || `${tour.durationDays} days`,

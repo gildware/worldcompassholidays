@@ -7,10 +7,14 @@ export function LocationSearch({
   locations,
   value,
   onChange,
+  label = "Location",
+  placeholder = "Where are you going?",
 }: {
   locations: HotelListLocation[];
   value: string;
   onChange: (value: string) => void;
+  label?: string;
+  placeholder?: string;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const query = value.trim().toLowerCase();
@@ -25,12 +29,12 @@ export function LocationSearch({
   return (
     <div className="searchMenu-loc px-30 lg:py-20 lg:px-0 js-form-dd js-liverSearch">
       <div data-bs-toggle="dropdown" data-bs-auto-close="true" data-bs-offset="0,22">
-        <h4 className="text-15 fw-500 ls-2 lh-16">Location</h4>
+        <h4 className="text-15 fw-500 ls-2 lh-16">{label}</h4>
         <div className="text-15 text-light-1 ls-2 lh-16">
           <input
             autoComplete="off"
             type="search"
-            placeholder="Where are you going?"
+            placeholder={placeholder}
             className="js-search js-dd-focus"
             value={value}
             onChange={(event) => {

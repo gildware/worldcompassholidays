@@ -7,6 +7,7 @@ export function Field({
   required = false,
   error,
   name,
+  className,
   children,
 }: {
   label: string;
@@ -17,10 +18,11 @@ export function Field({
   error?: string | null;
   /** Stable key for scroll-to-error targeting (`data-field`). */
   name?: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-2 text-sm font-medium" data-field={name}>
+    <div className={["grid gap-2 text-sm font-medium", className].filter(Boolean).join(" ")} data-field={name}>
       <div className="inline-flex items-center gap-1.5">
         <span>
           {label}

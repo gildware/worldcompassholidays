@@ -115,7 +115,7 @@ export default async function ToursPage({
       tag,
       freeCancellation: /free cancellation/i.test(haystack),
       languages,
-      href: place?.slug ? `/destinations/${place.slug}#tours` : "/tours",
+      href: `/tours/${tour.slug}`,
     };
   });
 

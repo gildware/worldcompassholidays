@@ -4,22 +4,44 @@ export function PageIntro({
   eyebrow,
   title,
   description,
+  compact = false,
 }: {
   eyebrow?: string;
   title: string;
   description: string;
+  compact?: boolean;
 }) {
   return (
     <div className="max-w-2xl">
       {eyebrow ? (
-        <p className="text-sm font-medium tracking-wide text-brand uppercase">
+        <p
+          className={
+            compact
+              ? "text-sm font-medium tracking-wide text-brand uppercase"
+              : "text-sm font-medium tracking-wide text-brand uppercase"
+          }
+        >
           {eyebrow}
         </p>
       ) : null}
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
+      <h1
+        className={
+            compact
+            ? "mt-1 text-2xl font-semibold tracking-tight"
+            : "mt-2 text-3xl font-semibold tracking-tight md:text-4xl"
+        }
+      >
         {title}
       </h1>
-      <p className="mt-3 text-base leading-7 text-muted">{description}</p>
+      <p
+        className={
+            compact
+            ? "mt-2 text-base leading-6 text-muted"
+            : "mt-3 text-base leading-7 text-muted"
+        }
+      >
+        {description}
+      </p>
     </div>
   );
 }
