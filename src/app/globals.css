@@ -363,18 +363,98 @@ body {
 }
 
 .gotrip-page .tour-workspace__mast .mainSearch {
-  width: min(900px, 100%);
+  width: min(1120px, 100%);
   margin: 12px auto 0;
   padding-top: 4px !important;
   padding-bottom: 4px !important;
 }
 
-.gotrip-page .tour-workspace__mast .mainSearch.-fields-3 .button-grid {
-  grid-template-columns: 1.2fr 1.05fr 1.15fr auto;
+.gotrip-page .tour-workspace__mast .mainSearch.-fields-4 .button-grid {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr);
 }
 
-.gotrip-page .tour-workspace__mast .searchMenu-guests .lh-16 {
+.gotrip-page .tour-workspace__mast .tour-mast-field {
+  position: relative;
+}
+
+.gotrip-page .tour-workspace__mast .tour-mast-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-dark-1, #051036);
+  text-align: left;
+  cursor: pointer;
+}
+
+.gotrip-page .tour-workspace__mast .tour-mast-value {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.gotrip-page .tour-workspace__mast .tour-mast-menu {
+  position: absolute;
+  top: calc(100% + 18px);
+  left: 0;
+  z-index: 40;
+  min-width: 240px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 40px rgba(5, 16, 54, 0.14);
+}
+
+.gotrip-page .tour-workspace__mast .tour-mast-menu--wide {
+  width: 280px;
+}
+
+.gotrip-page .tour-workspace__mast .tour-mast-choices {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gotrip-page .tour-workspace__mast .tour-mast-choices button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--color-dark-1, #051036);
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gotrip-page .tour-workspace__mast .tour-mast-choices button:hover {
+  color: var(--color-blue-1, #3554d1);
+}
+
+.gotrip-page .tour-workspace__mast .tour-mast-check {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #c4c8d4;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.gotrip-page .tour-workspace__mast .tour-mast-check[data-checked="true"] {
+  border-color: var(--color-blue-1, #3554d1);
+  background: var(--color-blue-1, #3554d1);
+  box-shadow: inset 0 0 0 2px #fff;
 }
 
 .tour-workspace__mast .searchMenu-loc .dropdown-menu {
@@ -383,8 +463,7 @@ body {
 }
 
 .tour-workspace__mast .searchMenu-loc,
-.tour-workspace__mast .searchMenu-date,
-.tour-workspace__mast .searchMenu-guests {
+.tour-workspace__mast .tour-mast-field {
   padding-top: 4px;
   padding-bottom: 4px;
 }
@@ -394,7 +473,7 @@ body {
   flex: 1 1 auto;
   gap: 16px;
   min-height: 0;
-  padding: 16px 20px;
+  padding: 16px 40px;
   overflow: hidden;
 }
 
@@ -630,6 +709,13 @@ body {
   padding-bottom: 10px;
 }
 
+.gotrip-page .tour-toolbar {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .tour-workspace__toolbar .text-18 {
   font-size: 16px;
 }
@@ -759,8 +845,7 @@ body {
 
 @media (max-width: 991px) {
   .gotrip-page .tour-workspace__mast .searchMenu-loc,
-  .gotrip-page .tour-workspace__mast .searchMenu-date,
-  .gotrip-page .tour-workspace__mast .searchMenu-guests {
+  .gotrip-page .tour-workspace__mast .tour-mast-field {
     padding: 6px 14px !important;
   }
 }
@@ -784,7 +869,7 @@ body {
   }
 
   .tour-workspace__panes {
-    padding: 16px;
+    padding: 16px 24px;
   }
 
   .tour-workspace__tours {
@@ -802,7 +887,7 @@ body {
   }
 
   .tour-workspace__panes {
-    padding: 12px 12px 20px;
+    padding: 12px 16px 20px;
   }
 
   .tour-workspace__grid {

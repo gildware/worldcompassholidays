@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DateObject } from "react-multi-date-picker";
 import "rc-slider/assets/index.css";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -10,12 +9,11 @@ import "swiper/css/pagination";
 import CallToActions from "@/components/common/CallToActions";
 import DefaultFooter from "@/components/footer/default";
 import { GoTripFrame } from "@/components/gotrip/GoTripFrame";
-import type { GuestCounts } from "@/components/hotel-list/common/GuestSearch";
 import { Pagination } from "@/components/hotel-list/common/Pagination";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { MainFilterSearchBox } from "@/components/tour-list/tour-list-v2/MainFilterSearchBox";
 import { durationChoices, readTourQuery, tourQueryString, type TourListQueryInput } from "@/components/tour-list/tour-list-v2/query";
-import { Sidebar, type TourListFilters } from "@/components/tour-list/tour-list-v2/Sidebar";
+import type { TourListFilters } from "@/components/tour-list/tour-list-v2/Sidebar";
 import { TopHeaderFilter } from "@/components/tour-list/tour-list-v2/TopHeaderFilter";
 import { TourProperties } from "@/components/tour-list/tour-list-v2/TourProperties";
 import type { TourListCard, TourListLocation, TourSort } from "@/components/tour-list/types";
@@ -37,16 +35,12 @@ export function TourListV2({
 }) {
   const router = useRouter();
   const currency = tours[0]?.currency || "INR";
-  const priceMin = catalogMin;
-  const priceMax = Math.max(catalogMin, catalogMax);
+  const prices = tours.map((tour) => tour.price);
+  const priceMin = Math.min(catalogMin, ...(prices.length ? prices : [catalogMin]));
+  const priceMax = Math.max(catalogMax, priceMin, ...(prices.length ? prices : [catalogMax]));
   const priceStep = 1;
   const initialQuery = readTourQuery(query, { priceMin, priceMax });
   const [location, setLocation] = useState(initialQuery.location);
-  const [dates, setDates] = useState<DateObject[]>(() => [
-    new DateObject().setDay(15),
-    new DateObject().setDay(14).add(1, "month"),
-  ]);
-  const [guests, setGuests] = useState<GuestCounts>({ Adults: 2, Children: 1, Rooms: 1 });
   const [page, setPage] = useState(initialQuery.page);
   const [sort, setSort] = useState<TourSort>(initialQuery.sort);
   const [nameQuery, setNameQuery] = useState(initialQuery.name);
@@ -75,7 +69,10 @@ export function TourListV2({
     const matched = tours.filter((tour) => {
       if (place && !`${tour.location} ${tour.address}`.toLowerCase().includes(place)) return false;
       if (queryText && !tour.title.toLowerCase().includes(queryText)) return false;
-      if (tour.price < filters.price[0] || tour.price > filters.price[1]) return false;
+      const low = Math.min(filters.price[0], filters.price[1]);
+      const high = Math.max(filters.price[0], filters.price[1]);
+      const fullRange = low <= priceMin && high >= priceMax;
+      if (!fullRange && (tour.price < low || tour.price > high)) return false;
       if (filters.categories.length > 0 && !filters.categories.includes(tour.category)) return false;
       if (
         filters.durations.length > 0 &&
@@ -91,7 +88,7 @@ export function TourListV2({
     if (sort === "price-desc") next.sort((a, b) => b.price - a.price || a.title.localeCompare(b.title));
     if (sort === "title") next.sort((a, b) => a.title.localeCompare(b.title));
     return next;
-  }, [filters, location, sort, tours]);
+  }, [filters, location, priceMax, priceMin, sort, tours]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
@@ -172,16 +169,8 @@ export function TourListV2({
     });
   };
 
-  const sidebarProps = {
-    filters,
-    onChange: updateFilters,
-    priceMin,
-    priceMax,
-    priceStep,
-    currency,
-    categories: categoryLabels.map((label) => ({ value: label, label })),
-    durations: durationChoices.map(({ value, label }) => ({ value, label })),
-  };
+  const categories = categoryLabels.map((label) => ({ value: label, label }));
+  const durations = durationChoices.map(({ value, label }) => ({ value, label }));
 
   return (
     <GoTripFrame>
@@ -205,25 +194,21 @@ export function TourListV2({
                   page: 1,
                 });
               }}
-              dates={dates}
-              onDates={setDates}
-              guests={guests}
-              onGuests={setGuests}
+              categories={categories}
+              durations={durations}
+              filters={filters}
+              onFilters={updateFilters}
+              priceMin={priceMin}
+              priceMax={priceMax}
+              priceStep={priceStep}
+              currency={currency}
             />
           </section>
 
           <section className="tour-workspace__panes">
-          <aside className="tour-workspace__filters xl:d-none">
-            <div className="tour-workspace__filters-scroll sidebar">
-              <Sidebar {...sidebarProps} />
-            </div>
-          </aside>
-
           <div className="tour-workspace__results">
             <div className="tour-workspace__toolbar">
               <TopHeaderFilter
-                count={filtered.length}
-                place={location.trim()}
                 name={nameQuery}
                 onName={setNameQuery}
                 sort={sort}
@@ -272,20 +257,6 @@ export function TourListV2({
         <div className="tour-workspace__footer">
           <CallToActions />
           <DefaultFooter />
-        </div>
-
-        <div className="offcanvas offcanvas-start" tabIndex={-1} id="listingSidebar">
-          <div className="offcanvas-header">
-            <h5 className="offcanvas-title" id="offcanvasLabel">
-              Filter Tours
-            </h5>
-            <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close" />
-          </div>
-          <div className="offcanvas-body">
-            <aside className="sidebar y-gap-20">
-              <Sidebar {...sidebarProps} />
-            </aside>
-          </div>
         </div>
       </div>
     </GoTripFrame>

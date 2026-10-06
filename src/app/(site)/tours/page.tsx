@@ -37,7 +37,7 @@ export default async function ToursPage({
   if (!modules.tours) notFound();
   const params = await searchParams;
 
-  const [rows, catalog, destinations, priceBounds] = await Promise.all([
+  const [rows, catalog, destinations] = await Promise.all([
     prisma.tour.findMany({
       where: { published: true },
       include: {
@@ -66,11 +66,6 @@ export default async function ToursPage({
       },
       select: { id: true, name: true, region: true, country: true },
       orderBy: { name: "asc" },
-    }),
-    prisma.tour.aggregate({
-      where: { published: true, priceFrom: { gt: 0 } },
-      _min: { priceFrom: true },
-      _max: { priceFrom: true },
     }),
   ]);
 
@@ -116,8 +111,9 @@ export default async function ToursPage({
     address: [destination.region, destination.country].filter(Boolean).join(", "),
   }));
 
-  const priceMin = priceBounds._min.priceFrom ?? 0;
-  const priceMax = Math.max(priceMin, priceBounds._max.priceFrom ?? priceMin);
+  const prices = tours.map((tour) => tour.price);
+  const priceMin = prices.length ? Math.min(...prices) : 0;
+  const priceMax = prices.length ? Math.max(...prices) : priceMin;
 
   return (
     <TourListV2
