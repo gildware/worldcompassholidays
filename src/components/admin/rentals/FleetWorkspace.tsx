@@ -10,6 +10,7 @@ import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { formatMoney } from "@/lib/format";
 import { fleetLabel } from "@/lib/rentals/labels";
+import { modules } from "@/config/modules";
 
 type SortKey = "name" | "destination" | "type" | "seats" | "price" | "listing";
 
@@ -150,12 +151,14 @@ export function FleetWorkspace({
   canManage,
   notice,
   error,
+  fleet,
 }: {
   vehicles: FleetRow[];
   destinations: { id: string; name: string }[];
   canManage: boolean;
   notice?: "deleted" | "saved" | null;
   error?: string | null;
+  fleet?: "car" | "bike";
 }) {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 300);
@@ -236,19 +239,42 @@ export function FleetWorkspace({
     setSortDir("asc");
   }
 
+  const title = fleet === "car" ? "Car rental" : fleet === "bike" ? "Bike rental" : "Fleet";
+  const addHref = fleet === "bike" ? "/admin/rentals/fleet/new?kind=bike" : "/admin/rentals/fleet/new?kind=car";
+  const noun = fleet === "bike" ? "bike" : fleet === "car" ? "car" : "vehicle";
+
   return (
     <div className="grid gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-navy">Fleet</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-navy">{title}</h1>
           <p className="mt-0.5 text-xs text-muted">
-            Cars and bikes. Use the step form to add or edit.
+            {fleet === "bike"
+              ? "Bikes only. Use the step form to add or edit a bike."
+              : fleet === "car"
+                ? "Cars only. Use the step form to add or edit a car."
+                : "Cars and bikes. Use the step form to add or edit."}
           </p>
         </div>
         {canManage ? (
-          <ButtonLink href="/admin/rentals/fleet/new" size="sm" className="w-full shrink-0 sm:w-auto">
-            Add vehicle
-          </ButtonLink>
+          fleet ? (
+            <ButtonLink href={addHref} size="sm" className="w-full shrink-0 sm:w-auto">
+              {fleet === "bike" ? "Add bike" : "Add car"}
+            </ButtonLink>
+          ) : (
+            <div className="flex w-full shrink-0 gap-2 sm:w-auto">
+              {modules.cars ? (
+                <ButtonLink href="/admin/rentals/fleet/new?kind=car" size="sm">
+                  Add car
+                </ButtonLink>
+              ) : null}
+              {modules.bikes ? (
+                <ButtonLink href="/admin/rentals/fleet/new?kind=bike" size="sm" variant="secondary">
+                  Add bike
+                </ButtonLink>
+              ) : null}
+            </div>
+          )
         ) : null}
       </div>
 
@@ -303,6 +329,7 @@ export function FleetWorkspace({
           className="!h-10"
           wrapperClassName="lg:w-40"
         />
+        {fleet ? null : (
         <SearchableSelect
           ariaLabel="Filter by fleet"
           value={fleetFilter}
@@ -316,6 +343,7 @@ export function FleetWorkspace({
           className="!h-10"
           wrapperClassName="lg:w-40"
         />
+        )}
         <SearchableSelect
           ariaLabel="Filter by destination"
           value={destinationFilter}
@@ -373,7 +401,7 @@ export function FleetWorkspace({
             {vehicles.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-3 py-8 text-center text-sm text-muted">
-                  No vehicles yet.{canManage ? " Add the first car or bike." : ""}
+                  No vehicles yet.{canManage ? ` Add the first ${noun}.` : ""}
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
@@ -399,8 +427,7 @@ export function FleetWorkspace({
                     </Link>
                     <p className="text-xs font-medium tracking-wide text-navy">{vehicle.registrationNumber}</p>
                     <p className="line-clamp-1 max-w-xs text-xs text-muted">
-                      {fleetLabel(vehicle.kind)}
-                      {vehicle.summary ? ` · ${vehicle.summary}` : ""}
+                      {fleet ? vehicle.summary || "—" : `${fleetLabel(vehicle.kind)}${vehicle.summary ? ` · ${vehicle.summary}` : ""}`}
                     </p>
                   </td>
                   <td className="px-3 py-2 text-navy">{vehicle.destinationName || "—"}</td>

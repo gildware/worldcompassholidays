@@ -120,7 +120,17 @@ function NavIcon({ href, label }: { href: string; label?: string }) {
       </svg>
     );
   }
-  if (href === "/admin/rentals/fleet" || href === "/admin/rentals") {
+  if (href === "/admin/rentals/bikes") {
+    return (
+      <svg {...common}>
+        <circle cx="7" cy="16" r="3" />
+        <circle cx="17" cy="16" r="3" />
+        <path d="M7 16h4l2-6h4" />
+        <path d="M11 10 9 6h3" />
+      </svg>
+    );
+  }
+  if (href === "/admin/rentals/cars" || href === "/admin/rentals/fleet" || href === "/admin/rentals") {
     return (
       <svg {...common}>
         <path d="M4 16h16" />
@@ -288,11 +298,16 @@ export function AdminShell({
 
   const openItem = items.find((item) => item.href === submenuHref && item.children?.length);
 
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+
   useEffect(() => {
     setMenuOpen(false);
-    const parent = items.find((item) => item.children?.length && isActive(pathname, item.href));
+    const parent = itemsRef.current.find(
+      (item) => item.children?.length && isActive(pathname, item.href),
+    );
     setSubmenuHref(parent?.href ?? null);
-  }, [pathname, items]);
+  }, [pathname]);
 
   useEffect(() => {
     if (!menuOpen) return;

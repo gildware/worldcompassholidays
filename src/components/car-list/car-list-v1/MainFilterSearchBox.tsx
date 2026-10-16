@@ -19,6 +19,7 @@ export function MainFilterSearchBox({
   onDropoffDate,
   guests,
   onGuests,
+  showGuests = true,
 }: {
   locations: CarListLocation[];
   pickup: string;
@@ -31,9 +32,12 @@ export function MainFilterSearchBox({
   onDropoffDate: (date: DateObject | null) => void;
   guests: GuestCounts;
   onGuests: (counts: GuestCounts) => void;
+  showGuests?: boolean;
 }) {
   return (
-    <div className="mainSearch -col-5 border-light bg-white px-20 py-20 lg:px-20 lg:pt-5 lg:pb-20 rounded-4 mt-30">
+    <div
+      className={`mainSearch ${showGuests ? "-col-5" : "-col-4"} border-light bg-white px-20 py-20 lg:px-20 lg:pt-5 lg:pb-20 rounded-4 mt-30`}
+    >
       <div className="button-grid items-center">
         <LocationSearch
           locations={locations}
@@ -63,7 +67,7 @@ export function MainFilterSearchBox({
           </div>
         </div>
 
-        <GuestSearch guestCounts={guests} onChange={onGuests} />
+        {showGuests ? <GuestSearch guestCounts={guests} onChange={onGuests} /> : null}
 
         <div className="button-item">
           <button

@@ -88,9 +88,11 @@ function formatRange(start: string, end: string) {
 export function AvailabilityWorkspace({
   vehicles,
   types,
+  title = "Availability",
 }: {
   vehicles: AvailabilityVehicle[];
   types: { id: string; name: string }[];
+  title?: string;
 }) {
   const today = useMemo(() => isoDate(new Date()), []);
   const [view, setView] = useState<"calendar" | "list">("calendar");
@@ -122,7 +124,7 @@ export function AvailabilityWorkspace({
   return (
     <div className="grid gap-4">
       <div className="flex items-center gap-3 overflow-x-auto">
-        <h1 className="shrink-0 text-xl font-semibold tracking-tight text-navy">Availability</h1>
+        <h1 className="shrink-0 text-xl font-semibold tracking-tight text-navy">{title}</h1>
         <div className="inline-flex shrink-0 rounded-full border border-line bg-white p-0.5">
           {(["calendar", "list"] as const).map((option) => (
             <button

@@ -67,14 +67,14 @@ const contactDetails = [
   {
     title: "Toll Free Customer Care",
     icon: "phone" as const,
-    value: "+47 333 78 901",
-    href: "tel:+4733378901",
+    value: "+91- 70064 22204",
+    href: "tel:+917006422204",
   },
   {
     title: "Need live support?",
     icon: "mail" as const,
-    value: "hi@gotrip.com",
-    href: "mailto:hi@gotrip.com",
+    value: "hi@worldcompassholiday.com",
+    href: "mailto:hi@worldcompassholiday.com",
   },
 ];
 

@@ -8,7 +8,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import CallToActions from "@/components/common/CallToActions";
 import DefaultFooter from "@/components/footer/default";
-import { GoTripFrame } from "@/components/gotrip/GoTripFrame";
+import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { Pagination } from "@/components/hotel-list/common/Pagination";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { MainFilterSearchBox } from "@/components/tour-list/tour-list-v2/MainFilterSearchBox";
@@ -173,7 +173,7 @@ export function TourListV2({
   const durations = durationChoices.map(({ value, label }) => ({ value, label }));
 
   return (
-    <GoTripFrame>
+    <WorldCompassHolidayFrame>
       <div className="tour-list-v2 tour-workspace">
         <div className="tour-workspace__stage">
           <section className="tour-workspace__mast">
@@ -202,6 +202,27 @@ export function TourListV2({
               priceMax={priceMax}
               priceStep={priceStep}
               currency={currency}
+              onClear={() => {
+                const next: TourListFilters = {
+                  query: "",
+                  categories: [],
+                  price: [priceMin, priceMax],
+                  durations: [],
+                };
+                setLocation("");
+                setNameQuery("");
+                setFilters(next);
+                setPage(1);
+                writeQuery({
+                  location: "",
+                  name: "",
+                  types: [],
+                  days: [],
+                  price: next.price,
+                  sort,
+                  page: 1,
+                });
+              }}
             />
           </section>
 
@@ -259,6 +280,6 @@ export function TourListV2({
           <DefaultFooter />
         </div>
       </div>
-    </GoTripFrame>
+    </WorldCompassHolidayFrame>
   );
 }

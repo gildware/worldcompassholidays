@@ -61,7 +61,9 @@ export default async function RentalBookingPage({ params }: Props) {
     booking.status as (typeof customerCancelStatuses)[number],
   );
   const policies = canCancel
-    ? await prisma.rentalPolicy.findMany({ where: { kind: "cancellation", active: true } })
+    ? await prisma.rentalPolicy.findMany({
+        where: { kind: "cancellation", active: true, fleet: booking.vehicle.kind },
+      })
     : [];
   const decision = canCancel
     ? cancellationRefund({ pickupAt: booking.pickupAt, cancelledAt: new Date(), policies })

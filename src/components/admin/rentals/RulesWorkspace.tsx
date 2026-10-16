@@ -35,19 +35,23 @@ export function RulesWorkspace({
   allowCounterPickup,
   allowHomeDelivery,
   manage,
+  fleet,
 }: {
   rules: Policy[];
   cancellations: Policy[];
   allowCounterPickup: boolean;
   allowHomeDelivery: boolean;
   manage: boolean;
+  fleet: "car" | "bike";
 }) {
   const [tab, setTab] = useState<TabId>("rules");
   const [adding, setAdding] = useState(false);
 
   return (
     <div className="grid gap-4">
-      <h1 className="text-xl font-semibold tracking-tight text-navy">Rules</h1>
+      <h1 className="text-xl font-semibold tracking-tight text-navy">
+        {fleet === "bike" ? "Bike rules" : "Car rules"}
+      </h1>
       <div role="tablist" aria-label="Rental rules" className="flex gap-1 overflow-x-auto border-b border-line">
         {tabs.map((item) => {
           const selected = tab === item.id;
@@ -79,11 +83,12 @@ export function RulesWorkspace({
       ) : null}
 
       {tab === "rules" ? (
-        <PolicyPanel kind="rule" policies={rules} manage={manage} adding={adding} onClose={() => setAdding(false)} />
+        <PolicyPanel kind="rule" fleet={fleet} policies={rules} manage={manage} adding={adding} onClose={() => setAdding(false)} />
       ) : null}
       {tab === "cancellation" ? (
         <PolicyPanel
           kind="cancellation"
+          fleet={fleet}
           policies={cancellations}
           manage={manage}
           adding={adding}
@@ -93,10 +98,11 @@ export function RulesWorkspace({
       {tab === "settings" ? (
         <section className="grid gap-3">
           <p className="max-w-2xl text-sm text-muted">
-            Pickup and delivery can be allowed for the whole company here, then turned on or off for each vehicle.
+            Pickup and delivery for {fleet === "bike" ? "bikes" : "cars"}. A vehicle can still turn either option off.
           </p>
           {manage ? (
             <ActionForm action={saveRentalSettings} className="grid max-w-xl gap-3 rounded-xl border border-line bg-white p-4">
+              <input type="hidden" name="fleet" value={fleet} />
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" name="allowCounterPickup" defaultChecked={allowCounterPickup} />
                 Allow pickup at a location
@@ -121,12 +127,14 @@ export function RulesWorkspace({
 
 function PolicyPanel({
   kind,
+  fleet,
   policies,
   manage,
   adding,
   onClose,
 }: {
   kind: "rule" | "cancellation";
+  fleet: "car" | "bike";
   policies: Policy[];
   manage: boolean;
   adding: boolean;
@@ -165,14 +173,22 @@ function PolicyPanel({
           title={kind === "rule" ? "Add rental rule" : "Add cancellation window"}
           size="md"
         >
-          {adding ? <AddPolicyForm kind={kind} onSaved={onClose} /> : null}
+          {adding ? <AddPolicyForm kind={kind} fleet={fleet} onSaved={onClose} /> : null}
         </Modal>
       ) : null}
     </div>
   );
 }
 
-function AddPolicyForm({ kind, onSaved }: { kind: "rule" | "cancellation"; onSaved: () => void }) {
+function AddPolicyForm({
+  kind,
+  fleet,
+  onSaved,
+}: {
+  kind: "rule" | "cancellation";
+  fleet: "car" | "bike";
+  onSaved: () => void;
+}) {
   const router = useRouter();
   const [state, action, pending] = useActionState(saveRentalPolicy, initialFormState);
 
@@ -186,6 +202,7 @@ function AddPolicyForm({ kind, onSaved }: { kind: "rule" | "cancellation"; onSav
     <form action={action} className="grid gap-3">
       <FormMessage state={state} />
       <input type="hidden" name="kind" value={kind} />
+      <input type="hidden" name="fleet" value={fleet} />
       <Field label="Name" required>
         <input name="name" required />
       </Field>

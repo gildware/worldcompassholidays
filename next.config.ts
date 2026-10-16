@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [{ source: "/visa", destination: "/visa-services", permanent: true }];
+  },
   env: {
     NEXT_PUBLIC_MAP_API_KEY: process.env.MAP_API_KEY ?? "",
   },

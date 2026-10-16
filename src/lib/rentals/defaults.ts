@@ -482,6 +482,69 @@ async function seedRentalDefaults() {
 
   await fillLocationPins();
   await seedDemoFleet();
+  await separateFleetRecords();
+}
+
+async function separateFleetRecords() {
+  const base = await prisma.rentalSettings.findUnique({ where: { id: "default" } });
+  const settings = {
+    allowCounterPickup: base?.allowCounterPickup ?? true,
+    allowHomeDelivery: base?.allowHomeDelivery ?? true,
+    taxPercent: base?.taxPercent ?? 0,
+    currency: base?.currency ?? "INR",
+  };
+  for (const id of ["car", "bike"] as const) {
+    await prisma.rentalSettings.upsert({
+      where: { id },
+      update: {},
+      create: { id, ...settings },
+    });
+  }
+
+  if ((await prisma.rentalPolicy.count({ where: { fleet: "bike" } })) === 0) {
+    const rows = await prisma.rentalPolicy.findMany({ where: { fleet: "car" } });
+    if (rows.length > 0) {
+      await prisma.rentalPolicy.createMany({
+        data: rows.map(({ id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...row }) => ({
+          ...row,
+          fleet: "bike",
+        })),
+      });
+    }
+  }
+
+  if ((await prisma.rentalLocation.count({ where: { fleet: "bike" } })) === 0) {
+    const rows = await prisma.rentalLocation.findMany({ where: { fleet: "car" } });
+    for (const location of rows) {
+      const copy = await prisma.rentalLocation.create({
+        data: {
+          name: location.name,
+          slug: `${location.slug}-bike`,
+          address: location.address,
+          mapLat: location.mapLat,
+          mapLng: location.mapLng,
+          mapZoom: location.mapZoom,
+          imageUrl: location.imageUrl,
+          imageKey: location.imageKey,
+          imageDriver: location.imageDriver,
+          active: location.active,
+          destinationId: location.destinationId,
+          fleet: "bike",
+        },
+      });
+      const links = await prisma.vehicleLocation.findMany({
+        where: { locationId: location.id, vehicle: { kind: "bike" } },
+      });
+      for (const link of links) {
+        await prisma.vehicleLocation.delete({
+          where: { vehicleId_locationId: { vehicleId: link.vehicleId, locationId: location.id } },
+        });
+        await prisma.vehicleLocation.create({
+          data: { vehicleId: link.vehicleId, locationId: copy.id },
+        });
+      }
+    }
+  }
 }
 
 export function ensureRentalDefaults() {

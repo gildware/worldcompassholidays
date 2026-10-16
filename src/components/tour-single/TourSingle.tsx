@@ -14,7 +14,7 @@ import "swiper/css/navigation";
 import CallToActions from "@/components/common/CallToActions";
 import { TourCards } from "@/components/destinations/single/widgets";
 import DefaultFooter from "@/components/footer/default";
-import { GoTripFrame } from "@/components/gotrip/GoTripFrame";
+import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { DateSearch } from "@/components/hotel-list/common/DateSearch";
 import type { TourSingleData } from "@/components/tour-single/types";
 
@@ -244,7 +244,7 @@ export function TourSingle({ tour, mapApiKey }: { tour: TourSingleData; mapApiKe
   }
 
   return (
-    <GoTripFrame>
+    <WorldCompassHolidayFrame>
       <div className="tour-single">
         <section className="py-10 d-flex items-center bg-light-2">
           <div className="container">
@@ -883,6 +883,6 @@ export function TourSingle({ tour, mapApiKey }: { tour: TourSingleData; mapApiKe
         <CallToActions />
         <DefaultFooter />
       </div>
-    </GoTripFrame>
+    </WorldCompassHolidayFrame>
   );
 }

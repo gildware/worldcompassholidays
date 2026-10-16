@@ -326,6 +326,7 @@ model RentalLocation {
   imageKey      String       @default("")
   imageDriver   String       @default("local")
   active        Boolean      @default(true)
+  fleet         String       @default("car")
   destinationId String?
   destination   Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
   vehicleLinks  VehicleLocation[]
@@ -335,13 +336,15 @@ model RentalLocation {
   updatedAt     DateTime     @updatedAt
 
   @@index([destinationId])
+  @@index([fleet])
 }
 
 model RentalPolicy {
   id                String   @id @default(cuid())
   kind              String
   name              String
-  slug              String   @unique
+  slug              String
+  fleet             String   @default("car")
   description       String   @default("")
   active            Boolean  @default(true)
   sortOrder         Int      @default(0)
@@ -350,7 +353,9 @@ model RentalPolicy {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  @@unique([fleet, slug])
   @@index([kind, active])
+  @@index([fleet])
 }
 
 model VehicleImage {

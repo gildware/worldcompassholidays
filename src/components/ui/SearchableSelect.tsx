@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 export type SelectOption = {
   value: string;
   label: string;
   iconUrl?: string;
+  /** Extra search text, such as a country code or a common short name. */
+  keywords?: string;
+  icon?: ReactNode;
 };
 
 type SearchableSelectProps = {
@@ -28,6 +31,9 @@ type SearchableSelectProps = {
   ariaLabel?: string;
   /** Selectable blank choice, such as "None" or "Any service". */
   emptyLabel?: string;
+  describedBy?: string;
+  /** Stacking order for the portaled menu. Raise this inside a modal. */
+  menuZIndex?: number;
 };
 
 type MenuBox = {
@@ -58,12 +64,13 @@ function measure(trigger: HTMLElement): MenuBox {
   };
 }
 
-function matches(query: string, label: string, value: string) {
+function matches(query: string, label: string, value: string, keywords = "") {
   if (!query) return true;
   const needle = query.trim().toLowerCase();
   return (
     label.toLowerCase().includes(needle) ||
-    value.toLowerCase().includes(needle)
+    value.toLowerCase().includes(needle) ||
+    keywords.toLowerCase().includes(needle)
   );
 }
 
@@ -83,6 +90,8 @@ export function SearchableSelect({
   wrapperClassName,
   ariaLabel,
   emptyLabel,
+  describedBy,
+  menuZIndex = 1200,
 }: SearchableSelectProps) {
   const listId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -102,7 +111,7 @@ export function SearchableSelect({
     items.push({ value: "", label: emptyLabel });
   }
   for (const option of options) {
-    if (matches(query, option.label, option.value)) items.push(option);
+    if (matches(query, option.label, option.value, option.keywords)) items.push(option);
   }
 
   const safeIndex =
@@ -227,7 +236,7 @@ export function SearchableSelect({
             className="app-select-menu fixed z-[80] overflow-hidden rounded-lg border border-line bg-white shadow-lg"
             style={{
               position: "fixed",
-              zIndex: 1200,
+              zIndex: menuZIndex,
               top: box.top,
               left: box.left,
               width: box.width,
@@ -285,7 +294,7 @@ export function SearchableSelect({
                         onClick={() => commit(option.value)}
                       >
                         <span className="flex min-w-0 flex-1 items-center gap-2">
-                          {option.iconUrl ? <OptionIcon option={option} /> : null}
+                          {option.icon || option.iconUrl ? <OptionIcon option={option} /> : null}
                           <span className="min-w-0 truncate">{option.label}</span>
                         </span>
                         {chosen ? (
@@ -317,6 +326,7 @@ export function SearchableSelect({
         aria-controls={listId}
         aria-required={required || undefined}
         aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onTriggerKeyDown}
         className={[
@@ -339,7 +349,9 @@ export function SearchableSelect({
             muted ? "text-muted" : "",
           ].join(" ")}
         >
-          {selectedOption?.iconUrl ? <OptionIcon option={selectedOption} /> : null}
+          {selectedOption?.icon || selectedOption?.iconUrl ? (
+            <OptionIcon option={selectedOption} />
+          ) : null}
           <span className="min-w-0 truncate">{shown}</span>
         </span>
         <svg
@@ -410,7 +422,9 @@ export function MultiSearchableSelect({
   const [box, setBox] = useState<MenuBox | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  const items = options.filter((option) => matches(query, option.label, option.value));
+  const items = options.filter((option) =>
+    matches(query, option.label, option.value, option.keywords),
+  );
   const safeIndex = items.length === 0 ? -1 : Math.min(activeIndex, items.length - 1);
   const selectedOptions = values
     .map((value) => options.find((option) => option.value === value))
@@ -691,6 +705,7 @@ export function NamedMultiSelect({
 }
 
 function OptionIcon({ option, small = false }: { option: SelectOption; small?: boolean }) {
+  if (option.icon) return <>{option.icon}</>;
   const size = small ? "size-4" : "size-6";
   if (option.iconUrl) {
     return (

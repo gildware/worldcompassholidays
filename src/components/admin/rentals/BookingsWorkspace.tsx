@@ -64,10 +64,12 @@ export function BookingsWorkspace({
   vehicles,
   bookings,
   types,
+  title = "Bookings",
 }: {
   vehicles: BookingVehicle[];
   bookings: BookingItem[];
   types: { id: string; name: string }[];
+  title?: string;
 }) {
   const today = useMemo(() => isoDate(new Date()), []);
   const [from, setFrom] = useState(today);
@@ -97,7 +99,7 @@ export function BookingsWorkspace({
   return (
     <div className="grid gap-4">
       <div className="flex items-center gap-3 overflow-x-auto">
-        <h1 className="shrink-0 text-xl font-semibold tracking-tight text-navy">Bookings</h1>
+        <h1 className="shrink-0 text-xl font-semibold tracking-tight text-navy">{title}</h1>
         <div className="ml-auto flex shrink-0 items-center gap-3">
           <p className="text-xs text-muted">
             {rangeInvalid ? "Pick a valid date range" : `${visible.length} booking${visible.length === 1 ? "" : "s"}`}

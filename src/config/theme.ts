@@ -1,5 +1,5 @@
 export const theme = {
-  brandName: "Travel Co",
+  brandName: "World Compass Holidays",
   tagline: "Tours, treks, stays, and rides across the mountains and the coast.",
   description:
     "A travel company website for tours, treks, hotels, and car and bike rental.",
@@ -15,4 +15,10 @@ export const theme = {
   },
   font: "Jost",
   layout: "destination-first",
+  contact: {
+    city: "India",
+    phone: "+91- 70064 22204",
+    whatsapp: "+91- 70064 22204",
+    email: "hi@worldcompassholiday.com",
+  },
 } as const;

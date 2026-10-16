@@ -95,7 +95,9 @@ export async function confirmRentalBooking(
           locationLinks: true,
         },
       });
-      const settings = await tx.rentalSettings.findUnique({ where: { id: "default" } });
+      const settings =
+        (await tx.rentalSettings.findUnique({ where: { id: vehicle.kind } })) ??
+        (await tx.rentalSettings.findUnique({ where: { id: "default" } }));
       if (!vehicle || !vehicle.published || !settings) {
         throw new Error("This vehicle is not available to book.");
       }
@@ -133,7 +135,7 @@ export async function confirmRentalBooking(
         const location = await tx.rentalLocation.findFirst({
           where: { id, active: true },
         });
-        if (!location) throw new Error(`Choose an active ${label} location.`);
+        if (!location || location.fleet !== vehicle.kind) throw new Error(`Choose an active ${label} location.`);
         if (allowedLocations.length > 0 && !allowedLocations.includes(id)) {
           throw new Error(`This vehicle is not offered at that ${label} location.`);
         }
@@ -415,7 +417,7 @@ export async function cancelRentalBooking(
   try {
     const booking = await prisma.rentalBooking.findUnique({
       where: { id: String(formData.get("bookingId") ?? "") },
-      include: { payments: true, vehicle: { select: { slug: true } } },
+      include: { payments: true, vehicle: { select: { slug: true, kind: true } } },
     });
     if (!booking) return { error: "Booking not found." };
     if (customer && booking.userId !== actor.id) return { error: "Booking not found." };
@@ -427,7 +429,7 @@ export async function cancelRentalBooking(
     const reason = String(formData.get("reason") ?? "").trim();
     if (reason.length < 3) return { error: "Enter a short reason for the cancellation." };
     const policies = await prisma.rentalPolicy.findMany({
-      where: { kind: "cancellation", active: true },
+      where: { kind: "cancellation", active: true, fleet: booking.vehicle.kind },
     });
     const decision = cancellationRefund({
       pickupAt: booking.pickupAt,

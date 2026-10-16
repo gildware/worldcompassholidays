@@ -44,7 +44,10 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
     },
   });
   if (!vehicle) notFound();
-  const setup = await getRentalSetup();
+  const kind = fleetKinds().includes(vehicle.kind as "car" | "bike")
+    ? (vehicle.kind as "car" | "bike")
+    : "car";
+  const setup = await getRentalSetup(kind);
   const manage = can(user, "vehicles.manage");
 
   const documents = manage ? (
@@ -91,13 +94,16 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
     />
   );
 
+  const listHref = kind === "bike" ? "/admin/rentals/bikes" : "/admin/rentals/cars";
+  const noun = kind === "bike" ? "bike" : "car";
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
       <div className="shrink-0">
-        <Link href="/admin/rentals/fleet" className="text-xs font-medium text-brand hover:underline">
-          ← All vehicles
+        <Link href={listHref} className="text-xs font-medium text-brand hover:underline">
+          ← All {noun}s
         </Link>
-        <h1 className="mt-1 text-xl font-semibold tracking-tight text-navy">Edit vehicle</h1>
+        <h1 className="mt-1 text-xl font-semibold tracking-tight text-navy">Edit {noun}</h1>
         <p className="mt-0.5 truncate text-xs text-muted">
           {vehicle.name}
           {vehicle.published ? (
@@ -115,12 +121,13 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
 
       {manage ? (
         <VehicleForm
+          lockKind
           initialStep={Number.isInteger(initialStep) ? initialStep : 0}
           values={{
             id: vehicle.id,
             name: vehicle.name,
             registrationNumber: vehicle.registrationNumber,
-            kind: fleetKinds().includes(vehicle.kind as "car" | "bike") ? (vehicle.kind as "car" | "bike") : "car",
+            kind,
             brand: vehicle.brand,
             modelName: vehicle.modelName,
             year: vehicle.year ? String(vehicle.year) : "",
@@ -155,7 +162,7 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
               driver: image.driver === "cloudinary" ? "cloudinary" : "local",
             })),
           }}
-          kinds={fleetKinds()}
+          kinds={[kind]}
           destinations={setup.destinations}
           types={configsOf(setup.configs, "vehicle_type")}
           fuels={configsOf(setup.configs, "fuel")}

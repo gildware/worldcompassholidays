@@ -3,9 +3,13 @@ import type { ZodError } from "zod";
 export type FormState = {
   error: string | null;
   success?: string | null;
+  fields?: Record<string, string>;
+  values?: Record<string, string>;
   tourId?: string | null;
   vehicleId?: string | null;
   hotelId?: string | null;
+  reference?: string | null;
+  whatsappUrl?: string | null;
 };
 
 export const initialFormState: FormState = {

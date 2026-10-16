@@ -10,8 +10,8 @@ export type NavItem = {
 const moduleHrefs: Record<ModuleKey, string> = {
   tours: "/tours",
   hotels: "/hotels",
-  cars: "/rentals",
-  bikes: "/rentals",
+  cars: "/rentals/cars",
+  bikes: "/rentals/bikes",
   buses: "/buses",
 };
 
@@ -25,11 +25,10 @@ export function getPublicNav(): NavItem[] {
     if (!modules[key]) return;
     const href = moduleHrefs[key];
     if (items.some((item) => item.href === href)) return;
-    const label =
-      key === "cars" || key === "bikes" ? "Rentals" : moduleLabels[key];
-    items.push({ href, label });
+    items.push({ href, label: moduleLabels[key] });
   });
 
+  items.push({ href: "/visa-services", label: "Visa Services" });
   items.push({ href: "/contact", label: "Contact" });
   return items;
 }
@@ -70,17 +69,31 @@ const adminNav: (NavItem & {
       enabled: modules.hotels,
     },
     {
-      href: "/admin/rentals",
-      label: "Rentals",
+      href: "/admin/rentals/cars",
+      label: "Car rental",
       permission: "vehicles.view",
-      enabled: modules.cars || modules.bikes,
+      enabled: modules.cars,
       children: [
-        { href: "/admin/rentals", label: "Overview" },
-        { href: "/admin/rentals/fleet", label: "Fleet" },
-        { href: "/admin/rentals/availability", label: "Availability" },
-        { href: "/admin/rentals/bookings", label: "Bookings" },
-        { href: "/admin/rentals/locations", label: "Locations" },
-        { href: "/admin/rentals/policies", label: "Rules" },
+        { href: "/admin/rentals/cars/overview", label: "Overview" },
+        { href: "/admin/rentals/cars", label: "Cars" },
+        { href: "/admin/rentals/cars/availability", label: "Availability" },
+        { href: "/admin/rentals/cars/bookings", label: "Bookings" },
+        { href: "/admin/rentals/cars/locations", label: "Locations" },
+        { href: "/admin/rentals/cars/rules", label: "Rules" },
+      ],
+    },
+    {
+      href: "/admin/rentals/bikes",
+      label: "Bike rental",
+      permission: "vehicles.view",
+      enabled: modules.bikes,
+      children: [
+        { href: "/admin/rentals/bikes/overview", label: "Overview" },
+        { href: "/admin/rentals/bikes", label: "Bikes" },
+        { href: "/admin/rentals/bikes/availability", label: "Availability" },
+        { href: "/admin/rentals/bikes/bookings", label: "Bookings" },
+        { href: "/admin/rentals/bikes/locations", label: "Locations" },
+        { href: "/admin/rentals/bikes/rules", label: "Rules" },
       ],
     },
     {
@@ -92,6 +105,12 @@ const adminNav: (NavItem & {
     {
       href: "/admin/bookings",
       label: "Bookings",
+      permission: "bookings.view",
+      enabled: true,
+    },
+    {
+      href: "/admin/visa",
+      label: "Visa requests",
       permission: "bookings.view",
       enabled: true,
     },

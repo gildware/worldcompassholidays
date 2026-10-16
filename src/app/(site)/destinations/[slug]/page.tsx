@@ -10,9 +10,10 @@ import {
   NearbyDestinations,
   TourCards,
 } from "@/components/destinations/single/widgets";
-import { HomeFooter } from "@/components/gotrip/HomeFooter";
+import { HomeFooter } from "@/components/worldcompassholiday/HomeFooter";
 import { MapEmbed } from "@/components/site/MapEmbed";
 import { modules } from "@/config/modules";
+import { theme } from "@/config/theme";
 import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
 import { mapApiKey } from "@/lib/map-key";
@@ -31,8 +32,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     select: { name: true, summary: true },
   });
   return {
-    title: destination ? `${destination.name} || GoTrip - Travel & Tour React NextJS Template` : "Destination",
-    description: destination?.summary || "GoTrip - Travel & Tour React NextJS Template",
+    title: destination?.name ?? "Destination",
+    description: destination?.summary || theme.description,
   };
 }
 
@@ -165,7 +166,7 @@ export default async function DestinationPage({ params }: Props) {
   ];
 
   return (
-    <div className="gotrip-page">
+    <div className="worldcompassholiday-page">
       <section data-aos="fade" className="d-flex items-center py-15 border-top-light">
         <div className="container">
           <div className="row y-gap-10 items-center justify-between">
@@ -331,7 +332,7 @@ export default async function DestinationPage({ params }: Props) {
           id="cars"
           title="Popular Car Hire"
           text={`Cars available in ${destination.name}`}
-          moreHref="/rentals?kind=car"
+          moreHref="/rentals/cars"
         >
           <CarCards
             cars={cars.map((vehicle) => ({
@@ -356,7 +357,7 @@ export default async function DestinationPage({ params }: Props) {
           id="bikes"
           title="Bike rental"
           text={`Bikes available in ${destination.name}`}
-          moreHref="/rentals?kind=bike"
+          moreHref="/rentals/bikes"
         >
           <CarCards
             cars={bikes.map((vehicle) => ({

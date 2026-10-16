@@ -8,7 +8,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import CallToActions from "@/components/common/CallToActions";
 import DefaultFooter from "@/components/footer/default";
-import { GoTripFrame } from "@/components/gotrip/GoTripFrame";
+import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import type { GuestCounts } from "@/components/hotel-list/common/GuestSearch";
 import { Pagination } from "@/components/hotel-list/common/Pagination";
 import { HotelProperties } from "@/components/hotel-list/hotel-list-v1/HotelProperties";
@@ -152,7 +152,7 @@ export function HotelListV1({
   };
 
   return (
-    <GoTripFrame>
+    <WorldCompassHolidayFrame>
       <div className="hotel-list-v1">
         <section className="pt-40 pb-40 bg-light-2">
           <div className="container">
@@ -226,6 +226,6 @@ export function HotelListV1({
         <CallToActions />
         <DefaultFooter />
       </div>
-    </GoTripFrame>
+    </WorldCompassHolidayFrame>
   );
 }

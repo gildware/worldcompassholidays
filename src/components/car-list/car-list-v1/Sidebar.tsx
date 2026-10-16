@@ -29,6 +29,7 @@ export function Sidebar({
   mileage,
   transmissions,
   fuelPolicies,
+  fleet = "car",
 }: {
   filters: CarListFilters;
   onChange: (next: CarListFilters) => void;
@@ -42,6 +43,7 @@ export function Sidebar({
   mileage: CountOption[];
   transmissions: CountOption[];
   fuelPolicies: CountOption[];
+  fleet?: "car" | "bike" | "mixed";
 }) {
   const patch = (next: Partial<CarListFilters>) => onChange({ ...filters, ...next });
 
@@ -65,7 +67,7 @@ export function Sidebar({
       </div>
 
       <div className="sidebar__item">
-        <h5 className="text-18 fw-500 mb-10">Car Category</h5>
+        <h5 className="text-18 fw-500 mb-10">{fleet === "bike" ? "Bike type" : "Car category"}</h5>
         <div className="sidebar-checkbox">
           <CountFilter
             options={categories}
@@ -102,7 +104,7 @@ export function Sidebar({
       </div>
 
       <div className="sidebar__item">
-        <h5 className="text-18 fw-500 mb-10">Car Specifications</h5>
+        <h5 className="text-18 fw-500 mb-10">{fleet === "bike" ? "Bike specifications" : "Car specifications"}</h5>
         <div className="sidebar-checkbox">
           <CountFilter
             options={specifications}

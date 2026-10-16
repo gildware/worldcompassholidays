@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import "rc-slider/assets/index.css";
 import { PriceSlider } from "@/components/hotel-list/sidebar/PriceSlider";
 import { LocationSearch } from "@/components/tour-list/tour-list-v2/LocationSearch";
 import type { TourListFilters } from "@/components/tour-list/tour-list-v2/Sidebar";
@@ -50,7 +51,7 @@ function FilterMenu({
   }, [open]);
 
   return (
-    <div className="searchMenu-guests tour-mast-field px-20 lg:py-20 lg:px-0" ref={rootRef}>
+    <div className="searchMenu-guests tour-mast-field px-30 lg:py-20 lg:px-0" ref={rootRef}>
       <button
         type="button"
         className="tour-mast-trigger"
@@ -118,6 +119,8 @@ export function MainFilterSearchBox({
   priceMax,
   priceStep,
   currency,
+  onClear,
+  showSearch = false,
 }: {
   locations: TourListLocation[];
   location: string;
@@ -130,13 +133,26 @@ export function MainFilterSearchBox({
   priceMax: number;
   priceStep: number;
   currency: string;
+  onClear: () => void;
+  showSearch?: boolean;
 }) {
   const setPrice = (next: [number, number]) => onFilters({ ...filters, price: clampPrice(next, priceMin, priceMax) });
   const low = Math.min(filters.price[0], filters.price[1]);
   const high = Math.max(filters.price[0], filters.price[1]);
+  const filtered =
+    location.trim().length > 0 ||
+    filters.query.trim().length > 0 ||
+    filters.categories.length > 0 ||
+    filters.durations.length > 0 ||
+    low > priceMin ||
+    high < priceMax;
 
   return (
-    <div className="mainSearch -fields-4 bg-white px-10 lg:px-20 rounded-100">
+    <div
+      className={`mainSearch tour-search -fields-4 bg-white px-10 lg:px-20 rounded-100${
+        showSearch ? " -w-1070 py-10 lg:pt-5 lg:pb-20" : ""
+      }${filtered ? " -has-clear" : ""}`}
+    >
       <div className="button-grid items-center">
         <LocationSearch locations={locations} value={location} onChange={onLocation} />
 
@@ -204,6 +220,26 @@ export function MainFilterSearchBox({
             onChange={(next) => onFilters({ ...filters, durations: next })}
           />
         </FilterMenu>
+
+        {filtered ? (
+          <div className="button-item">
+            <button type="button" className="tour-mast-clear" onClick={onClear}>
+              Clear
+            </button>
+          </div>
+        ) : null}
+
+        {showSearch ? (
+          <div className="button-item">
+            <button
+              type="submit"
+              className="mainSearch__submit button -dark-1 h-60 px-35 col-12 rounded-100 bg-blue-1 text-white"
+            >
+              <i className="icon-search text-20 mr-10" />
+              Search
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

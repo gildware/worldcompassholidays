@@ -101,6 +101,7 @@ export function VehicleForm({
   initialStep = 0,
   documents,
   calendar,
+  lockKind = false,
 }: {
   values: VehicleFormValues;
   kinds: Array<"car" | "bike">;
@@ -116,6 +117,7 @@ export function VehicleForm({
   initialStep?: number;
   documents?: ReactNode;
   calendar?: ReactNode;
+  lockKind?: boolean;
 }) {
   const isEdit = Boolean(values.id);
   const steps = useMemo(
@@ -203,10 +205,10 @@ export function VehicleForm({
       pendingDraftRef.current = false;
       pendingPublishRef.current = false;
       setSaveMode(null);
-      router.push("/admin/rentals/fleet?saved=1");
+      router.push(`${kind === "bike" ? "/admin/rentals/bikes" : "/admin/rentals/cars"}?saved=1`);
       router.refresh();
     }
-  }, [router, state, step, steps.length, values.id]);
+  }, [kind, router, state, step, steps.length, values.id]);
 
   function validateStep(index: number) {
     const form = formRef.current;
@@ -342,7 +344,9 @@ export function VehicleForm({
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
           <div className="min-w-0">
             <h2 className="text-sm font-semibold text-navy">{current.title}</h2>
-            <p className="mt-0.5 truncate text-xs text-muted">{current.description}</p>
+            <p className="mt-0.5 truncate text-xs text-muted">
+              {current.id === "vehicle" && lockKind ? "Name and home destination" : current.description}
+            </p>
           </div>
           {isEdit ? (
             <Button type="button" size="sm" className="shrink-0" onClick={() => submit("publish")} disabled={pending || uploading}>
@@ -365,17 +369,21 @@ export function VehicleForm({
                 placeholder="JK01AB1234"
               />
             </Field>
-            <Field label="Fleet" required>
-              <SearchableSelect
-                name="kind"
-                value={kind}
-                onChange={(value) => setKind(value === "bike" ? "bike" : "car")}
-                ariaLabel="Fleet"
-                searchPlaceholder="Search fleet"
-                className="!h-10"
-                options={kinds.map((item) => ({ value: item, label: fleetLabel(item) }))}
-              />
-            </Field>
+            {lockKind ? (
+              <input type="hidden" name="kind" value={kind} />
+            ) : (
+              <Field label="Fleet" required>
+                <SearchableSelect
+                  name="kind"
+                  value={kind}
+                  onChange={(value) => setKind(value === "bike" ? "bike" : "car")}
+                  ariaLabel="Fleet"
+                  searchPlaceholder="Search fleet"
+                  className="!h-10"
+                  options={kinds.map((item) => ({ value: item, label: fleetLabel(item) }))}
+                />
+              </Field>
+            )}
             <Field label="Brand">
               <input name="brand" defaultValue={values.brand} className="!h-10" />
             </Field>
@@ -469,12 +477,21 @@ export function VehicleForm({
               <Field label="Seats" name="seats" required error={fieldErrors.seats}>
                 <input name="seats" type="number" min={1} defaultValue={values.seats} className="!h-10" />
               </Field>
-              <Field label="Doors">
-                <input name="doors" type="number" min={0} defaultValue={values.doors} className="!h-10" />
-              </Field>
-              <Field label="Luggage pieces">
-                <input name="luggage" type="number" min={0} defaultValue={values.luggage} className="!h-10" />
-              </Field>
+              {kind === "bike" ? (
+                <>
+                  <input type="hidden" name="doors" value={values.doors} />
+                  <input type="hidden" name="luggage" value={values.luggage} />
+                </>
+              ) : (
+                <>
+                  <Field label="Doors">
+                    <input name="doors" type="number" min={0} defaultValue={values.doors} className="!h-10" />
+                  </Field>
+                  <Field label="Luggage pieces">
+                    <input name="luggage" type="number" min={0} defaultValue={values.luggage} className="!h-10" />
+                  </Field>
+                </>
+              )}
               <Field label="Included km / day" hint="0 means unlimited.">
                 <input name="includedKmPerDay" type="number" min={0} defaultValue={values.includedKmPerDay} className="!h-10" />
               </Field>
@@ -647,7 +664,9 @@ export function VehicleForm({
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
             <div className="min-w-0">
               <h2 className="text-sm font-semibold text-navy">{current.title}</h2>
-              <p className="mt-0.5 truncate text-xs text-muted">{current.description}</p>
+              <p className="mt-0.5 truncate text-xs text-muted">
+              {current.id === "vehicle" && lockKind ? "Name and home destination" : current.description}
+            </p>
             </div>
             <Button type="button" size="sm" className="shrink-0" onClick={() => submit("publish")} disabled={pending || uploading}>
               {pending && saveMode === "publish" ? "Publishing…" : "Save and publish"}
@@ -661,7 +680,12 @@ export function VehicleForm({
 
       <div className="shrink-0 rounded-lg border border-line bg-white px-4 py-3 sm:px-5">
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <ButtonLink href="/admin/rentals/fleet" variant="secondary" size="sm" className="w-full sm:w-auto">
+          <ButtonLink
+            href={kind === "bike" ? "/admin/rentals/bikes" : "/admin/rentals/cars"}
+            variant="secondary"
+            size="sm"
+            className="w-full sm:w-auto"
+          >
             Cancel
           </ButtonLink>
           <div className="flex flex-col-reverse gap-2 sm:flex-row">

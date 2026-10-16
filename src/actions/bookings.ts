@@ -30,6 +30,7 @@ export async function updateBookingStatus(
   });
 
   revalidatePath("/admin/bookings");
+  revalidatePath("/admin/visa");
   revalidatePath("/account");
   revalidatePath(`/account/bookings/${booking.reference}`);
   return { error: null, success: "Status updated." };

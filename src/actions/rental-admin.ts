@@ -25,11 +25,25 @@ function fail(error: unknown): FormState {
 function revalidateFleet(slug?: string) {
   revalidatePath("/admin/rentals");
   revalidatePath("/admin/rentals/fleet");
+  revalidatePath("/admin/rentals/cars");
+  revalidatePath("/admin/rentals/bikes");
+  revalidatePath("/admin/rentals/cars/overview");
+  revalidatePath("/admin/rentals/bikes/overview");
+  revalidatePath("/admin/rentals/cars/availability");
+  revalidatePath("/admin/rentals/bikes/availability");
+  revalidatePath("/admin/rentals/cars/bookings");
+  revalidatePath("/admin/rentals/bikes/bookings");
+  revalidatePath("/admin/rentals/cars/locations");
+  revalidatePath("/admin/rentals/bikes/locations");
+  revalidatePath("/admin/rentals/cars/rules");
+  revalidatePath("/admin/rentals/bikes/rules");
   revalidatePath("/admin/rentals/configuration");
   revalidatePath("/admin/configuration");
   revalidatePath("/admin/rentals/locations");
   revalidatePath("/admin/rentals/policies");
   revalidatePath("/rentals");
+  revalidatePath("/rentals/cars");
+  revalidatePath("/rentals/bikes");
   revalidatePath("/destinations");
   if (slug) revalidatePath(`/rentals/${slug}`);
 }
@@ -136,16 +150,22 @@ export async function saveRentalSettings(
   formData: FormData,
 ): Promise<FormState> {
   await requirePermission("vehicles.manage");
+  const fleet = formData.get("fleet") === "bike" ? "bike" : "car";
   const allowCounterPickup = formData.get("allowCounterPickup") === "on";
   const allowHomeDelivery = formData.get("allowHomeDelivery") === "on";
   if (!allowCounterPickup && !allowHomeDelivery) {
     return { error: "Allow pickup at a location, home delivery, or both." };
   }
-  await prisma.rentalSettings.update({
-    where: { id: "default" },
-    data: {
+  const current = await prisma.rentalSettings.findUnique({ where: { id: fleet } });
+  await prisma.rentalSettings.upsert({
+    where: { id: fleet },
+    update: { allowCounterPickup, allowHomeDelivery },
+    create: {
+      id: fleet,
       allowCounterPickup,
       allowHomeDelivery,
+      taxPercent: current?.taxPercent ?? 0,
+      currency: current?.currency ?? "INR",
     },
   });
   revalidateFleet();
@@ -155,6 +175,7 @@ export async function saveRentalSettings(
 const policySchema = z.object({
   id: z.string().optional(),
   kind: z.enum(["rule", "cancellation"]),
+  fleet: z.enum(["car", "bike"]),
   name: z.string().trim().min(2).max(80),
   description: z.string().trim().min(2).max(600),
   active: z.boolean(),
@@ -171,6 +192,7 @@ export async function saveRentalPolicy(
   const parsed = policySchema.safeParse({
     id: String(formData.get("id") ?? "") || undefined,
     kind: formData.get("kind"),
+    fleet: formData.get("fleet") === "bike" ? "bike" : "car",
     name: formData.get("name"),
     description: formData.get("description"),
     active: formData.get("active") === "on",
@@ -190,12 +212,17 @@ export async function saveRentalPolicy(
   }
   const slug = slugify(parsed.data.name);
   const duplicate = await prisma.rentalPolicy.findFirst({
-    where: { slug, id: parsed.data.id ? { not: parsed.data.id } : undefined },
+    where: {
+      fleet: parsed.data.fleet,
+      slug,
+      id: parsed.data.id ? { not: parsed.data.id } : undefined,
+    },
     select: { id: true },
   });
   if (duplicate) return { error: "A policy with this name already exists." };
   const data = {
     kind: parsed.data.kind,
+    fleet: parsed.data.fleet,
     name: parsed.data.name,
     slug,
     description: parsed.data.description,
@@ -239,6 +266,7 @@ export async function saveRentalLocation(
   const imageDriver = String(formData.get("imageDriver") ?? "") === "cloudinary" ? "cloudinary" : "local";
   const id = String(formData.get("id") ?? "");
   const active = formData.get("active") === "on";
+  const fleet = formData.get("fleet") === "bike" ? "bike" : "car";
   if (name.length < 2) return { error: "Enter a location name." };
   if (address.length < 2) return { error: "Enter the address." };
   if (!imageUrl) return { error: "Add an image." };
@@ -270,7 +298,7 @@ export async function saveRentalLocation(
     });
   } else {
     await prisma.rentalLocation.create({
-      data: { ...data, slug },
+      data: { ...data, slug, fleet },
     });
   }
   revalidateFleet();
@@ -293,8 +321,14 @@ export async function deleteRentalLocation(
 }
 
 export async function removePickupLocation(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const location = await prisma.rentalLocation.findUnique({ where: { id }, select: { fleet: true } });
   const result = await deleteRentalLocation({ error: null }, formData);
-  if (result.error) redirect("/admin/rentals/locations?blocked=used");
+  if (result.error) {
+    const { redirect } = await import("next/navigation");
+    const listPath = location?.fleet === "bike" ? "/admin/rentals/bikes/locations" : "/admin/rentals/cars/locations";
+    redirect(`${listPath}?blocked=used`);
+  }
 }
 
 const imageSchema = z.array(
@@ -607,15 +641,19 @@ export async function deleteVehicle(
   ]);
   revalidateFleet(vehicle.slug);
   const { redirect } = await import("next/navigation");
-  redirect("/admin/rentals/fleet?deleted=1");
+  const listPath = vehicle.kind === "bike" ? "/admin/rentals/bikes" : "/admin/rentals/cars";
+  redirect(`${listPath}?deleted=1`);
   return { error: null };
 }
 
 export async function removeVehicle(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
   const result = await deleteVehicle({ error: null }, formData);
   if (result.error) {
     const { redirect } = await import("next/navigation");
-    redirect(`/admin/rentals/fleet?notice=${encodeURIComponent(result.error)}`);
+    const vehicle = await prisma.vehicle.findUnique({ where: { id }, select: { kind: true } });
+    const listPath = vehicle?.kind === "bike" ? "/admin/rentals/bikes" : "/admin/rentals/cars";
+    redirect(`${listPath}?notice=${encodeURIComponent(result.error)}`);
   }
 }
 

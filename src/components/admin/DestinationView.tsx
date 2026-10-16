@@ -84,7 +84,8 @@ const tabs = [
   { id: "places", label: "Places" },
   ...(modules.tours ? [{ id: "tours", label: "Tours" }] : []),
   ...(modules.hotels ? [{ id: "hotels", label: "Hotels" }] : []),
-  ...(modules.cars || modules.bikes ? [{ id: "rentals", label: "Rentals" }] : []),
+  ...(modules.cars ? [{ id: "cars", label: "Car rental" }] : []),
+  ...(modules.bikes ? [{ id: "bikes", label: "Bike rental" }] : []),
   ...(modules.buses ? [{ id: "buses", label: "Buses" }] : []),
 ] as const;
 
@@ -112,7 +113,8 @@ export function DestinationView({
     places: destination.children.length,
     tours: destination.tours.length,
     hotels: destination.hotels.length,
-    rentals: destination.vehicles.length,
+    cars: destination.vehicles.filter((vehicle) => vehicle.kind === "car").length,
+    bikes: destination.vehicles.filter((vehicle) => vehicle.kind === "bike").length,
     buses: destination.busRoutes.length,
   };
 
@@ -303,15 +305,32 @@ export function DestinationView({
                 }))}
               />
             ) : null}
-            {tab === "rentals" ? (
+            {tab === "cars" ? (
               <RecordList
-                empty="No rentals are attached to this destination."
-                items={destination.vehicles.map((vehicle) => ({
-                  id: vehicle.id,
-                  title: vehicle.name,
-                  detail: `${vehicle.kind} · ${vehicle.seats} seats · ${formatMoney(vehicle.pricePerDay, vehicle.currency)} / day`,
-                  published: vehicle.published,
-                }))}
+                empty="No cars are attached to this destination."
+                items={destination.vehicles
+                  .filter((vehicle) => vehicle.kind === "car")
+                  .map((vehicle) => ({
+                    id: vehicle.id,
+                    href: `/admin/rentals/fleet/${vehicle.id}`,
+                    title: vehicle.name,
+                    detail: `${vehicle.seats} seats · ${formatMoney(vehicle.pricePerDay, vehicle.currency)} / day`,
+                    published: vehicle.published,
+                  }))}
+              />
+            ) : null}
+            {tab === "bikes" ? (
+              <RecordList
+                empty="No bikes are attached to this destination."
+                items={destination.vehicles
+                  .filter((vehicle) => vehicle.kind === "bike")
+                  .map((vehicle) => ({
+                    id: vehicle.id,
+                    href: `/admin/rentals/fleet/${vehicle.id}`,
+                    title: vehicle.name,
+                    detail: `${vehicle.seats} seats · ${formatMoney(vehicle.pricePerDay, vehicle.currency)} / day`,
+                    published: vehicle.published,
+                  }))}
               />
             ) : null}
             {tab === "buses" ? (

@@ -3,9 +3,25 @@ import Link from "next/link";
 import { VehicleForm, type VehicleFormValues } from "@/components/admin/rentals/VehicleForm";
 import { requirePermission } from "@/lib/auth/guards";
 import { fleetKinds } from "@/lib/rentals/labels";
+import { modules } from "@/config/modules";
 import { configsOf, getRentalSetup } from "@/lib/rentals/setup";
 
-export const metadata: Metadata = { title: "Add vehicle" };
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ kind?: string }>;
+}): Promise<Metadata> {
+  const { kind } = await searchParams;
+  return { title: kind === "bike" ? "Add bike" : "Add car" };
+}
+
+type Kind = "car" | "bike";
+
+function requestedKind(value: string | undefined): Kind | null {
+  if (value === "car" && modules.cars) return "car";
+  if (value === "bike" && modules.bikes) return "bike";
+  return null;
+}
 
 const blank: VehicleFormValues = {
   name: "",
@@ -42,25 +58,34 @@ const blank: VehicleFormValues = {
   images: [],
 };
 
-export default async function NewVehiclePage() {
+export default async function NewVehiclePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ kind?: string }>;
+}) {
   await requirePermission("vehicles.manage");
-  const setup = await getRentalSetup();
+  const { kind: requested } = await searchParams;
   const kinds = fleetKinds();
+  const kind = requestedKind(requested) ?? kinds[0] ?? "car";
+  const setup = await getRentalSetup(kind);
+  const listHref = kind === "bike" ? "/admin/rentals/bikes" : "/admin/rentals/cars";
+  const noun = kind === "bike" ? "bike" : "car";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
       <div className="shrink-0">
-        <Link href="/admin/rentals/fleet" className="text-xs font-medium text-brand hover:underline">
-          ← All vehicles
+        <Link href={listHref} className="text-xs font-medium text-brand hover:underline">
+          ← All {noun}s
         </Link>
-        <h1 className="mt-1 text-xl font-semibold tracking-tight text-navy">Add vehicle</h1>
+        <h1 className="mt-1 text-xl font-semibold tracking-tight text-navy">Add {noun}</h1>
         <p className="mt-0.5 text-xs text-muted">
           Choose type, fuel, transmission, features, and add-ons from configuration.
         </p>
       </div>
       <VehicleForm
-        values={{ ...blank, kind: kinds[0] ?? "car" }}
-        kinds={kinds}
+        lockKind
+        values={{ ...blank, kind, seats: kind === "bike" ? "1" : "5" }}
+        kinds={[kind]}
         destinations={setup.destinations}
         types={configsOf(setup.configs, "vehicle_type")}
         fuels={configsOf(setup.configs, "fuel")}

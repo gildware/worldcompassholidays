@@ -13,7 +13,7 @@ import { TopHeaderFilter } from "@/components/car-list/car-list-v1/TopHeaderFilt
 import type { CarListCard, CarListLocation, CarSort } from "@/components/car-list/types";
 import CallToActions from "@/components/common/CallToActions";
 import DefaultFooter from "@/components/footer/default";
-import { GoTripFrame } from "@/components/gotrip/GoTripFrame";
+import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import type { GuestCounts } from "@/components/hotel-list/common/GuestSearch";
 import { Pagination } from "@/components/hotel-list/common/Pagination";
 
@@ -165,8 +165,8 @@ export function CarListV1({
   const currentPage = Math.min(page, pageCount);
   const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const place = pickup.trim();
-  const fleetTitle = fleet === "bike" ? "Rental Bikes" : "Rental Cars";
-  const heading = place ? `${place} ${fleetTitle}` : fleet === "bike" ? fleetTitle : "London Rental Cars";
+  const fleetTitle = fleet === "bike" ? "Bike rental" : fleet === "mixed" ? "Rentals" : "Car rental";
+  const heading = place ? `${place} ${fleetTitle}` : fleetTitle;
   const locationLabel = place || locationLabels[0] || "";
 
   const detailParams = new URLSearchParams();
@@ -194,10 +194,11 @@ export function CarListV1({
     mileage,
     transmissions,
     fuelPolicies,
+    fleet,
   };
 
   return (
-    <GoTripFrame>
+    <WorldCompassHolidayFrame>
       <div className="car-list-v1">
         <section className="pt-60">
           <div className="container">
@@ -223,6 +224,7 @@ export function CarListV1({
                   onPickupDate={setPickupDate}
                   onDropoffDate={setDropoffDate}
                   guests={guests}
+                  showGuests={fleet !== "bike"}
                   onGuests={(next) => {
                     setGuests(next);
                     setPassengersActive(true);
@@ -290,6 +292,6 @@ export function CarListV1({
         <CallToActions />
         <DefaultFooter />
       </div>
-    </GoTripFrame>
+    </WorldCompassHolidayFrame>
   );
 }

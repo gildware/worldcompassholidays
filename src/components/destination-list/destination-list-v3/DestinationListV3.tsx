@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
-import { GoTripFrame } from "@/components/gotrip/GoTripFrame";
+import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { Pagination } from "@/components/hotel-list/common/Pagination";
 import { DestinationProperties } from "@/components/destination-list/destination-list-v3/DestinationProperties";
 import { DropdownSelectBar } from "@/components/destination-list/destination-list-v3/DropdownSelectBar";
@@ -141,7 +141,7 @@ export function DestinationListV3({
   }, [selectedId, currentPage]);
 
   return (
-    <GoTripFrame>
+    <WorldCompassHolidayFrame>
       <section className="halfMap destination-list-v3">
         <div className="halfMap__content">
           <MainFilterSearchBox
@@ -221,6 +221,6 @@ export function DestinationListV3({
           </div>
         </div>
       </section>
-    </GoTripFrame>
+    </WorldCompassHolidayFrame>
   );
 }

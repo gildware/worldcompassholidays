@@ -6,7 +6,7 @@ import Link from "next/link";
 import { DateObject } from "react-multi-date-picker";
 import CallToActions from "@/components/common/CallToActions";
 import DefaultFooter from "@/components/footer/default";
-import { GoTripFrame } from "@/components/gotrip/GoTripFrame";
+import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import type { GuestCounts } from "@/components/hotel-list/common/GuestSearch";
 import { AvailableRooms2 } from "@/components/hotel-single/AvailableRooms2";
 import { FilterBox2 } from "@/components/hotel-single/FilterBox2";
@@ -68,7 +68,7 @@ export function HotelSingleV2({ hotel }: { hotel: HotelSingleData }) {
   ];
 
   return (
-    <GoTripFrame>
+    <WorldCompassHolidayFrame>
       <div className="hotel-single-v2">
         <div className="py-10 bg-dark-2">
           <div className="container">
@@ -495,6 +495,6 @@ export function HotelSingleV2({ hotel }: { hotel: HotelSingleData }) {
         <CallToActions />
         <DefaultFooter />
       </div>
-    </GoTripFrame>
+    </WorldCompassHolidayFrame>
   );
 }

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { blockingBookingStatuses, rentalStatusLabel } from "@/lib/rentals/labels";
 import { ensureRentalDefaults } from "@/lib/rentals/defaults";
+import { modules } from "@/config/modules";
 
 export const metadata: Metadata = { title: "Rentals" };
 
@@ -15,8 +16,9 @@ export default async function RentalDashboardPage() {
   const soon = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   const week = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const [fleet, active, pendingDocs, expiring, pickups] = await Promise.all([
-    prisma.vehicle.count(),
+  const [cars, bikes, active, pendingDocs, expiring, pickups] = await Promise.all([
+    prisma.vehicle.count({ where: { kind: "car" } }),
+    prisma.vehicle.count({ where: { kind: "bike" } }),
     prisma.rentalBooking.count({ where: { status: { in: ["active", "return_pending"] } } }),
     prisma.rentalBooking.count({
       where: { status: { in: ["documents_required", "documents_under_review", "pending"] } },
@@ -39,10 +41,11 @@ export default async function RentalDashboardPage() {
   ]);
 
   const stats = [
-    ["Fleet", fleet, "/admin/rentals/fleet"],
-    ["On rent", active, "/admin/rentals/bookings"],
-    ["Needs review", pendingDocs, "/admin/rentals/bookings"],
-  ] as const;
+    ...(modules.cars ? [["Car rental", cars, "/admin/rentals/cars"] as const] : []),
+    ...(modules.bikes ? [["Bike rental", bikes, "/admin/rentals/bikes"] as const] : []),
+    ["On rent", active, "/admin/rentals/bookings"] as const,
+    ["Needs review", pendingDocs, "/admin/rentals/bookings"] as const,
+  ];
 
   return (
     <div className="grid gap-6">

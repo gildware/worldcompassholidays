@@ -1,1 +1,0 @@
-../../vendor/gotrip/app/(homes)/home_1/page.jsx

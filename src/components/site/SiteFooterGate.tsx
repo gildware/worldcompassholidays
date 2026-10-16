@@ -12,8 +12,11 @@ export function SiteFooterGate({ items }: { items: NavItem[] }) {
     pathname === "/tours" ||
     pathname.startsWith("/tours/") ||
     pathname === "/rentals" ||
+    pathname === "/rentals/cars" ||
+    pathname === "/rentals/bikes" ||
     pathname === "/destinations" ||
     pathname === "/contact" ||
+    pathname === "/visa-services" ||
     /^\/destinations\/[^/]+$/.test(pathname)
   ) {
     return null;

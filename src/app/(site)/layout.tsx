@@ -1,7 +1,7 @@
-import { PublicHeader } from "@/components/gotrip/PublicHeader";
+import { PublicHeader } from "@/components/worldcompassholiday/PublicHeader";
 import { SiteFooterGate } from "@/components/site/SiteFooterGate";
 import { getPublicNav } from "@/lib/navigation";
-import "@/styles/gotrip-home.css";
+import "@/styles/worldcompassholiday-home.css";
 
 export default function SiteLayout({
   children,

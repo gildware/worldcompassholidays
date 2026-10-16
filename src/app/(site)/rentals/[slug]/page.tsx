@@ -37,7 +37,7 @@ export default async function RentalDetailPage({ params }: Props) {
     notFound();
   }
 
-  const setup = await getRentalSetup();
+  const setup = await getRentalSetup(vehicle.kind === "bike" ? "bike" : "car");
   const modes = handoverModes({
     systemPickup: setup.settings.allowCounterPickup,
     systemDelivery: setup.settings.allowHomeDelivery,

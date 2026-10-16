@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function AdminVehiclesRedirect() {
-  redirect("/admin/rentals/fleet");
+  redirect("/admin/rentals");
 }

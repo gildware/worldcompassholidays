@@ -45,7 +45,7 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
     notFound();
   }
 
-  const setup = await getRentalSetup();
+  const setup = await getRentalSetup(vehicle.kind === "bike" ? "bike" : "car");
   const user = await getCurrentUser();
   const modes = handoverModes({
     systemPickup: setup.settings.allowCounterPickup,
