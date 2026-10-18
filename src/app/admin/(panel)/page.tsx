@@ -4,7 +4,7 @@ import { modules } from "@/config/modules";
 import { requireStaff } from "@/lib/auth/guards";
 import type { StaffPermission } from "@/lib/auth/permissions";
 import { can } from "@/lib/auth/session";
-import { statusLabel } from "@/lib/bookings";
+import { moduleLabel, statusLabel } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 
@@ -134,7 +134,7 @@ export default async function AdminHomePage() {
                   <div>
                     <p className="font-medium">{booking.contactName}</p>
                     <p className="text-muted">
-                      {booking.reference} · {booking.module} · {statusLabel(booking.status)}
+                      {booking.reference} · {moduleLabel(booking.module)} · {statusLabel(booking.status)}
                     </p>
                   </div>
                   <p className="text-muted">{formatDate(booking.createdAt)}</p>

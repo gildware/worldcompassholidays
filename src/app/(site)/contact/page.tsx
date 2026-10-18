@@ -6,8 +6,10 @@ import { enquiryInterests } from "@/lib/navigation";
 
 export const metadata: Metadata = { title: "Contact" };
 
+const officeAddress = "328 Queensberry Street, North Melbourne VIC 3051, Australia.";
 const officeMapEmbed =
   "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d182586.0420340798!2d-73.99038430252834!3d40.749936548349346!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sbd!4v1670824458615!5m2!1sen!2sbd";
+const officeMapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(officeAddress)}`;
 
 export default async function ContactPage({
   searchParams,
@@ -62,19 +64,26 @@ const contactDetails = [
   {
     title: "Address",
     icon: "pin" as const,
-    value: "328 Queensberry Street, North Melbourne VIC 3051, Australia.",
+    value: officeAddress,
+    href: officeMapLink,
+    hint: "Get directions",
+    external: true,
   },
   {
     title: "Toll Free Customer Care",
     icon: "phone" as const,
     value: "+91- 70064 22204",
     href: "tel:+917006422204",
+    hint: "Call now",
+    external: false,
   },
   {
     title: "Need live support?",
     icon: "mail" as const,
     value: "hi@worldcompassholiday.com",
     href: "mailto:hi@worldcompassholiday.com",
+    hint: "Write an email",
+    external: false,
   },
 ];
 
@@ -91,22 +100,21 @@ function ContactDetails() {
       <h2 className="text-2xl font-semibold tracking-tight">Contact Us</h2>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         {contactDetails.map((item) => (
-          <article
+          <a
             key={item.title}
-            className="rounded-xl border border-line bg-white p-5 shadow-[0px_10px_60px_rgba(5,16,54,0.05)]"
+            href={item.href}
+            {...(item.external ? { target: "_blank", rel: "noreferrer" } : {})}
+            className="group flex min-w-0 flex-col rounded-xl border border-line bg-white p-5 shadow-[0px_10px_60px_rgba(5,16,54,0.05)] transition duration-200 hover:-translate-y-1 hover:border-brand"
           >
-            <span className="flex size-11 items-center justify-center rounded-full bg-brand-soft text-brand">
+            <span className="flex size-11 items-center justify-center rounded-full bg-brand-soft text-brand transition group-hover:bg-brand group-hover:text-white">
               <ContactIcon name={item.icon} />
             </span>
             <p className="mt-3 text-sm text-muted">{item.title}</p>
-            {item.href ? (
-              <a href={item.href} className="mt-1 block text-base font-medium leading-6">
-                {item.value}
-              </a>
-            ) : (
-              <p className="mt-1 text-base font-medium leading-6">{item.value}</p>
-            )}
-          </article>
+            <p className="mt-1 break-words text-base font-medium leading-6">{item.value}</p>
+            <p className="mt-2 text-sm font-medium text-brand opacity-0 transition duration-200 group-hover:opacity-100">
+              {item.hint} →
+            </p>
+          </a>
         ))}
         <article className="rounded-xl border border-line bg-white p-5 shadow-[0px_10px_60px_rgba(5,16,54,0.05)]">
           <span className="flex size-11 items-center justify-center rounded-full bg-brand-soft text-brand">
@@ -121,7 +129,7 @@ function ContactDetails() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={item.label}
-                className="flex size-10 items-center justify-center rounded-full border border-line text-navy"
+                className="flex size-10 items-center justify-center rounded-full border border-line text-navy transition hover:-translate-y-0.5 hover:border-brand hover:bg-brand hover:text-white"
               >
                 <ContactIcon name={item.icon} />
               </a>

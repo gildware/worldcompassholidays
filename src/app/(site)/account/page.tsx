@@ -5,7 +5,7 @@ import { ProfileForm } from "@/components/account/ProfileForm";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { requireCustomer } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
-import { statusLabel } from "@/lib/bookings";
+import { moduleLabel, statusLabel } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 
@@ -55,7 +55,7 @@ export default async function AccountPage() {
                   <div>
                     <p className="font-medium">{booking.title}</p>
                     <p className="text-muted">
-                      {booking.reference} · {booking.module} · {booking.guests}{" "}
+                      {booking.reference} · {moduleLabel(booking.module)} · {booking.guests}{" "}
                       {booking.guests === 1 ? "guest" : "guests"}
                     </p>
                   </div>

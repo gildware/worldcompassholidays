@@ -29,6 +29,7 @@ export function getPublicNav(): NavItem[] {
   });
 
   items.push({ href: "/visa-services", label: "Visa Services" });
+  items.push({ href: "/meet-and-assist", label: "Meet & assist" });
   items.push({ href: "/contact", label: "Contact" });
   return items;
 }
@@ -111,6 +112,12 @@ const adminNav: (NavItem & {
     {
       href: "/admin/visa",
       label: "Visa requests",
+      permission: "bookings.view",
+      enabled: true,
+    },
+    {
+      href: "/admin/meet-and-assist",
+      label: "Meet and assist",
       permission: "bookings.view",
       enabled: true,
     },

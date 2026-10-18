@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { BookingStatusForm } from "@/components/admin/BookingStatusForm";
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
-import { statusLabel } from "@/lib/bookings";
+import { moduleLabel, statusLabel } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 
@@ -36,7 +36,7 @@ export default async function AdminBookingsPage() {
                 <p className="text-muted">{booking.reference}</p>
               </div>
               <p className="mt-1 text-muted">
-                {booking.contactName} · {booking.contactEmail} · {booking.module} ·{" "}
+                {booking.contactName} · {booking.contactEmail} · {moduleLabel(booking.module)} ·{" "}
                 {statusLabel(booking.status)} · {booking.guests}{" "}
                 {booking.guests === 1 ? "guest" : "guests"}
                 {booking.user ? " · has account" : " · guest enquiry"}

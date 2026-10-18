@@ -24,6 +24,12 @@ export function statusLabel(status: string) {
   return bookingStatusLabels[status as BookingStatus] ?? status;
 }
 
+export function moduleLabel(module: string) {
+  if (module === "visa") return "Visa";
+  if (module === "assist") return "Meet and assist";
+  return module;
+}
+
 export function bookingReference() {
   return `BK-${Date.now().toString(36).toUpperCase()}`;
 }

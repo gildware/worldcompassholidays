@@ -95,10 +95,13 @@ export async function confirmRentalBooking(
           locationLinks: true,
         },
       });
+      if (!vehicle || !vehicle.published) {
+        throw new Error("This vehicle is not available to book.");
+      }
       const settings =
         (await tx.rentalSettings.findUnique({ where: { id: vehicle.kind } })) ??
         (await tx.rentalSettings.findUnique({ where: { id: "default" } }));
-      if (!vehicle || !vehicle.published || !settings) {
+      if (!settings) {
         throw new Error("This vehicle is not available to book.");
       }
       if (vehicle.status !== "available") {
@@ -130,12 +133,13 @@ export async function confirmRentalBooking(
       }
 
       const allowedLocations = vehicle.locationLinks.map((link) => link.locationId);
+      const fleet = vehicle.kind;
       async function assertLocation(id: string | null, label: string) {
         if (!id) throw new Error(`Choose a ${label} location.`);
         const location = await tx.rentalLocation.findFirst({
           where: { id, active: true },
         });
-        if (!location || location.fleet !== vehicle.kind) throw new Error(`Choose an active ${label} location.`);
+        if (!location || location.fleet !== fleet) throw new Error(`Choose an active ${label} location.`);
         if (allowedLocations.length > 0 && !allowedLocations.includes(id)) {
           throw new Error(`This vehicle is not offered at that ${label} location.`);
         }

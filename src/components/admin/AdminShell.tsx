@@ -229,6 +229,16 @@ function NavIcon({ href, label }: { href: string; label?: string }) {
       </svg>
     );
   }
+  if (href === "/admin/meet-and-assist") {
+    return (
+      <svg {...common}>
+        <rect x="3" y="8" width="12" height="8" rx="1.5" />
+        <path d="M9 16v3.5" />
+        <circle cx="18" cy="7.5" r="2.2" />
+        <path d="M15.2 16.5c.4-1.8 1.4-2.8 2.8-2.8s2.4 1 2.8 2.8" />
+      </svg>
+    );
+  }
   return (
     <svg {...common}>
       <path d="M12 3.5 19 6.5v5.2c0 4-2.8 6.8-7 8.3-4.2-1.5-7-4.3-7-8.3V6.5L12 3.5z" />

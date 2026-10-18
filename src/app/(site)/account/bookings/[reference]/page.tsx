@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { BookingEditForm } from "@/components/account/BookingEditForm";
 import { requireCustomer } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
-import { customerEditableStatuses, statusLabel } from "@/lib/bookings";
+import { customerEditableStatuses, moduleLabel, statusLabel } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import { formatDate, formatMoney } from "@/lib/format";
 
@@ -29,7 +29,7 @@ export default async function AccountBookingPage({
 
   const rows = [
     ["Status", statusLabel(booking.status)],
-    ["Service", booking.module],
+    ["Service", moduleLabel(booking.module)],
     ["Guests", String(booking.guests)],
     ["Preferred start", booking.startDate ? formatDate(booking.startDate) : "Not set"],
     ["Amount", booking.amount > 0 ? formatMoney(booking.amount, booking.currency) : "Not quoted yet"],
