@@ -24,6 +24,7 @@ export type FleetRow = {
   kind: string;
   typeName: string;
   destinationId: string;
+  destinationIds: string[];
   destinationName: string;
   seats: number;
   transmission: string;
@@ -176,7 +177,13 @@ export function FleetWorkspace({
       if (listingFilter === "published" && !vehicle.published) return false;
       if (listingFilter === "draft" && vehicle.published) return false;
       if (fleetFilter !== "all" && vehicle.kind !== fleetFilter) return false;
-      if (destinationFilter !== "all" && vehicle.destinationId !== destinationFilter) return false;
+      if (
+        destinationFilter !== "all" &&
+        vehicle.destinationId !== destinationFilter &&
+        !vehicle.destinationIds.includes(destinationFilter)
+      ) {
+        return false;
+      }
       if (!needle) return true;
       const haystack = [
         vehicle.name,
@@ -345,12 +352,12 @@ export function FleetWorkspace({
         />
         )}
         <SearchableSelect
-          ariaLabel="Filter by destination"
+          ariaLabel="Filter by location"
           value={destinationFilter}
           onChange={setDestinationFilter}
-          searchPlaceholder="Search destinations"
+          searchPlaceholder="Search locations"
           options={[
-            { value: "all", label: "All destinations" },
+            { value: "all", label: "All locations" },
             ...destinations.map((destination) => ({
               value: destination.id,
               label: destination.name,
@@ -387,7 +394,7 @@ export function FleetWorkspace({
                 <span className="sr-only">Image</span>
               </th>
               <SortHeader label="Name" column="name" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
-              <SortHeader label="Destination" column="destination" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+              <SortHeader label="Location" column="destination" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               <SortHeader label="Type" column="type" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               <SortHeader label="Seats" column="seats" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               <SortHeader label="Price" column="price" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" />

@@ -4,8 +4,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { customerReturnPath, firstIssue, safeRedirectPath, type FormState } from "@/lib/forms";
-import { getDummyHash, hashPassword, verifyPassword } from "@/lib/auth/password";
+import { firstIssue, safeRedirectPath, type FormState } from "@/lib/forms";
+import { getDummyHash, verifyPassword } from "@/lib/auth/password";
 import type { RoleScope } from "@/lib/auth/permissions";
 import {
   clearLoginFailures,
@@ -13,18 +13,11 @@ import {
   recordLoginFailure,
 } from "@/lib/auth/rate-limit";
 import { createSession, destroySession } from "@/lib/auth/session";
-import { emailField, nameField, passwordField, phoneField } from "@/lib/validation";
+import { emailField } from "@/lib/validation";
 
 const loginSchema = z.object({
   email: emailField,
   password: z.string().min(1, "Enter your password"),
-});
-
-const signupSchema = z.object({
-  name: nameField,
-  email: emailField,
-  phone: phoneField,
-  password: passwordField,
 });
 
 const genericLoginError = "Email or password is incorrect.";
@@ -78,54 +71,6 @@ export async function staffLogin(
   const result = await signIn("staff", formData);
   if (result) return result;
   redirect(safeRedirectPath(formData.get("next"), "/admin", "/admin"));
-}
-
-export async function customerLogin(
-  _previous: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const result = await signIn("customer", formData);
-  if (result) return result;
-  redirect(customerReturnPath(formData.get("next")));
-}
-
-export async function customerSignup(
-  _previous: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const parsed = signupSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    phone: formData.get("phone") ?? "",
-    password: formData.get("password"),
-  });
-  if (!parsed.success) return { error: firstIssue(parsed.error) };
-
-  const existing = await prisma.user.findUnique({
-    where: { email: parsed.data.email },
-    select: { id: true },
-  });
-  if (existing) {
-    return { error: "An account with this email already exists. Sign in instead." };
-  }
-
-  const customerRole = await prisma.role.findUnique({ where: { key: "customer" } });
-  if (!customerRole) {
-    return { error: "Customer accounts are not set up yet. Run the database seed." };
-  }
-
-  const user = await prisma.user.create({
-    data: {
-      name: parsed.data.name,
-      email: parsed.data.email,
-      phone: parsed.data.phone,
-      passwordHash: await hashPassword(parsed.data.password),
-      roleId: customerRole.id,
-    },
-  });
-
-  await createSession(user.id, "customer");
-  redirect(customerReturnPath(formData.get("next")));
 }
 
 export async function logout(formData: FormData) {

@@ -17,6 +17,8 @@ export type CarListCard = {
   images: string[];
   price: number;
   currency: string;
+  deposit: number;
+  helmet: boolean;
   freeCancellation: boolean;
 };
 
@@ -24,6 +26,8 @@ export type CarListLocation = {
   id: string;
   name: string;
   address: string;
+  lat?: number;
+  lng?: number;
 };
 
 export type CarSort = "recommended" | "price-asc" | "price-desc" | "name";

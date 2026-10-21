@@ -60,6 +60,7 @@ export default async function RentalCustomersPage() {
               <div>
                 <p className="font-medium">{customer.name}</p>
                 <p className="text-muted">{customer.email}</p>
+                {customer.address ? <p className="text-muted">{customer.address}</p> : null}
               </div>
               <p className="text-muted">{customer._count.rentalBookings} rentals</p>
             </li>

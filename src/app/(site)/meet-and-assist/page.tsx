@@ -2,21 +2,20 @@ import type { Metadata } from "next";
 import { AssistDesk } from "@/components/assist/AssistDesk";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { getCurrentUser } from "@/lib/auth/session";
+import { pageMetadata } from "@/lib/seo";
 import "@/styles/assist-desk.css";
 
 const pageTitle = "Meet and assist at the airport";
 const pageDescription =
   "A greeter meets you on arrival, departure, or a connection. We quote the fee before anyone is booked.";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: pageTitle,
   description: pageDescription,
-  openGraph: {
-    title: pageTitle,
-    description: pageDescription,
-    url: "/meet-and-assist",
-  },
-};
+  path: "/meet-and-assist",
+  image: "/img/assist/assist-arrival.jpg",
+  imageAlt: "A greeter meeting a traveller at an airport",
+});
 
 const faqs = [
   {

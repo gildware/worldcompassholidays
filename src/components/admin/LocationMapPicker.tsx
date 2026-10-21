@@ -34,18 +34,18 @@ type PredictionService = {
   ) => void;
 };
 
+type GeocodeResult = {
+  formatted_address?: string;
+  geometry?: {
+    location?: { lat: () => number; lng: () => number };
+    viewport?: object;
+  };
+};
+
 type GeocoderService = {
   geocode: (
-    request: { placeId: string },
-    callback: (
-      results: Array<{
-        geometry?: {
-          location?: { lat: () => number; lng: () => number };
-          viewport?: object;
-        };
-      }> | null,
-      status: string,
-    ) => void,
+    request: { placeId?: string; location?: LatLng },
+    callback: (results: GeocodeResult[] | null, status: string) => void,
   ) => void;
 };
 
@@ -57,12 +57,14 @@ export function LocationMapPicker({
   lng,
   zoom,
   onChange,
+  onAddress,
 }: {
   apiKey: string;
   lat: string;
   lng: string;
   zoom: number;
   onChange: (next: { lat: string; lng: string; zoom: number }) => void;
+  onAddress?: (address: string, source: "search" | "pin") => void;
 }) {
   const mapNode = useRef<HTMLDivElement>(null);
   const mapHandle = useRef<MapHandle | null>(null);
@@ -70,6 +72,7 @@ export function LocationMapPicker({
   const predictionsRef = useRef<PredictionService | null>(null);
   const geocoderRef = useRef<GeocoderService | null>(null);
   const onChangeRef = useRef(onChange);
+  const onAddressRef = useRef(onAddress);
   const skipSync = useRef(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -79,7 +82,8 @@ export function LocationMapPicker({
 
   useEffect(() => {
     onChangeRef.current = onChange;
-  }, [onChange]);
+    onAddressRef.current = onAddress;
+  }, [onChange, onAddress]);
 
   useEffect(() => {
     const node = mapNode.current;
@@ -135,6 +139,10 @@ export function LocationMapPicker({
               lat: position.lat.toFixed(6),
               lng: position.lng.toFixed(6),
               zoom: map.getZoom() ?? zoom,
+            });
+            geocoderRef.current?.geocode({ location: position }, (results, geocodeStatus) => {
+              const formatted = results?.[0]?.formatted_address;
+              if (geocodeStatus === "OK" && formatted) onAddressRef.current?.(formatted, "pin");
             });
           }),
         );
@@ -232,6 +240,7 @@ export function LocationMapPicker({
   function selectSuggestion(item: Suggestion) {
     setQuery(item.description);
     setSuggestions([]);
+    onAddressRef.current?.(item.description, "search");
     const geocoder = geocoderRef.current;
     if (!geocoder) return;
     geocoder.geocode({ placeId: item.placeId }, (results, geocodeStatus) => {
@@ -258,6 +267,9 @@ export function LocationMapPicker({
             aria-label="Search a place"
             autoComplete="off"
             onChange={(event) => onQueryChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.preventDefault();
+            }}
             className="h-10 w-full rounded-lg border border-line bg-white px-3 text-sm text-navy shadow-sm outline-none disabled:opacity-70"
           />
           {suggestions.length > 0 ? (

@@ -3,12 +3,18 @@ import { CarListV1 } from "@/components/car-list/car-list-v1/CarListV1";
 import type { CarListCard, CarListLocation } from "@/components/car-list/types";
 import { modules } from "@/config/modules";
 import { prisma } from "@/lib/db";
+import { ensureRentalDefaults } from "@/lib/rentals/defaults";
 import { fleetKinds } from "@/lib/rentals/labels";
 
 type Search = Record<string, string | string[] | undefined>;
 
 function one(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
+
+function coord(value: string) {
+  const number = Number(value);
+  return value.trim() && Number.isFinite(number) ? number : undefined;
 }
 
 function isAirConditioning(feature: string) {
@@ -26,6 +32,7 @@ export async function RentalListing({
   if (lockedKind === "bike" && !modules.bikes) notFound();
   if (!lockedKind && !modules.cars && !modules.bikes) notFound();
 
+  await ensureRentalDefaults();
   const params = await searchParams;
   const kinds = fleetKinds();
   const requestedKind = one(params.kind);
@@ -35,7 +42,7 @@ export async function RentalListing({
   const locationId = one(params.location);
   const seats = Number(one(params.seats) || 0);
 
-  const [vehicles, destinations, rentalLocations, freeCancellation] = await Promise.all([
+  const [vehicles, rentalLocations, freeCancellation] = await Promise.all([
     prisma.vehicle.findMany({
       where: {
         published: true,
@@ -48,22 +55,22 @@ export async function RentalListing({
         fuelType: true,
         transmission: true,
         features: { include: { config: true } },
-        destination: { select: { id: true, name: true, region: true, country: true } },
+        destination: { select: { id: true, name: true } },
         locationLinks: { include: { location: true } },
       },
       orderBy: [{ pricePerDay: "asc" }, { name: "asc" }],
     }),
-    prisma.destination.findMany({
-      where: {
-        published: true,
-        vehicles: { some: { published: true, ...(kind ? { kind } : {}) } },
-      },
-      select: { id: true, name: true, region: true, country: true },
-      orderBy: { name: "asc" },
-    }),
     prisma.rentalLocation.findMany({
-      where: { active: true, ...(kind ? { fleet: kind } : {}) },
-      select: { id: true, name: true, address: true },
+      where: {
+        active: true,
+        ...(kind ? { fleet: kind } : {}),
+        vehicleLinks: {
+          some: {
+            vehicle: { published: true, status: { not: "inactive" }, ...(kind ? { kind } : {}) },
+          },
+        },
+      },
+      select: { id: true, name: true, address: true, mapLat: true, mapLng: true },
       orderBy: { name: "asc" },
     }),
     prisma.rentalPolicy.findFirst({
@@ -73,17 +80,17 @@ export async function RentalListing({
   ]);
 
   const cars: CarListCard[] = vehicles.map((vehicle) => {
-    const features = vehicle.features
+    const linked = vehicle.features
       .map((feature) => feature.config)
       .filter((feature) => feature.active)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((feature) => feature.name);
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    const features = linked.filter((feature) => feature.kind === "feature").map((feature) => feature.name);
     const transmission = vehicle.transmission?.name ?? "";
     const pickupNames = vehicle.locationLinks
       .map((link) => link.location)
-      .filter((location) => location.active)
+      .filter((location) => location.active && (!kind || location.fleet === vehicle.kind))
       .map((location) => location.name);
-    const locations = [...new Set([vehicle.destination?.name ?? "", ...pickupNames].filter(Boolean))];
+    const locations = [...new Set(pickupNames)];
     const specs = [
       ...(features.some(isAirConditioning) ? ["With air conditioning"] : []),
       ...(/automatic/i.test(transmission) ? ["Automatic transmission"] : []),
@@ -97,7 +104,7 @@ export async function RentalListing({
       slug: vehicle.slug,
       name: vehicle.name,
       kind: vehicle.kind,
-      location: vehicle.destination?.name || pickupNames[0] || "",
+      location: pickupNames[0] || vehicle.destination?.name || "",
       locations,
       category: vehicle.vehicleType?.name || (vehicle.kind === "bike" ? "Bike" : "Car"),
       brand: vehicle.brand,
@@ -105,36 +112,25 @@ export async function RentalListing({
       luggage: vehicle.luggage ?? 0,
       transmission,
       mileage: vehicle.includedKmPerDay > 0 ? "Limited" : "Unlimited",
-      mileageLabel: vehicle.includedKmPerDay > 0 ? `${vehicle.includedKmPerDay} km` : "Unlimited",
+      mileageLabel: vehicle.includedKmPerDay > 0 ? `${vehicle.includedKmPerDay} km included` : "Unlimited km",
       fuel: vehicle.fuelType?.name ?? "",
       specs,
       images: vehicle.images.map((image) => image.url).filter(Boolean),
       price: vehicle.pricePerDay,
       currency: vehicle.currency || "INR",
+      deposit: vehicle.securityDeposit,
+      helmet: vehicle.kind === "bike" || linked.some((feature) => /helmet/i.test(feature.name)),
       freeCancellation: Boolean(freeCancellation),
     };
   });
 
-  const locationNames = new Set<string>();
-  const locations: CarListLocation[] = [];
-  destinations.forEach((destination) => {
-    if (locationNames.has(destination.name)) return;
-    locationNames.add(destination.name);
-    locations.push({
-      id: destination.id,
-      name: destination.name,
-      address: [destination.region, destination.country].filter(Boolean).join(", "),
-    });
-  });
-  rentalLocations.forEach((location) => {
-    if (locationNames.has(location.name)) return;
-    locationNames.add(location.name);
-    locations.push({
-      id: location.id,
-      name: location.name,
-      address: location.address,
-    });
-  });
+  const locations: CarListLocation[] = rentalLocations.map((location) => ({
+    id: location.id,
+    name: location.name,
+    address: location.address,
+    lat: coord(location.mapLat),
+    lng: coord(location.mapLng),
+  }));
 
   const selectedLocation = rentalLocations.find((location) => location.id === locationId);
   const initialPickup = one(params.q).trim() || selectedLocation?.name || "";

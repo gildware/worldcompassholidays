@@ -7,7 +7,6 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import CallToActions from "@/components/common/CallToActions";
-import DefaultFooter from "@/components/footer/default";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { Pagination } from "@/components/hotel-list/common/Pagination";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -177,7 +176,7 @@ export function TourListV2({
       <div className="tour-list-v2 tour-workspace">
         <div className="tour-workspace__stage">
           <section className="tour-workspace__mast">
-            <h1 className="tour-workspace__title">Find Your Dream Tour</h1>
+            <h1 className="tour-workspace__title">Tours and treks</h1>
             <MainFilterSearchBox
               locations={locations}
               location={location}
@@ -277,7 +276,6 @@ export function TourListV2({
 
         <div className="tour-workspace__footer">
           <CallToActions />
-          <DefaultFooter />
         </div>
       </div>
     </WorldCompassHolidayFrame>

@@ -1,4 +1,10 @@
 import Link from "next/link";
+import { privateMetadata } from "@/lib/seo";
+
+export const metadata = privateMetadata(
+  "Page not found",
+  "That page is not on World Compass Holidays.",
+);
 
 export default function NotFound() {
   return (

@@ -27,7 +27,7 @@ export function TourProperties({ tours }: { tours: TourListCard[] }) {
 
   return (
     <>
-      {tours.map((item) => (
+      {tours.map((item, itemIndex) => (
         <div key={item.id}>
           <Link href={item.href} className="tourCard -type-1 rounded-4 position-relative d-block">
             <div className="tourCard__image">
@@ -49,6 +49,7 @@ export function TourProperties({ tours }: { tours: TourListCard[] }) {
                               className="rounded-4 col-12 js-lazy"
                               src={slide}
                               alt={item.title}
+                              loading={itemIndex === 0 && slideIndex === 0 ? "eager" : "lazy"}
                             />
                           ) : (
                             <div className="rounded-4 bg-light-2 w-100 h-100" />

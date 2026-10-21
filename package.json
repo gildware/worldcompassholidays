@@ -25,6 +25,8 @@
     "bootstrap": "^5.3.8",
     "ckeditor5": "^48.5.2",
     "cloudinary": "^2.11.0",
+    "firebase": "^13.0.0",
+    "jose": "^6.2.13",
     "next": "16.3.8",
     "photoswipe": "^5.4.4",
     "postcss": "^8.5.29",

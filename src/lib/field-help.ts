@@ -148,18 +148,6 @@ const guides: Record<string, FieldGuide> = {
     what: "Your name as it should appear on your account and bookings.",
     why: "The team and your booking records use this name. Use the name you want on confirmations.",
   },
-  "signup.email": {
-    what: "The email address for your new account.",
-    why: "You will sign in with it, and booking updates are sent there. Use an inbox you control.",
-  },
-  "signup.phone": {
-    what: "A phone number for your account.",
-    why: "Optional. The team can use it for trip updates when email is slow.",
-  },
-  "signup.password": {
-    what: "The password you will use to sign in.",
-    why: "It protects your bookings and profile. Use at least 8 characters that you do not use elsewhere.",
-  },
   "profile.email": {
     what: "The email address on your account. It cannot be edited here.",
     why: "Sign-in and booking mail use this address. Contact the team if it needs to change.",

@@ -10,6 +10,17 @@ import { loadHotelCatalog } from "@/lib/catalog-query";
 import type { CatalogOption } from "@/lib/catalog";
 import { resolveFaqs, resolveTitles } from "@/lib/hotels/labels";
 import { mealPlanLabel, propertyTypeLabel } from "@/lib/hotels/options";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  absoluteUrl,
+  breadcrumbNode,
+  faqNode,
+  graphLd,
+  organizationNode,
+  pageMetadata,
+  plainText,
+  privateMetadata,
+} from "@/lib/seo";
 import { parseJsonArray, type GalleryItem } from "@/lib/tours/json";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -30,13 +41,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const hotel = await prisma.hotel.findUnique({
     where: { slug },
-    select: { name: true, seoTitle: true, seoDescription: true, published: true },
+    select: {
+      name: true,
+      summary: true,
+      seoTitle: true,
+      seoDescription: true,
+      seoIndex: true,
+      seoImageUrl: true,
+      imageUrl: true,
+      featuredImageUrl: true,
+      published: true,
+      destination: { select: { name: true } },
+    },
   });
-  if (!hotel?.published) return { title: "Hotel" };
-  return {
-    title: hotel.seoTitle || hotel.name,
-    description: hotel.seoDescription || undefined,
-  };
+  if (!hotel?.published) return privateMetadata("Hotel");
+  const place = hotel.destination?.name;
+  return pageMetadata({
+    title: hotel.seoTitle.trim() || hotel.name,
+    description:
+      hotel.seoDescription.trim() ||
+      hotel.summary.trim() ||
+      `${hotel.name}${place ? ` in ${place}` : ""}. Rooms, rates, and what is included.`,
+    path: `/hotels/${slug}`,
+    image: hotel.seoImageUrl || hotel.featuredImageUrl || hotel.imageUrl,
+    imageAlt: hotel.name,
+    index: hotel.seoIndex,
+  });
 }
 
 export default async function HotelPage({ params }: Props) {
@@ -152,5 +182,64 @@ export default async function HotelPage({ params }: Props) {
     locations,
   };
 
-  return <HotelSingleV2 hotel={data} />;
+  const path = `/hotels/${hotel.slug}`;
+  const description =
+    hotel.seoDescription.trim() ||
+    hotel.summary.trim() ||
+    plainText(hotel.description) ||
+    `${hotel.name}${hotel.destination?.name ? ` in ${hotel.destination.name}` : ""}.`;
+  const addressCountry = hotel.destination?.country
+    ? hotel.destination.country === "India"
+      ? "IN"
+      : hotel.destination.country
+    : "";
+
+  return (
+    <>
+      <JsonLd
+        data={graphLd([
+          organizationNode(),
+          breadcrumbNode([
+            { name: "Home", path: "/" },
+            { name: "Hotels", path: "/hotels" },
+            ...(hotel.destination
+              ? [{ name: hotel.destination.name, path: `/destinations/${hotel.destination.slug}` }]
+              : []),
+            { name: hotel.name, path },
+          ]),
+          faqNode(data.faqs),
+          {
+            "@type": "Hotel",
+            name: hotel.name,
+            description,
+            url: absoluteUrl(path),
+            image: data.images.map((image) => absoluteUrl(image)),
+            ...(hotel.starRating > 0
+              ? {
+                  starRating: {
+                    "@type": "Rating",
+                    ratingValue: String(hotel.starRating),
+                    bestRating: "5",
+                  },
+                }
+              : {}),
+            ...(hotel.address.trim() || hotel.destination?.name || addressCountry
+              ? {
+                  address: {
+                    "@type": "PostalAddress",
+                    ...(hotel.address.trim() ? { streetAddress: hotel.address.trim() } : {}),
+                    ...(hotel.destination?.name ? { addressLocality: hotel.destination.name } : {}),
+                    ...(addressCountry ? { addressCountry } : {}),
+                  },
+                }
+              : {}),
+            ...(hotel.priceFrom > 0
+              ? { priceRange: formatMoney(hotel.priceFrom, hotel.currency || "INR") }
+              : {}),
+          },
+        ])}
+      />
+      <HotelSingleV2 hotel={data} />
+    </>
+  );
 }

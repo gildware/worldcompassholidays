@@ -30,11 +30,153 @@ body {
   font-family: var(--font-jost), sans-serif;
 }
 
+.site-shell {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.site-shell > main {
+  flex: 1 1 auto;
+}
+
+.site-shell > footer {
+  margin-top: auto;
+}
+
+body > .worldcompassholiday-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+body > .worldcompassholiday-page > main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+body > .worldcompassholiday-page > main > .footer {
+  margin-top: auto;
+}
+
 .worldcompassholiday-page.worldcompassholiday-header-scope {
   flex: none;
   width: 100%;
   min-height: 0;
   background: transparent;
+}
+
+.worldcompassholiday-page.site-footer-scope {
+  flex: none;
+  width: 100%;
+  min-height: 0;
+  background: transparent;
+}
+
+.worldcompassholiday-page .site-footer {
+  background: #051036;
+  color: #c5cbe0;
+}
+
+.worldcompassholiday-page .site-footer p,
+.worldcompassholiday-page .site-footer a,
+.worldcompassholiday-page .site-footer h2,
+.worldcompassholiday-page .site-footer li {
+  color: inherit;
+}
+
+.worldcompassholiday-page .site-footer__main {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.4fr) repeat(3, minmax(0, 1fr));
+  gap: 22px 36px;
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 28px 0 22px;
+}
+
+.worldcompassholiday-page .site-footer__brand p {
+  margin: 10px 0 0;
+  max-width: 32ch;
+  color: #a8b0c8;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.worldcompassholiday-page .site-footer__reach {
+  margin-top: 12px;
+}
+
+.worldcompassholiday-page .site-footer h2 {
+  margin: 0 0 10px;
+  color: #e7c98a;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.worldcompassholiday-page .site-footer ul,
+.worldcompassholiday-page .site-footer li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.worldcompassholiday-page .site-footer ul {
+  display: grid;
+  gap: 6px;
+}
+
+.worldcompassholiday-page .site-footer a {
+  color: #e7ebf5;
+  font-size: 14px;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.worldcompassholiday-page .site-footer a:hover {
+  color: #ffffff;
+}
+
+.worldcompassholiday-page .site-footer__bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px 24px;
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 12px 0 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: #8ea0c8;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+@media (max-width: 900px) {
+  .worldcompassholiday-page .site-footer__main {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+    padding-top: 24px;
+  }
+}
+
+@media (max-width: 560px) {
+  .worldcompassholiday-page .site-footer__main,
+  .worldcompassholiday-page .site-footer__bar {
+    width: min(1180px, calc(100% - 32px));
+  }
+
+  .worldcompassholiday-page .site-footer__main {
+    gap: 18px 20px;
+    padding-top: 20px;
+  }
+
+  .worldcompassholiday-page .site-footer__bar {
+    flex-direction: column;
+    padding-bottom: 14px;
+  }
 }
 
 .worldcompassholiday-page .header .header-logo,
@@ -123,6 +265,17 @@ body {
 
 .worldcompassholiday-page .destination-list-v3 .mainSearch .button-grid {
   grid-template-columns: minmax(160px, 1.4fr) minmax(140px, 1fr) minmax(140px, 1fr) 60px;
+}
+
+@media (max-width: 991px) {
+  .worldcompassholiday-page .destination-list-v3 .mainSearch .button-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .worldcompassholiday-page .destination-list-v3 .mainSearch__submit.size-60 {
+    width: 100%;
+    height: 48px;
+  }
 }
 
 .worldcompassholiday-page .destination-list-v3 .mainSearch .button-grid > * {
@@ -451,6 +604,14 @@ body {
 
 .worldcompassholiday-page .masthead.-type-1 .mainSearch.tour-search.-has-clear .button-grid {
   grid-template-columns: 1.2fr 1fr 1fr 0.7fr auto auto;
+}
+
+@media (max-width: 991px) {
+  .worldcompassholiday-page .tour-workspace__mast .mainSearch.-fields-4 .button-grid,
+  .worldcompassholiday-page .tour-workspace__mast .mainSearch.-has-clear .button-grid,
+  .worldcompassholiday-page .masthead.-type-1 .mainSearch.tour-search.-has-clear .button-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .worldcompassholiday-page .tour-search .rc-slider,
@@ -1009,6 +1170,679 @@ body {
   object-fit: cover;
 }
 
+.bike-fleet,
+.car-fleet {
+  --fleet-ink: #142033;
+  --fleet-paper: #f3f0ea;
+  --fleet-paper-2: #f6f4ef;
+  --fleet-line: #e7e3db;
+  --fleet-line-2: #e4e0d8;
+  --fleet-line-hover: #c9c3b6;
+  --fleet-wash: #f3f1ec;
+  --fleet-rule: #efece6;
+  --fleet-muted: #697488;
+  --fleet-label: #8b93a7;
+  --fleet-dot: #c5cad3;
+  --fleet-ink-08: rgba(20, 32, 51, 0.08);
+  --fleet-ink-12: rgba(20, 32, 51, 0.12);
+  --fleet-ink-06: rgba(20, 32, 51, 0.06);
+  --fleet-banner: rgba(12, 18, 32, 0.78);
+}
+
+.car-fleet {
+  --fleet-ink: #0e4b48;
+  --fleet-paper: #e7f2f0;
+  --fleet-paper-2: #f3f8f7;
+  --fleet-line: #d5e6e2;
+  --fleet-line-2: #c5ddd8;
+  --fleet-line-hover: #8fb8b2;
+  --fleet-wash: #eef6f4;
+  --fleet-rule: #dceae6;
+  --fleet-muted: #5d6f6c;
+  --fleet-label: #6d8581;
+  --fleet-dot: #b7cdc8;
+  --fleet-ink-08: rgba(14, 75, 72, 0.1);
+  --fleet-ink-12: rgba(14, 75, 72, 0.14);
+  --fleet-ink-06: rgba(14, 75, 72, 0.08);
+  --fleet-banner: rgba(8, 42, 40, 0.78);
+}
+
+:is(.bike-fleet, .car-fleet) .bike-mast {
+  padding-bottom: 4px;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-results {
+  padding-top: 0;
+  padding-bottom: 36px;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-banner {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 260px;
+  margin: 0 0 16px;
+  border-radius: 0;
+  background: var(--fleet-ink);
+}
+
+:is(.bike-fleet, .car-fleet) .bike-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 42%;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-banner__copy {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 72px 0 20px;
+  background: linear-gradient(180deg, transparent, var(--fleet-banner));
+  color: #fff;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-banner h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-banner p {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+@media (max-width: 767px) {
+  :is(.bike-fleet, .car-fleet) .bike-banner {
+    height: 200px;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-banner h1 {
+    font-size: 22px;
+  }
+}
+
+:is(.bike-fleet, .car-fleet) .mainSearch {
+  margin-top: 8px;
+  padding: 2px 8px 8px !important;
+}
+
+:is(.bike-fleet, .car-fleet) .mainSearch .searchMenu-loc,
+:is(.bike-fleet, .car-fleet) .mainSearch .searchMenu-date {
+  padding: 8px 14px !important;
+}
+
+:is(.bike-fleet, .car-fleet) .mainSearch__submit {
+  min-height: 46px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+:is(.bike-fleet, .car-fleet) .sidebar.y-gap-40 {
+  padding: 14px 14px 6px;
+  border: 1px solid var(--fleet-line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+:is(.bike-fleet, .car-fleet) .sidebar.y-gap-40 > * {
+  padding-top: 0;
+  padding-bottom: 14px;
+  border: 0;
+}
+
+:is(.bike-fleet, .car-fleet) .sidebar__item h5 {
+  margin-bottom: 8px !important;
+  color: var(--fleet-label);
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+:is(.bike-fleet, .car-fleet) .sidebar-checkbox .row {
+  min-height: 30px;
+  margin-top: 0 !important;
+  padding: 0 4px;
+  border-radius: 8px;
+}
+
+:is(.bike-fleet, .car-fleet) .sidebar-checkbox .row:hover {
+  background: var(--fleet-paper-2);
+}
+
+:is(.bike-fleet, .car-fleet) .sidebar-checkbox .text-15 {
+  font-size: 13px !important;
+}
+
+:is(.bike-fleet, .car-fleet) .sidebar-checkbox .form-checkbox__mark {
+  width: 16px;
+  height: 16px;
+}
+
+:is(.bike-fleet, .car-fleet) .js-price-rangeSlider > .text-14 {
+  display: none;
+}
+
+:is(.bike-fleet, .car-fleet) .js-price-rangeSlider .mb-20 {
+  margin-bottom: 8px !important;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 14px;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-field {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-field__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--fleet-label);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-field__label svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-bar__count {
+  flex: none;
+  margin: 0;
+  color: var(--fleet-muted);
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-bar__count strong {
+  color: var(--fleet-ink);
+  font-weight: 600;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-bar__line {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  gap: 14px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-bar__line::-webkit-scrollbar {
+  display: none;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-bar__rule {
+  flex: none;
+  width: 1px;
+  height: 18px;
+  background: var(--fleet-line-2);
+}
+
+:is(.bike-fleet, .car-fleet) .bike-bar__reset {
+  flex: none;
+  align-self: flex-end;
+  height: 36px;
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--fleet-muted);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-date {
+  flex: none;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-date .rmdp-container {
+  display: block;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-date__label {
+  color: var(--fleet-label);
+  font-weight: 500;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu {
+  position: relative;
+  flex: none;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  margin: 0;
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--fleet-line-2);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--fleet-ink);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__btn svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__btn.is-open,
+:is(.bike-fleet, .car-fleet) .bike-menu__btn:hover {
+  border-color: var(--fleet-line-hover);
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__btn.is-on {
+  border-color: var(--fleet-ink);
+  background: var(--fleet-ink);
+  color: #fff;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__btn:focus-visible,
+:is(.bike-fleet, .car-fleet) .bike-seg__btn:focus-visible,
+:is(.bike-fleet, .car-fleet) .bike-menu__option:focus-visible,
+:is(.bike-fleet, .car-fleet) .bike-bar__reset:focus-visible {
+  outline: 2px solid var(--fleet-ink);
+  outline-offset: 2px;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__panel {
+  position: fixed;
+  z-index: 40;
+  padding: 6px;
+  border: 1px solid var(--fleet-line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 40px var(--fleet-ink-12);
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  height: 36px;
+  margin: 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fleet-ink);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__option:hover {
+  background: var(--fleet-paper-2);
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__option.is-on {
+  background: var(--fleet-ink);
+  color: #fff;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__note {
+  margin: 2px 10px 8px;
+  color: #8b4a3a;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__count {
+  color: var(--fleet-label);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__option.is-on .bike-menu__count {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__price {
+  padding: 8px 14px 18px;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__price .rc-slider {
+  width: 100% !important;
+  height: 16px;
+  margin: 16px 0 0;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__price .rc-slider-rail,
+:is(.bike-fleet, .car-fleet) .bike-menu__price .rc-slider-track {
+  height: 4px;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-seg {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 36px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--fleet-paper);
+}
+
+:is(.bike-fleet, .car-fleet) .bike-seg__btn {
+  height: 30px;
+  margin: 0;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #5c6578;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-seg__btn.is-on {
+  background: #fff;
+  color: var(--fleet-ink);
+  font-weight: 600;
+  box-shadow: 0 1px 2px var(--fleet-ink-12);
+}
+
+.bike-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .bike-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .worldcompassholiday-page :is(.bike-fleet, .car-fleet) .bike-layout {
+    display: grid !important;
+    grid-template-columns: 180px minmax(0, 1fr);
+    column-gap: 16px;
+    align-items: start;
+  }
+
+  .worldcompassholiday-page :is(.bike-fleet, .car-fleet) .bike-layout > .col-xl-3,
+  .worldcompassholiday-page :is(.bike-fleet, .car-fleet) .bike-layout > .col-xl-9 {
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+    min-width: 0 !important;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .bike-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.bike-empty {
+  grid-column: 1 / -1;
+  padding: 20px 4px;
+}
+
+.bike-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--fleet-line);
+  border-radius: 14px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bike-card:hover {
+  border-color: var(--fleet-ink);
+  box-shadow: 0 10px 24px var(--fleet-ink-06);
+  color: inherit;
+}
+
+.bike-card__media {
+  position: relative;
+  aspect-ratio: 5 / 2;
+  overflow: hidden;
+  background: var(--fleet-wash);
+}
+
+.bike-card__media img,
+.bike-card__fallback {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none;
+  object-fit: contain;
+  object-position: center;
+  background: var(--fleet-wash);
+}
+
+.bike-card__media.is-photo img {
+  padding: 10px 12px 4px;
+}
+
+.bike-card__fuel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 7px;
+  border: 1px solid var(--fleet-ink-08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--fleet-ink);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bike-card__fuel svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+.bike-card__kicker svg,
+.bike-card__place svg,
+.bike-card__specs svg {
+  width: 10px;
+  height: 10px;
+  flex: none;
+}
+
+.bike-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px 8px;
+}
+
+.bike-card__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bike-card__topline .bike-card__place {
+  margin-left: auto;
+  max-width: 55%;
+  text-align: right;
+}
+
+.bike-fleet .bike-card__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  color: var(--fleet-muted);
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.bike-card__kicker span {
+  color: var(--fleet-ink);
+  font-weight: 600;
+}
+
+.bike-card__kicker span::after {
+  content: "·";
+  margin-left: 6px;
+  color: var(--fleet-dot);
+  font-weight: 400;
+}
+
+.bike-fleet .bike-card__place {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  color: var(--fleet-muted);
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.bike-card__title {
+  margin: 0 !important;
+  min-height: 0;
+  color: var(--fleet-ink);
+  font-size: 14px !important;
+  font-weight: 600;
+  line-height: 1.25 !important;
+  letter-spacing: -0.01em;
+}
+
+.bike-fleet .bike-card__specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 0;
+  color: var(--fleet-muted);
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.bike-card__specs span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bike-card__price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: auto 0 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--fleet-rule);
+  color: var(--fleet-ink);
+}
+
+.bike-card__price strong {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.bike-card__price span {
+  color: var(--fleet-muted);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.car-fleet .bike-banner {
+  height: 300px;
+  background: #0e4b48;
+}
+
+.car-fleet .bike-banner img {
+  object-position: center 78%;
+}
+
+.car-fleet .bike-bar {
+  flex-wrap: wrap;
+}
+
+.car-fleet .bike-bar__line {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.car-fleet .bike-card__media.is-photo img {
+  padding: 0;
+  object-fit: cover;
+}
+
+.car-fleet .bike-card__price strong {
+  color: #0e4b48;
+}
+
+@media (max-width: 767px) {
+  .car-fleet .bike-banner {
+    height: 220px;
+  }
+}
+
 .public-header-offset {
   padding-top: 90px;
 }
@@ -1019,9 +1853,9 @@ body {
   }
 }
 
-body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope))) input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
-body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope))) select,
-body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope))) textarea {
+body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope, .site-footer-scope))) input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope, .site-footer-scope))) select,
+body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope, .site-footer-scope))) textarea {
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -1032,10 +1866,145 @@ body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope)))
   font: inherit;
 }
 
-body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope))) input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
-body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope))) select {
+body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope, .site-footer-scope))) input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope, .site-footer-scope))) select {
   height: 2.75rem;
   padding-inline: 0.75rem;
+}
+
+.phone-login__row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope, .site-footer-scope))) .phone-login__row input {
+  width: auto;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.otp-inputs {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope, .site-footer-scope))) .otp-inputs input {
+  height: 3.25rem;
+  padding: 0;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.country-code-trigger {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  height: 2.75rem;
+  margin: 0;
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: #fff;
+  color: var(--foreground);
+  font: inherit;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.country-code-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.country-code-trigger__flag {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.country-code-trigger__chevron {
+  width: 12px;
+  height: 8px;
+  color: var(--muted);
+}
+
+.country-code-menu {
+  position: fixed;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(5, 16, 54, 0.16);
+}
+
+.country-code-menu__search {
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope, .site-footer-scope))) .country-code-menu__search input {
+  height: 2.25rem;
+}
+
+.country-code-menu ul {
+  margin: 0;
+  padding: 4px;
+  overflow: auto;
+  list-style: none;
+}
+
+.country-code-menu li button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.country-code-menu li button.is-active,
+.country-code-menu li button[aria-selected="true"] {
+  background: var(--blue-soft);
+}
+
+.country-code-menu__flag {
+  width: 1.5rem;
+  flex: 0 0 auto;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.country-code-menu__name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.country-code-menu__dial {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.country-code-menu__empty {
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 0.875rem;
 }
 
 input[type="checkbox"],
@@ -1053,7 +2022,7 @@ textarea {
   padding: 0.75rem;
 }
 
-body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope))) :is(input, select, textarea, a, button):focus-visible {
+body:not(:has(.worldcompassholiday-page:not(.worldcompassholiday-header-scope, .site-footer-scope))) :is(input, select, textarea, a, button):focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 2px;
 }
@@ -1186,6 +2155,1346 @@ button[aria-invalid="true"]:focus-visible {
   border: 0 !important;
   outline: none !important;
   box-shadow: none !important;
+}
+
+.rental-detail {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 28px 0 72px;
+  color: #142033;
+}
+
+.rental-detail__crumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+  color: #697488;
+  font-size: 13px;
+}
+
+.rental-detail__crumb a {
+  color: #697488;
+  text-decoration: none;
+}
+
+.rental-detail__crumb a:hover {
+  color: #142033;
+}
+
+.rental-detail__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.72fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.rental-steps {
+  display: flex;
+  gap: 8px;
+  margin: 18px 0 0;
+  overflow-x: auto;
+}
+
+.rental-steps a {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #e3e8f2;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fff, #f4f7fb);
+  color: #142033;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rental-steps a span {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 999px;
+  background: #051036;
+  color: #fff;
+  font-size: 11px;
+}
+
+.rental-steps .rental-ico {
+  width: 15px;
+  height: 15px;
+  color: #3554d1;
+}
+
+.rental-section {
+  scroll-margin-top: 110px;
+  margin-top: 28px;
+}
+
+.rental-section--images {
+  margin-top: 22px;
+}
+
+.rental-section__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.rental-section__head h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.rental-section__head p {
+  margin: 2px 0 0;
+  color: #697488;
+  font-size: 13px;
+}
+
+.rental-section__num,
+.rental-section__mark {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 12px;
+}
+
+.rental-section__num {
+  width: 28px;
+  height: 28px;
+  background: #051036;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.rental-section__mark {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(180deg, #eef3ff, #d9e4ff);
+  color: #243ea8;
+}
+
+.rental-ico {
+  width: 18px;
+  height: 18px;
+}
+
+.rental-gallery__hero {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: min(460px, 72vw);
+  min-height: 280px;
+  padding: 12px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 22px;
+  background:
+    radial-gradient(80% 80% at 50% 40%, #fff 0%, #f3ecdf 70%, #e7dcc8 100%);
+  cursor: zoom-in;
+  box-shadow: 0 16px 40px rgba(5, 16, 54, 0.08);
+}
+
+.rental-gallery__hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.rental-gallery__hero img,
+.rental-lightbox img {
+  display: block;
+}
+
+.rental-gallery__count {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(5, 16, 54, 0.78);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rental-gallery__thumbs {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+.rental-gallery__thumbs button {
+  flex: 0 0 auto;
+  width: 92px;
+  height: 68px;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: #e8eef6;
+  cursor: pointer;
+}
+
+.rental-gallery__thumbs button.is-on {
+  border-color: #3554d1;
+}
+
+.rental-gallery__thumbs img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rental-detail__hero--empty {
+  display: grid;
+  min-height: 220px;
+  place-items: center;
+  border-radius: 20px;
+  background: #eef2f7;
+  color: #697488;
+}
+
+.rental-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 28px 72px;
+  background: rgba(5, 16, 54, 0.9);
+}
+
+.rental-lightbox img {
+  max-width: min(1100px, 100%);
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.rental-lightbox__close,
+.rental-lightbox__nav {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #051036;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rental-lightbox__close {
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+}
+
+.rental-lightbox__nav {
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translateY(-50%);
+}
+
+.rental-lightbox__nav.is-prev { left: 16px; }
+.rental-lightbox__nav.is-next { right: 16px; }
+
+.rental-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rental-facts li {
+  padding: 12px;
+  border: 1px solid #e4eaf3;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fff, #f6f8fc);
+}
+
+.rental-facts .rental-ico {
+  color: #3554d1;
+}
+
+.rental-facts span {
+  display: block;
+  margin-top: 6px;
+  color: #697488;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rental-facts strong,
+.rental-places strong,
+.rental-modes strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.rental-cover {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.rental-cover__col:only-child {
+  grid-column: 1 / -1;
+}
+
+.rental-cover__col {
+  padding: 14px;
+  border-radius: 16px;
+}
+
+.rental-cover__col h3,
+.rental-cover__col li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rental-cover__col h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.rental-cover__col ul,
+.rental-cover__col p {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rental-cover__col.is-in li {
+  margin-top: 0;
+  padding: 6px 0;
+}
+
+.rental-cover__col p,
+.rental-cover__col li {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rental-cover__col.is-in {
+  border: 1px solid #b7dfc4;
+  background: linear-gradient(180deg, #f4fbf6, #e5f6ea);
+  color: #17693a;
+}
+
+.rental-cover__col.is-out {
+  border: 1px solid #f0c2b8;
+  background: linear-gradient(180deg, #fff7f5, #fde8e3);
+  color: #8d3a2c;
+}
+
+.rental-cover__col.is-out ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rental-cover__col.is-out li {
+  margin: 0;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(141, 58, 44, 0.08);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rental-cover__col.is-in li {
+  padding: 8px 0;
+  font-size: 15px;
+}
+
+.rental-cover__col .rental-ico {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.rental-prices,
+.rental-modes,
+.rental-places,
+.rental-addons {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rental-prices div,
+.rental-addons li,
+.rental-places li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e7e3db;
+}
+
+.rental-prices dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #697488;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rental-prices dd,
+.rental-addons strong {
+  margin: 0;
+  font-weight: 700;
+}
+
+.rental-prices .rental-ico,
+.rental-addons .rental-ico,
+.rental-places .rental-ico {
+  color: #3554d1;
+}
+
+.rental-modes li,
+.rental-places li,
+.rental-addons li {
+  justify-content: flex-start;
+}
+
+.rental-modes li {
+  border: 1px solid #e4eaf3;
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.rental-modes li[data-on="yes"] {
+  border-color: #b7dfc4;
+  background: linear-gradient(180deg, #f4fbf6, #e7f6ec);
+  color: #17693a;
+}
+
+.rental-modes li[data-on="no"] {
+  border-color: #eadfd8;
+  background: linear-gradient(180deg, #fbf8f6, #f3eeea);
+  color: #7a624f;
+}
+
+.rental-modes span,
+.rental-places span {
+  display: block;
+  margin-top: 2px;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.rental-addons li strong {
+  margin-left: auto;
+}
+
+.rental-book {
+  display: grid;
+  gap: 16px;
+}
+
+.rental-book__rider {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 0 2px;
+  background: none;
+  color: #051036;
+}
+
+.rental-book__rider p {
+  display: none;
+}
+
+.rental-book__rider strong,
+.rental-book__rider span {
+  display: block;
+}
+
+.rental-book__rider strong {
+  font-size: 15px;
+}
+
+.rental-book__rider span {
+  color: #697488;
+  font-size: 13px;
+}
+
+.rental-book__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: 12px;
+}
+
+.rental-book__place-fields {
+  display: grid;
+  gap: 12px;
+}
+
+.rental-book__place {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #eadcc0;
+  border-radius: 14px;
+  background: #fbf7ef;
+  color: #142033;
+}
+
+.rental-book__place .rental-ico {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: #8d6b2f;
+}
+
+.rental-book__place p,
+.rental-book__place ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rental-book__place strong,
+.rental-book__place span {
+  display: block;
+}
+
+.rental-book__place strong {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.rental-book__place span {
+  margin-top: 2px;
+  color: #7a624f;
+  font-size: 13px;
+}
+
+.rental-book input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+.rental-book select,
+.rental-book textarea {
+  height: 48px;
+  border: 1px solid #e4eaf3;
+  border-radius: 12px;
+  background: #fff;
+  color: #051036;
+  font-size: 15px;
+}
+
+.rental-book textarea {
+  height: auto;
+  min-height: 88px;
+}
+
+.rental-book input::placeholder {
+  color: #8b95a7;
+}
+
+.rental-book .rental-detail__book {
+  margin-top: 0;
+}
+
+.rental-book__field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.rental-book__field > span,
+.rental-book__addons legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #142033;
+}
+
+.rental-book__field .rental-ico,
+.rental-book__addons .rental-ico {
+  width: 16px;
+  height: 16px;
+  color: #3554d1;
+}
+
+.rental-book__addons {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rental-book__addons button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e4eaf3;
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rental-book__addons button.is-on {
+  border-color: #b7dfc4;
+  background: #f3faf5;
+  color: #17693a;
+}
+
+.rental-book__addons strong {
+  margin-left: auto;
+  font-size: 13px;
+}
+
+.rental-book__estimate,
+.rental-book__error,
+.rental-book__back {
+  margin: 0;
+  font-size: 13px;
+}
+
+.rental-book__estimate { color: #697488; }
+.rental-book__error { color: #8d3a2c; }
+
+.rental-book__field.is-invalid input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.rental-book__field.is-invalid select,
+.rental-book__field.is-invalid textarea {
+  background: #fff7f8;
+}
+
+.rental-book__place.is-invalid {
+  border-color: #ef4444;
+  background: #fff7f8;
+}
+
+.rental-book__map.is-invalid > .grid > .relative {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px #ef4444;
+}
+
+.rental-book__field-error {
+  margin: 2px 0 0;
+  color: #9f1239;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.rental-book__upload input[type="file"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.rental-book__upload.is-invalid {
+  border-color: #ef4444 !important;
+  background: #fff7f8 !important;
+  box-shadow: 0 0 0 2px #ef4444;
+}
+
+.rental-book__doc {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #e4eaf3;
+  border-radius: 14px;
+}
+
+.rental-book__doc legend {
+  padding: 0 4px;
+  color: #142033;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.rental-book__doc-note {
+  margin: 0;
+  color: #697488;
+  font-size: 12px;
+}
+
+.rental-book__back {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #3554d1;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rental-book__steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.rental-book__steps li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #697488;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: center;
+}
+
+.rental-book__steps li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 11px;
+  left: calc(50% + 18px);
+  width: calc(100% - 36px);
+  height: 2px;
+  border-radius: 999px;
+  background: #e4eaf3;
+}
+
+.rental-book__steps li.is-done:not(:last-child)::before {
+  background: #b7dfc4;
+}
+
+.rental-book__steps li.is-current {
+  color: #142033;
+}
+
+.rental-book__steps li.is-done {
+  color: #17693a;
+}
+
+.rental-book__steps span {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e4eaf3;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 12px;
+}
+
+.rental-book__steps li.is-current span {
+  border-color: #3554d1;
+  background: #3554d1;
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(53, 84, 209, 0.12);
+}
+
+.rental-book__steps li.is-done span {
+  border-color: #b7dfc4;
+  background: #e5f6ea;
+  color: #17693a;
+}
+
+.rental-book__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rental-book__actions .rental-detail__book,
+.rental-book__actions .rental-book__submit {
+  width: auto;
+  min-width: 9rem;
+  margin-top: 0;
+  margin-left: auto;
+}
+
+.rental-detail__intro {
+  margin-top: 16px;
+}
+
+.rental-detail__kicker {
+  margin: 0;
+  color: #3554d1;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.rental-detail h1 {
+  margin: 6px 0 0;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.rental-detail__summary {
+  max-width: 38rem;
+  margin: 10px 0 0;
+  color: #697488;
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.rental-detail__specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rental-detail__specs li {
+  min-width: 96px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f6f4ef;
+}
+
+.rental-detail__specs span {
+  display: block;
+  color: #697488;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rental-detail__specs strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.rental-detail__about {
+  margin: 22px 0 0;
+  max-width: 40rem;
+  color: #142033;
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.rental-detail__block {
+  margin-top: 28px;
+}
+
+.rental-detail__block h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.rental-detail__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rental-detail__chips li {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #eef3e4;
+  color: #2d4318;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rental-detail__rules {
+  margin: 8px 0 0;
+}
+
+.rental-detail__rules div {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid #e7e3db;
+}
+
+.rental-detail__rules dt {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rental-detail__rules dd {
+  margin: 0;
+  color: #697488;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.rental-detail__lead {
+  max-width: 36rem;
+  margin: 10px 0 0;
+  color: #142033;
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+.rental-detail__meta {
+  margin: 8px 0 0;
+  color: #697488;
+  font-size: 14px;
+}
+
+.rental-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rental-highlights li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 6px;
+  row-gap: 4px;
+  padding: 12px;
+  border: 1px solid #e4eaf3;
+  border-radius: 16px;
+  background: #fff;
+  color: #142033;
+}
+
+.rental-highlights .rental-ico {
+  color: #3554d1;
+}
+
+.rental-highlights span {
+  color: #697488;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rental-highlights strong {
+  grid-column: 1 / -1;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.rental-block {
+  margin-top: 28px;
+}
+
+.rental-block h2 {
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.rental-block__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rental-block__title .rental-ico {
+  width: 22px;
+  height: 22px;
+  color: #3554d1;
+}
+
+.rental-collect {
+  margin: 0 0 4px;
+  color: #3d4a63;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.rental-rate {
+  overflow: hidden;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #f7f1e4, #fff);
+  border: 1px solid #eadcc0;
+}
+
+.rental-rate > p {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  padding: 16px 16px 12px;
+}
+
+.rental-rate > p strong {
+  font-size: 32px;
+  letter-spacing: -0.03em;
+}
+
+.rental-rate > p span,
+.rental-rate li span {
+  color: #7a624f;
+  font-size: 13px;
+}
+
+.rental-rate ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rental-rate li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid #eadcc0;
+}
+
+.rental-rate li strong {
+  font-size: 13px;
+}
+
+.rental-detail__quote {
+  position: sticky;
+  top: 108px;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(5, 16, 54, 0.12);
+}
+
+.rental-detail__offer {
+  padding: 16px 16px 14px;
+  background:
+    radial-gradient(120px 80px at 100% 0%, rgba(228, 194, 122, 0.35), transparent 70%),
+    #051036;
+  color: #fff;
+}
+
+.rental-detail__offer .rental-detail__availability {
+  background: rgba(255, 255, 255, 0.12);
+  color: #e4c27a;
+}
+
+.rental-detail__offer .rental-detail__availability[data-state="closed"] {
+  background: rgba(248, 236, 232, 0.16);
+  color: #f3c1b6;
+}
+
+.rental-detail__offer .rental-detail__price {
+  margin: 12px 0 0;
+  color: #fff;
+}
+
+.rental-detail__offer .rental-detail__price span {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.rental-detail__offer-body {
+  padding: 14px 16px 16px;
+}
+
+.rental-detail__book,
+.rental-detail__dock-book {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  margin-top: 16px;
+  border: 0;
+  border-radius: 12px;
+  background: #c6a15b;
+  color: #051036;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.rental-detail__book:hover {
+  background: #d4b56e;
+  color: #051036;
+}
+
+.rental-detail__availability {
+  display: inline-flex;
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef3e4;
+  color: #2d4318;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rental-detail__availability[data-state="closed"] {
+  background: #f8ece8;
+  color: #8a3b2b;
+}
+
+.rental-detail__when {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.rental-detail__when p,
+.rental-detail__place {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f6f4ef;
+}
+
+.rental-detail__when span,
+.rental-detail__place span {
+  display: block;
+  color: #697488;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rental-detail__when strong,
+.rental-detail__place strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.rental-detail__place {
+  margin-top: 10px;
+}
+
+.rental-detail__place em {
+  display: block;
+  margin-top: 2px;
+  color: #697488;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.rental-detail__price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+.rental-detail__price strong {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.rental-detail__price span,
+.rental-detail__note,
+.rental-detail__fine {
+  color: #697488;
+  font-size: 13px;
+}
+
+.rental-detail__note {
+  margin: 6px 0 0;
+}
+
+.rental-detail__lines {
+  margin: 14px 0 0;
+}
+
+.rental-detail__lines div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid #efece6;
+  font-size: 14px;
+}
+
+.rental-detail__lines dt {
+  color: #697488;
+}
+
+.rental-detail__lines dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.rental-detail__lines .is-total dt,
+.rental-detail__lines .is-total dd {
+  color: #142033;
+  font-size: 15px;
+}
+
+.rental-detail__fine {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rental-detail__fine li + li {
+  margin-top: 4px;
+}
+
+.rental-detail__book.is-disabled {
+  background: #e7e3db;
+  color: #697488;
+  cursor: default;
+}
+
+.rental-detail__back {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  color: #3554d1;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rental-detail__dock {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .rental-detail__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .rental-cover,
+  .rental-book__grid,
+  .rental-rate ul {
+    grid-template-columns: 1fr;
+  }
+
+  .rental-detail h1 {
+    font-size: 32px;
+  }
+
+  .rental-detail__quote {
+    position: static;
+  }
+
+  .rental-detail__rules div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .rental-detail__dock {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid #e7e3db;
+    background: #fff;
+  }
+
+  .rental-detail__dock p {
+    margin: 0;
+  }
+
+  .rental-detail__dock strong {
+    display: block;
+    font-size: 18px;
+  }
+
+  .rental-detail__dock span {
+    color: #697488;
+    font-size: 12px;
+  }
+
+  .rental-detail__dock a,
+  .rental-detail__dock button,
+  .rental-detail__dock > span.is-disabled {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: 44px;
+    margin-top: 0;
+    padding: 0 18px;
+    border-radius: 12px;
+    background: #051036;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .rental-detail__dock > span.is-disabled,
+  .rental-detail__dock button.is-disabled {
+    background: #e7e3db;
+    color: #697488;
+  }
+
+  .rental-detail {
+    padding-bottom: 96px;
+  }
 }
 
 @media (min-width: 640px) {

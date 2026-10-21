@@ -5,6 +5,8 @@ export const rentalConfigKinds = [
   "fuel",
   "transmission",
   "feature",
+  "included",
+  "excluded",
   "vehicle_document",
   "customer_document",
   "addon",
@@ -17,8 +19,10 @@ export const rentalConfigKindLabels: Record<RentalConfigKind, string> = {
   fuel: "Fuel types",
   transmission: "Transmission",
   feature: "Features",
+  included: "Included",
+  excluded: "Not included",
   vehicle_document: "Vehicle documents",
-  customer_document: "Customer documents",
+  customer_document: "Documents required",
   addon: "Add-ons",
 };
 

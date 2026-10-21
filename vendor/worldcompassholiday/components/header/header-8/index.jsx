@@ -91,7 +91,7 @@ const Header1 = () => {
                     Become An Expert
                   </Link>
                   <Link
-                    href="/signup"
+                    href="/login"
                     className="button px-30 fw-400 text-14 border-dark-1 -blue-1 h-50 text-dark-1 ml-20"
                   >
                     Sign In / Register

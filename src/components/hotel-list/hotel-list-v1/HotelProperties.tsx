@@ -13,10 +13,12 @@ export function HotelProperties({
   hotels,
   nights,
   adults,
+  requestHref,
 }: {
   hotels: HotelListCard[];
   nights: number;
   adults: number;
+  requestHref: string;
 }) {
   if (hotels.length === 0) {
     return (
@@ -24,8 +26,11 @@ export function HotelProperties({
         <div className="border-top-light pt-30">
           <h3 className="text-18 lh-16 fw-500">No hotels match these filters</h3>
           <p className="text-15 text-light-1 mt-10">
-            Try another destination, price, or star rating.
+            Try another destination, price, or star rating. Or send a request and we will search for you.
           </p>
+          <Link href={requestHref} className="button -md -dark-1 bg-blue-1 text-white mt-20">
+            Request a hotel <div className="icon-arrow-top-right ml-15" />
+          </Link>
         </div>
       </div>
     );
@@ -33,7 +38,7 @@ export function HotelProperties({
 
   return (
     <>
-      {hotels.map((item) => {
+      {hotels.map((item, itemIndex) => {
         const stayTotal = item.price * nights;
         return (
           <div className="col-12" key={item.id}>
@@ -58,6 +63,8 @@ export function HotelProperties({
                                   className="rounded-4 col-12 js-lazy h-full w-100 object-fit-cover"
                                   src={slide}
                                   alt={item.name}
+                                  loading={itemIndex === 0 && index === 0 ? "eager" : "lazy"}
+                                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
                                 />
                               ) : (
                                 <div className="rounded-4 bg-light-2 h-full" />

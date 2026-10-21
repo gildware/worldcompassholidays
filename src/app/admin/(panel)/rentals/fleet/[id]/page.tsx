@@ -32,7 +32,7 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
     where: { id },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
-      features: true,
+      features: { include: { config: { select: { kind: true } } } },
       addonLinks: true,
       locationLinks: true,
       documents: { orderBy: { createdAt: "desc" } },
@@ -153,7 +153,18 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
             lateReturnCharge: String(vehicle.lateReturnCharge),
             discountType: vehicle.discountType,
             discountValue: String(vehicle.discountValue),
-            featureIds: vehicle.features.map((feature) => feature.configId),
+            featureIds: vehicle.features
+              .filter((feature) => feature.config.kind === "feature")
+              .map((feature) => feature.configId),
+            includedIds: vehicle.features
+              .filter((feature) => feature.config.kind === "included")
+              .map((feature) => feature.configId),
+            excludedIds: vehicle.features
+              .filter((feature) => feature.config.kind === "excluded")
+              .map((feature) => feature.configId),
+            documentIds: vehicle.features
+              .filter((feature) => feature.config.kind === "customer_document")
+              .map((feature) => feature.configId),
             addonIds: vehicle.addonLinks.map((addon) => addon.configId),
             locationIds: vehicle.locationLinks.map((link) => link.locationId),
             images: vehicle.images.map((image) => ({
@@ -163,11 +174,13 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
             })),
           }}
           kinds={[kind]}
-          destinations={setup.destinations}
           types={configsOf(setup.configs, "vehicle_type")}
           fuels={configsOf(setup.configs, "fuel")}
           transmissions={configsOf(setup.configs, "transmission")}
           features={configsOf(setup.configs, "feature")}
+          included={configsOf(setup.configs, "included")}
+          excluded={configsOf(setup.configs, "excluded")}
+          bookingDocuments={configsOf(setup.configs, "customer_document")}
           addons={configsOf(setup.configs, "addon")}
           locations={setup.locations.filter((location) => location.active)}
           systemPickup={setup.settings.allowCounterPickup}

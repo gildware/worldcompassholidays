@@ -20,6 +20,9 @@ export function MainFilterSearchBox({
   guests,
   onGuests,
   showGuests = true,
+  pickupLabel = "Location",
+  dropoffLabel = "Location",
+  singlePlace = false,
 }: {
   locations: CarListLocation[];
   pickup: string;
@@ -33,25 +36,33 @@ export function MainFilterSearchBox({
   guests: GuestCounts;
   onGuests: (counts: GuestCounts) => void;
   showGuests?: boolean;
+  pickupLabel?: string;
+  dropoffLabel?: string;
+  singlePlace?: boolean;
 }) {
+  const columns = singlePlace ? "-col-3-big" : showGuests ? "-col-5" : "-col-4";
   return (
     <div
-      className={`mainSearch ${showGuests ? "-col-5" : "-col-4"} border-light bg-white px-20 py-20 lg:px-20 lg:pt-5 lg:pb-20 rounded-4 mt-30`}
+      className={`mainSearch ${columns} border-light bg-white px-20 py-20 lg:px-20 lg:pt-5 lg:pb-20 rounded-4 ${singlePlace ? "mt-10" : "mt-30"}`}
     >
       <div className="button-grid items-center">
         <LocationSearch
           locations={locations}
           value={pickup}
           onChange={onPickup}
-          placeholder="City or Airport"
+          label={pickupLabel}
+          placeholder={singlePlace ? "City" : "City or Airport"}
         />
 
-        <LocationSearch
-          locations={locations}
-          value={dropoff}
-          onChange={onDropoff}
-          placeholder="City or Airport"
-        />
+        {singlePlace ? null : (
+          <LocationSearch
+            locations={locations}
+            value={dropoff}
+            onChange={onDropoff}
+            label={dropoffLabel}
+            placeholder="City or Airport"
+          />
+        )}
 
         <div className="searchMenu-date px-30 lg:py-20 lg:px-0 js-form-dd js-calendar">
           <div>

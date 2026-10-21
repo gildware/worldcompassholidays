@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BookingCheckout } from "@/components/rentals/BookingCheckout";
-import { NamedMultiSelect, SearchableSelect } from "@/components/ui/SearchableSelect";
+import { PlaceFields } from "@/components/rentals/PlaceFields";
+import { NamedMultiSelect } from "@/components/ui/SearchableSelect";
+import { mapApiKey } from "@/lib/map-key";
 import { PriceBreakdown } from "@/components/rentals/PriceBreakdown";
 import { modules } from "@/config/modules";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -10,8 +12,11 @@ import { prisma } from "@/lib/db";
 import { handoverModes, unavailableReason } from "@/lib/rentals/availability";
 import { findAvailabilityConflicts } from "@/lib/rentals/availability";
 import { parseDateTimeLocal } from "@/lib/rentals/dates";
+import { documentsRequiredToBook } from "@/lib/rentals/booking-documents";
+import { listProfileDocuments } from "@/lib/rentals/profile-documents";
 import { fleetKinds } from "@/lib/rentals/labels";
 import { quoteRental } from "@/lib/rentals/pricing";
+import { privateMetadata } from "@/lib/seo";
 import { getRentalSetup } from "@/lib/rentals/setup";
 
 type Props = {
@@ -28,7 +33,17 @@ function many(value: string | string[] | undefined) {
   return Array.isArray(value) ? value : [value];
 }
 
-export const metadata: Metadata = { title: "Book a rental" };
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const vehicle = await prisma.vehicle.findUnique({
+    where: { slug },
+    select: { name: true },
+  });
+  return privateMetadata(
+    vehicle?.name ? `Book ${vehicle.name}` : "Book a rental",
+    "Checkout for a World Compass Holidays rental. This page is not indexed.",
+  );
+}
 
 export default async function BookRentalPage({ params, searchParams }: Props) {
   if (!modules.cars && !modules.bikes) notFound();
@@ -39,6 +54,7 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
     include: {
       addonLinks: { include: { config: true } },
       locationLinks: { include: { location: true } },
+      features: { include: { config: true } },
     },
   });
   if (!vehicle || !vehicle.published || !fleetKinds().includes(vehicle.kind as "car" | "bike")) {
@@ -47,6 +63,13 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
 
   const setup = await getRentalSetup(vehicle.kind === "bike" ? "bike" : "car");
   const user = await getCurrentUser();
+  const profile =
+    user?.scope === "customer"
+      ? await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { address: true, mapLat: true, mapLng: true },
+        })
+      : null;
   const modes = handoverModes({
     systemPickup: setup.settings.allowCounterPickup,
     systemDelivery: setup.settings.allowHomeDelivery,
@@ -64,8 +87,10 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
   const returnMode = one(query.returnMode) || mode;
   const location = one(query.location);
   const returnLocation = one(query.returnLocation);
-  const address = one(query.address);
+  const address = one(query.address) || profile?.address || "";
   const returnAddress = one(query.returnAddress);
+  const deliveryLat = one(query.deliveryLat) || profile?.mapLat || "";
+  const deliveryLng = one(query.deliveryLng) || profile?.mapLng || "";
   const same = one(query.same) !== "0";
   const selectedAddons = many(query.addon);
   const pickupAt = parseDateTimeLocal(pickup);
@@ -130,6 +155,8 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
     returnLocation: same ? location : returnLocation,
     address,
     returnAddress: same ? address : returnAddress,
+    deliveryLat,
+    deliveryLng,
     same: same ? "1" : "0",
     ...Object.fromEntries(selectedAddons.map((id, index) => [`addon${index}`, id])),
   }).toString()}`;
@@ -143,15 +170,19 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
       returnLocation,
       address,
       returnAddress,
+      deliveryLat,
+      deliveryLng,
       same: same ? "1" : "0",
     }).filter((entry) => entry[1]),
   ).toString()}${selectedAddons.map((id) => `&addon=${encodeURIComponent(id)}`).join("")}`;
 
-  const docTypes = setup.configs.filter(
-    (item) =>
-      item.kind === "customer_document" &&
-      item.active &&
-      (item.appliesTo === "all" || item.appliesTo === vehicle.kind),
+  const docTypes = documentsRequiredToBook(
+    vehicle.kind,
+    vehicle.features.map((feature) => feature.config),
+    setup.configs,
+  );
+  const savedDocuments = (user?.scope === "customer" ? await listProfileDocuments(user.id) : []).filter((item) =>
+    docTypes.some((document) => document.id === item.configId),
   );
 
   return (
@@ -171,74 +202,22 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
             Return
             <input name="return" type="datetime-local" defaultValue={ret} required />
           </label>
-          <label className="grid gap-1 text-sm">
-            Receive the vehicle
-            <SearchableSelect
-              name="mode"
-              defaultValue={mode}
-              ariaLabel="Receive the vehicle"
-              searchPlaceholder="Search"
-              className="!h-10"
-              options={[
-                ...(modes.counter ? [{ value: "counter", label: "Pick up at a location" }] : []),
-                ...(modes.delivery ? [{ value: "delivery", label: "Deliver to my address" }] : []),
-              ]}
-            />
-          </label>
-          {modes.counter ? (
-            <label className="grid gap-1 text-sm">
-              Pickup location
-              <SearchableSelect
-                name="location"
-                defaultValue={location}
-                emptyLabel="Choose"
-                ariaLabel="Pickup location"
-                searchPlaceholder="Search locations"
-                className="!h-10"
-                options={locations.map((item) => ({ value: item.id, label: item.name }))}
-              />
-            </label>
-          ) : null}
-          {modes.delivery ? (
-            <label className="grid gap-1 text-sm">
-              Delivery address
-              <textarea name="address" defaultValue={address} className="min-h-20" />
-            </label>
-          ) : null}
-          <label className="grid gap-1 text-sm">
-            Return
-            <SearchableSelect
-              name="same"
-              defaultValue={same ? "1" : "0"}
-              ariaLabel="Return"
-              searchPlaceholder="Search"
-              className="!h-10"
-              options={[
-                { value: "1", label: "Same place as pickup" },
-                { value: "0", label: "A different place" },
-              ]}
-            />
-          </label>
-          {!same && modes.counter ? (
-            <label className="grid gap-1 text-sm">
-              Return location
-              <SearchableSelect
-                name="returnLocation"
-                defaultValue={returnLocation}
-                emptyLabel="Choose"
-                ariaLabel="Return location"
-                searchPlaceholder="Search locations"
-                className="!h-10"
-                options={locations.map((item) => ({ value: item.id, label: item.name }))}
-              />
-            </label>
-          ) : null}
-          {!same && modes.delivery ? (
-            <label className="grid gap-1 text-sm">
-              Return address
-              <textarea name="returnAddress" defaultValue={returnAddress} className="min-h-20" />
-            </label>
-          ) : null}
+          <PlaceFields
+            counter={modes.counter}
+            delivery={modes.delivery}
+            locations={locations.map((item) => ({
+              id: item.id,
+              name: item.name,
+              address: item.address,
+            }))}
+            defaultMode={mode}
+            defaultLocationId={location || locations[0]?.id || ""}
+            defaultAddress={mode === "delivery" ? address : profile?.address || ""}
+            defaultLat={deliveryLat}
+            defaultLng={deliveryLng}
+            mapApiKey={mapApiKey()}
+            named
+          />
           {addons.length > 0 ? (
             <label className="grid gap-1 text-sm">
               Add-ons
@@ -279,8 +258,10 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
             returnMode={same ? mode : returnMode}
             pickupLocationId={location}
             returnLocationId={same ? location : returnLocation}
-            deliveryAddress={address}
-            returnAddress={same ? address : returnAddress}
+            deliveryAddress={mode === "delivery" ? address : ""}
+            returnAddress={same ? (mode === "delivery" ? address : "") : returnAddress}
+            deliveryLat={mode === "delivery" ? deliveryLat : ""}
+            deliveryLng={mode === "delivery" ? deliveryLng : ""}
             sameReturn={same}
             addonIds={selectedAddons}
             documents={docTypes.map((item) => ({
@@ -291,6 +272,7 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
               requiresIssueDate: item.requiresIssueDate,
               requiresExpiry: item.requiresExpiry,
             }))}
+            savedDocuments={savedDocuments}
           />
         ) : null}
       </div>

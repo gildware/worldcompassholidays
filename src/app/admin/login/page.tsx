@@ -5,8 +5,9 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { theme } from "@/config/theme";
 import { getCurrentUser } from "@/lib/auth/session";
 import { safeRedirectPath } from "@/lib/forms";
+import { privateMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Staff sign in" };
+export const metadata: Metadata = privateMetadata("Staff sign in", "Staff sign in for World Compass Holidays.");
 
 export default async function AdminLoginPage({
   searchParams,

@@ -1,15 +1,25 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { EnquiryForm } from "@/components/site/EnquiryForm";
 import { PageIntro } from "@/components/site/PageIntro";
+import { theme } from "@/config/theme";
 import { getCurrentUser } from "@/lib/auth/session";
 import { enquiryInterests } from "@/lib/navigation";
+import { absoluteUrl, graphLd, organizationNode, pageMetadata, phoneE164, siteOrigin } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Contact" };
+const contactDescription =
+  "Call, WhatsApp, or send a trip enquiry to World Compass Holidays. We reply with a plan and a price before you pay.";
 
-const officeAddress = "328 Queensberry Street, North Melbourne VIC 3051, Australia.";
-const officeMapEmbed =
-  "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d182586.0420340798!2d-73.99038430252834!3d40.749936548349346!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sbd!4v1670824458615!5m2!1sen!2sbd";
-const officeMapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(officeAddress)}`;
+export const metadata: Metadata = pageMetadata({
+  title: "Contact us",
+  description: contactDescription,
+  path: "/contact",
+});
+
+const officeLabel = theme.contact.city;
+const officeMapEmbed = "https://maps.google.com/maps?q=India&z=5&output=embed";
+const officeMapLink = "https://www.google.com/maps/search/?api=1&query=India";
+const phoneHref = `tel:${phoneE164(theme.contact.phone)}`;
 
 export default async function ContactPage({
   searchParams,
@@ -24,9 +34,21 @@ export default async function ContactPage({
 
   return (
     <div>
+      <JsonLd
+        data={graphLd([
+          organizationNode(),
+          {
+            "@type": "ContactPage",
+            name: "Contact us",
+            url: absoluteUrl("/contact"),
+            description: contactDescription,
+            mainEntity: { "@id": `${siteOrigin()}/#organization` },
+          },
+        ])}
+      />
       <div className="h-[180px] overflow-hidden bg-[#f9f9f9] lg:h-[260px]">
         <iframe
-          title="Office location on the map"
+          title="Map of India"
           src={officeMapEmbed}
           className="h-full w-full border-0"
           loading="lazy"
@@ -44,7 +66,7 @@ export default async function ContactPage({
             compact
             eyebrow="Contact"
             title="Tell us what you want to book"
-            description="Treks start as an enquiry. The team quotes, confirms, and closes it from the same record."
+            description="Tours, hotels, visas, and rentals start as an enquiry. We quote the price before you pay."
           />
           <div className="mt-4">
             <EnquiryForm
@@ -62,26 +84,26 @@ export default async function ContactPage({
 
 const contactDetails = [
   {
-    title: "Address",
+    title: "Based in",
     icon: "pin" as const,
-    value: officeAddress,
+    value: officeLabel,
     href: officeMapLink,
-    hint: "Get directions",
+    hint: "Open the map",
     external: true,
   },
   {
-    title: "Toll Free Customer Care",
+    title: "Phone and WhatsApp",
     icon: "phone" as const,
-    value: "+91- 70064 22204",
-    href: "tel:+917006422204",
+    value: theme.contact.phone,
+    href: phoneHref,
     hint: "Call now",
     external: false,
   },
   {
-    title: "Need live support?",
+    title: "Email",
     icon: "mail" as const,
-    value: "hi@worldcompassholiday.com",
-    href: "mailto:hi@worldcompassholiday.com",
+    value: theme.contact.email,
+    href: `mailto:${theme.contact.email}`,
     hint: "Write an email",
     external: false,
   },

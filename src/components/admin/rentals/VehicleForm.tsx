@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveVehicle } from "@/actions/rental-admin";
 import { Field } from "@/components/forms/Field";
@@ -53,14 +54,17 @@ export type VehicleFormValues = {
   discountType: string;
   discountValue: string;
   featureIds: string[];
+  includedIds: string[];
+  excludedIds: string[];
+  documentIds: string[];
   addonIds: string[];
   locationIds: string[];
   images: ImageItem[];
 };
 
 const DATA_STEPS = [
-  { id: "vehicle", title: "Vehicle", description: "Name, fleet, and home destination" },
-  { id: "specs", title: "Specifications", description: "Type, fuel, transmission, and features" },
+  { id: "vehicle", title: "Vehicle", description: "Name, fleet, and where it is available" },
+  { id: "specs", title: "Specifications", description: "Type, fuel, features, and what is included" },
   { id: "pricing", title: "Pricing", description: "Daily rates, deposit, and add-ons" },
   { id: "handover", title: "Handover", description: "Pickup, delivery, and locations" },
   { id: "images", title: "Images", description: "Cover photo and gallery" },
@@ -89,11 +93,13 @@ function fieldValue(form: HTMLFormElement, name: string) {
 export function VehicleForm({
   values,
   kinds,
-  destinations,
   types,
   fuels,
   transmissions,
   features,
+  included,
+  excluded,
+  bookingDocuments,
   addons,
   locations,
   systemPickup,
@@ -105,13 +111,15 @@ export function VehicleForm({
 }: {
   values: VehicleFormValues;
   kinds: Array<"car" | "bike">;
-  destinations: { id: string; name: string }[];
   types: Option[];
   fuels: Option[];
   transmissions: Option[];
   features: Option[];
+  included: Option[];
+  excluded: Option[];
+  bookingDocuments: Option[];
   addons: Option[];
-  locations: { id: string; name: string; address: string }[];
+  locations: { id: string; name: string; address: string; destinationId?: string | null }[];
   systemPickup: boolean;
   systemDelivery: boolean;
   initialStep?: number;
@@ -134,13 +142,15 @@ export function VehicleForm({
   );
   const [vehicleId, setVehicleId] = useState(values.id ?? "");
   const [kind, setKind] = useState(values.kind);
-  const [destinationId, setDestinationId] = useState(values.destinationId);
   const [status, setStatus] = useState(values.status);
   const [vehicleTypeId, setVehicleTypeId] = useState(values.vehicleTypeId);
   const [fuelTypeId, setFuelTypeId] = useState(values.fuelTypeId);
   const [transmissionId, setTransmissionId] = useState(values.transmissionId);
   const [discountType, setDiscountType] = useState(values.discountType);
   const [featureIds, setFeatureIds] = useState(values.featureIds);
+  const [includedIds, setIncludedIds] = useState(values.includedIds);
+  const [excludedIds, setExcludedIds] = useState(values.excludedIds);
+  const [documentIds, setDocumentIds] = useState(values.documentIds);
   const [addonIds, setAddonIds] = useState(values.addonIds);
   const [locationIds, setLocationIds] = useState(values.locationIds);
   const [allowCounterPickup, setAllowCounterPickup] = useState(values.allowCounterPickup);
@@ -159,9 +169,12 @@ export function VehicleForm({
       fuels: fuels.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
       transmissions: transmissions.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
       features: features.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
+      included: included.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
+      excluded: excluded.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
+      bookingDocuments: bookingDocuments.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
       addons: addons.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
     }),
-    [addons, features, fuels, kind, transmissions, types],
+    [addons, bookingDocuments, excluded, features, fuels, included, kind, transmissions, types],
   );
 
   const current = steps[step];
@@ -174,8 +187,12 @@ export function VehicleForm({
       visible.transmissions.some((item) => item.id === currentId) ? currentId : "",
     );
     setFeatureIds((currentIds) => currentIds.filter((id) => visible.features.some((item) => item.id === id)));
+    setIncludedIds((currentIds) => currentIds.filter((id) => visible.included.some((item) => item.id === id)));
+    setExcludedIds((currentIds) => currentIds.filter((id) => visible.excluded.some((item) => item.id === id)));
+    setDocumentIds((currentIds) => currentIds.filter((id) => visible.bookingDocuments.some((item) => item.id === id)));
     setAddonIds((currentIds) => currentIds.filter((id) => visible.addons.some((item) => item.id === id)));
   }, [visible]);
+
 
   useEffect(() => {
     if (state.error) {
@@ -220,7 +237,7 @@ export function VehicleForm({
       if (fieldValue(form, "registrationNumber").replace(/[\s-]/g, "").length < 4) {
         errors.registrationNumber = "Enter the registration number.";
       }
-      if (!destinationId) errors.destinationId = "Choose a destination.";
+      if (locationIds.length === 0) errors.locationIds = "Add a location.";
     }
     if (id === "specs") {
       if (!vehicleTypeId) errors.vehicleTypeId = "Choose a vehicle type.";
@@ -266,7 +283,7 @@ export function VehicleForm({
       const errors = validateStep(0);
       if (intent === "continue" && dataStep) Object.assign(errors, validateStep(step));
       if (Object.keys(errors).length > 0) {
-        const index = errors.name || errors.destinationId || errors.registrationNumber ? 0 : step;
+        const index = errors.name || errors.locationIds || errors.registrationNumber ? 0 : step;
         showErrors(errors, index);
         return;
       }
@@ -345,7 +362,7 @@ export function VehicleForm({
           <div className="min-w-0">
             <h2 className="text-sm font-semibold text-navy">{current.title}</h2>
             <p className="mt-0.5 truncate text-xs text-muted">
-              {current.id === "vehicle" && lockKind ? "Name and home destination" : current.description}
+              {current.id === "vehicle" && lockKind ? "Name and available locations" : current.description}
             </p>
           </div>
           {isEdit ? (
@@ -393,22 +410,80 @@ export function VehicleForm({
             <Field label="Year">
               <input name="year" defaultValue={values.year} inputMode="numeric" className="!h-10" />
             </Field>
-            <Field label="Home destination" name="destinationId" required error={fieldErrors.destinationId}>
-              <SearchableSelect
-                name="destinationId"
-                value={destinationId}
-                onChange={setDestinationId}
-                emptyLabel="Choose"
-                ariaLabel="Home destination"
-                searchPlaceholder="Search destinations"
-                invalid={Boolean(fieldErrors.destinationId)}
-                className="!h-10"
-                options={destinations.map((destination) => ({
-                  value: destination.id,
-                  label: destination.name,
-                }))}
-              />
-            </Field>
+            <div className="md:col-span-2">
+              <Field
+                label="Location"
+                name="locationIds"
+                required
+                hint={`Where this ${kind} can be picked up and dropped off. Add places on the ${kind} locations page.`}
+                error={fieldErrors.locationIds}
+              >
+                <input type="hidden" name="destinationId" value={values.destinationId} />
+                {locationIds.map((id) => (
+                  <input key={id} type="hidden" name="locationIds" value={id} />
+                ))}
+                <div className="grid gap-2">
+                  {locationIds.length > 0 ? (
+                    <ul className="flex flex-wrap gap-2">
+                      {locationIds.map((id) => {
+                        const location = locations.find((item) => item.id === id);
+                        const label = location
+                          ? location.address
+                            ? `${location.name} · ${location.address}`
+                            : location.name
+                          : "Location";
+                        return (
+                          <li key={id}>
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-medium text-navy"
+                              onClick={() => setLocationIds((current) => current.filter((item) => item !== id))}
+                            >
+                              {label}
+                              <span aria-hidden="true">×</span>
+                              <span className="sr-only">Remove</span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : locations.length === 0 ? (
+                    <p className="text-xs text-muted">
+                      No {kind} locations yet.{" "}
+                      <a
+                        href={kind === "bike" ? "/admin/rentals/bikes/locations" : "/admin/rentals/cars/locations"}
+                        className="font-medium text-brand hover:underline"
+                      >
+                        Add one
+                      </a>
+                    </p>
+                  ) : null}
+                  <SearchableSelect
+                    value=""
+                    onChange={(value) => {
+                      if (!value || locationIds.includes(value)) return;
+                      setLocationIds((current) => [...current, value]);
+                      setFieldErrors((current) => {
+                        const next = { ...current };
+                        delete next.locationIds;
+                        return next;
+                      });
+                    }}
+                    emptyLabel="Add a location"
+                    searchPlaceholder="Search locations"
+                    ariaLabel="Add a location"
+                    invalid={Boolean(fieldErrors.locationIds)}
+                    options={locations
+                      .filter((item) => !locationIds.includes(item.id))
+                      .map((location) => ({
+                        value: location.id,
+                        label: location.address ? `${location.name} · ${location.address}` : location.name,
+                      }))}
+                    className="!h-10"
+                  />
+                </div>
+              </Field>
+            </div>
             <Field label="Summary" hint="Shown on cards and the detail page.">
               <input name="summary" defaultValue={values.summary} className="!h-10" />
             </Field>
@@ -496,6 +571,48 @@ export function VehicleForm({
                 <input name="includedKmPerDay" type="number" min={0} defaultValue={values.includedKmPerDay} className="!h-10" />
               </Field>
             </div>
+            <p className="text-sm text-muted">
+              Add items in{" "}
+              <Link
+                href={kind === "bike" ? "/admin/rentals/bikes/configuration" : "/admin/rentals/cars/configuration"}
+                className="font-medium text-brand hover:underline"
+              >
+                {kind === "bike" ? "bike" : "car"} configuration
+              </Link>
+              , then choose them for this {kind}.
+            </p>
+            <Field label="Included">
+              {includedIds.map((id) => (
+                <input key={id} type="hidden" name="includedIds" value={id} />
+              ))}
+              <MultiSearchableSelect
+                values={includedIds}
+                onChange={setIncludedIds}
+                placeholder="Choose included items"
+                searchPlaceholder="Search included items"
+                ariaLabel="Included"
+                options={visible.included.map((item) => ({
+                  value: item.id,
+                  label: item.name,
+                }))}
+              />
+            </Field>
+            <Field label="Not included">
+              {excludedIds.map((id) => (
+                <input key={id} type="hidden" name="excludedIds" value={id} />
+              ))}
+              <MultiSearchableSelect
+                values={excludedIds}
+                onChange={setExcludedIds}
+                placeholder="Choose excluded items"
+                searchPlaceholder="Search excluded items"
+                ariaLabel="Not included"
+                options={visible.excluded.map((item) => ({
+                  value: item.id,
+                  label: item.name,
+                }))}
+              />
+            </Field>
             <Field label="Features">
               {featureIds.map((id) => (
                 <input key={id} type="hidden" name="featureIds" value={id} />
@@ -512,6 +629,27 @@ export function VehicleForm({
                 }))}
               />
             </Field>
+            {kind === "bike" ? (
+              <Field
+                label="Documents required to book"
+                hint="Only these are asked when someone books this bike. Add types under Documents required in bike configuration."
+              >
+                {documentIds.map((id) => (
+                  <input key={id} type="hidden" name="documentIds" value={id} />
+                ))}
+                <MultiSearchableSelect
+                  values={documentIds}
+                  onChange={setDocumentIds}
+                  placeholder="Choose required documents"
+                  searchPlaceholder="Search documents"
+                  ariaLabel="Documents required to book"
+                  options={visible.bookingDocuments.map((item) => ({
+                    value: item.id,
+                    label: item.name,
+                  }))}
+                />
+              </Field>
+            ) : null}
           </div>
 
           <div className={current.id === "pricing" ? "grid gap-4 md:grid-cols-2" : "hidden"}>
@@ -597,22 +735,9 @@ export function VehicleForm({
               />
               Vehicle can be delivered to the customer
             </label>
-            <Field label="Pickup locations" hint="Leave none selected to offer every active location.">
-              {locationIds.map((id) => (
-                <input key={id} type="hidden" name="locationIds" value={id} />
-              ))}
-              <MultiSearchableSelect
-                values={locationIds}
-                onChange={setLocationIds}
-                placeholder="All active locations"
-                searchPlaceholder="Search locations"
-                ariaLabel="Pickup locations"
-                options={locations.map((location) => ({
-                  value: location.id,
-                  label: location.address ? `${location.name} · ${location.address}` : location.name,
-                }))}
-              />
-            </Field>
+            <p className="text-sm text-muted">
+              Pickup and drop-off use the locations chosen on the vehicle step.
+            </p>
           </div>
 
           <div className={current.id === "images" ? "grid gap-3" : "hidden"}>
@@ -665,7 +790,7 @@ export function VehicleForm({
             <div className="min-w-0">
               <h2 className="text-sm font-semibold text-navy">{current.title}</h2>
               <p className="mt-0.5 truncate text-xs text-muted">
-              {current.id === "vehicle" && lockKind ? "Name and home destination" : current.description}
+              {current.id === "vehicle" && lockKind ? "Name and available locations" : current.description}
             </p>
             </div>
             <Button type="button" size="sm" className="shrink-0" onClick={() => submit("publish")} disabled={pending || uploading}>

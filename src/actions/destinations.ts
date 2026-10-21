@@ -269,6 +269,7 @@ export async function deleteDestination(formData: FormData) {
           tours: true,
           hotels: true,
           vehicles: true,
+          vehicleAvailability: true,
           busRoutes: true,
           children: true,
         },
@@ -288,6 +289,7 @@ export async function deleteDestination(formData: FormData) {
     destination._count.tours +
     destination._count.hotels +
     destination._count.vehicles +
+    destination._count.vehicleAvailability +
     destination._count.busRoutes;
 
   if (linked > 0) {

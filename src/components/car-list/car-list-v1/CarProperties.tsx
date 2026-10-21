@@ -29,7 +29,7 @@ export function CarProperties({
 
   return (
     <>
-      {cars.map((item) => {
+      {cars.map((item, itemIndex) => {
         const specs = [
           { icon: "icon-user-2", label: String(item.seats) },
           { icon: "icon-luggage", label: String(item.luggage) },
@@ -67,6 +67,7 @@ export function CarProperties({
                                       className="rounded-4 col-12 js-lazy"
                                       src={slide}
                                       alt={item.name}
+                                      loading={itemIndex === 0 && index === 0 ? "eager" : "lazy"}
                                     />
                                   ) : (
                                     <div className="rounded-4 bg-light-2 h-100 w-100" />

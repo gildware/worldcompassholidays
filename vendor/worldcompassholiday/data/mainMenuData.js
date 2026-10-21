@@ -77,7 +77,7 @@ export const pageItems = [
   },
   {
     name: "Register",
-    routePath: "/signup",
+    routePath: "/login",
   },
   {
     name: "Terms",

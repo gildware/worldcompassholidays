@@ -19,15 +19,17 @@ export function ProfileForm({
   const [state, action] = useActionState(updateProfile, initialFormState);
 
   return (
-    <form action={action} className="grid gap-4 rounded-xl border border-line bg-white p-5">
-      <h2 className="text-lg font-semibold">Profile</h2>
+    <form action={action} className="grid gap-3 rounded-lg border border-line bg-white p-4">
+      <h2 className="text-base font-semibold">Profile</h2>
       <FormMessage state={state} />
       <Field label="Full name">
         <input name="name" defaultValue={name} autoComplete="name" required />
       </Field>
-      <Field label="Email" help="profile.email" hint="Contact us to change the email on your account.">
-        <input value={email} readOnly aria-readonly className="bg-surface" />
-      </Field>
+      {email ? (
+        <Field label="Email" help="profile.email" hint="Contact us to change the email on your account.">
+          <input value={email} readOnly aria-readonly className="bg-surface" />
+        </Field>
+      ) : null}
       <Field label="Phone" help="profile.phone">
         <input name="phone" type="tel" defaultValue={phone} autoComplete="tel" />
       </Field>

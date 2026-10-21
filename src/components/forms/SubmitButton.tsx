@@ -8,12 +8,16 @@ export function SubmitButton({
   variant = "primary",
   className = "",
   disabled = false,
+  name,
+  value,
 }: {
   children: React.ReactNode;
   pendingLabel: string;
   variant?: "primary" | "secondary" | "danger";
   className?: string;
   disabled?: boolean;
+  name?: string;
+  value?: string;
 }) {
   const { pending } = useFormStatus();
 
@@ -26,6 +30,8 @@ export function SubmitButton({
   return (
     <button
       type="submit"
+      name={name}
+      value={value}
       disabled={pending || disabled}
       className={[
         "inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-medium transition-colors",

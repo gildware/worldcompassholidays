@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { DateObject } from "react-multi-date-picker";
 import "rc-slider/assets/index.css";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import CallToActions from "@/components/common/CallToActions";
-import DefaultFooter from "@/components/footer/default";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import type { GuestCounts } from "@/components/hotel-list/common/GuestSearch";
 import { Pagination } from "@/components/hotel-list/common/Pagination";
@@ -16,6 +16,8 @@ import { MainFilterSearchBox } from "@/components/hotel-list/hotel-list-v1/MainF
 import { Sidebar, type HotelListFilters } from "@/components/hotel-list/hotel-list-v1/Sidebar";
 import { TopHeaderFilter } from "@/components/hotel-list/hotel-list-v1/TopHeaderFilter";
 import type { CountOption, HotelListCard, HotelListLocation } from "@/components/hotel-list/types";
+import { hotelRequestHref } from "@/lib/hotels/request-link";
+import "@/styles/hotel-request.css";
 
 const PAGE_SIZE = 7;
 
@@ -128,6 +130,17 @@ export function HotelListV1({
     });
   }, [filters, hotels, location]);
 
+  const today = new DateObject().format("YYYY-MM-DD");
+  const checkIn = dates[0]?.format("YYYY-MM-DD") ?? "";
+  const checkOut = dates[1]?.format("YYYY-MM-DD") ?? "";
+  const requestHref = hotelRequestHref({
+    destination: location,
+    checkIn: checkIn >= today ? checkIn : "",
+    checkOut: checkIn >= today && checkOut > checkIn ? checkOut : "",
+    adults: guests.Adults,
+    children: guests.Children,
+    rooms: guests.Rooms,
+  });
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -159,7 +172,7 @@ export function HotelListV1({
             <div className="row">
               <div className="col-12">
                 <div className="text-center">
-                  <h1 className="text-30 fw-600">Find Your Dream Luxury Hotel</h1>
+                  <h1 className="text-30 fw-600">Hotels and stays</h1>
                 </div>
                 <MainFilterSearchBox
                   locations={locations}
@@ -173,6 +186,15 @@ export function HotelListV1({
                   guests={guests}
                   onGuests={setGuests}
                 />
+                <div className="hotel-request-prompt">
+                  <div>
+                    <h2>Can&apos;t find the hotel you want?</h2>
+                    <p>Send a custom request. We search for a stay that fits and contact you with options.</p>
+                  </div>
+                  <Link href={requestHref} className="button -md -dark-1 bg-blue-1 text-white">
+                    Request a hotel <div className="icon-arrow-top-right ml-15" />
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -210,7 +232,12 @@ export function HotelListV1({
                 <TopHeaderFilter count={filtered.length} place={location.trim()} />
                 <div className="mt-30" />
                 <div className="row y-gap-30">
-                  <HotelProperties hotels={visible} nights={nights} adults={guests.Adults} />
+                  <HotelProperties
+                    hotels={visible}
+                    nights={nights}
+                    adults={guests.Adults}
+                    requestHref={requestHref}
+                  />
                 </div>
                 <Pagination
                   page={currentPage}
@@ -224,7 +251,6 @@ export function HotelListV1({
         </section>
 
         <CallToActions />
-        <DefaultFooter />
       </div>
     </WorldCompassHolidayFrame>
   );

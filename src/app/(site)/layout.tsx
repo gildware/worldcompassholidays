@@ -1,5 +1,5 @@
 import { PublicHeader } from "@/components/worldcompassholiday/PublicHeader";
-import { SiteFooterGate } from "@/components/site/SiteFooterGate";
+import { HomeFooter } from "@/components/worldcompassholiday/HomeFooter";
 import { getPublicNav } from "@/lib/navigation";
 import "@/styles/worldcompassholiday-home.css";
 
@@ -11,10 +11,12 @@ export default function SiteLayout({
   const items = getPublicNav();
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="site-shell">
       <PublicHeader />
-      <main className="public-header-offset flex-1">{children}</main>
-      <SiteFooterGate items={items} />
+      <main className="public-header-offset">{children}</main>
+      <div className="worldcompassholiday-page site-footer-scope">
+        <HomeFooter items={items} />
+      </div>
     </div>
   );
 }

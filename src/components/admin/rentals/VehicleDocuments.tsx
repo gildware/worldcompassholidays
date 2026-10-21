@@ -8,6 +8,7 @@ import { DocumentField } from "@/components/rentals/DocumentField";
 import { StatusPill } from "@/components/rentals/VehicleCard";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { todayDateInput } from "@/lib/rentals/document-dates";
 import { documentStatusLabels } from "@/lib/rentals/labels";
 import type { StoredFile } from "@/lib/storage/documents";
 
@@ -113,7 +114,7 @@ export function VehicleDocuments({
           <input name="issueDate" type="date" />
         </Field>
         <Field label="Expiry date">
-          <input name="expiryDate" type="date" />
+          <input name="expiryDate" type="date" min={todayDateInput()} />
         </Field>
         <Field label="Note">
           <input name="note" />

@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { DateObject } from "react-multi-date-picker";
 import CallToActions from "@/components/common/CallToActions";
-import DefaultFooter from "@/components/footer/default";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import type { GuestCounts } from "@/components/hotel-list/common/GuestSearch";
 import { AvailableRooms2 } from "@/components/hotel-single/AvailableRooms2";
@@ -493,7 +492,6 @@ export function HotelSingleV2({ hotel }: { hotel: HotelSingleData }) {
         ) : null}
 
         <CallToActions />
-        <DefaultFooter />
       </div>
     </WorldCompassHolidayFrame>
   );

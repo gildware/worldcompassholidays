@@ -3,8 +3,14 @@ import { notFound } from "next/navigation";
 import { EmptyState, PageIntro } from "@/components/site/PageIntro";
 import { modules } from "@/config/modules";
 import { prisma } from "@/lib/db";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Buses" };
+export const metadata: Metadata = pageMetadata({
+  title: "Bus routes",
+  description: "Published bus routes between cities, with the schedule attached to each route.",
+  path: "/buses",
+  index: modules.buses,
+});
 
 function one(value: string | string[] | undefined) {
   return (Array.isArray(value) ? value[0] : value) ?? "";

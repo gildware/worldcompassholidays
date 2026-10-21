@@ -1,5 +1,8 @@
+import { existsSync } from "fs";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import { bikeCatalog, type BikeSeed } from "@/lib/rentals/bike-catalog";
+import { carCatalog, type CarSeed } from "@/lib/rentals/car-catalog";
 import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 
@@ -24,6 +27,7 @@ const configs: Array<{
   { kind: "vehicle_type", name: "Scooter", appliesTo: "bike", sortOrder: 70 },
   { kind: "vehicle_type", name: "Motorcycle", appliesTo: "bike", sortOrder: 80 },
   { kind: "vehicle_type", name: "Cruiser", appliesTo: "bike", sortOrder: 90 },
+  { kind: "vehicle_type", name: "Adventure", appliesTo: "bike", sortOrder: 100 },
   { kind: "fuel", name: "Petrol", sortOrder: 10 },
   { kind: "fuel", name: "Diesel", sortOrder: 20 },
   { kind: "fuel", name: "CNG", sortOrder: 30 },
@@ -39,7 +43,7 @@ const configs: Array<{
   { kind: "feature", name: "Sunroof", sortOrder: 70 },
   { kind: "feature", name: "Android Auto", sortOrder: 80 },
   { kind: "feature", name: "Apple CarPlay", sortOrder: 90 },
-  { kind: "feature", name: "Helmet included", appliesTo: "bike", sortOrder: 100 },
+  { kind: "included", name: "Helmet included", appliesTo: "bike", sortOrder: 10 },
   {
     kind: "vehicle_document",
     name: "Registration",
@@ -418,6 +422,449 @@ async function seedDemoFleet() {
   }
 }
 
+function bikeMark(type: BikeSeed["type"]) {
+  const wheels = `<circle cx="248" cy="318" r="40"/>
+    <circle cx="248" cy="318" r="7" fill="#142033" stroke="none"/>
+    <circle cx="552" cy="318" r="40"/>
+    <circle cx="552" cy="318" r="7" fill="#142033" stroke="none"/>`;
+  if (type === "Scooter") {
+    return `${wheels}
+      <path d="M284 318h48"/>
+      <path d="M332 318l48-78h86"/>
+      <path d="M466 240l48 78"/>
+      <path d="M360 238c28-22 70-18 92 4"/>
+      <path d="M430 214l28-52"/>
+      <path d="M438 176h58"/>
+      <path d="M468 168v-16"/>`;
+  }
+  if (type === "Cruiser") {
+    return `${wheels}
+      <path d="M288 318c28-18 70-28 118-22"/>
+      <path d="M390 292c36-8 78 2 108 22"/>
+      <path d="M430 286c22-26 58-30 86-8"/>
+      <path d="M500 250c18-22 48-18 58 4"/>
+      <path d="M548 236h42"/>
+      <path d="M300 300h34"/>`;
+  }
+  if (type === "Adventure") {
+    return `${wheels}
+      <path d="M286 318l52-88h70"/>
+      <path d="M408 230l46-62"/>
+      <path d="M454 168h48"/>
+      <path d="M470 168l28 46"/>
+      <path d="M498 214l54 104"/>
+      <path d="M360 228c24-16 58-12 78 8"/>
+      <path d="M430 188h22l10 22h-18z" fill="#142033" stroke="none"/>`;
+  }
+  return `${wheels}
+    <path d="M286 318l58-86h54"/>
+    <path d="M398 232l40-58"/>
+    <path d="M420 186h52"/>
+    <path d="M448 174l36 58"/>
+    <path d="M484 232l68 86"/>
+    <path d="M352 230c26-18 64-14 86 8"/>`;
+}
+
+export function bikeStudioSvg(type: BikeSeed["type"]) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#f3f1ec"/>
+  <ellipse cx="400" cy="378" rx="180" ry="10" fill="#e6e1d8"/>
+  <g fill="none" stroke="#142033" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    ${bikeMark(type)}
+  </g>
+</svg>`;
+}
+
+function carMark(type: CarSeed["type"]) {
+  const wheels = `<circle cx="250" cy="318" r="34"/>
+    <circle cx="250" cy="318" r="7" fill="#0e4b48" stroke="none"/>
+    <circle cx="530" cy="318" r="34"/>
+    <circle cx="530" cy="318" r="7" fill="#0e4b48" stroke="none"/>`;
+  if (type === "SUV" || type === "MUV") {
+    return `${wheels}
+      <path d="M188 318h28"/>
+      <path d="M284 318h212"/>
+      <path d="M564 318h48"/>
+      <path d="M210 318v-28c0-22 16-36 36-36h86l28-48h92c28 0 48 14 62 36l28 48h28c16 0 28 12 28 28"/>
+      <path d="M360 206h78"/>
+      <path d="M250 254h70"/>`;
+  }
+  if (type === "Luxury" || type === "Sedan") {
+    return `${wheels}
+      <path d="M176 318h40"/>
+      <path d="M284 318h212"/>
+      <path d="M564 318h70"/>
+      <path d="M200 318c8-34 28-52 62-58h70l78-46h86c22 0 40 10 52 28l36 48h36c18 0 30 14 30 28"/>
+      <path d="M410 214h70"/>
+      <path d="M248 260h64"/>`;
+  }
+  return `${wheels}
+    <path d="M196 318h20"/>
+    <path d="M284 318h212"/>
+    <path d="M564 318h36"/>
+    <path d="M214 318c6-30 24-48 54-54h78l36-42h70c18 0 34 10 46 26l28 40h28c14 0 24 12 24 26"/>
+    <path d="M382 222h62"/>
+    <path d="M246 264h58"/>`;
+}
+
+export function carStudioSvg(type: CarSeed["type"]) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#eef6f4"/>
+  <ellipse cx="400" cy="372" rx="190" ry="10" fill="#d5e6e2"/>
+  <g fill="none" stroke="#0e4b48" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    ${carMark(type)}
+  </g>
+</svg>`;
+}
+
+async function carImage(item: CarSeed) {
+  const key = `vehicles/seed-${item.slug}.svg`;
+  const file = path.join(process.cwd(), "public", "uploads", key);
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, carStudioSvg(item.type));
+  return { url: `/uploads/${key}`, key };
+}
+
+async function bikeImage(item: BikeSeed) {
+  const key = `vehicles/seed-${item.slug}.svg`;
+  const file = path.join(process.cwd(), "public", "uploads", key);
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, bikeStudioSvg(item.type));
+  return { url: `/uploads/${key}`, key };
+}
+
+const bikeTypes = [
+  ["Scooter", 70],
+  ["Motorcycle", 80],
+  ["Cruiser", 90],
+  ["Adventure", 100],
+  ["Sports", 110],
+  ["Touring", 120],
+  ["Commuter", 130],
+  ["Moped", 140],
+  ["Cafe Racer", 150],
+  ["Off-road", 160],
+  ["Electric", 170],
+] as const;
+
+async function ensureBikeTypes() {
+  for (const [name, sortOrder] of bikeTypes) {
+    await ensureNamedConfig("vehicle_type", name, "bike", sortOrder);
+  }
+}
+
+async function ensureCoverLists() {
+  const helmet = await prisma.rentalConfig.findFirst({
+    where: { kind: "feature", slug: "helmet-included" },
+    select: { id: true },
+  });
+  const includedHelmet = await prisma.rentalConfig.findFirst({
+    where: { kind: "included", slug: "helmet-included" },
+    select: { id: true },
+  });
+  if (helmet && !includedHelmet) {
+    await prisma.rentalConfig.update({
+      where: { id: helmet.id },
+      data: { kind: "included", appliesTo: "bike" },
+    });
+  } else if (!helmet && !includedHelmet) {
+    await ensureNamedConfig("included", "Helmet included", "bike", 10);
+  }
+}
+
+async function ensureNamedConfig(kind: string, name: string, appliesTo: string, sortOrder: number) {
+  const slug = slugify(name);
+  await prisma.rentalConfig.upsert({
+    where: { kind_slug: { kind, slug } },
+    update: { appliesTo, active: true },
+    create: {
+      kind,
+      name,
+      slug,
+      appliesTo,
+      sortOrder,
+      active: true,
+    },
+  });
+}
+
+async function ensureCalanguteLocation() {
+  const existing = await prisma.rentalLocation.findFirst({
+    where: { fleet: "car", slug: "calangute" },
+  });
+  if (existing) return existing;
+  const goa = await prisma.destination.findUnique({
+    where: { slug: "goa" },
+    select: { id: true, imageUrl: true, imageKey: true, imageDriver: true },
+  });
+  return prisma.rentalLocation.create({
+    data: {
+      name: "Calangute",
+      slug: "calangute",
+      address: "Calangute Beach Road, Goa",
+      destinationId: goa?.id,
+      mapLat: "15.5474",
+      mapLng: "73.7553",
+      mapZoom: 14,
+      imageUrl: goa?.imageUrl ?? "",
+      imageKey: goa?.imageKey ?? "",
+      imageDriver: goa?.imageDriver || "local",
+      active: true,
+      fleet: "car",
+    },
+  });
+}
+
+async function seedCarCatalog() {
+  for (const [name, sortOrder] of [
+    ["Hatchback", 10],
+    ["Sedan", 20],
+    ["SUV", 30],
+    ["MUV", 40],
+    ["Luxury", 50],
+    ["EV", 60],
+  ] as const) {
+    await ensureNamedConfig("vehicle_type", name, "car", sortOrder);
+  }
+  await ensureCalanguteLocation();
+
+  const [types, fuels, gears, features, locations, takenRegs] = await Promise.all([
+    prisma.rentalConfig.findMany({ where: { kind: "vehicle_type", active: true } }),
+    prisma.rentalConfig.findMany({ where: { kind: "fuel", active: true } }),
+    prisma.rentalConfig.findMany({ where: { kind: "transmission", active: true } }),
+    prisma.rentalConfig.findMany({ where: { kind: "feature", active: true } }),
+    prisma.rentalLocation.findMany({
+      where: { fleet: "car", active: true, slug: "calangute" },
+      select: { id: true },
+    }),
+    prisma.vehicle.findMany({ select: { registrationNumber: true } }),
+  ]);
+  const usedRegs = new Set(takenRegs.map((row) => row.registrationNumber));
+  const prefix: Record<string, string> = {
+    goa: "GA",
+    kashmir: "JK",
+    ladakh: "LA",
+    himachal: "HP",
+    kerala: "KL",
+    gulmarg: "JK",
+    pahalgam: "JK",
+    jammu: "JK",
+  };
+  let serial = 5100;
+
+  for (const item of carCatalog) {
+    const existing = await prisma.vehicle.findUnique({ where: { slug: item.slug } });
+    if (existing) continue;
+    const destination = await prisma.destination.findUnique({
+      where: { slug: item.destination },
+      select: { id: true },
+    });
+    if (!destination) continue;
+
+    let registrationNumber = "";
+    do {
+      serial += 1;
+      registrationNumber = `${prefix[item.destination] ?? "IN"}${serial}C`;
+    } while (usedRegs.has(registrationNumber));
+    usedRegs.add(registrationNumber);
+
+    const photoFile = path.join(process.cwd(), "public", "uploads", "vehicles", "photos", `${item.slug}.jpg`);
+    const image = existsSync(photoFile)
+      ? { url: `/uploads/vehicles/photos/${item.slug}.jpg`, key: `vehicles/photos/${item.slug}.jpg` }
+      : await carImage(item);
+    const location = locations[0];
+    const featureNames = ["AC"];
+    if (item.pricePerDay >= 2200) featureNames.push("Bluetooth");
+    if (item.type === "SUV" || item.type === "MUV" || item.type === "Luxury" || item.pricePerDay >= 4000) {
+      featureNames.push("GPS");
+    }
+    if (item.type === "SUV" || item.type === "MUV" || item.type === "Luxury" || item.type === "EV") {
+      featureNames.push("Rear Camera");
+    }
+    if (item.type === "Luxury") featureNames.push("Sunroof");
+    if (item.fuel === "Electric" || item.pricePerDay >= 3000) featureNames.push("USB");
+    const featureIds = featureNames
+      .map((name) => features.find((row) => row.name === name)?.id)
+      .filter((id): id is string => Boolean(id));
+    const includedKm =
+      item.type === "Luxury" ? 150 : item.type === "SUV" ? 250 : item.type === "MUV" ? 220 : 200;
+
+    await prisma.vehicle.create({
+      data: {
+        slug: item.slug,
+        kind: "car",
+        name: item.name,
+        registrationNumber,
+        brand: item.brand,
+        modelName: item.modelName,
+        year: item.year,
+        summary: item.summary,
+        seats: item.seats,
+        doors: item.doors,
+        luggage: item.luggage,
+        includedKmPerDay: includedKm,
+        pricePerDay: item.pricePerDay,
+        securityDeposit: item.pricePerDay >= 8000 ? 20000 : item.pricePerDay >= 4000 ? 10000 : 5000,
+        extraKmCharge: item.type === "Luxury" ? 25 : 15,
+        currency: "INR",
+        status: "available",
+        published: true,
+        allowCounterPickup: true,
+        destinationId: destination.id,
+        vehicleTypeId: types.find((row) => row.name === item.type)?.id,
+        fuelTypeId: fuels.find((row) => row.name === item.fuel)?.id,
+        transmissionId: gears.find((row) => row.name === item.transmission)?.id,
+        images: { create: [{ url: image.url, key: image.key, driver: "local", sortOrder: 0 }] },
+        ...(featureIds.length > 0
+          ? { features: { create: featureIds.map((configId) => ({ configId })) } }
+          : {}),
+        ...(location ? { locationLinks: { create: [{ locationId: location.id }] } } : {}),
+      },
+    });
+  }
+}
+
+async function ensureDalLakeLocation() {
+  const existing = await prisma.rentalLocation.findFirst({
+    where: { fleet: "bike", slug: "dal-lake" },
+  });
+  if (existing) return existing;
+  const kashmir = await prisma.destination.findUnique({
+    where: { slug: "kashmir" },
+    select: { id: true, imageUrl: true, imageKey: true, imageDriver: true },
+  });
+  return prisma.rentalLocation.create({
+    data: {
+      name: "Dal Lake",
+      slug: "dal-lake",
+      address: "Dal Lake, Srinagar",
+      destinationId: kashmir?.id,
+      mapLat: "34.1218",
+      mapLng: "74.8544",
+      mapZoom: 14,
+      imageUrl: kashmir?.imageUrl ?? "",
+      imageKey: kashmir?.imageKey ?? "",
+      imageDriver: kashmir?.imageDriver || "local",
+      active: true,
+      fleet: "bike",
+    },
+  });
+}
+
+async function seedBikeCatalog() {
+  await ensureNamedConfig("vehicle_type", "Adventure", "bike", 100);
+  await ensureDalLakeLocation();
+
+  const [types, fuels, gears, features, included, locations, takenRegs] = await Promise.all([
+    prisma.rentalConfig.findMany({ where: { kind: "vehicle_type", active: true } }),
+    prisma.rentalConfig.findMany({ where: { kind: "fuel", active: true } }),
+    prisma.rentalConfig.findMany({ where: { kind: "transmission", active: true } }),
+    prisma.rentalConfig.findMany({ where: { kind: "feature", active: true } }),
+    prisma.rentalConfig.findMany({ where: { kind: "included", active: true } }),
+    prisma.rentalLocation.findMany({
+      where: { fleet: "bike", active: true, slug: "dal-lake" },
+      select: { id: true },
+    }),
+    prisma.vehicle.findMany({ select: { registrationNumber: true } }),
+  ]);
+  const usedRegs = new Set(takenRegs.map((row) => row.registrationNumber));
+  const prefix: Record<string, string> = {
+    goa: "GA",
+    kashmir: "JK",
+    ladakh: "LA",
+    himachal: "HP",
+    kerala: "KL",
+    gulmarg: "JK",
+    pahalgam: "JK",
+    jammu: "JK",
+  };
+  let serial = 3200;
+
+  for (const item of bikeCatalog) {
+    const existing = await prisma.vehicle.findUnique({ where: { slug: item.slug } });
+    if (existing) continue;
+    const destination = await prisma.destination.findUnique({
+      where: { slug: item.destination },
+      select: { id: true },
+    });
+    if (!destination) continue;
+
+    let registrationNumber = "";
+    do {
+      serial += 1;
+      registrationNumber = `${prefix[item.destination] ?? "IN"}${serial}B`;
+    } while (usedRegs.has(registrationNumber));
+    usedRegs.add(registrationNumber);
+
+    const photoFile = path.join(process.cwd(), "public", "uploads", "vehicles", "photos", `${item.slug}.jpg`);
+    const image = existsSync(photoFile)
+      ? { url: `/uploads/vehicles/photos/${item.slug}.jpg`, key: `vehicles/photos/${item.slug}.jpg` }
+      : await bikeImage(item);
+    const location = locations[0];
+    const featureNames: string[] = [];
+    if (item.fuel === "Electric") featureNames.push("USB");
+    if (item.pricePerDay >= 2000) featureNames.push("GPS", "Bluetooth");
+    const featureIds = [
+      ...featureNames.map((name) => features.find((row) => row.name === name)?.id),
+      included.find((row) => row.name === "Helmet included")?.id,
+    ].filter((id): id is string => Boolean(id));
+
+    await prisma.vehicle.create({
+      data: {
+        slug: item.slug,
+        kind: "bike",
+        name: item.name,
+        registrationNumber,
+        brand: item.brand,
+        modelName: item.modelName,
+        year: item.year,
+        summary: item.summary,
+        seats: 2,
+        luggage: item.type === "Adventure" || item.type === "Cruiser" ? 1 : 0,
+        includedKmPerDay: item.type === "Scooter" ? 80 : item.type === "Adventure" ? 160 : 120,
+        pricePerDay: item.pricePerDay,
+        securityDeposit: item.pricePerDay >= 2500 ? 5000 : 2000,
+        extraKmCharge: 8,
+        currency: "INR",
+        status: "available",
+        published: true,
+        allowCounterPickup: true,
+        destinationId: destination.id,
+        vehicleTypeId: types.find((row) => row.name === item.type)?.id,
+        fuelTypeId: fuels.find((row) => row.name === item.fuel)?.id,
+        transmissionId: gears.find((row) => row.name === item.transmission)?.id,
+        images: { create: [{ url: image.url, key: image.key, driver: "local", sortOrder: 0 }] },
+        ...(featureIds.length > 0
+          ? { features: { create: featureIds.map((configId) => ({ configId })) } }
+          : {}),
+        ...(location ? { locationLinks: { create: [{ locationId: location.id }] } } : {}),
+      },
+    });
+  }
+
+  const plates = [
+    ...bikeCatalog.map((item) => ({ slug: item.slug, type: item.type })),
+    { slug: "honda-activa", type: "Scooter" as const },
+    { slug: "royal-enfield-himalayan", type: "Adventure" as const },
+    { slug: "royal-enfield-classic-350", type: "Cruiser" as const },
+  ];
+  for (const item of plates) {
+    await bikeImage({
+      slug: item.slug,
+      name: item.slug,
+      brand: "",
+      modelName: "",
+      year: 2024,
+      type: item.type,
+      fuel: "Petrol",
+      transmission: "Manual",
+      pricePerDay: 0,
+      destination: "goa",
+      summary: "",
+    });
+  }
+}
+
 let ready: Promise<void> | null = null;
 
 async function seedRentalDefaults() {
@@ -452,6 +899,9 @@ async function seedRentalDefaults() {
     });
   }
 
+  await ensureCoverLists();
+  await ensureBikeTypes();
+
   if ((await prisma.rentalPolicy.count()) === 0) {
     await prisma.rentalPolicy.createMany({ data: policies });
   }
@@ -483,6 +933,8 @@ async function seedRentalDefaults() {
   await fillLocationPins();
   await seedDemoFleet();
   await separateFleetRecords();
+  await seedBikeCatalog();
+  await seedCarCatalog();
 }
 
 async function separateFleetRecords() {
@@ -514,36 +966,7 @@ async function separateFleetRecords() {
   }
 
   if ((await prisma.rentalLocation.count({ where: { fleet: "bike" } })) === 0) {
-    const rows = await prisma.rentalLocation.findMany({ where: { fleet: "car" } });
-    for (const location of rows) {
-      const copy = await prisma.rentalLocation.create({
-        data: {
-          name: location.name,
-          slug: `${location.slug}-bike`,
-          address: location.address,
-          mapLat: location.mapLat,
-          mapLng: location.mapLng,
-          mapZoom: location.mapZoom,
-          imageUrl: location.imageUrl,
-          imageKey: location.imageKey,
-          imageDriver: location.imageDriver,
-          active: location.active,
-          destinationId: location.destinationId,
-          fleet: "bike",
-        },
-      });
-      const links = await prisma.vehicleLocation.findMany({
-        where: { locationId: location.id, vehicle: { kind: "bike" } },
-      });
-      for (const link of links) {
-        await prisma.vehicleLocation.delete({
-          where: { vehicleId_locationId: { vehicleId: link.vehicleId, locationId: location.id } },
-        });
-        await prisma.vehicleLocation.create({
-          data: { vehicleId: link.vehicleId, locationId: copy.id },
-        });
-      }
-    }
+    await ensureDalLakeLocation();
   }
 }
 

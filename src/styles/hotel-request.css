@@ -1,0 +1,648 @@
+.worldcompassholiday-page .hotel-request-card {
+  border-radius: 16px;
+  background: #fff;
+  padding: 28px;
+  box-shadow: 0 12px 40px rgba(5, 16, 54, 0.08);
+}
+
+.worldcompassholiday-page .hotel-request-card h2 {
+  margin: 0;
+  color: #051036;
+  font-size: 24px;
+  font-weight: 650;
+}
+
+.worldcompassholiday-page .hotel-request-card .hotel-request-lede {
+  margin: 8px 0 0;
+  color: #697488;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.worldcompassholiday-page .hotel-request-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 18px;
+  margin-top: 22px;
+}
+
+.worldcompassholiday-page .hotel-request-span {
+  grid-column: 1 / -1;
+}
+
+.worldcompassholiday-page .hotel-request-cell > label,
+.worldcompassholiday-page .hotel-request-span > label,
+.worldcompassholiday-page .hotel-request-span > p.hotel-request-label {
+  display: block;
+  margin: 0 0 8px;
+  color: #051036;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.worldcompassholiday-page .hotel-request-control input,
+.worldcompassholiday-page .hotel-request-control textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid #d5d9e6;
+  border-radius: 12px;
+  background: #fff !important;
+  color: #051036 !important;
+  font-size: 15px;
+  box-shadow: none;
+}
+
+.worldcompassholiday-page .hotel-request-control textarea {
+  min-height: 110px;
+  padding: 12px 14px;
+}
+
+.worldcompassholiday-page .hotel-request-control.is-invalid input,
+.worldcompassholiday-page .hotel-request-control.is-invalid textarea {
+  border-color: #e11d48 !important;
+}
+
+.worldcompassholiday-page .hotel-request-error {
+  margin: 6px 0 0;
+  color: #9f1239;
+  font-size: 13px;
+}
+
+.worldcompassholiday-page .hotel-request-banner-alert {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff1f0;
+  color: #9f1239;
+  font-size: 14px;
+}
+
+.worldcompassholiday-page .hotel-request-stars {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.worldcompassholiday-page .hotel-request-stars button {
+  min-height: 48px;
+  padding: 8px 10px;
+  border: 1px solid #d9deea;
+  border-radius: 12px;
+  background: #fff;
+  color: #051036;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.worldcompassholiday-page .hotel-request-stars button.is-on {
+  border-color: #3554d1;
+  background: #3554d1;
+  color: #fff;
+}
+
+.worldcompassholiday-page .hotel-request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.worldcompassholiday-page .hotel-request-submit,
+.worldcompassholiday-page a.hotel-request-whatsapp,
+.worldcompassholiday-page button.hotel-request-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.worldcompassholiday-page .hotel-request-submit {
+  background: #3554d1;
+  color: #fff;
+}
+
+.worldcompassholiday-page a.hotel-request-whatsapp,
+.worldcompassholiday-page button.hotel-request-whatsapp {
+  background: #1f8a4c;
+  color: #fff;
+}
+
+.worldcompassholiday-page .hotel-request-submit:disabled,
+.worldcompassholiday-page button.hotel-request-whatsapp:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.worldcompassholiday-page .hotel-request-steps {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.worldcompassholiday-page .hotel-request-steps li {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.worldcompassholiday-page .hotel-request-steps strong {
+  display: block;
+  color: #051036;
+  font-size: 15px;
+}
+
+.worldcompassholiday-page .hotel-request-steps p {
+  margin: 4px 0 0;
+  color: #697488;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.worldcompassholiday-page .hotel-request-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #3554d1;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.worldcompassholiday-page .hotel-request-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 20px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.worldcompassholiday-page .hotel-request-prompt h2 {
+  margin: 0;
+  color: #051036;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.worldcompassholiday-page .hotel-request-prompt p {
+  margin: 4px 0 0;
+  color: #697488;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.worldcompassholiday-page .hotel-request-guests {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 800px) {
+  .worldcompassholiday-page .hotel-request-form,
+  .worldcompassholiday-page .hotel-request-stars {
+    grid-template-columns: 1fr;
+  }
+
+  .worldcompassholiday-page .hotel-request-prompt {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.worldcompassholiday-page .hotel-brief {
+  background: #f3f5f9;
+  color: #051036;
+}
+
+.worldcompassholiday-page .hotel-brief .container {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.worldcompassholiday-page .hotel-brief-top {
+  padding: 28px 0 8px;
+}
+
+.worldcompassholiday-page .hotel-brief-crumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #697488;
+  font-size: 14px;
+}
+
+.worldcompassholiday-page .hotel-brief-crumb a {
+  color: #3554d1;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.worldcompassholiday-page .hotel-brief-intro {
+  margin-top: 14px;
+}
+
+.worldcompassholiday-page .hotel-brief-intro h1 {
+  margin: 0;
+  max-width: 12em;
+  color: #051036;
+  font-size: clamp(34px, 4vw, 46px);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.worldcompassholiday-page .hotel-brief-intro p {
+  max-width: 52ch;
+  margin: 12px 0 0;
+  color: #697488;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.worldcompassholiday-page .hotel-brief-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.worldcompassholiday-page .hotel-brief-facts li {
+  color: #051036;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.worldcompassholiday-page .hotel-brief-facts li::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: #3554d1;
+}
+
+.worldcompassholiday-page .hotel-brief-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 28px;
+  align-items: start;
+  padding: 22px 0 56px;
+}
+
+.worldcompassholiday-page .hotel-brief-side {
+  position: sticky;
+  top: 108px;
+}
+
+.worldcompassholiday-page #hotel-request-pass {
+  scroll-margin-top: 108px;
+}
+
+.worldcompassholiday-page .hotel-brief-side .hotel-request-card {
+  padding: 22px;
+  border: 1px solid #e1e5ef;
+  box-shadow: none;
+}
+
+.worldcompassholiday-page .hotel-brief-side .hotel-request-form {
+  grid-template-columns: 1fr 1fr;
+}
+
+.worldcompassholiday-page .hotel-brief-side .hotel-request-stars {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.worldcompassholiday-page .hotel-brief-side .hotel-request-stars button {
+  min-height: 40px;
+  padding: 6px 4px;
+  font-size: 13px;
+}
+
+.worldcompassholiday-page .hotel-brief-side .hotel-request-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.worldcompassholiday-page .hotel-brief-side .hotel-request-submit,
+.worldcompassholiday-page .hotel-brief-side a.hotel-request-whatsapp,
+.worldcompassholiday-page .hotel-brief-side button.hotel-request-whatsapp {
+  width: 100%;
+}
+
+.worldcompassholiday-page .hotel-brief-side a.hotel-request-whatsapp,
+.worldcompassholiday-page .hotel-brief-side button.hotel-request-whatsapp {
+  border: 1px solid #1f8a4c;
+  background: #fff;
+  color: #1f8a4c;
+}
+
+.worldcompassholiday-page .hotel-brief-main {
+  display: grid;
+  gap: 28px;
+}
+
+.worldcompassholiday-page .hotel-brief-main > section {
+  padding: 22px;
+  border: 1px solid #e1e5ef;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.worldcompassholiday-page .hotel-brief-main h2 {
+  margin: 0;
+  color: #051036;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.worldcompassholiday-page .hotel-brief-note {
+  margin: 6px 0 0;
+  color: #697488;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.worldcompassholiday-page .hotel-brief-stays {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.worldcompassholiday-page .hotel-brief-stays button {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #e1e5ef;
+  border-radius: 12px;
+  background: #f7f8fb;
+  color: #051036;
+  font-size: 14px;
+  font-weight: 650;
+  text-align: center;
+  cursor: pointer;
+}
+
+.worldcompassholiday-page .hotel-brief-stays button.is-on {
+  border-color: #3554d1;
+  background: #3554d1;
+  color: #fff;
+}
+
+.worldcompassholiday-page .hotel-brief-picked {
+  margin: 12px 0 0;
+  color: #051036;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.worldcompassholiday-page .hotel-brief-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.worldcompassholiday-page .hotel-brief-steps li {
+  min-width: 0;
+}
+
+.worldcompassholiday-page .hotel-brief-steps b {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  background: #051036;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.worldcompassholiday-page .hotel-brief-steps strong {
+  display: block;
+  color: #051036;
+  font-size: 14px;
+}
+
+.worldcompassholiday-page .hotel-brief-steps p {
+  margin: 4px 0 0;
+  color: #697488;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.worldcompassholiday-page .hotel-brief-checks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+  margin: 18px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid #e1e5ef;
+  list-style: none;
+}
+
+.worldcompassholiday-page .hotel-brief-checks strong {
+  display: block;
+  color: #051036;
+  font-size: 15px;
+}
+
+.worldcompassholiday-page .hotel-brief-checks span {
+  display: block;
+  margin-top: 3px;
+  color: #697488;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.worldcompassholiday-page .hotel-brief-places-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.worldcompassholiday-page .hotel-brief-places-head input {
+  width: min(240px, 100%);
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #d5d9e6;
+  border-radius: 12px;
+  background: #fff !important;
+  color: #051036 !important;
+  font-size: 15px;
+}
+
+.worldcompassholiday-page .hotel-brief-places {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.worldcompassholiday-page .hotel-brief-places button {
+  padding: 8px 14px;
+  border: 1px solid #e1e5ef;
+  border-radius: 999px;
+  background: #f7f8fb;
+  color: #051036;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.worldcompassholiday-page .hotel-brief-places button.is-on {
+  border-color: #051036;
+  background: #051036;
+  color: #fff;
+}
+
+.worldcompassholiday-page .hotel-brief-places button:hover,
+.worldcompassholiday-page .hotel-brief-places button:focus-visible,
+.worldcompassholiday-page .hotel-brief-stays button:hover,
+.worldcompassholiday-page .hotel-brief-stays button:focus-visible {
+  border-color: #3554d1;
+}
+
+.worldcompassholiday-page .hotel-brief-places button.is-on:hover,
+.worldcompassholiday-page .hotel-brief-stays button.is-on:hover {
+  border-color: #051036;
+}
+
+.worldcompassholiday-page .hotel-brief-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #697488;
+  font-size: 14px;
+}
+
+.worldcompassholiday-page .hotel-brief-faqs {
+  display: grid;
+  margin-top: 8px;
+}
+
+.worldcompassholiday-page .hotel-brief-faqs article + article {
+  border-top: 1px solid #e1e5ef;
+}
+
+.worldcompassholiday-page .hotel-brief-faqs h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.worldcompassholiday-page .hotel-brief-faqs button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 0;
+  border: 0;
+  background: transparent;
+  color: #051036;
+  font-size: 15px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.worldcompassholiday-page .hotel-brief-faqs button span {
+  color: #3554d1;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.worldcompassholiday-page .hotel-brief-faqs p {
+  margin: 0 0 14px;
+  color: #697488;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.worldcompassholiday-page .hotel-brief-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.worldcompassholiday-page .hotel-brief-contact a {
+  padding: 8px 12px;
+  border: 1px solid #e1e5ef;
+  border-radius: 999px;
+  color: #051036;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.worldcompassholiday-page .hotel-brief-contact a:hover {
+  border-color: #3554d1;
+  color: #3554d1;
+}
+
+@media (max-width: 1100px) {
+  .worldcompassholiday-page .hotel-brief-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .worldcompassholiday-page .hotel-brief-side {
+    position: static;
+    order: -1;
+  }
+
+  .worldcompassholiday-page .hotel-brief-steps {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .worldcompassholiday-page .hotel-brief-stays,
+  .worldcompassholiday-page .hotel-brief-checks,
+  .worldcompassholiday-page .hotel-brief-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .worldcompassholiday-page .hotel-brief-side .hotel-request-form {
+    grid-template-columns: 1fr;
+  }
+
+  .worldcompassholiday-page .hotel-brief-places-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .worldcompassholiday-page .hotel-brief-places-head input {
+    width: 100%;
+  }
+}

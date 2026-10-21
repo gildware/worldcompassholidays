@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { customerLogin } from "@/actions/auth";
-import { LoginForm } from "@/components/auth/LoginForm";
+import { PhoneLogin } from "@/components/auth/PhoneLogin";
+import { countryIsoFromHeaders } from "@/lib/auth/countries";
 import { getCurrentUser } from "@/lib/auth/session";
+import { firebaseWebConfig } from "@/lib/firebase/config";
 import { customerReturnPath } from "@/lib/forms";
+import { privateMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = privateMetadata(
+  "Sign in",
+  "Sign in to World Compass Holidays with your mobile number.",
+);
 
 export default async function LoginPage({
   searchParams,
@@ -20,25 +25,18 @@ export default async function LoginPage({
 
   return (
     <div className="mx-auto w-full max-w-md px-5 py-16">
-      <h1 className="text-3xl font-semibold">Sign in</h1>
-      <p className="mt-2 text-sm text-muted">See your bookings and update your requests.</p>
-      {user?.scope === "staff" ? (
-        <p className="mt-4 rounded-md bg-surface px-3 py-2 text-sm text-muted">
-          You are signed in as staff. Signing in here will switch to a customer account.
-        </p>
-      ) : null}
-      <div className="mt-8">
-        <LoginForm action={customerLogin} next={returnPath} />
-      </div>
-      <p className="mt-6 text-sm text-muted">
-        New here?{" "}
-        <Link
-          href={returnPath === "/account" ? "/signup" : `/signup?next=${encodeURIComponent(returnPath)}`}
-          className="font-medium text-brand"
-        >
-          Create an account
-        </Link>
+      <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand">Sign in</p>
+      <h1 className="mt-2 text-3xl font-semibold">Use your mobile number</h1>
+      <p className="mt-2 text-sm text-muted">
+        We text a 6-digit code to your mobile. New customers add their name after the code.
       </p>
+      <div className="mt-8">
+        <PhoneLogin
+          next={returnPath}
+          ready={firebaseWebConfig() !== null}
+          defaultCountry={countryIsoFromHeaders(await headers())}
+        />
+      </div>
     </div>
   );
 }

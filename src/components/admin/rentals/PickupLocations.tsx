@@ -100,11 +100,13 @@ export function PickupLocations({
   mapApiKey,
   manage,
   blocked,
+  fleet,
 }: {
   locations: PickupLocation[];
   mapApiKey: string;
   manage: boolean;
   blocked?: boolean;
+  fleet: "car" | "bike";
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -160,9 +162,11 @@ export function PickupLocations({
     <div className="grid gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-navy">Pickup locations</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-navy">
+            {fleet === "bike" ? "Bike locations" : "Car locations"}
+          </h1>
           <p className="mt-0.5 text-xs text-muted">
-            Counter desks customers can choose. Each one has a name, address, map pin, and image.
+            Where {fleet === "bike" ? "bikes" : "cars"} can be picked up and dropped off. These are separate from destinations.
           </p>
         </div>
         {manage ? (
@@ -320,6 +324,7 @@ export function PickupLocations({
         {open ? (
           <LocationForm
             key={current?.id ?? "new"}
+            fleet={fleet}
             location={current}
             mapApiKey={mapApiKey}
             onCancel={closeForm}
@@ -381,11 +386,13 @@ function SortHead({
 }
 
 function LocationForm({
+  fleet,
   location,
   mapApiKey,
   onCancel,
   onSaved,
 }: {
+  fleet: "car" | "bike";
   location: PickupLocation | null;
   mapApiKey: string;
   onCancel: () => void;
@@ -417,6 +424,7 @@ function LocationForm({
       }}
     >
       {location ? <input type="hidden" name="id" value={location.id} /> : null}
+      <input type="hidden" name="fleet" value={fleet} />
       <input type="hidden" name="imageUrl" value={image?.url ?? ""} />
       <input type="hidden" name="imageKey" value={image?.key ?? ""} />
       <input type="hidden" name="imageDriver" value={image?.driver ?? "local"} />

@@ -120,7 +120,7 @@ function NavIcon({ href, label }: { href: string; label?: string }) {
       </svg>
     );
   }
-  if (href === "/admin/rentals/bikes") {
+  if (href === "/admin/rentals/bikes" || label === "Bikes") {
     return (
       <svg {...common}>
         <circle cx="7" cy="16" r="3" />
@@ -130,7 +130,12 @@ function NavIcon({ href, label }: { href: string; label?: string }) {
       </svg>
     );
   }
-  if (href === "/admin/rentals/cars" || href === "/admin/rentals/fleet" || href === "/admin/rentals") {
+  if (
+    href === "/admin/rentals/cars" ||
+    href === "/admin/rentals/fleet" ||
+    href === "/admin/rentals" ||
+    label === "Cars"
+  ) {
     return (
       <svg {...common}>
         <path d="M4 16h16" />
@@ -157,7 +162,7 @@ function NavIcon({ href, label }: { href: string; label?: string }) {
       </svg>
     );
   }
-  if (href === "/admin/rentals/availability") {
+  if (href.endsWith("/availability") || label === "Availability") {
     return (
       <svg {...common}>
         <rect x="4" y="5" width="16" height="15" rx="2" />
@@ -165,7 +170,7 @@ function NavIcon({ href, label }: { href: string; label?: string }) {
       </svg>
     );
   }
-  if (href === "/admin/rentals/locations") {
+  if (href.endsWith("/locations") || label === "Locations") {
     return (
       <svg {...common}>
         <path d="M12 21s6.5-5.6 6.5-10.2a6.5 6.5 0 1 0-13 0C5.5 15.4 12 21 12 21z" />
@@ -203,7 +208,7 @@ function NavIcon({ href, label }: { href: string; label?: string }) {
       </svg>
     );
   }
-  if (href === "/admin/bookings" || href === "/admin/rentals/bookings") {
+  if (href === "/admin/bookings" || href.endsWith("/bookings") || label === "Bookings") {
     return (
       <svg {...common}>
         <rect x="4" y="5" width="16" height="15" rx="2" />

@@ -11,8 +11,8 @@ export function PasswordForm() {
   const [state, action] = useActionState(changePassword, initialFormState);
 
   return (
-    <form action={action} className="grid gap-4 rounded-xl border border-line bg-white p-5">
-      <h2 className="text-lg font-semibold">Change password</h2>
+    <form action={action} className="grid gap-3 rounded-lg border border-line bg-white p-4">
+      <h2 className="text-base font-semibold">Change password</h2>
       <FormMessage state={state} />
       <Field label="Current password">
         <input name="currentPassword" type="password" autoComplete="current-password" required />

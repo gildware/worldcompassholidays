@@ -9,8 +9,14 @@ import type { CatalogOption } from "@/lib/catalog";
 import { resolveTitles } from "@/lib/hotels/labels";
 import { mealPlanLabel, propertyTypeLabel } from "@/lib/hotels/options";
 import { parseJsonArray, type GalleryItem } from "@/lib/tours/json";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Hotels" };
+export const metadata: Metadata = pageMetadata({
+  title: "Hotels and stays",
+  description:
+    "Hotels and stays with rates, locations, and what is included. Search by city and dates, or ask us to find a place that is not listed.",
+  path: "/hotels",
+});
 
 function amenityNames(stored: string, catalog: CatalogOption[]) {
   const resolved = resolveTitles(stored, catalog);

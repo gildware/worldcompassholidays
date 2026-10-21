@@ -49,30 +49,22 @@ export function Sidebar({
 
   return (
     <>
-      <div className="sidebar__item -no-border position-relative">
-        <Map />
-      </div>
+      {fleet === "bike" ? null : (
+        <div className="sidebar__item -no-border position-relative">
+          <Map />
+        </div>
+      )}
 
       <div className="sidebar__item">
         <h5 className="text-18 fw-500 mb-10">
-          Location{locationLabel ? ` (${locationLabel})` : ""}
+          {fleet === "bike" ? "City" : "Location"}
+          {locationLabel ? ` (${locationLabel})` : ""}
         </h5>
         <div className="sidebar-checkbox">
           <CountFilter
             options={locations}
             selected={filters.locations}
             onChange={(locations) => patch({ locations })}
-          />
-        </div>
-      </div>
-
-      <div className="sidebar__item">
-        <h5 className="text-18 fw-500 mb-10">{fleet === "bike" ? "Bike type" : "Car category"}</h5>
-        <div className="sidebar-checkbox">
-          <CountFilter
-            options={categories}
-            selected={filters.categories}
-            onChange={(categories) => patch({ categories })}
           />
         </div>
       </div>
@@ -92,6 +84,19 @@ export function Sidebar({
         </div>
       </div>
 
+      {fleet === "bike" ? null : (
+      <>
+      <div className="sidebar__item">
+        <h5 className="text-18 fw-500 mb-10">Car category</h5>
+        <div className="sidebar-checkbox">
+          <CountFilter
+            options={categories}
+            selected={filters.categories}
+            onChange={(categories) => patch({ categories })}
+          />
+        </div>
+      </div>
+
       <div className="sidebar__item">
         <h5 className="text-18 fw-500 mb-10">Supplier</h5>
         <div className="sidebar-checkbox">
@@ -104,7 +109,7 @@ export function Sidebar({
       </div>
 
       <div className="sidebar__item">
-        <h5 className="text-18 fw-500 mb-10">{fleet === "bike" ? "Bike specifications" : "Car specifications"}</h5>
+        <h5 className="text-18 fw-500 mb-10">Car specifications</h5>
         <div className="sidebar-checkbox">
           <CountFilter
             options={specifications}
@@ -146,6 +151,8 @@ export function Sidebar({
           />
         </div>
       </div>
+      </>
+      )}
     </>
   );
 }

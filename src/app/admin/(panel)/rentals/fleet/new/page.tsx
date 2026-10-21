@@ -53,6 +53,9 @@ const blank: VehicleFormValues = {
   discountType: "none",
   discountValue: "0",
   featureIds: [],
+  includedIds: [],
+  excludedIds: [],
+  documentIds: [],
   addonIds: [],
   locationIds: [],
   images: [],
@@ -79,18 +82,20 @@ export default async function NewVehiclePage({
         </Link>
         <h1 className="mt-1 text-xl font-semibold tracking-tight text-navy">Add {noun}</h1>
         <p className="mt-0.5 text-xs text-muted">
-          Choose type, fuel, transmission, features, and add-ons from configuration.
+          Choose type, fuel, transmission, included items, and features from configuration.
         </p>
       </div>
       <VehicleForm
         lockKind
         values={{ ...blank, kind, seats: kind === "bike" ? "1" : "5" }}
         kinds={[kind]}
-        destinations={setup.destinations}
         types={configsOf(setup.configs, "vehicle_type")}
         fuels={configsOf(setup.configs, "fuel")}
         transmissions={configsOf(setup.configs, "transmission")}
         features={configsOf(setup.configs, "feature")}
+        included={configsOf(setup.configs, "included")}
+        excluded={configsOf(setup.configs, "excluded")}
+        bookingDocuments={configsOf(setup.configs, "customer_document")}
         addons={configsOf(setup.configs, "addon")}
         locations={setup.locations.filter((location) => location.active)}
         systemPickup={setup.settings.allowCounterPickup}

@@ -1,23 +1,32 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DateObject } from "react-multi-date-picker";
 import "rc-slider/assets/index.css";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import { BikeCards } from "@/components/car-list/car-list-v1/BikeCards";
+import { BikeFilterBar } from "@/components/car-list/car-list-v1/BikeFilterBar";
 import { CarProperties } from "@/components/car-list/car-list-v1/CarProperties";
 import { MainFilterSearchBox } from "@/components/car-list/car-list-v1/MainFilterSearchBox";
 import { Sidebar, type CarListFilters } from "@/components/car-list/car-list-v1/Sidebar";
 import { TopHeaderFilter } from "@/components/car-list/car-list-v1/TopHeaderFilter";
 import type { CarListCard, CarListLocation, CarSort } from "@/components/car-list/types";
 import CallToActions from "@/components/common/CallToActions";
-import DefaultFooter from "@/components/footer/default";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import type { GuestCounts } from "@/components/hotel-list/common/GuestSearch";
 import { Pagination } from "@/components/hotel-list/common/Pagination";
 
 const PAGE_SIZE = 5;
+const BIKE_PAGE_SIZE = 16;
+const CAR_PAGE_SIZE = 16;
+const bikeSorts: { value: CarSort; label: string }[] = [
+  { value: "recommended", label: "Recommended" },
+  { value: "price-asc", label: "Price: low to high" },
+  { value: "price-desc", label: "Price: high to low" },
+  { value: "name", label: "Name" },
+];
 
 const specOrder = [
   "With air conditioning",
@@ -161,13 +170,18 @@ export function CarListV1({
     return next;
   }, [cars, dropoff, filters, guests.Adults, guests.Children, passengersActive, pickup, sort]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const isBike = fleet === "bike";
+  const isCar = fleet === "car";
+  const isBoard = isBike || isCar;
+  const pageSize = isBike ? BIKE_PAGE_SIZE : isCar ? CAR_PAGE_SIZE : PAGE_SIZE;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, pageCount);
-  const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  const place = pickup.trim();
-  const fleetTitle = fleet === "bike" ? "Bike rental" : fleet === "mixed" ? "Rentals" : "Car rental";
+  const visible = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const solePlace = isBoard && locationLabels.length === 1 ? locationLabels[0] : "";
+  const place = solePlace || (isBoard && filters.locations.length === 1 ? filters.locations[0] : pickup.trim());
+  const fleetTitle = isBike ? "Bike rental" : fleet === "mixed" ? "Car and bike rental" : "Car rental";
   const heading = place ? `${place} ${fleetTitle}` : fleetTitle;
-  const locationLabel = place || locationLabels[0] || "";
+  const locationLabel = isBoard ? place : place || locationLabels[0] || "";
 
   const detailParams = new URLSearchParams();
   const pickupValue = dateParam(pickupDate);
@@ -180,6 +194,16 @@ export function CarListV1({
     setFilters(next);
     setPage(1);
   };
+
+  useEffect(() => {
+    if (!isBoard || locationLabels.length < 2) return;
+    const named = locationLabels.find(
+      (label) => label.toLowerCase() === initialPickup.trim().toLowerCase(),
+    );
+    if (!named) return;
+    setFilters((current) => ({ ...current, locations: [named] }));
+    setPage(1);
+  }, [initialPickup, isBoard, locationLabels]);
 
   const sidebarProps = {
     filters,
@@ -199,7 +223,8 @@ export function CarListV1({
 
   return (
     <WorldCompassHolidayFrame>
-      <div className="car-list-v1">
+      <div className={`car-list-v1${isBoard ? " bike-fleet" : ""}${isCar ? " car-fleet" : ""}`}>
+        {isBoard ? null : (
         <section className="pt-60">
           <div className="container">
             <div className="row">
@@ -224,7 +249,6 @@ export function CarListV1({
                   onPickupDate={setPickupDate}
                   onDropoffDate={setDropoffDate}
                   guests={guests}
-                  showGuests={fleet !== "bike"}
                   onGuests={(next) => {
                     setGuests(next);
                     setPassengersActive(true);
@@ -235,10 +259,34 @@ export function CarListV1({
             </div>
           </div>
         </section>
+        )}
 
-        <section className="layout-pt-md layout-pb-lg" id="car-list-results">
+        <section className={isBoard ? "bike-results" : "layout-pt-md layout-pb-lg"} id="car-list-results">
+          {isBoard ? (
+            <section className="bike-banner">
+              <img
+                src={isCar ? "/img/cars/car-rental-banner.jpg" : "/img/bikes/bike-rental-banner.jpg"}
+                alt={isCar ? "Car on a coastal road at dusk" : "Rider on a scooter along a palm-lined coastal road"}
+              />
+              <div className="bike-banner__copy">
+                <div className="container">
+                  <h1>{isCar ? "Car rental" : "Bike rental"}</h1>
+                  <p>
+                    {isCar
+                      ? solePlace
+                        ? `Self-drive cars at ${solePlace}.`
+                        : "Self-drive cars with daily rates."
+                      : solePlace
+                        ? `Scooters and motorbikes at ${solePlace}.`
+                        : "Scooters and motorbikes with daily rates."}
+                  </p>
+                </div>
+              </div>
+            </section>
+          ) : null}
           <div className="container">
-            <div className="row y-gap-30">
+            <div className={isBoard ? "row" : "row y-gap-30"}>
+              {isBoard ? null : (
               <div className="col-xl-3">
                 <aside className="sidebar y-gap-40 xl:d-none">
                   <Sidebar {...sidebarProps} />
@@ -263,26 +311,56 @@ export function CarListV1({
                   </div>
                 </div>
               </div>
+              )}
 
-              <div className="col-xl-9">
-                <TopHeaderFilter
-                  count={filtered.length}
-                  place={place}
-                  sort={sort}
-                  onSort={(next) => {
-                    setSort(next);
-                    setPage(1);
-                  }}
-                />
-                <div className="mt-30" />
-                <div className="row y-gap-30">
-                  <CarProperties cars={visible} detailQuery={detailParams.toString()} />
-                </div>
+              <div className={isBoard ? "col-12" : "col-xl-9"}>
+                {isBoard ? (
+                  <BikeFilterBar
+                    cities={locationLabels.length > 1 ? locationOptions : []}
+                    types={categories}
+                    fuels={fuelPolicies}
+                    transmissions={isCar ? transmissions : []}
+                    typeAsMenu={isCar}
+                    filters={filters}
+                    sort={sort}
+                    sorts={bikeSorts}
+                    pickupDate={pickupDate}
+                    dropoffDate={dropoffDate}
+                    onPickupDate={setPickupDate}
+                    onDropoffDate={setDropoffDate}
+                    onChange={updateFilters}
+                    onSort={(next) => {
+                      setSort(next);
+                      setPage(1);
+                    }}
+                  />
+                ) : (
+                  <TopHeaderFilter
+                    count={filtered.length}
+                    place={place}
+                    sort={sort}
+                    onSort={(next) => {
+                      setSort(next);
+                      setPage(1);
+                    }}
+                  />
+                )}
+                {isBoard ? null : <div className="mt-30" />}
+                {isBoard ? (
+                  <div className="bike-grid">
+                    <BikeCards bikes={visible} noun={isCar ? "cars" : "bikes"} showSeats={isCar} />
+                  </div>
+                ) : (
+                  <div className="row y-gap-30">
+                    <CarProperties cars={visible} detailQuery={detailParams.toString()} />
+                  </div>
+                )}
                 <Pagination
                   page={currentPage}
-                  pageSize={PAGE_SIZE}
+                  pageSize={pageSize}
                   total={filtered.length}
                   onPage={setPage}
+                  itemLabel={isBike ? "bikes" : isCar ? "cars" : "properties"}
                 />
               </div>
             </div>
@@ -290,7 +368,6 @@ export function CarListV1({
         </section>
 
         <CallToActions />
-        <DefaultFooter />
       </div>
     </WorldCompassHolidayFrame>
   );

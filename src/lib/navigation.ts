@@ -81,6 +81,7 @@ const adminNav: (NavItem & {
         { href: "/admin/rentals/cars/bookings", label: "Bookings" },
         { href: "/admin/rentals/cars/locations", label: "Locations" },
         { href: "/admin/rentals/cars/rules", label: "Rules" },
+        { href: "/admin/rentals/cars/configuration", label: "Configuration" },
       ],
     },
     {
@@ -95,6 +96,7 @@ const adminNav: (NavItem & {
         { href: "/admin/rentals/bikes/bookings", label: "Bookings" },
         { href: "/admin/rentals/bikes/locations", label: "Locations" },
         { href: "/admin/rentals/bikes/rules", label: "Rules" },
+        { href: "/admin/rentals/bikes/configuration", label: "Configuration" },
       ],
     },
     {

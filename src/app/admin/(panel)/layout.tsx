@@ -1,8 +1,19 @@
+import type { Metadata } from "next";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { requireStaff } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { getAdminNav } from "@/lib/navigation";
+import { noIndexRobots } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: {
+    default: "Admin",
+    template: "%s · Admin",
+  },
+  description: "Staff tools for World Compass Holidays.",
+  robots: noIndexRobots,
+};
 
 export default async function AdminPanelLayout({
   children,

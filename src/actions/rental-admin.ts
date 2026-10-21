@@ -10,7 +10,9 @@ import { slugify, uniqueSlug } from "@/lib/slug";
 import { deleteImage } from "@/lib/storage";
 import { deleteDocument } from "@/lib/storage/documents";
 import { parseDateOnly, parseDateTimeLocal } from "@/lib/rentals/dates";
+import { expiredDocumentMessage, isExpiredDocumentDate } from "@/lib/rentals/document-dates";
 import {
+  appliesToFleet,
   fleetKinds,
   isRentalConfigKind,
   vehicleBaseStatuses,
@@ -37,6 +39,8 @@ function revalidateFleet(slug?: string) {
   revalidatePath("/admin/rentals/bikes/locations");
   revalidatePath("/admin/rentals/cars/rules");
   revalidatePath("/admin/rentals/bikes/rules");
+  revalidatePath("/admin/rentals/cars/configuration");
+  revalidatePath("/admin/rentals/bikes/configuration");
   revalidatePath("/admin/rentals/configuration");
   revalidatePath("/admin/configuration");
   revalidatePath("/admin/rentals/locations");
@@ -355,7 +359,7 @@ const vehicleSchema = z.object({
   year: z.string().optional().default(""),
   summary: z.string().trim().max(280).optional().default(""),
   description: z.string().trim().max(4000).optional().default(""),
-  destinationId: z.string().min(1, "Choose a destination."),
+  destinationId: z.string().optional().default(""),
   vehicleTypeId: z.string().optional().default(""),
   fuelTypeId: z.string().optional().default(""),
   transmissionId: z.string().optional().default(""),
@@ -378,7 +382,25 @@ const vehicleSchema = z.object({
 });
 
 function idList(formData: FormData, name: string) {
-  return formData.getAll(name).map(String).filter(Boolean);
+  return [...new Set(formData.getAll(name).map(String).filter(Boolean))];
+}
+
+async function coverIds(
+  ids: string[],
+  kind: "feature" | "included" | "excluded" | "customer_document",
+  fleet: string,
+) {
+  if (ids.length === 0) return null;
+  const rows = await prisma.rentalConfig.findMany({
+    where: { id: { in: ids }, kind, active: true },
+    select: { id: true, appliesTo: true },
+  });
+  if (rows.length !== ids.length || rows.some((row) => !appliesToFleet(row.appliesTo, fleet))) {
+    return kind === "customer_document"
+      ? "Choose required documents from bike configuration."
+      : "Choose included items, excluded items, and features from this fleet's configuration.";
+  }
+  return null;
 }
 
 export async function saveVehicle(
@@ -458,8 +480,28 @@ export async function saveVehicle(
   }
 
   const featureIds = idList(formData, "featureIds");
+  const includedIds = idList(formData, "includedIds");
+  const excludedIds = idList(formData, "excludedIds");
+  const documentIds = data.kind === "bike" ? idList(formData, "documentIds") : [];
   const addonIds = idList(formData, "addonIds");
-  const locationIds = idList(formData, "locationIds");
+  const coverError = (
+    await Promise.all([
+      coverIds(featureIds, "feature", data.kind),
+      coverIds(includedIds, "included", data.kind),
+      coverIds(excludedIds, "excluded", data.kind),
+      coverIds(documentIds, "customer_document", data.kind),
+    ])
+  ).find(Boolean);
+  if (coverError) return { error: coverError };
+  const locationIds = [...new Set(idList(formData, "locationIds"))];
+  if (locationIds.length === 0) return { error: "Add a location." };
+  const places = await prisma.rentalLocation.findMany({
+    where: { id: { in: locationIds }, fleet: data.kind, active: true },
+    select: { id: true, destinationId: true },
+  });
+  if (places.length !== locationIds.length) {
+    return { error: "Choose a location from this fleet." };
+  }
   const [type, fuel, transmission] = await Promise.all([
     data.vehicleTypeId
       ? prisma.rentalConfig.findFirst({ where: { id: data.vehicleTypeId, kind: "vehicle_type", active: true } })
@@ -547,6 +589,15 @@ export async function saveVehicle(
     : await uniqueSlug(data.name, async (candidate) =>
         Boolean(await prisma.vehicle.findUnique({ where: { slug: candidate }, select: { id: true } })),
       );
+  const destinationId =
+    data.destinationId ||
+    places.find((place) => place.destinationId)?.destinationId ||
+    existing?.destinationId ||
+    (await prisma.destination.findFirst({ where: { published: true }, orderBy: { name: "asc" }, select: { id: true } }))?.id ||
+    "";
+  if (!destinationId) return { error: "Add a destination before saving a vehicle." };
+  record.destinationId = destinationId;
+
   const published =
     publishing || (intent !== "draft" && Boolean(existing?.published && readyToPublish));
 
@@ -557,10 +608,18 @@ export async function saveVehicle(
   await prisma.$transaction([
     prisma.vehicleFeature.deleteMany({ where: { vehicleId: vehicle.id } }),
     prisma.vehicleAddon.deleteMany({ where: { vehicleId: vehicle.id } }),
+    prisma.vehicleDestination.deleteMany({ where: { vehicleId: vehicle.id } }),
     prisma.vehicleLocation.deleteMany({ where: { vehicleId: vehicle.id } }),
     prisma.vehicleImage.deleteMany({ where: { vehicleId: vehicle.id } }),
-    ...(featureIds.length
-      ? [prisma.vehicleFeature.createMany({ data: featureIds.map((configId) => ({ vehicleId: vehicle.id, configId })) })]
+    ...([...featureIds, ...includedIds, ...excludedIds, ...documentIds].length
+      ? [
+          prisma.vehicleFeature.createMany({
+            data: [...featureIds, ...includedIds, ...excludedIds, ...documentIds].map((configId) => ({
+              vehicleId: vehicle.id,
+              configId,
+            })),
+          }),
+        ]
       : []),
     ...(addonIds.length
       ? [prisma.vehicleAddon.createMany({ data: addonIds.map((configId) => ({ vehicleId: vehicle.id, configId })) })]
@@ -682,11 +741,14 @@ export async function saveVehicleDocument(
     return { error: "Upload the document file." };
   }
   const number = String(formData.get("number") ?? "").trim();
-  const issueDate = parseDateOnly(String(formData.get("issueDate") ?? ""));
-  const expiryDate = parseDateOnly(String(formData.get("expiryDate") ?? ""));
+  const issueRaw = String(formData.get("issueDate") ?? "");
+  const expiryRaw = String(formData.get("expiryDate") ?? "");
+  const issueDate = parseDateOnly(issueRaw);
+  const expiryDate = parseDateOnly(expiryRaw);
   if (config.requiresNumber && !number) return { error: `${config.name} needs a number.` };
   if (config.requiresIssueDate && !issueDate) return { error: `${config.name} needs an issue date.` };
   if (config.requiresExpiry && !expiryDate) return { error: `${config.name} needs an expiry date.` };
+  if (expiryRaw && isExpiredDocumentDate(expiryRaw)) return { error: `${config.name} is expired. ${expiredDocumentMessage}` };
   const note = String(formData.get("note") ?? "").trim();
   const status = String(formData.get("status") ?? "pending");
   if (!["pending", "verified", "rejected"].includes(status)) {

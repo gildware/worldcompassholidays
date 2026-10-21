@@ -27,6 +27,7 @@ export function statusLabel(status: string) {
 export function moduleLabel(module: string) {
   if (module === "visa") return "Visa";
   if (module === "assist") return "Meet and assist";
+  if (module === "hotel") return "Hotel";
   return module;
 }
 

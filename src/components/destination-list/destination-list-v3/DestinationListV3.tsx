@@ -144,6 +144,14 @@ export function DestinationListV3({
     <WorldCompassHolidayFrame>
       <section className="halfMap destination-list-v3">
         <div className="halfMap__content">
+          <div className="pt-20">
+            <h1 className="text-30 fw-600">
+              {placeLabel ? `Destinations in ${placeLabel}` : "Travel destinations"}
+            </h1>
+            <p className="text-15 text-light-1 mt-5">
+              Tours, hotels, and car and bike rentals in the places we plan trips for.
+            </p>
+          </div>
           <MainFilterSearchBox
             locations={locations}
             location={location}

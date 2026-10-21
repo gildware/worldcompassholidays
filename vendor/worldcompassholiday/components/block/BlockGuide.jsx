@@ -1,24 +1,29 @@
+import { theme } from "@/config/theme";
+
 const BlockGuide = () => {
   const blockContent = [
     {
       id: 1,
       icon: "/img/featureIcons/1/1.svg",
-      title: "Best Price Guarantee",
-      text: `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`,
+      title: "A price before you pay",
+      text: "The quote names the fee. You accept it before anyone is booked.",
+      alt: "A quoted price",
       delayAnim: "100",
     },
     {
       id: 2,
       icon: "/img/featureIcons/1/2.svg",
-      title: "Easy & Quick Booking",
-      text: `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`,
+      title: "One request for the trip",
+      text: "Tours, stays, visas, and rentals start from the same enquiry.",
+      alt: "A trip request",
       delayAnim: "200",
     },
     {
       id: 3,
       icon: "/img/featureIcons/1/3.svg",
-      title: "Customer Care 24/7",
-      text: `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`,
+      title: "A person replies",
+      text: `Call or WhatsApp ${theme.contact.phone}. We answer from India.`,
+      alt: "Phone support",
       delayAnim: "300",
     },
   ];
@@ -33,7 +38,7 @@ const BlockGuide = () => {
         >
           <div className="featureIcon -type-1 ">
             <div className="d-flex justify-center">
-              <img src={item.icon} alt="image" className="js-lazy" />
+              <img src={item.icon} alt={item.alt} className="js-lazy" />
             </div>
             <div className="text-center mt-30">
               <h4 className="text-18 fw-500">{item.title}</h4>

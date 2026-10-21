@@ -7,6 +7,9 @@ import type { FormState } from "@/lib/forms";
 import { requireCustomer, requirePermission } from "@/lib/auth/guards";
 import { can, getCurrentUser } from "@/lib/auth/session";
 import { handoverModes, cancellationRefund } from "@/lib/rentals/availability";
+import { documentsRequiredToBook } from "@/lib/rentals/booking-documents";
+import { expiredDocumentMessage, isExpiredDocumentDate } from "@/lib/rentals/document-dates";
+import { rememberCustomerDocuments, releaseUnusedDocumentFiles } from "@/lib/rentals/profile-documents";
 import { parseDateTimeLocal, rentalReference } from "@/lib/rentals/dates";
 import {
   blockingBookingStatuses,
@@ -14,8 +17,8 @@ import {
   customerCancelStatuses,
   paymentMethods,
 } from "@/lib/rentals/labels";
+import { parseMapPoint } from "@/lib/maps";
 import { extraReturnCharges, quoteRental, type RentalQuote } from "@/lib/rentals/pricing";
-import { deleteDocument } from "@/lib/storage/documents";
 
 function fail(error: unknown): FormState {
   if (error instanceof Error && error.message) return { error: error.message };
@@ -70,6 +73,8 @@ export async function confirmRentalBooking(
     const returnLocationId = String(formData.get("returnLocationId") ?? "") || null;
     const deliveryAddress = String(formData.get("deliveryAddress") ?? "").trim();
     const returnAddress = String(formData.get("returnAddress") ?? "").trim();
+    const deliveryLat = String(formData.get("deliveryLat") ?? "").trim();
+    const deliveryLng = String(formData.get("deliveryLng") ?? "").trim();
     const sameReturn = formData.get("sameReturn") === "on";
     const notes = String(formData.get("notes") ?? "").trim().slice(0, 500);
     const addonIds = formData.getAll("addonIds").map(String).filter(Boolean);
@@ -82,6 +87,7 @@ export async function confirmRentalBooking(
       return { error: "Customer documents could not be read. Upload them again." };
     }
 
+    const replacedFiles: { key: string; driver: string; resourceType: string }[] = [];
     const booking = await prisma.$transaction(async (tx) => {
       await tx.vehicle.update({
         where: { id: vehicleId },
@@ -93,6 +99,7 @@ export async function confirmRentalBooking(
         include: {
           addonLinks: { include: { config: true } },
           locationLinks: true,
+          features: { include: { config: true } },
         },
       });
       if (!vehicle || !vehicle.published) {
@@ -148,6 +155,21 @@ export async function confirmRentalBooking(
       else if (deliveryAddress.length < 8) throw new Error("Enter the full delivery address.");
       if (resolvedReturnMode === "counter") await assertLocation(resolvedReturnLocation, "return");
       else if (resolvedReturnAddress.length < 8) throw new Error("Enter the full return address.");
+      const needsCustomerPlace = pickupMode === "delivery" || resolvedReturnMode === "delivery";
+      const deliveryPoint = needsCustomerPlace ? parseMapPoint(deliveryLat, deliveryLng) : null;
+      if (needsCustomerPlace && !deliveryPoint) {
+        throw new Error("Choose the pickup location on the map.");
+      }
+      if (pickupMode === "delivery" && deliveryPoint) {
+        await tx.user.update({
+          where: { id: user.id },
+          data: {
+            address: deliveryAddress,
+            mapLat: deliveryLat,
+            mapLng: deliveryLng,
+          },
+        });
+      }
 
       const clash = await tx.rentalBooking.findFirst({
         where: {
@@ -198,19 +220,30 @@ export async function confirmRentalBooking(
         })),
       });
 
-      const requiredDocs = await tx.rentalConfig.findMany({
-        where: {
-          kind: "customer_document",
-          active: true,
-          OR: [{ appliesTo: "all" }, { appliesTo: vehicle.kind }],
-        },
-      });
+      const fleetDocuments =
+        vehicle.kind === "bike"
+          ? []
+          : await tx.rentalConfig.findMany({
+              where: {
+                kind: "customer_document",
+                active: true,
+                OR: [{ appliesTo: "all" }, { appliesTo: vehicle.kind }],
+              },
+            });
+      const requiredDocs = documentsRequiredToBook(
+        vehicle.kind,
+        vehicle.features.map((feature) => feature.config),
+        fleetDocuments,
+      );
       const docRows = requiredDocs.map((config) => {
         const uploaded = documents.find((item) => item.configId === config.id);
         return { config, uploaded };
       });
       for (const row of docRows) {
-        if (!row.uploaded) continue;
+        if (!row.uploaded?.fileUrl) {
+          if (vehicle.kind === "bike") throw new Error(`Upload ${row.config.name}.`);
+          continue;
+        }
         if (row.config.requiresNumber && !row.uploaded.number.trim()) {
           throw new Error(`${row.config.name} needs a number.`);
         }
@@ -220,9 +253,27 @@ export async function confirmRentalBooking(
         if (row.config.requiresExpiry && !row.uploaded.expiryDate) {
           throw new Error(`${row.config.name} needs an expiry date.`);
         }
+        if (row.uploaded.expiryDate && isExpiredDocumentDate(row.uploaded.expiryDate)) {
+          throw new Error(`${row.config.name} is expired. ${expiredDocumentMessage}`);
+        }
       }
-      const missing = docRows.some((row) => !row.uploaded);
+      const missing = docRows.some((row) => !row.uploaded?.fileUrl);
       const status = requiredDocs.length === 0 ? "pending" : missing ? "documents_required" : "documents_under_review";
+
+      const savedRows = docRows
+        .filter((row) => row.uploaded?.fileUrl && row.uploaded.fileKey)
+        .map((row) => ({
+          configId: row.config.id,
+          typeName: row.config.name,
+          fileUrl: row.uploaded!.fileUrl,
+          fileKey: row.uploaded!.fileKey,
+          fileDriver: row.uploaded!.fileDriver,
+          fileResource: row.uploaded!.fileResource,
+          number: row.uploaded!.number.trim(),
+          issueDate: row.uploaded!.issueDate ? new Date(`${row.uploaded!.issueDate}T00:00`) : null,
+          expiryDate: row.uploaded!.expiryDate ? new Date(`${row.uploaded!.expiryDate}T00:00`) : null,
+        }));
+      replacedFiles.push(...(await rememberCustomerDocuments(tx, user.id, savedRows)));
 
       const created = await tx.rentalBooking.create({
         data: {
@@ -238,6 +289,8 @@ export async function confirmRentalBooking(
           returnLocationId: resolvedReturnMode === "counter" ? resolvedReturnLocation : null,
           deliveryAddress: pickupMode === "delivery" ? deliveryAddress : "",
           returnAddress: resolvedReturnMode === "delivery" ? resolvedReturnAddress : "",
+          deliveryLat: deliveryPoint ? deliveryLat : "",
+          deliveryLng: deliveryPoint ? deliveryLng : "",
           currency: quote.currency,
           rentalDays: quote.days,
           baseAmount: quote.baseAmount,
@@ -299,6 +352,7 @@ export async function confirmRentalBooking(
       });
       return created;
     });
+    await releaseUnusedDocumentFiles(replacedFiles);
 
     revalidateBooking(booking.reference);
     const { redirect } = await import("next/navigation");
@@ -318,7 +372,10 @@ export async function saveCustomerRentalDocument(
   try {
     const booking = await prisma.rentalBooking.findFirst({
       where: { id: String(formData.get("bookingId") ?? ""), userId: user.id },
-      include: { vehicle: true, documents: true },
+      include: {
+        vehicle: { include: { features: { include: { config: true } } } },
+        documents: true,
+      },
     });
     if (!booking) return { error: "Booking not found." };
     if (!["pending", "documents_required", "documents_under_review"].includes(booking.status)) {
@@ -328,6 +385,14 @@ export async function saveCustomerRentalDocument(
       where: { id: String(formData.get("configId") ?? ""), kind: "customer_document", active: true },
     });
     if (!config) return { error: "Choose a document type." };
+    const allowed = documentsRequiredToBook(
+      booking.vehicle.kind,
+      booking.vehicle.features.map((feature) => feature.config),
+      booking.vehicle.kind === "bike" ? [] : [config],
+    );
+    if (!allowed.some((item) => item.id === config.id)) {
+      return { error: "That document is not required for this booking." };
+    }
     const file = JSON.parse(String(formData.get("fileJson") || "{}")) as {
       url?: string;
       key?: string;
@@ -343,16 +408,14 @@ export async function saveCustomerRentalDocument(
     if (config.requiresNumber && !number) return { error: `${config.name} needs a number.` };
     if (config.requiresIssueDate && !issueDate) return { error: `${config.name} needs an issue date.` };
     if (config.requiresExpiry && !expiryDate) return { error: `${config.name} needs an expiry date.` };
+    if (expiryDate && isExpiredDocumentDate(expiryDate)) return { error: `${config.name} is expired. ${expiredDocumentMessage}` };
 
     const previous = booking.documents.find((document) => document.configId === config.id);
     if (previous) {
       await prisma.rentalBookingDocument.delete({ where: { id: previous.id } });
-      await deleteDocument({
-        key: previous.fileKey,
-        driver: previous.fileDriver,
-        resourceType: previous.fileResource,
-      });
     }
+    const issue = issueDate ? new Date(`${issueDate}T00:00`) : null;
+    const expiry = expiryDate ? new Date(`${expiryDate}T00:00`) : null;
     await prisma.rentalBookingDocument.create({
       data: {
         bookingId: booking.id,
@@ -363,20 +426,48 @@ export async function saveCustomerRentalDocument(
         fileDriver: file.driver,
         fileResource: file.resourceType,
         number,
-        issueDate: issueDate ? new Date(`${issueDate}T00:00`) : null,
-        expiryDate: expiryDate ? new Date(`${expiryDate}T00:00`) : null,
+        issueDate: issue,
+        expiryDate: expiry,
         status: "pending",
       },
     });
-
-    const required = await prisma.rentalConfig.findMany({
-      where: {
-        kind: "customer_document",
-        active: true,
-        OR: [{ appliesTo: "all" }, { appliesTo: booking.vehicle.kind }],
+    const stale = await rememberCustomerDocuments(prisma, user.id, [
+      {
+        configId: config.id,
+        typeName: config.name,
+        fileUrl: file.url,
+        fileKey: file.key,
+        fileDriver: file.driver,
+        fileResource: file.resourceType,
+        number,
+        issueDate: issue,
+        expiryDate: expiry,
       },
-      select: { id: true },
-    });
+    ]);
+    if (previous?.fileKey && previous.fileKey !== file.key) {
+      stale.push({
+        key: previous.fileKey,
+        driver: previous.fileDriver,
+        resourceType: previous.fileResource,
+      });
+    }
+    await releaseUnusedDocumentFiles(stale);
+
+    const fleetDocuments =
+      booking.vehicle.kind === "bike"
+        ? []
+        : await prisma.rentalConfig.findMany({
+            where: {
+              kind: "customer_document",
+              active: true,
+              OR: [{ appliesTo: "all" }, { appliesTo: booking.vehicle.kind }],
+            },
+          });
+    const required = documentsRequiredToBook(
+      booking.vehicle.kind,
+      booking.vehicle.features.map((feature) => feature.config),
+      fleetDocuments,
+    );
     const current = await prisma.rentalBookingDocument.findMany({
       where: { bookingId: booking.id },
     });

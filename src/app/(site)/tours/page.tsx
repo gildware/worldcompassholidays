@@ -7,8 +7,14 @@ import { loadTourCatalog } from "@/lib/catalog-query";
 import { prisma } from "@/lib/db";
 import { resolveTitles } from "@/lib/hotels/labels";
 import { formatTourDuration, parseDurationUnit, parseJsonArray, type GalleryItem } from "@/lib/tours/json";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Tours" };
+export const metadata: Metadata = pageMetadata({
+  title: "Tours and treks",
+  description:
+    "Guided tours and treks with duration, group size, and a starting price. Filter by place, type, and length, then send a booking request.",
+  path: "/tours",
+});
 
 const languageNames = ["English", "Spanish", "French", "Turkish"];
 

@@ -56,7 +56,22 @@ export default async function RentalBookingAdminPage({ params }: Props) {
       <section className="grid gap-2 rounded-xl border border-line bg-white p-4 text-sm md:grid-cols-2">
         <p>Pickup {formatDateTime(booking.pickupAt)}</p>
         <p>Return {formatDateTime(booking.returnAt)}</p>
-        <p>{booking.pickupMode === "delivery" ? `Deliver to ${booking.deliveryAddress}` : `Pickup at ${booking.pickupLocation?.name ?? "location"}`}</p>
+        <p>
+          {booking.pickupMode === "delivery" ? `Deliver to ${booking.deliveryAddress}` : `Pickup at ${booking.pickupLocation?.name ?? "location"}`}
+          {booking.deliveryLat && booking.deliveryLng ? (
+            <>
+              {" "}
+              <a
+                className="text-brand"
+                href={`https://www.google.com/maps?q=${encodeURIComponent(`${booking.deliveryLat},${booking.deliveryLng}`)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Map
+              </a>
+            </>
+          ) : null}
+        </p>
         <p>{booking.returnMode === "delivery" ? `Collect from ${booking.returnAddress}` : `Return at ${booking.returnLocation?.name ?? "location"}`}</p>
         {booking.notes ? <p className="md:col-span-2">Customer note: {booking.notes}</p> : null}
       </section>

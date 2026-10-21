@@ -7,8 +7,16 @@ import { can } from "@/lib/auth/session";
 import { customerEditableStatuses, moduleLabel, statusLabel } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import { formatDate, formatMoney } from "@/lib/format";
+import { privateMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Booking" };
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ reference: string }>;
+}): Promise<Metadata> {
+  const { reference } = await params;
+  return privateMetadata(`Booking ${reference}`, "A booking on your World Compass Holidays account.");
+}
 
 export default async function AccountBookingPage({
   params,
@@ -37,9 +45,9 @@ export default async function AccountBookingPage({
   ];
 
   return (
-    <div className="mx-auto grid max-w-3xl gap-8 px-5 py-14">
-      <Link href="/account" className="text-sm font-medium text-brand">
-        My account
+    <div className="grid max-w-3xl gap-5">
+      <Link href="/account/bookings" className="text-sm font-medium text-brand">
+        Bookings
       </Link>
       {created ? (
         <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
@@ -48,7 +56,7 @@ export default async function AccountBookingPage({
       ) : null}
       <div>
         <p className="text-sm text-muted">{booking.reference}</p>
-        <h1 className="mt-1 text-3xl font-semibold">{booking.title}</h1>
+        <h1 className="mt-1 text-2xl font-semibold">{booking.title}</h1>
       </div>
       <dl className="grid gap-3 rounded-xl border border-line bg-white p-5 text-sm sm:grid-cols-2">
         {rows.map(([label, value]) => (

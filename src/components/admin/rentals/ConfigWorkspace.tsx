@@ -8,10 +8,12 @@ import {
 } from "@/actions/rental-admin";
 import { Field } from "@/components/forms/Field";
 import { ActionForm } from "@/components/rentals/ActionForm";
+import { iconForConfig, RentalIcon, type RentalIconName } from "@/components/rentals/rental-icons";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { Button } from "@/components/ui/Button";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import {
+  appliesToFleet,
   rentalConfigKindLabels,
   rentalConfigKinds,
   type RentalConfigKind,
@@ -32,6 +34,16 @@ export type ConfigRow = {
   requiresExpiry: boolean;
 };
 
+function kindIcon(kind: RentalConfigKind, fleet?: "car" | "bike"): RentalIconName {
+  if (kind === "vehicle_type") return fleet === "car" ? "car" : "scooter";
+  if (kind === "fuel") return "fuel";
+  if (kind === "transmission") return "gear";
+  if (kind === "included") return "check";
+  if (kind === "excluded") return "minus";
+  if (kind === "addon") return "tag";
+  return "specs";
+}
+
 const empty: Omit<ConfigRow, "id" | "kind"> = {
   name: "",
   description: "",
@@ -45,10 +57,20 @@ const empty: Omit<ConfigRow, "id" | "kind"> = {
   requiresExpiry: false,
 };
 
-export function ConfigWorkspace({ items }: { items: ConfigRow[] }) {
-  const [kind, setKind] = useState<RentalConfigKind>("vehicle_type");
+export function ConfigWorkspace({
+  items,
+  kinds = rentalConfigKinds,
+  fleet,
+}: {
+  items: ConfigRow[];
+  kinds?: readonly RentalConfigKind[];
+  fleet?: "car" | "bike";
+}) {
+  const [kind, setKind] = useState<RentalConfigKind>(kinds[0] ?? "vehicle_type");
   const [editing, setEditing] = useState<ConfigRow | null>(null);
-  const rows = items.filter((item) => item.kind === kind);
+  const rows = items.filter(
+    (item) => item.kind === kind && (!fleet || appliesToFleet(item.appliesTo, fleet)),
+  );
   const value = editing ?? { ...empty, kind };
   const showPrice = kind === "addon";
   const showDocument = kind === "vehicle_document" || kind === "customer_document";
@@ -56,7 +78,7 @@ export function ConfigWorkspace({ items }: { items: ConfigRow[] }) {
   return (
     <div className="grid gap-5">
       <div className="flex gap-2 overflow-x-auto">
-        {rentalConfigKinds.map((item) => (
+        {kinds.map((item) => (
           <button
             key={item}
             type="button"
@@ -65,10 +87,11 @@ export function ConfigWorkspace({ items }: { items: ConfigRow[] }) {
               setEditing(null);
             }}
             className={[
-              "shrink-0 rounded-full border px-3 py-1.5 text-sm",
+              "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm",
               kind === item ? "border-brand bg-brand-soft font-medium text-brand" : "border-line bg-white",
             ].join(" ")}
           >
+            <RentalIcon name={kindIcon(item, fleet)} />
             {rentalConfigKindLabels[item]}
           </button>
         ))}
@@ -81,7 +104,11 @@ export function ConfigWorkspace({ items }: { items: ConfigRow[] }) {
           ) : (
             rows.map((row) => (
               <li key={row.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                <div>
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-brand">
+                    <RentalIcon name={iconForConfig(row.kind, row.name)} />
+                  </span>
+                  <div className="min-w-0">
                   <p className="font-medium">
                     {row.name}{" "}
                     {!row.active ? <span className="text-muted">(inactive)</span> : null}
@@ -90,6 +117,7 @@ export function ConfigWorkspace({ items }: { items: ConfigRow[] }) {
                     {row.appliesTo === "all" ? "Cars and bikes" : row.appliesTo}
                     {row.kind === "addon" ? ` · ${row.price} ${row.priceUnit}` : ""}
                   </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button type="button" variant="secondary" size="sm" onClick={() => setEditing(row)}>
@@ -118,20 +146,24 @@ export function ConfigWorkspace({ items }: { items: ConfigRow[] }) {
           <Field label="Description">
             <textarea name="description" defaultValue={value.description} className="min-h-20" />
           </Field>
-          <Field label="Applies to">
-            <SearchableSelect
-              name="appliesTo"
-              defaultValue={value.appliesTo}
-              ariaLabel="Applies to"
-              searchPlaceholder="Search"
-              className="!h-10"
-              options={[
-                { value: "all", label: "Cars and bikes" },
-                { value: "car", label: "Cars" },
-                { value: "bike", label: "Bikes" },
-              ]}
-            />
-          </Field>
+          {fleet ? (
+            <input type="hidden" name="appliesTo" value={editing ? value.appliesTo : fleet} />
+          ) : (
+            <Field label="Applies to">
+              <SearchableSelect
+                name="appliesTo"
+                defaultValue={value.appliesTo}
+                ariaLabel="Applies to"
+                searchPlaceholder="Search"
+                className="!h-10"
+                options={[
+                  { value: "all", label: "Cars and bikes" },
+                  { value: "car", label: "Cars" },
+                  { value: "bike", label: "Bikes" },
+                ]}
+              />
+            </Field>
+          )}
           <Field label="Sort order">
             <input name="sortOrder" type="number" min={0} defaultValue={value.sortOrder} />
           </Field>

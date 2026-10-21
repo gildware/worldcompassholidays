@@ -5,26 +5,23 @@ import { VisaCountrySection } from "@/components/visa/VisaCountrySection";
 import { VisaServiceSection } from "@/components/visa/VisaServiceSection";
 import { VisaFaq } from "@/components/visa/VisaFaq";
 import { CountryFlag } from "@/components/visa/CountryFlag";
-import { PromiseIcon, VisaStatIcon, VisaStepIcon, WhatsAppIcon } from "@/components/visa/VisaIcons";
+import { PromiseIcon, VisaStatIcon, VisaStepIcon } from "@/components/visa/VisaIcons";
 import { theme } from "@/config/theme";
 import "@/styles/service-desk.css";
 import { getCurrentUser } from "@/lib/auth/session";
-import { whatsAppHref } from "@/lib/visa";
+import { pageMetadata } from "@/lib/seo";
 
 const pageTitle = "Visa help for Indian passports";
 const pageDescription =
   "Visa assistance for Indian passports. We list every document, quote the service fee before you pay, and keep the embassy fee separate. Thailand, Japan, the Schengen area, the UAE, and more.";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: pageTitle,
   description: pageDescription,
-  openGraph: {
-    title: pageTitle,
-    description: pageDescription,
-    url: "/visa-services",
-    images: [{ url: "/img/visa/visa-hero.jpg", alt: "Traveler with a passport at an airport window" }],
-  },
-};
+  path: "/visa-services",
+  image: "/img/visa/visa-hero.jpg",
+  imageAlt: "Traveler with a passport at an airport window",
+});
 
 const stats = [
   { icon: "places", figure: "14", label: "Destinations", detail: "The places listed on this page" },
@@ -162,7 +159,6 @@ export default async function VisaPage({
       ? { name: user.name, email: user.email, phone: user.phone }
       : null;
   const reference = ref && /^BK-[A-Z0-9]+$/.test(ref) ? ref : "";
-  const whatsapp = whatsAppHref(theme.contact.whatsapp);
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -282,30 +278,6 @@ export default async function VisaPage({
           </div>
         </div>
       </section>
-      <footer className="visa-footer pt-30 pb-30">
-        <div className="container">
-          <h2 className="text-18 fw-500">{theme.brandName} visa desk</h2>
-          <p className="text-14 mt-10">
-            {theme.contact.city}. Indian passports. We quote before you pay, and the embassy fee stays separate.
-          </p>
-          <div className="visa-footer-links mt-15 text-14">
-            <a href={`tel:${theme.contact.phone.replace(/\s/g, "")}`}>{theme.contact.phone}</a>
-            <a href={`mailto:${theme.contact.email}`}>{theme.contact.email}</a>
-            {whatsapp ? (
-              <a
-                href={`${whatsapp}?text=${encodeURIComponent("Hello, I need visa help for an Indian passport.")}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <WhatsAppIcon />
-                WhatsApp
-              </a>
-            ) : null}
-            <a href="/contact">Contact</a>
-            <a href="/">Home</a>
-          </div>
-        </div>
-      </footer>
     </WorldCompassHolidayFrame>
   );
 }

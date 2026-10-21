@@ -12,18 +12,22 @@ export function TopHeaderFilter({
   place,
   sort,
   onSort,
+  noun = "properties",
 }: {
   count: number;
   place: string;
   sort: CarSort;
   onSort: (sort: CarSort) => void;
+  noun?: string;
 }) {
   return (
     <div className="row y-gap-10 items-center justify-between">
       <div className="col-auto">
         <div className="text-18">
-          <span className="fw-500">{count.toLocaleString("en-US")} properties</span>
-          {place ? ` in ${place}` : " in Europe"}
+          <span className="fw-500">
+            {count.toLocaleString("en-US")} {noun}
+          </span>
+          {place ? ` in ${place}` : ""}
         </div>
       </div>
 

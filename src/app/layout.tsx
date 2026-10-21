@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { theme } from "@/config/theme";
+import { RotatingFavicon } from "@/components/worldcompassholiday/RotatingFavicon";
+import { siteName, siteOrigin } from "@/lib/seo";
 import "./globals.css";
 
 // Pages read the live database. A production image must not freeze that data at build time.
@@ -33,13 +35,54 @@ const jost = localFont({
   display: "swap",
 });
 
+const defaultTitle = `${siteName} | Tours, Hotels & Rentals`;
+const shareImage = {
+  url: "/img/masthead/1/bg.webp",
+  alt: "A mountain road planned by World Compass Holidays",
+};
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(siteOrigin()),
   title: {
-    default: theme.brandName,
-    template: `%s · ${theme.brandName}`,
+    default: defaultTitle,
+    template: `%s · ${siteName}`,
   },
   description: theme.description,
+  applicationName: siteName,
+  authors: [{ name: siteName, url: siteOrigin() }],
+  creator: siteName,
+  publisher: siteName,
+  category: "travel",
+  referrer: "origin-when-cross-origin",
+  formatDetection: { email: false, address: false, telephone: false },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    siteName,
+    title: defaultTitle,
+    description: theme.description,
+    images: [shareImage],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: defaultTitle,
+    description: theme.description,
+    images: [shareImage.url],
+  },
+  icons: {
+    icon: [{ url: "/favicon.gif", type: "image/gif" }],
+  },
 };
 
 export default function RootLayout({
@@ -59,8 +102,11 @@ export default function RootLayout({
   } as React.CSSProperties;
 
   return (
-    <html lang="en" className={`${jost.variable} h-full`} style={style}>
-      <body className="flex min-h-full flex-col antialiased">{children}</body>
+    <html lang="en" className={`${jost.variable} min-h-dvh`} style={style}>
+      <body className="flex min-h-dvh flex-col antialiased">
+        <RotatingFavicon />
+        {children}
+      </body>
     </html>
   );
 }

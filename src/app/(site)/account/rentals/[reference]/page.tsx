@@ -11,6 +11,8 @@ import { requireCustomer } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { cancellationRefund } from "@/lib/rentals/availability";
+import { documentsRequiredToBook } from "@/lib/rentals/booking-documents";
+import { listProfileDocuments } from "@/lib/rentals/profile-documents";
 import {
   customerCancelStatuses,
   documentStatusLabels,
@@ -19,12 +21,13 @@ import {
   rentalStatusLabel,
 } from "@/lib/rentals/labels";
 import { parseQuote } from "@/lib/rentals/pricing";
+import { privateMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ reference: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { reference } = await params;
-  return { title: reference };
+  return privateMetadata(`Rental ${reference}`, "A rental on your World Compass Holidays account.");
 }
 
 export default async function RentalBookingPage({ params }: Props) {
@@ -33,7 +36,7 @@ export default async function RentalBookingPage({ params }: Props) {
   const booking = await prisma.rentalBooking.findUnique({
     where: { reference },
     include: {
-      vehicle: true,
+      vehicle: { include: { features: { include: { config: true } } } },
       pickupLocation: true,
       returnLocation: true,
       documents: { include: { config: true } },
@@ -45,14 +48,23 @@ export default async function RentalBookingPage({ params }: Props) {
   if (!booking || booking.userId !== user.id) notFound();
 
   const quote = parseQuote(booking.pricingSnapshot);
-  const required = await prisma.rentalConfig.findMany({
-    where: {
-      kind: "customer_document",
-      active: true,
-      OR: [{ appliesTo: "all" }, { appliesTo: booking.vehicle.kind }],
-    },
-    orderBy: { sortOrder: "asc" },
-  });
+  const fleetDocuments =
+    booking.vehicle.kind === "bike"
+      ? []
+      : await prisma.rentalConfig.findMany({
+          where: {
+            kind: "customer_document",
+            active: true,
+            OR: [{ appliesTo: "all" }, { appliesTo: booking.vehicle.kind }],
+          },
+          orderBy: { sortOrder: "asc" },
+        });
+  const savedDocuments = await listProfileDocuments(user.id);
+  const required = documentsRequiredToBook(
+    booking.vehicle.kind,
+    booking.vehicle.features.map((feature) => feature.config),
+    fleetDocuments,
+  );
   const canUpload = ["pending", "documents_required", "documents_under_review"].includes(booking.status);
   const missing = required.filter(
     (config) => !booking.documents.some((document) => document.configId === config.id && document.status !== "rejected"),
@@ -70,13 +82,13 @@ export default async function RentalBookingPage({ params }: Props) {
     : null;
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-8 px-5 py-12">
+    <div className="grid gap-5">
       <div>
-        <Link href="/account/rentals" className="text-sm text-brand">
-          My rentals
+        <Link href="/account/rentals" className="text-sm font-medium text-brand">
+          Rentals
         </Link>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-semibold">{booking.vehicle.name}</h1>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-semibold">{booking.vehicle.name}</h1>
           <StatusPill status={booking.status} label={rentalStatusLabel(booking.status)} />
         </div>
         <p className="mt-2 text-sm text-muted">
@@ -89,6 +101,19 @@ export default async function RentalBookingPage({ params }: Props) {
         <p>Return {formatDateTime(booking.returnAt)}</p>
         <p>
           Receive: {booking.pickupMode === "delivery" ? booking.deliveryAddress : booking.pickupLocation?.name ?? "Location"}
+          {booking.deliveryLat && booking.deliveryLng ? (
+            <>
+              {" "}
+              <a
+                className="text-brand"
+                href={`https://www.google.com/maps?q=${encodeURIComponent(`${booking.deliveryLat},${booking.deliveryLng}`)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Map
+              </a>
+            </>
+          ) : null}
         </p>
         <p>
           Return: {booking.returnMode === "delivery" ? booking.returnAddress : booking.returnLocation?.name ?? "Location"}
@@ -127,6 +152,7 @@ export default async function RentalBookingPage({ params }: Props) {
                 requiresNumber={config.requiresNumber}
                 requiresIssueDate={config.requiresIssueDate}
                 requiresExpiry={config.requiresExpiry}
+                saved={savedDocuments.find((item) => item.configId === config.id) ?? null}
               />
             ))
           : null}

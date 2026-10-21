@@ -5,8 +5,9 @@ import { prisma } from "@/lib/db";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { rentalListGroup, rentalStatusLabel } from "@/lib/rentals/labels";
 import { StatusPill } from "@/components/rentals/VehicleCard";
+import { privateMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "My rentals" };
+export const metadata: Metadata = privateMetadata("My rentals", "Car and bike rentals on your World Compass Holidays account.");
 
 const groups = [
   { id: "upcoming", label: "Upcoming" },
@@ -31,16 +32,18 @@ export default async function MyRentalsPage({
   const visible = bookings.filter((booking) => rentalListGroup(booking.status) === selected);
 
   return (
-    <div className="mx-auto max-w-4xl px-5 py-12">
-      <p className="text-sm font-medium text-brand uppercase">My rentals</p>
-      <h1 className="mt-2 text-3xl font-semibold">Your car and bike bookings</h1>
-      <div className="mt-6 flex gap-2 overflow-x-auto">
+    <div className="grid gap-4">
+      <div>
+        <h1 className="text-xl font-semibold leading-tight">Rentals</h1>
+        <p className="mt-1 text-sm text-muted">Cars and bikes</p>
+      </div>
+      <div className="flex gap-1.5 overflow-x-auto">
         {groups.map((group) => (
           <Link
             key={group.id}
             href={`/account/rentals?view=${group.id}`}
             className={[
-              "rounded-full border px-3 py-1.5 text-sm",
+              "rounded-full border px-3 py-1 text-sm",
               selected === group.id ? "border-brand bg-brand-soft font-medium text-brand" : "border-line bg-white",
             ].join(" ")}
           >
@@ -49,14 +52,14 @@ export default async function MyRentalsPage({
         ))}
       </div>
       {visible.length === 0 ? (
-        <p className="mt-8 rounded-xl border border-dashed border-line bg-white px-5 py-8 text-sm text-muted">
+        <p className="rounded-lg border border-dashed border-line bg-white px-4 py-6 text-sm text-muted">
           Nothing in {selected} rentals. <Link href="/rentals" className="text-brand">Browse the fleet</Link>
         </p>
       ) : (
-        <ul className="mt-6 divide-y divide-line rounded-xl border border-line bg-white">
+        <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-white">
           {visible.map((booking) => (
             <li key={booking.id}>
-              <Link href={`/account/rentals/${booking.reference}`} className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 text-sm">
+              <Link href={`/account/rentals/${booking.reference}`} className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 text-sm hover:bg-surface">
                 <div>
                   <p className="font-medium">{booking.vehicle.name}</p>
                   <p className="text-xs font-medium tracking-wide">{booking.vehicle.registrationNumber}</p>

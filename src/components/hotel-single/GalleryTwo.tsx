@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Gallery, Item } from "react-photoswipe-gallery";
 import "photoswipe/dist/photoswipe.css";
 import type { HotelSingleData } from "@/components/hotel-single/types";
@@ -93,6 +94,19 @@ export function GalleryTwo({ hotel }: { hotel: HotelSingleData }) {
 
             <div className="row justify-between items-end pt-40">
               <div className="col-auto">
+                <nav aria-label="Breadcrumb" className="text-14 text-light-1 pb-10">
+                  <Link href="/">Home</Link>
+                  <span> &gt; </span>
+                  <Link href="/hotels">Hotels</Link>
+                  {hotel.location ? (
+                    <>
+                      <span> &gt; </span>
+                      <Link href={hotel.destinationHref}>{hotel.location}</Link>
+                    </>
+                  ) : null}
+                  <span> &gt; </span>
+                  <span className="text-dark-1">{hotel.name}</span>
+                </nav>
                 <div className="row x-gap-20 items-center">
                   <div className="col-auto">
                     <h1 className="text-30 sm:text-25 fw-600">{hotel.name}</h1>

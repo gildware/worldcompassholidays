@@ -13,7 +13,6 @@ import "swiper/css";
 import "swiper/css/navigation";
 import CallToActions from "@/components/common/CallToActions";
 import { TourCards } from "@/components/destinations/single/widgets";
-import DefaultFooter from "@/components/footer/default";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { DateSearch } from "@/components/hotel-list/common/DateSearch";
 import type { TourSingleData } from "@/components/tour-single/types";
@@ -250,7 +249,7 @@ export function TourSingle({ tour, mapApiKey }: { tour: TourSingleData; mapApiKe
           <div className="container">
             <div className="row y-gap-10 items-center justify-between">
               <div className="col-auto">
-                <div className="row x-gap-10 y-gap-5 items-center text-14 text-light-1">
+                <nav aria-label="Breadcrumb" className="row x-gap-10 y-gap-5 items-center text-14 text-light-1">
                   <div className="col-auto">
                     <Link href="/">Home</Link>
                   </div>
@@ -262,7 +261,7 @@ export function TourSingle({ tour, mapApiKey }: { tour: TourSingleData; mapApiKe
                   <div className="col-auto">
                     <div className="text-dark-1">{tour.title}</div>
                   </div>
-                </div>
+                </nav>
               </div>
               <div className="col-auto">
                 <Link href={tour.destinationHref} className="text-14 text-blue-1 underline">
@@ -864,7 +863,7 @@ export function TourSingle({ tour, mapApiKey }: { tour: TourSingleData; mapApiKe
                 <div className="col-auto">
                   <div className="sectionTitle -md">
                     <h2 className="sectionTitle__title">Most Popular Tours</h2>
-                    <p className="sectionTitle__text mt-5 sm:mt-0">Interdum et malesuada fames ac ante ipsum</p>
+                    <p className="sectionTitle__text mt-5 sm:mt-0">Other published tours you can compare with this one.</p>
                   </div>
                 </div>
                 <div className="col-auto">
@@ -881,7 +880,6 @@ export function TourSingle({ tour, mapApiKey }: { tour: TourSingleData; mapApiKe
         ) : null}
 
         <CallToActions />
-        <DefaultFooter />
       </div>
     </WorldCompassHolidayFrame>
   );

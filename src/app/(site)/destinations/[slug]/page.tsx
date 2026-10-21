@@ -10,15 +10,22 @@ import {
   NearbyDestinations,
   TourCards,
 } from "@/components/destinations/single/widgets";
-import { HomeFooter } from "@/components/worldcompassholiday/HomeFooter";
 import { MapEmbed } from "@/components/site/MapEmbed";
 import { modules } from "@/config/modules";
-import { theme } from "@/config/theme";
 import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
 import { mapApiKey } from "@/lib/map-key";
 import { parseMapPoint } from "@/lib/maps";
-import { getPublicNav } from "@/lib/navigation";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  absoluteUrl,
+  breadcrumbNode,
+  graphLd,
+  organizationNode,
+  pageMetadata,
+  plainText,
+  privateMetadata,
+} from "@/lib/seo";
 import { parseJsonArray, type GalleryItem } from "@/lib/tours/json";
 
 type Props = {
@@ -29,12 +36,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const destination = await prisma.destination.findUnique({
     where: { slug },
-    select: { name: true, summary: true },
+    select: { name: true, summary: true, region: true, country: true, imageUrl: true, published: true },
   });
-  return {
-    title: destination?.name ?? "Destination",
-    description: destination?.summary || theme.description,
-  };
+  if (!destination?.published) return privateMetadata("Destination");
+  const place = [destination.region, destination.country].filter(Boolean).join(", ");
+  return pageMetadata({
+    title: `${destination.name} tours and stays`,
+    description:
+      destination.summary ||
+      `Tours, hotels, and rentals in ${destination.name}${place ? `, ${place}` : ""}.`,
+    path: `/destinations/${slug}`,
+    image: destination.imageUrl,
+    imageAlt: destination.name,
+  });
 }
 
 function listingMeta(counts: { hotels: number; tours: number; vehicles: number }) {
@@ -165,13 +179,36 @@ export default async function DestinationPage({ params }: Props) {
     { href: "", label: destination.name },
   ];
 
+  const placeLine = [destination.region, destination.country].filter(Boolean).join(", ");
+
   return (
     <div className="worldcompassholiday-page">
+      <JsonLd
+        data={graphLd([
+          organizationNode(),
+          breadcrumbNode(
+            crumbs.map((crumb) => ({
+              name: crumb.label,
+              path: crumb.href || `/destinations/${destination.slug}`,
+            })),
+          ),
+          {
+            "@type": "TouristDestination",
+            name: destination.name,
+            description: plainText(destination.summary) || `Tours, hotels, and rentals in ${destination.name}.`,
+            url: absoluteUrl(`/destinations/${destination.slug}`),
+            image: destination.imageUrl ? absoluteUrl(destination.imageUrl) : undefined,
+            ...(placeLine
+              ? { containedInPlace: { "@type": "Place", name: placeLine } }
+              : {}),
+          },
+        ])}
+      />
       <section data-aos="fade" className="d-flex items-center py-15 border-top-light">
         <div className="container">
           <div className="row y-gap-10 items-center justify-between">
             <div className="col-auto">
-              <div className="row x-gap-10 y-gap-5 items-center text-14 text-light-1">
+              <nav aria-label="Breadcrumb" className="row x-gap-10 y-gap-5 items-center text-14 text-light-1">
                 {crumbs.map((crumb, index) => (
                   <div className="col-auto d-flex items-center x-gap-10" key={`${crumb.label}-${index}`}>
                     {index > 0 ? <div>&gt;</div> : null}
@@ -182,12 +219,10 @@ export default async function DestinationPage({ params }: Props) {
                     )}
                   </div>
                 ))}
-              </div>
+              </nav>
             </div>
             <div className="col-auto">
-              <div className="text-14 text-light-1">
-                {destination.name} Tourism: Best of {destination.name}
-              </div>
+              <div className="text-14 text-light-1">{placeLine || destination.name}</div>
             </div>
           </div>
         </div>
@@ -200,7 +235,7 @@ export default async function DestinationPage({ params }: Props) {
               <div className="relative d-flex">
                 <img
                   src={destination.imageUrl}
-                  alt="image"
+                  alt={destination.name}
                   className="col-12 rounded-4"
                   style={{
                     width: "100%",
@@ -215,7 +250,7 @@ export default async function DestinationPage({ params }: Props) {
                     Explore {destination.name}
                   </h1>
                   <div className="text-white">
-                    Explore deals, travel guides and things to do in {destination.name}
+                    {destination.summary || `Tours, hotels, and rentals in ${destination.name}.`}
                   </div>
                 </div>
                 <div className="absolute d-flex justify-end items-end col-12 h-full z-1 px-10 py-10">
@@ -410,7 +445,7 @@ export default async function DestinationPage({ params }: Props) {
                 <div className="sectionTitle -md">
                   <h2 className="sectionTitle__title">Top sights in {destination.name}</h2>
                   <p className="sectionTitle__text mt-5 sm:mt-0">
-                    These popular destinations have a lot to offer
+                    Places inside {destination.name}, with their own tours, stays, and rentals.
                   </p>
                 </div>
               </div>
@@ -461,7 +496,7 @@ export default async function DestinationPage({ params }: Props) {
                 <div className="sectionTitle -md">
                   <h2 className="sectionTitle__title">Destinations near {destination.name}</h2>
                   <p className="sectionTitle__text mt-5 sm:mt-0">
-                    These popular destinations have a lot to offer
+                    Other published places you can plan from the same trip.
                   </p>
                 </div>
               </div>
@@ -474,7 +509,6 @@ export default async function DestinationPage({ params }: Props) {
       ) : null}
 
       <CallToActions />
-      <HomeFooter items={getPublicNav()} />
     </div>
   );
 }

@@ -34,6 +34,7 @@ model Destination {
   tourLinks       TourDestination[]
   hotels          Hotel[]
   vehicles        Vehicle[]
+  vehicleAvailability VehicleDestination[]
   busRoutes       BusRoute[]
   pages           Page[]
   rentalLocations RentalLocation[]
@@ -263,6 +264,7 @@ model Vehicle {
   images             VehicleImage[]
   features           VehicleFeature[]
   addonLinks         VehicleAddon[]
+  availability       VehicleDestination[]
   locationLinks      VehicleLocation[]
   documents          VehicleDocument[]
   blocks             VehicleBlock[]
@@ -298,6 +300,7 @@ model RentalConfig {
   vehicleDocuments  VehicleDocument[]
   bookingDocuments  RentalBookingDocument[]
   bookingAddons     RentalBookingAddon[]
+  customerDocuments CustomerDocument[]
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -356,6 +359,16 @@ model RentalPolicy {
   @@unique([fleet, slug])
   @@index([kind, active])
   @@index([fleet])
+}
+
+model VehicleDestination {
+  vehicleId     String
+  destinationId String
+  vehicle       Vehicle     @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Restrict)
+
+  @@id([vehicleId, destinationId])
+  @@index([destinationId])
 }
 
 model VehicleImage {
@@ -474,6 +487,8 @@ model RentalBooking {
   returnLocation     RentalLocation? @relation("ReturnLocation", fields: [returnLocationId], references: [id], onDelete: SetNull)
   deliveryAddress    String    @default("")
   returnAddress      String    @default("")
+  deliveryLat        String    @default("")
+  deliveryLng        String    @default("")
   currency           String    @default("INR")
   rentalDays         Int
   baseAmount         Int
@@ -656,18 +671,45 @@ model User {
   name         String
   email        String    @unique
   phone        String    @default("")
+  address      String    @default("")
+  mapLat       String    @default("")
+  mapLng       String    @default("")
   passwordHash String
   isActive     Boolean   @default(true)
   lastLoginAt  DateTime?
   roleId       String
   role         Role      @relation(fields: [roleId], references: [id])
-  sessions       Session[]
-  bookings       Booking[]
-  rentalBookings RentalBooking[]
+  sessions          Session[]
+  bookings          Booking[]
+  rentalBookings    RentalBooking[]
+  customerDocuments CustomerDocument[]
   createdAt      DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   @@index([roleId])
+}
+
+// One saved copy of each customer document, reused on later bookings.
+model CustomerDocument {
+  id           String       @id @default(cuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  configId     String
+  config       RentalConfig @relation(fields: [configId], references: [id], onDelete: Restrict)
+  typeName     String
+  fileUrl      String
+  fileKey      String       @default("")
+  fileDriver   String       @default("local")
+  fileResource String       @default("image")
+  number       String       @default("")
+  issueDate    DateTime?
+  expiryDate   DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([userId, configId])
+  @@index([userId])
+  @@index([configId])
 }
 
 // id is the SHA-256 hash of the cookie token, never the token itself.

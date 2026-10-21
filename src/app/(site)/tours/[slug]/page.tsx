@@ -9,6 +9,19 @@ import { formatMoney, formatDate } from "@/lib/format";
 import { resolveFaqs, resolveTitles } from "@/lib/hotels/labels";
 import { mapApiKey } from "@/lib/map-key";
 import { parseMapPoint } from "@/lib/maps";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  absoluteUrl,
+  breadcrumbNode,
+  faqNode,
+  graphLd,
+  offerNode,
+  organizationNode,
+  pageMetadata,
+  plainText,
+  privateMetadata,
+  siteOrigin,
+} from "@/lib/seo";
 import {
   formatTourDuration,
   parseDurationUnit,
@@ -19,10 +32,6 @@ import {
 type Props = { params: Promise<{ slug: string }> };
 
 const languageNames = ["English", "Spanish", "French", "Turkish", "German", "Chinese", "Portuguese", "Japanese", "Italian"];
-
-function plainText(value: string) {
-  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-}
 
 function durationText(count: number, unit: string, label: string) {
   if (label.trim()) return label.trim();
@@ -38,13 +47,41 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const tour = await prisma.tour.findUnique({
     where: { slug },
-    select: { title: true, seoTitle: true, seoDescription: true, published: true },
+    select: {
+      title: true,
+      summary: true,
+      description: true,
+      seoTitle: true,
+      seoDescription: true,
+      seoIndex: true,
+      seoImageUrl: true,
+      imageUrl: true,
+      featuredImageUrl: true,
+      facebookTitle: true,
+      facebookDescription: true,
+      twitterTitle: true,
+      twitterDescription: true,
+      published: true,
+      destination: { select: { name: true } },
+    },
   });
-  if (!tour?.published) return { title: "Tour" };
-  return {
-    title: tour.seoTitle || tour.title,
-    description: tour.seoDescription || undefined,
-  };
+  if (!tour?.published) return privateMetadata("Tour");
+  const place = tour.destination?.name;
+  const written = tour.seoDescription.trim() || tour.summary.trim() || plainText(tour.description);
+  return pageMetadata({
+    title: tour.seoTitle.trim() || tour.title,
+    description:
+      written ||
+      `${tour.title}${place ? ` in ${place}` : ""}. A guided tour with duration, group size, and a price before you pay.`,
+    path: `/tours/${slug}`,
+    image: tour.seoImageUrl || tour.featuredImageUrl || tour.imageUrl,
+    imageAlt: tour.title,
+    index: tour.seoIndex,
+    openGraphTitle: tour.facebookTitle,
+    openGraphDescription: tour.facebookDescription,
+    twitterTitle: tour.twitterTitle,
+    twitterDescription: tour.twitterDescription,
+  });
 }
 
 export default async function TourPage({ params }: Props) {
@@ -157,5 +194,58 @@ export default async function TourPage({ params }: Props) {
     freeCancellation: /free cancellation/i.test(haystack),
   };
 
-  return <TourSingle tour={data} mapApiKey={mapApiKey()} />;
+  const path = `/tours/${tour.slug}`;
+  const description =
+    tour.seoDescription.trim() ||
+    tour.summary.trim() ||
+    plainText(tour.description) ||
+    `${tour.title}${place?.name ? ` in ${place.name}` : ""}.`;
+
+  return (
+    <>
+      <JsonLd
+        data={graphLd([
+          organizationNode(),
+          breadcrumbNode([
+            { name: "Home", path: "/" },
+            {
+              name: place?.name ? `${place.name} tours` : "Tours",
+              path: place?.slug ? `/destinations/${place.slug}` : "/tours",
+            },
+            { name: tour.title, path },
+          ]),
+          faqNode(faqs),
+          {
+            "@type": "TouristTrip",
+            name: tour.title,
+            description,
+            url: absoluteUrl(path),
+            image: images.map((image) => absoluteUrl(image)),
+            ...(tour.category.trim() ? { touristType: tour.category.trim() } : {}),
+            provider: { "@id": `${siteOrigin()}/#organization` },
+            ...(tour.days.length
+              ? {
+                  itinerary: {
+                    "@type": "ItemList",
+                    itemListElement: tour.days.map((day) => ({
+                      "@type": "ListItem",
+                      position: day.dayNumber,
+                      name: day.title,
+                      description: plainText(day.description),
+                    })),
+                  },
+                }
+              : {}),
+            offers: offerNode({
+              price: tour.priceFrom,
+              currency: tour.currency || "INR",
+              path,
+              availability: "LimitedAvailability",
+            }),
+          },
+        ])}
+      />
+      <TourSingle tour={data} mapApiKey={mapApiKey()} />
+    </>
+  );
 }

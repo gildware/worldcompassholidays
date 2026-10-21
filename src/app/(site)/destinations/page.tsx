@@ -4,10 +4,14 @@ import type { DestinationListCard, DestinationListLocation } from "@/components/
 import { prisma } from "@/lib/db";
 import { mapApiKey } from "@/lib/map-key";
 import { parseMapPoint } from "@/lib/maps";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Destinations",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Travel destinations",
+  description:
+    "Places we plan trips for, with tours, hotels, and car and bike rentals in each. Search by country, region, or city.",
+  path: "/destinations",
+});
 
 function one(value: string | string[] | undefined) {
   return (Array.isArray(value) ? value[0] : value)?.trim() ?? "";
