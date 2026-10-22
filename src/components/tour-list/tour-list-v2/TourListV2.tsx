@@ -1,23 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import "rc-slider/assets/index.css";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import CallToActions from "@/components/common/CallToActions";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
-import { Pagination } from "@/components/hotel-list/common/Pagination";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useLazySlice } from "@/hooks/useLazySlice";
 import { MainFilterSearchBox } from "@/components/tour-list/tour-list-v2/MainFilterSearchBox";
-import { durationChoices, readTourQuery, tourQueryString, type TourListQueryInput } from "@/components/tour-list/tour-list-v2/query";
+import { ListFilterDrawer } from "@/components/listing/ListFilterDrawer";
+import { durationChoices, readTourQuery, tourOwnedKeys, tourQueryString, type TourListQueryInput } from "@/components/tour-list/tour-list-v2/query";
+import { replaceOwnedQuery } from "@/lib/list-url";
 import type { TourListFilters } from "@/components/tour-list/tour-list-v2/Sidebar";
 import { TopHeaderFilter } from "@/components/tour-list/tour-list-v2/TopHeaderFilter";
 import { TourProperties } from "@/components/tour-list/tour-list-v2/TourProperties";
 import type { TourListCard, TourListLocation, TourSort } from "@/components/tour-list/types";
-
-const PAGE_SIZE = 12;
 
 export function TourListV2({
   tours,
@@ -33,6 +33,7 @@ export function TourListV2({
   priceMax: number;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const currency = tours[0]?.currency || "INR";
   const prices = tours.map((tour) => tour.price);
   const priceMin = Math.min(catalogMin, ...(prices.length ? prices : [catalogMin]));
@@ -40,21 +41,21 @@ export function TourListV2({
   const priceStep = 1;
   const initialQuery = readTourQuery(query, { priceMin, priceMax });
   const [location, setLocation] = useState(initialQuery.location);
-  const [page, setPage] = useState(initialQuery.page);
   const [sort, setSort] = useState<TourSort>(initialQuery.sort);
   const [nameQuery, setNameQuery] = useState(initialQuery.name);
   const debouncedName = useDebouncedValue(nameQuery, 300);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<TourListFilters>({
     query: initialQuery.name,
     categories: initialQuery.types,
     price: initialQuery.price,
     durations: initialQuery.days,
   });
-  const nameReady = useRef(false);
-  const appliedQuery = useRef<string | null>(null);
+  const seenName = useRef<string | null>(null);
   const filtersRef = useRef(filters);
   filtersRef.current = filters;
   const incomingKey = tourQueryString(initialQuery, { priceMin, priceMax });
+  const appliedQuery = useRef(incomingKey);
 
   const categoryLabels = useMemo(() => {
     return [...new Set(tours.map((tour) => tour.category).filter(Boolean))].sort((a, b) =>
@@ -89,9 +90,15 @@ export function TourListV2({
     return next;
   }, [filters, location, priceMax, priceMin, sort, tours]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const windowKey = [
+    location,
+    sort,
+    filters.query,
+    filters.categories.join("\u0000"),
+    filters.durations.join("\u0000"),
+    filters.price.join("\u0000"),
+  ].join("|");
+  const { visible, sentinelRef, hasMore } = useLazySlice(filtered, windowKey);
   const toursScrollRef = useRef<HTMLDivElement>(null);
   const locationRef = useRef(location);
   const sortRef = useRef(sort);
@@ -105,13 +112,10 @@ export function TourListV2({
     days: string[];
     price: [number, number];
     sort: TourSort;
-    page: number;
   }) => {
     const next = tourQueryString(state, { priceMin, priceMax });
     appliedQuery.current = next;
-    const current = new URLSearchParams(window.location.search).toString();
-    if (current === next) return;
-    router.replace(next ? `/tours?${next}` : "/tours", { scroll: false });
+    replaceOwnedQuery(router, pathname, tourOwnedKeys, new URLSearchParams(next));
   };
 
   useEffect(() => {
@@ -121,7 +125,6 @@ export function TourListV2({
     setLocation(next.location);
     setNameQuery(next.name);
     setSort(next.sort);
-    setPage(next.page);
     setFilters({
       query: next.name,
       categories: next.types,
@@ -131,14 +134,14 @@ export function TourListV2({
   }, [incomingKey, priceMax, priceMin, query]);
 
   useEffect(() => {
-    if (!nameReady.current) {
-      nameReady.current = true;
+    if (seenName.current === null || seenName.current === debouncedName) {
+      seenName.current = debouncedName;
       return;
     }
+    seenName.current = debouncedName;
     if (filtersRef.current.query === debouncedName) return;
     const nextFilters = { ...filtersRef.current, query: debouncedName };
     setFilters(nextFilters);
-    setPage(1);
     writeQuery({
       location: locationRef.current,
       name: debouncedName,
@@ -146,17 +149,15 @@ export function TourListV2({
       days: nextFilters.durations,
       price: nextFilters.price,
       sort: sortRef.current,
-      page: 1,
     });
   }, [debouncedName, priceMax, priceMin, router]);
 
   useEffect(() => {
     toursScrollRef.current?.scrollTo({ top: 0 });
-  }, [currentPage, filters, location, sort]);
+  }, [filters, location, sort]);
 
   const updateFilters = (next: TourListFilters) => {
     setFilters(next);
-    setPage(1);
     writeQuery({
       location,
       name: next.query,
@@ -164,12 +165,64 @@ export function TourListV2({
       days: next.durations,
       price: next.price,
       sort,
-      page: 1,
     });
   };
 
   const categories = categoryLabels.map((label) => ({ value: label, label }));
   const durations = durationChoices.map(({ value, label }) => ({ value, label }));
+  const priceLow = Math.min(filters.price[0], filters.price[1]);
+  const priceHigh = Math.max(filters.price[0], filters.price[1]);
+  const filtersActive =
+    location.trim().length > 0 ||
+    filters.categories.length > 0 ||
+    filters.durations.length > 0 ||
+    priceLow > priceMin ||
+    priceHigh < priceMax;
+  const renderFilters = (sheet = false) => (
+    <MainFilterSearchBox
+      sheet={sheet}
+      locations={locations}
+      location={location}
+      onLocation={(value) => {
+        setLocation(value);
+        writeQuery({
+          location: value,
+          name: filters.query,
+          types: filters.categories,
+          days: filters.durations,
+          price: filters.price,
+          sort,
+        });
+      }}
+      categories={categories}
+      durations={durations}
+      filters={filters}
+      onFilters={updateFilters}
+      priceMin={priceMin}
+      priceMax={priceMax}
+      priceStep={priceStep}
+      currency={currency}
+      onClear={() => {
+        const next: TourListFilters = {
+          query: "",
+          categories: [],
+          price: [priceMin, priceMax],
+          durations: [],
+        };
+        setLocation("");
+        setNameQuery("");
+        setFilters(next);
+        writeQuery({
+          location: "",
+          name: "",
+          types: [],
+          days: [],
+          price: next.price,
+          sort,
+        });
+      }}
+    />
+  );
 
   return (
     <WorldCompassHolidayFrame>
@@ -177,53 +230,11 @@ export function TourListV2({
         <div className="tour-workspace__stage">
           <section className="tour-workspace__mast">
             <h1 className="tour-workspace__title">Tours and treks</h1>
-            <MainFilterSearchBox
-              locations={locations}
-              location={location}
-              onLocation={(value) => {
-                setLocation(value);
-                setPage(1);
-                writeQuery({
-                  location: value,
-                  name: filters.query,
-                  types: filters.categories,
-                  days: filters.durations,
-                  price: filters.price,
-                  sort,
-                  page: 1,
-                });
-              }}
-              categories={categories}
-              durations={durations}
-              filters={filters}
-              onFilters={updateFilters}
-              priceMin={priceMin}
-              priceMax={priceMax}
-              priceStep={priceStep}
-              currency={currency}
-              onClear={() => {
-                const next: TourListFilters = {
-                  query: "",
-                  categories: [],
-                  price: [priceMin, priceMax],
-                  durations: [],
-                };
-                setLocation("");
-                setNameQuery("");
-                setFilters(next);
-                setPage(1);
-                writeQuery({
-                  location: "",
-                  name: "",
-                  types: [],
-                  days: [],
-                  price: next.price,
-                  sort,
-                  page: 1,
-                });
-              }}
-            />
+            <div className="list-filters-inline">{renderFilters()}</div>
           </section>
+          <ListFilterDrawer open={filtersOpen} title="Filters" onClose={() => setFiltersOpen(false)}>
+            {renderFilters(true)}
+          </ListFilterDrawer>
 
           <section className="tour-workspace__panes">
           <div className="tour-workspace__results">
@@ -232,9 +243,10 @@ export function TourListV2({
                 name={nameQuery}
                 onName={setNameQuery}
                 sort={sort}
+                filtersActive={filtersActive}
+                onOpenFilters={() => setFiltersOpen(true)}
                 onSort={(next) => {
                   setSort(next);
-                  setPage(1);
                   writeQuery({
                     location,
                     name: filters.query,
@@ -242,7 +254,6 @@ export function TourListV2({
                     days: filters.durations,
                     price: filters.price,
                     sort: next,
-                    page: 1,
                   });
                 }}
               />
@@ -251,24 +262,7 @@ export function TourListV2({
               <div className="tour-workspace__grid">
                 <TourProperties tours={visible} />
               </div>
-              <Pagination
-                page={currentPage}
-                pageSize={PAGE_SIZE}
-                total={filtered.length}
-                onPage={(next) => {
-                  setPage(next);
-                  writeQuery({
-                    location,
-                    name: filters.query,
-                    types: filters.categories,
-                    days: filters.durations,
-                    price: filters.price,
-                    sort,
-                    page: next,
-                  });
-                }}
-                itemLabel="tours"
-              />
+              {hasMore ? <div ref={sentinelRef} className="tour-workspace__more" /> : null}
             </div>
           </div>
           </section>

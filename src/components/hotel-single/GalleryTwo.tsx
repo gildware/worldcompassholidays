@@ -1,19 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { type MouseEvent } from "react";
 import { Gallery, Item } from "react-photoswipe-gallery";
 import "photoswipe/dist/photoswipe.css";
+import GooglePlaceMap from "@/components/common/GooglePlaceMap";
 import type { HotelSingleData } from "@/components/hotel-single/types";
 
-const facilityIcons = [
-  "icon-wifi",
-  "icon-parking",
-  "icon-kitchen",
-  "icon-living-room",
-  "icon-shield",
-  "icon-bell-ring",
-];
+function selectRoom(event: MouseEvent<HTMLAnchorElement>) {
+  const section = document.getElementById("rooms");
+  if (!section) return;
+  event.preventDefault();
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+  const field = section.querySelector("select");
+  if (field instanceof HTMLElement) window.setTimeout(() => field.focus(), 350);
+}
+
+export function amenityIcon(name: string) {
+  const value = name.toLowerCase();
+  if (value.includes("wi")) return "icon-wifi";
+  if (value.includes("park")) return "icon-parking";
+  if (value.includes("restaurant") || value.includes("dining") || value.includes("breakfast")) return "icon-food";
+  if (value.includes("kitchen")) return "icon-kitchen";
+  if (value.includes("pool") || value.includes("swim")) return "icon-living-room";
+  if (value.includes("desk") || value.includes("service") || value.includes("laundry")) return "icon-bell-ring";
+  if (value.includes("transfer") || value.includes("airport")) return "icon-destination";
+  return "icon-check";
+}
 
 function padImages(images: string[]) {
   const source = images.length > 0 ? images : ["/img/general/map.svg"];
@@ -22,14 +34,12 @@ function padImages(images: string[]) {
   return next.slice(0, 4);
 }
 
-export function GalleryTwo({ hotel }: { hotel: HotelSingleData }) {
-  const [open, setOpen] = useState(false);
+export function GalleryTwo({ hotel, mapApiKey }: { hotel: HotelSingleData; mapApiKey: string }) {
   const photos = padImages(hotel.images);
-  const facilities = (hotel.amenities.length > 0 ? hotel.amenities : ["Free WiFi", "Parking"]).slice(0, 6);
-  const overview = hotel.description || hotel.summary;
+  const overview = hotel.description && hotel.description !== hotel.summary ? hotel.description : "";
 
   return (
-    <section className="pt-40">
+    <section className="hotel-hero">
       <div className="container">
         <div className="hotelSingleGrid">
           <div>
@@ -92,21 +102,8 @@ export function GalleryTwo({ hotel }: { hotel: HotelSingleData }) {
               </div>
             </Gallery>
 
-            <div className="row justify-between items-end pt-40">
+            <div className="row justify-between items-end pt-20">
               <div className="col-auto">
-                <nav aria-label="Breadcrumb" className="text-14 text-light-1 pb-10">
-                  <Link href="/">Home</Link>
-                  <span> &gt; </span>
-                  <Link href="/hotels">Hotels</Link>
-                  {hotel.location ? (
-                    <>
-                      <span> &gt; </span>
-                      <Link href={hotel.destinationHref}>{hotel.location}</Link>
-                    </>
-                  ) : null}
-                  <span> &gt; </span>
-                  <span className="text-dark-1">{hotel.name}</span>
-                </nav>
                 <div className="row x-gap-20 items-center">
                   <div className="col-auto">
                     <h1 className="text-30 sm:text-25 fw-600">{hotel.name}</h1>
@@ -119,7 +116,7 @@ export function GalleryTwo({ hotel }: { hotel: HotelSingleData }) {
                     </div>
                   ) : null}
                 </div>
-                <div className="row x-gap-20 y-gap-20 items-center">
+                <div className="row x-gap-20 y-gap-5 items-center pt-5">
                   <div className="col-auto">
                     <div className="d-flex items-center text-15 text-light-1">
                       <i className="icon-location-2 text-16 mr-5" />
@@ -139,129 +136,55 @@ export function GalleryTwo({ hotel }: { hotel: HotelSingleData }) {
                 <div className="text-14 text-md-end">
                   From <span className="text-22 text-dark-1 fw-500">{hotel.priceLabel}</span>
                 </div>
-                <a href="#rooms" className="button h-50 px-24 -dark-1 bg-blue-1 text-white">
+                <a href="#rooms" className="button h-50 px-24 -dark-1 bg-blue-1 text-white" onClick={selectRoom}>
                   Select Room <div className="icon-arrow-top-right ml-15" />
                 </a>
               </div>
             </div>
 
-            <div id="overview" className="row y-gap-40 pt-40">
-              <div className="col-12">
-                <h3 className="text-22 fw-500 pt-40 border-top-light">Overview</h3>
-                {hotel.summary ? <p className="text-dark-1 text-15 mt-20">{hotel.summary}</p> : null}
-                {overview ? (
-                  <div
-                    className={`text-dark-1 text-15 mt-20 hotel-overview ${open ? "is-open" : ""}`}
-                    dangerouslySetInnerHTML={{ __html: overview }}
+            <div id="overview" className="hotel-overview-block">
+              <h3>Overview</h3>
+              {hotel.summary ? <p>{hotel.summary}</p> : null}
+              {overview ? <div className="hotel-overview-block__more" dangerouslySetInnerHTML={{ __html: overview }} /> : null}
+            </div>
+          </div>
+
+          <aside className="hotel-side">
+            <div className="hotel-side__card">
+              {hotel.stars > 0 ? (
+                <div className="hotel-side__score">
+                  <div className="hotel-side__score-badge">{hotel.stars.toFixed(1)}</div>
+                  <div>
+                    <div className="hotel-side__score-label">{hotel.scoreLabel}</div>
+                    <div className="hotel-side__score-type">{hotel.propertyType}</div>
+                  </div>
+                </div>
+              ) : null}
+              <div className="hotel-side__map">
+                {hotel.mapLat && hotel.mapLng && mapApiKey ? (
+                  <GooglePlaceMap
+                    apiKey={mapApiKey}
+                    lat={Number(hotel.mapLat)}
+                    lng={Number(hotel.mapLng)}
+                    zoom={hotel.mapZoom || 14}
+                    minHeight={168}
                   />
-                ) : null}
-                {overview ? (
-                  <button
-                    type="button"
-                    className="d-block text-14 text-blue-1 fw-500 underline mt-10"
-                    onClick={() => setOpen((value) => !value)}
-                  >
-                    {open ? "Show Less" : "Show More"}
-                  </button>
-                ) : null}
+                ) : (
+                  <span className="hotel-side__pin">
+                    <i className="icon-location-pin" />
+                  </span>
+                )}
               </div>
-              <div className="col-12">
-                <h3 className="text-22 fw-500 pt-40 border-top-light">Most Popular Facilities</h3>
-                <div className="row y-gap-10 pt-20">
-                  {facilities.map((name, index) => (
-                    <div className="col-md-5" key={name}>
-                      <div className="d-flex x-gap-15 y-gap-15 items-center">
-                        <i className={facilityIcons[index % facilityIcons.length]} />
-                        <div className="text-15">{name}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {hotel.address || hotel.location ? (
+                <p className="hotel-side__address">{hotel.address || hotel.location}</p>
+              ) : null}
+              {hotel.mapUrl ? (
+                <a href={hotel.mapUrl} target="_blank" rel="noreferrer" className="hotel-side__open">
+                  Open in Google Maps
+                </a>
+              ) : null}
             </div>
-          </div>
-
-          <div>
-            <div className="px-30 py-30 border-light rounded-4">
-              <div className="mb-15">
-                <div
-                  className="flex-center"
-                  style={{
-                    backgroundImage: "url(/img/general/map.svg)",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    height: "180px",
-                  }}
-                >
-                  {hotel.mapUrl ? (
-                    <a
-                      href={hotel.mapUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="button py-15 px-24 -blue-1 bg-white text-dark-1 absolute"
-                    >
-                      <i className="icon-destination text-22 mr-10" />
-                      Show on map
-                    </a>
-                  ) : null}
-                </div>
-              </div>
-              <div className="row y-gap-10">
-                <div className="col-12">
-                  <div className="d-flex items-center">
-                    <i className="icon-award text-20 text-blue-1" />
-                    <div className="text-14 fw-500 ml-10">
-                      {hotel.location ? `In ${hotel.location}` : hotel.propertyType}
-                    </div>
-                  </div>
-                </div>
-                {hotel.address ? (
-                  <div className="col-12">
-                    <div className="d-flex items-center">
-                      <i className="icon-pedestrian text-20 text-blue-1" />
-                      <div className="text-14 fw-500 ml-10">{hotel.address}</div>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            {hotel.stars > 0 ? (
-              <div className="px-30 py-30 border-light rounded-4 mt-30">
-                <div className="d-flex items-center">
-                  <div className="size-40 flex-center bg-blue-1 rounded-4">
-                    <div className="text-14 fw-600 text-white">{hotel.stars.toFixed(1)}</div>
-                  </div>
-                  <div className="text-14 ml-10">
-                    <div className="lh-15 fw-500">{hotel.scoreLabel}</div>
-                    <div className="lh-15 text-light-1">{hotel.propertyType}</div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            <div className="px-30 py-30 border-light rounded-4 mt-30">
-              <div className="text-18 fw-500 pb-30">Property highlights</div>
-              <div className="row x-gap-20 y-gap-20">
-                <div className="col-auto">
-                  <i className="icon-city text-24 text-blue-1" />
-                </div>
-                <div className="col-auto">
-                  <div className="text-15">{hotel.location ? `In ${hotel.location}` : hotel.propertyType}</div>
-                </div>
-              </div>
-              {hotel.amenities.slice(0, 3).map((item) => (
-                <div className="row x-gap-20 y-gap-20 pt-15" key={item}>
-                  <div className="col-auto">
-                    <i className="icon-bell-ring text-24 text-blue-1" />
-                  </div>
-                  <div className="col-auto">
-                    <div className="text-15">{item}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          </aside>
         </div>
       </div>
     </section>

@@ -1,256 +1,285 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import { DateObject } from "react-multi-date-picker";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import "rc-slider/assets/index.css";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import CallToActions from "@/components/common/CallToActions";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
-import type { GuestCounts } from "@/components/hotel-list/common/GuestSearch";
-import { Pagination } from "@/components/hotel-list/common/Pagination";
 import { HotelProperties } from "@/components/hotel-list/hotel-list-v1/HotelProperties";
 import { MainFilterSearchBox } from "@/components/hotel-list/hotel-list-v1/MainFilterSearchBox";
-import { Sidebar, type HotelListFilters } from "@/components/hotel-list/hotel-list-v1/Sidebar";
+import { ListFilterDrawer } from "@/components/listing/ListFilterDrawer";
+import {
+  hotelOwnedKeys,
+  hotelQueryString,
+  readHotelQuery,
+  starChoices,
+  type HotelListFilters,
+  type HotelListQueryInput,
+} from "@/components/hotel-list/hotel-list-v1/query";
 import { TopHeaderFilter } from "@/components/hotel-list/hotel-list-v1/TopHeaderFilter";
-import type { CountOption, HotelListCard, HotelListLocation } from "@/components/hotel-list/types";
+import type { HotelListCard, HotelListLocation, HotelSort } from "@/components/hotel-list/types";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useLazySlice } from "@/hooks/useLazySlice";
 import { hotelRequestHref } from "@/lib/hotels/request-link";
-import "@/styles/hotel-request.css";
-
-const PAGE_SIZE = 7;
-
-const dealLabels = ["Free cancellation", "Reserve now, pay at stay", "Properties with special offers"];
-
-function stayNights(dates: DateObject[]) {
-  if (dates.length < 2) return 1;
-  const ms = dates[1].toDate().getTime() - dates[0].toDate().getTime();
-  return Math.max(1, Math.round(Math.abs(ms) / 86400000));
-}
-
-function counts(labels: string[], hotels: HotelListCard[], match: (hotel: HotelListCard, label: string) => boolean) {
-  return labels.map((label) => ({
-    label,
-    count: hotels.filter((hotel) => match(hotel, label)).length,
-  }));
-}
-
-function guestMinimum(value: string) {
-  if (value === "4.5") return 5;
-  if (value === "4") return 4;
-  if (value === "3.5") return 3;
-  return 0;
-}
+import { replaceOwnedQuery } from "@/lib/list-url";
 
 export function HotelListV1({
   hotels,
   locations,
-  initialLocation = "",
+  query = {},
+  priceMin: catalogMin,
+  priceMax: catalogMax,
 }: {
   hotels: HotelListCard[];
   locations: HotelListLocation[];
-  initialLocation?: string;
+  query?: HotelListQueryInput;
+  priceMin: number;
+  priceMax: number;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const currency = hotels[0]?.currency || "INR";
-  const priceMax = Math.max(1000, ...hotels.map((hotel) => hotel.price), 0);
-  const [location, setLocation] = useState(initialLocation);
-  const [dates, setDates] = useState<DateObject[]>(() => [
-    new DateObject().setDay(15),
-    new DateObject().setDay(14).add(1, "month"),
-  ]);
-  const [guests, setGuests] = useState<GuestCounts>({ Adults: 2, Children: 1, Rooms: 1 });
-  const [page, setPage] = useState(1);
+  const prices = hotels.map((hotel) => hotel.price);
+  const priceMin = Math.min(catalogMin, ...(prices.length ? prices : [catalogMin]));
+  const priceMax = Math.max(catalogMax, priceMin, ...(prices.length ? prices : [catalogMax]));
+  const priceStep = 1;
+  const initialQuery = readHotelQuery(query, { priceMin, priceMax });
+  const [location, setLocation] = useState(initialQuery.location);
+  const [sort, setSort] = useState<HotelSort>(initialQuery.sort);
+  const [nameQuery, setNameQuery] = useState(initialQuery.name);
+  const debouncedName = useDebouncedValue(nameQuery, 300);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<HotelListFilters>({
-    query: "",
-    stars: null,
-    price: [0, priceMax],
-    deals: [],
-    popular: [],
-    amenities: [],
-    guestRating: "",
-    styles: [],
-    neighborhoods: [],
+    query: initialQuery.name,
+    types: initialQuery.types,
+    price: initialQuery.price,
+    stars: initialQuery.stars,
   });
+  const seenName = useRef<string | null>(null);
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+  const incomingKey = hotelQueryString(initialQuery, { priceMin, priceMax });
+  const appliedQuery = useRef(incomingKey);
 
-  const amenityLabels = useMemo(() => {
-    const names = new Set<string>();
-    hotels.forEach((hotel) => hotel.amenities.forEach((amenity) => names.add(amenity)));
-    return [...names].sort((a, b) => a.localeCompare(b));
-  }, [hotels]);
-
-  const styleLabels = useMemo(() => {
-    return [...new Set(hotels.map((hotel) => hotel.propertyType))].sort((a, b) => a.localeCompare(b));
-  }, [hotels]);
-
-  const neighborhoodLabels = useMemo(() => {
-    return [...new Set(hotels.map((hotel) => hotel.location).filter(Boolean))].sort((a, b) =>
+  const typeLabels = useMemo(() => {
+    return [...new Set(hotels.map((hotel) => hotel.propertyType).filter(Boolean))].sort((a, b) =>
       a.localeCompare(b),
     );
   }, [hotels]);
 
-  const deals = counts(dealLabels, hotels, (hotel, label) =>
-    label === "Free cancellation" ? hotel.freeCancellation : false,
-  );
-  const popular: CountOption[] = counts(amenityLabels, hotels, (hotel, label) =>
-    hotel.amenities.includes(label),
-  ).slice(0, 5);
-  const amenities = counts(amenityLabels, hotels, (hotel, label) => hotel.amenities.includes(label));
-  const styles = counts(styleLabels, hotels, (hotel, label) => hotel.propertyType === label);
-  const neighborhoods = counts(neighborhoodLabels, hotels, (hotel, label) => hotel.location === label);
-  const guestRatings = [
-    { label: "Any", value: "", count: hotels.length },
-    { label: "Wonderful 4.5+", value: "4.5", count: hotels.filter((hotel) => hotel.stars >= 5).length },
-    { label: "Very good 4+", value: "4", count: hotels.filter((hotel) => hotel.stars >= 4).length },
-    { label: "Good 3.5+", value: "3.5", count: hotels.filter((hotel) => hotel.stars >= 3).length },
-  ];
-
   const filtered = useMemo(() => {
     const place = location.trim().toLowerCase();
-    const query = filters.query.trim().toLowerCase();
-    const minimumStars = guestMinimum(filters.guestRating);
-    return hotels.filter((hotel) => {
+    const queryText = filters.query.trim().toLowerCase();
+    const matched = hotels.filter((hotel) => {
       if (place && !`${hotel.location} ${hotel.address}`.toLowerCase().includes(place)) return false;
-      if (query && !hotel.name.toLowerCase().includes(query)) return false;
-      if (filters.stars && hotel.stars !== filters.stars) return false;
-      if (hotel.price < filters.price[0] || hotel.price > filters.price[1]) return false;
-      if (filters.deals.includes("Free cancellation") && !hotel.freeCancellation) return false;
+      if (queryText && !hotel.name.toLowerCase().includes(queryText)) return false;
+      const low = Math.min(filters.price[0], filters.price[1]);
+      const high = Math.max(filters.price[0], filters.price[1]);
+      const fullRange = low <= priceMin && high >= priceMax;
+      if (!fullRange && (hotel.price < low || hotel.price > high)) return false;
+      if (filters.types.length > 0 && !filters.types.includes(hotel.propertyType)) return false;
       if (
-        filters.deals.some((deal) => deal !== "Free cancellation") &&
-        filters.deals.filter((deal) => deal !== "Free cancellation").length > 0
+        filters.stars.length > 0 &&
+        !starChoices.some((choice) => filters.stars.includes(choice.value) && choice.match(hotel.stars))
       ) {
         return false;
       }
-      const wanted = [...filters.popular, ...filters.amenities];
-      if (wanted.some((amenity) => !hotel.amenities.includes(amenity))) return false;
-      if (minimumStars && hotel.stars < minimumStars) return false;
-      if (filters.styles.length > 0 && !filters.styles.includes(hotel.propertyType)) return false;
-      if (filters.neighborhoods.length > 0 && !filters.neighborhoods.includes(hotel.location)) return false;
       return true;
     });
-  }, [filters, hotels, location]);
 
-  const today = new DateObject().format("YYYY-MM-DD");
-  const checkIn = dates[0]?.format("YYYY-MM-DD") ?? "";
-  const checkOut = dates[1]?.format("YYYY-MM-DD") ?? "";
-  const requestHref = hotelRequestHref({
-    destination: location,
-    checkIn: checkIn >= today ? checkIn : "",
-    checkOut: checkIn >= today && checkOut > checkIn ? checkOut : "",
-    adults: guests.Adults,
-    children: guests.Children,
-    rooms: guests.Rooms,
-  });
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  const nights = stayNights(dates);
+    const next = [...matched];
+    if (sort === "price-asc") next.sort((a, b) => a.price - b.price || a.name.localeCompare(b.name));
+    if (sort === "price-desc") next.sort((a, b) => b.price - a.price || a.name.localeCompare(b.name));
+    if (sort === "name") next.sort((a, b) => a.name.localeCompare(b.name));
+    return next;
+  }, [filters, hotels, location, priceMax, priceMin, sort]);
+
+  const windowKey = [
+    location,
+    sort,
+    filters.query,
+    filters.types.join("\u0000"),
+    filters.stars.join("\u0000"),
+    filters.price.join("\u0000"),
+  ].join("|");
+  const { visible, sentinelRef, hasMore } = useLazySlice(filtered, windowKey);
+  const hotelsScrollRef = useRef<HTMLDivElement>(null);
+  const locationRef = useRef(location);
+  const sortRef = useRef(sort);
+  locationRef.current = location;
+  sortRef.current = sort;
+  const requestHref = hotelRequestHref({ destination: location });
+
+  const writeQuery = (state: {
+    location: string;
+    name: string;
+    types: string[];
+    stars: string[];
+    price: [number, number];
+    sort: HotelSort;
+  }) => {
+    const next = hotelQueryString(state, { priceMin, priceMax });
+    appliedQuery.current = next;
+    replaceOwnedQuery(router, pathname, hotelOwnedKeys, new URLSearchParams(next));
+  };
+
+  useEffect(() => {
+    if (appliedQuery.current === incomingKey) return;
+    appliedQuery.current = incomingKey;
+    const next = readHotelQuery(query, { priceMin, priceMax });
+    setLocation(next.location);
+    setNameQuery(next.name);
+    setSort(next.sort);
+    setFilters({
+      query: next.name,
+      types: next.types,
+      price: next.price,
+      stars: next.stars,
+    });
+  }, [incomingKey, priceMax, priceMin, query]);
+
+  useEffect(() => {
+    if (seenName.current === null || seenName.current === debouncedName) {
+      seenName.current = debouncedName;
+      return;
+    }
+    seenName.current = debouncedName;
+    if (filtersRef.current.query === debouncedName) return;
+    const nextFilters = { ...filtersRef.current, query: debouncedName };
+    setFilters(nextFilters);
+    writeQuery({
+      location: locationRef.current,
+      name: debouncedName,
+      types: nextFilters.types,
+      stars: nextFilters.stars,
+      price: nextFilters.price,
+      sort: sortRef.current,
+    });
+  }, [debouncedName, priceMax, priceMin, router]);
+
+  useEffect(() => {
+    hotelsScrollRef.current?.scrollTo({ top: 0 });
+  }, [filters, location, sort]);
 
   const updateFilters = (next: HotelListFilters) => {
     setFilters(next);
-    setPage(1);
+    writeQuery({
+      location,
+      name: next.query,
+      types: next.types,
+      stars: next.stars,
+      price: next.price,
+      sort,
+    });
   };
 
-  const sidebarProps = {
-    filters,
-    onChange: updateFilters,
-    priceMax,
-    currency,
-    deals,
-    popular,
-    amenities,
-    guestRatings,
-    styles,
-    neighborhoods,
-  };
+  const types = typeLabels.map((label) => ({ value: label, label }));
+  const stars = starChoices.map(({ value, label }) => ({ value, label }));
+  const priceLow = Math.min(filters.price[0], filters.price[1]);
+  const priceHigh = Math.max(filters.price[0], filters.price[1]);
+  const filtersActive =
+    location.trim().length > 0 ||
+    filters.types.length > 0 ||
+    filters.stars.length > 0 ||
+    priceLow > priceMin ||
+    priceHigh < priceMax;
+  const renderFilters = (sheet = false) => (
+    <MainFilterSearchBox
+      sheet={sheet}
+      locations={locations}
+      location={location}
+      onLocation={(value) => {
+        setLocation(value);
+        writeQuery({
+          location: value,
+          name: filters.query,
+          types: filters.types,
+          stars: filters.stars,
+          price: filters.price,
+          sort,
+        });
+      }}
+      types={types}
+      stars={stars}
+      filters={filters}
+      onFilters={updateFilters}
+      priceMin={priceMin}
+      priceMax={priceMax}
+      priceStep={priceStep}
+      currency={currency}
+      onClear={() => {
+        const next: HotelListFilters = {
+          query: "",
+          types: [],
+          price: [priceMin, priceMax],
+          stars: [],
+        };
+        setLocation("");
+        setNameQuery("");
+        setFilters(next);
+        writeQuery({
+          location: "",
+          name: "",
+          types: [],
+          stars: [],
+          price: next.price,
+          sort,
+        });
+      }}
+    />
+  );
 
   return (
     <WorldCompassHolidayFrame>
-      <div className="hotel-list-v1">
-        <section className="pt-40 pb-40 bg-light-2">
-          <div className="container">
-            <div className="row">
-              <div className="col-12">
-                <div className="text-center">
-                  <h1 className="text-30 fw-600">Hotels and stays</h1>
-                </div>
-                <MainFilterSearchBox
-                  locations={locations}
-                  location={location}
-                  onLocation={(value) => {
-                    setLocation(value);
-                    setPage(1);
+      <div className="hotel-list-v1 tour-list-v2 tour-workspace">
+        <div className="tour-workspace__stage">
+          <section className="tour-workspace__mast">
+            <h1 className="tour-workspace__title">Hotels and stays</h1>
+            <div className="list-filters-inline">{renderFilters()}</div>
+          </section>
+          <ListFilterDrawer open={filtersOpen} title="Filters" onClose={() => setFiltersOpen(false)}>
+            {renderFilters(true)}
+          </ListFilterDrawer>
+
+          <section className="tour-workspace__panes">
+            <div className="tour-workspace__results">
+              <div className="tour-workspace__toolbar">
+                <TopHeaderFilter
+                  name={nameQuery}
+                  onName={setNameQuery}
+                  sort={sort}
+                  onSort={(next) => {
+                    setSort(next);
+                    writeQuery({
+                      location,
+                      name: filters.query,
+                      types: filters.types,
+                      stars: filters.stars,
+                      price: filters.price,
+                      sort: next,
+                    });
                   }}
-                  dates={dates}
-                  onDates={setDates}
-                  guests={guests}
-                  onGuests={setGuests}
-                />
-                <div className="hotel-request-prompt">
-                  <div>
-                    <h2>Can&apos;t find the hotel you want?</h2>
-                    <p>Send a custom request. We search for a stay that fits and contact you with options.</p>
-                  </div>
-                  <Link href={requestHref} className="button -md -dark-1 bg-blue-1 text-white">
-                    Request a hotel <div className="icon-arrow-top-right ml-15" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="layout-pt-md layout-pb-lg">
-          <div className="container">
-            <div className="row y-gap-30">
-              <div className="col-xl-3">
-                <aside className="sidebar y-gap-40 xl:d-none">
-                  <Sidebar {...sidebarProps} group="guest-rating-desktop" />
-                </aside>
-
-                <div className="offcanvas offcanvas-start" tabIndex={-1} id="listingSidebar">
-                  <div className="offcanvas-header">
-                    <h5 className="offcanvas-title" id="offcanvasLabel">
-                      Filter Hotels
-                    </h5>
-                    <button
-                      type="button"
-                      className="btn-close"
-                      data-bs-dismiss="offcanvas"
-                      aria-label="Close"
-                    />
-                  </div>
-                  <div className="offcanvas-body">
-                    <aside className="sidebar y-gap-40 xl:d-block">
-                      <Sidebar {...sidebarProps} group="guest-rating-mobile" />
-                    </aside>
-                  </div>
-                </div>
-              </div>
-
-              <div className="col-xl-9">
-                <TopHeaderFilter count={filtered.length} place={location.trim()} />
-                <div className="mt-30" />
-                <div className="row y-gap-30">
-                  <HotelProperties
-                    hotels={visible}
-                    nights={nights}
-                    adults={guests.Adults}
-                    requestHref={requestHref}
-                  />
-                </div>
-                <Pagination
-                  page={currentPage}
-                  pageSize={PAGE_SIZE}
-                  total={filtered.length}
-                  onPage={setPage}
+                  requestHref={requestHref}
+                  filtersActive={filtersActive}
+                  onOpenFilters={() => setFiltersOpen(true)}
                 />
               </div>
+              <div className="tour-workspace__tours" ref={hotelsScrollRef}>
+                <div className="tour-workspace__grid">
+                  <HotelProperties hotels={visible} requestHref={requestHref} />
+                </div>
+                {hasMore ? <div ref={sentinelRef} className="tour-workspace__more" /> : null}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        <CallToActions />
+        <div className="tour-workspace__footer">
+          <CallToActions />
+        </div>
       </div>
     </WorldCompassHolidayFrame>
   );

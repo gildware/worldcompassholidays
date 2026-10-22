@@ -54,17 +54,19 @@ export type VehicleFormValues = {
   discountType: string;
   discountValue: string;
   featureIds: string[];
+  tagIds: string[];
   includedIds: string[];
   excludedIds: string[];
   documentIds: string[];
   addonIds: string[];
   locationIds: string[];
+  relatedIds: string[];
   images: ImageItem[];
 };
 
 const DATA_STEPS = [
   { id: "vehicle", title: "Vehicle", description: "Name, fleet, and where it is available" },
-  { id: "specs", title: "Specifications", description: "Type, fuel, features, and what is included" },
+  { id: "specs", title: "Specifications", description: "Type, tags, fuel, features, and what is included" },
   { id: "pricing", title: "Pricing", description: "Daily rates, deposit, and add-ons" },
   { id: "handover", title: "Handover", description: "Pickup, delivery, and locations" },
   { id: "images", title: "Images", description: "Cover photo and gallery" },
@@ -97,11 +99,13 @@ export function VehicleForm({
   fuels,
   transmissions,
   features,
+  tags,
   included,
   excluded,
   bookingDocuments,
   addons,
   locations,
+  relatedVehicles,
   systemPickup,
   systemDelivery,
   initialStep = 0,
@@ -115,11 +119,13 @@ export function VehicleForm({
   fuels: Option[];
   transmissions: Option[];
   features: Option[];
+  tags: Option[];
   included: Option[];
   excluded: Option[];
   bookingDocuments: Option[];
   addons: Option[];
   locations: { id: string; name: string; address: string; destinationId?: string | null }[];
+  relatedVehicles: { id: string; name: string; registrationNumber: string; published: boolean }[];
   systemPickup: boolean;
   systemDelivery: boolean;
   initialStep?: number;
@@ -148,11 +154,13 @@ export function VehicleForm({
   const [transmissionId, setTransmissionId] = useState(values.transmissionId);
   const [discountType, setDiscountType] = useState(values.discountType);
   const [featureIds, setFeatureIds] = useState(values.featureIds);
+  const [tagIds, setTagIds] = useState(values.tagIds);
   const [includedIds, setIncludedIds] = useState(values.includedIds);
   const [excludedIds, setExcludedIds] = useState(values.excludedIds);
   const [documentIds, setDocumentIds] = useState(values.documentIds);
   const [addonIds, setAddonIds] = useState(values.addonIds);
   const [locationIds, setLocationIds] = useState(values.locationIds);
+  const [relatedIds, setRelatedIds] = useState(values.relatedIds);
   const [allowCounterPickup, setAllowCounterPickup] = useState(values.allowCounterPickup);
   const [allowHomeDelivery, setAllowHomeDelivery] = useState(values.allowHomeDelivery);
   const [images, setImages] = useState(values.images);
@@ -169,12 +177,13 @@ export function VehicleForm({
       fuels: fuels.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
       transmissions: transmissions.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
       features: features.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
+      tags: tags.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
       included: included.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
       excluded: excluded.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
       bookingDocuments: bookingDocuments.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
       addons: addons.filter((item) => item.active && appliesToFleet(item.appliesTo, kind)),
     }),
-    [addons, bookingDocuments, excluded, features, fuels, included, kind, transmissions, types],
+    [addons, bookingDocuments, excluded, features, fuels, included, kind, tags, transmissions, types],
   );
 
   const current = steps[step];
@@ -187,6 +196,7 @@ export function VehicleForm({
       visible.transmissions.some((item) => item.id === currentId) ? currentId : "",
     );
     setFeatureIds((currentIds) => currentIds.filter((id) => visible.features.some((item) => item.id === id)));
+    setTagIds((currentIds) => currentIds.filter((id) => visible.tags.some((item) => item.id === id)));
     setIncludedIds((currentIds) => currentIds.filter((id) => visible.included.some((item) => item.id === id)));
     setExcludedIds((currentIds) => currentIds.filter((id) => visible.excluded.some((item) => item.id === id)));
     setDocumentIds((currentIds) => currentIds.filter((id) => visible.bookingDocuments.some((item) => item.id === id)));
@@ -571,6 +581,25 @@ export function VehicleForm({
                 <input name="includedKmPerDay" type="number" min={0} defaultValue={values.includedKmPerDay} className="!h-10" />
               </Field>
             </div>
+            <Field
+              label="Tags"
+              hint="Shown on the listing card. Add more under Tags in configuration."
+            >
+              {tagIds.map((id) => (
+                <input key={id} type="hidden" name="tagIds" value={id} />
+              ))}
+              <MultiSearchableSelect
+                values={tagIds}
+                onChange={setTagIds}
+                placeholder="Choose tags"
+                searchPlaceholder="Search tags"
+                ariaLabel="Tags"
+                options={visible.tags.map((tag) => ({
+                  value: tag.id,
+                  label: tag.name,
+                }))}
+              />
+            </Field>
             <p className="text-sm text-muted">
               Add items in{" "}
               <Link
@@ -650,6 +679,27 @@ export function VehicleForm({
                 />
               </Field>
             ) : null}
+            <Field
+              label={kind === "bike" ? "Related bikes" : "Related cars"}
+              hint="Shown as a full-width list under this vehicle on the website."
+            >
+              {relatedIds.map((id) => (
+                <input key={id} type="hidden" name="relatedIds" value={id} />
+              ))}
+              <MultiSearchableSelect
+                values={relatedIds}
+                onChange={setRelatedIds}
+                placeholder={kind === "bike" ? "Choose related bikes" : "Choose related cars"}
+                searchPlaceholder={kind === "bike" ? "Search bikes" : "Search cars"}
+                ariaLabel={kind === "bike" ? "Related bikes" : "Related cars"}
+                options={relatedVehicles
+                  .filter((vehicle) => vehicle.id !== values.id)
+                  .map((vehicle) => ({
+                    value: vehicle.id,
+                    label: `${vehicle.name} · ${vehicle.registrationNumber}${vehicle.published ? "" : " · Draft"}`,
+                  }))}
+              />
+            </Field>
           </div>
 
           <div className={current.id === "pricing" ? "grid gap-4 md:grid-cols-2" : "hidden"}>

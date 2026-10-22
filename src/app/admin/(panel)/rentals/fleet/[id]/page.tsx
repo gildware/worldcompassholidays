@@ -35,6 +35,7 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
       features: { include: { config: { select: { kind: true } } } },
       addonLinks: true,
       locationLinks: true,
+      relatedLinks: { orderBy: { sortOrder: "asc" } },
       documents: { orderBy: { createdAt: "desc" } },
       blocks: true,
       rentalBookings: {
@@ -47,7 +48,14 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
   const kind = fleetKinds().includes(vehicle.kind as "car" | "bike")
     ? (vehicle.kind as "car" | "bike")
     : "car";
-  const setup = await getRentalSetup(kind);
+  const [setup, relatedVehicles] = await Promise.all([
+    getRentalSetup(kind),
+    prisma.vehicle.findMany({
+      where: { kind, id: { not: vehicle.id } },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, registrationNumber: true, published: true },
+    }),
+  ]);
   const manage = can(user, "vehicles.manage");
 
   const documents = manage ? (
@@ -156,6 +164,9 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
             featureIds: vehicle.features
               .filter((feature) => feature.config.kind === "feature")
               .map((feature) => feature.configId),
+            tagIds: vehicle.features
+              .filter((feature) => feature.config.kind === "tag")
+              .map((feature) => feature.configId),
             includedIds: vehicle.features
               .filter((feature) => feature.config.kind === "included")
               .map((feature) => feature.configId),
@@ -167,6 +178,7 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
               .map((feature) => feature.configId),
             addonIds: vehicle.addonLinks.map((addon) => addon.configId),
             locationIds: vehicle.locationLinks.map((link) => link.locationId),
+            relatedIds: vehicle.relatedLinks.map((link) => link.relatedId),
             images: vehicle.images.map((image) => ({
               url: image.url,
               key: image.key,
@@ -178,11 +190,13 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
           fuels={configsOf(setup.configs, "fuel")}
           transmissions={configsOf(setup.configs, "transmission")}
           features={configsOf(setup.configs, "feature")}
+          tags={configsOf(setup.configs, "tag")}
           included={configsOf(setup.configs, "included")}
           excluded={configsOf(setup.configs, "excluded")}
           bookingDocuments={configsOf(setup.configs, "customer_document")}
           addons={configsOf(setup.configs, "addon")}
           locations={setup.locations.filter((location) => location.active)}
+          relatedVehicles={relatedVehicles}
           systemPickup={setup.settings.allowCounterPickup}
           systemDelivery={setup.settings.allowHomeDelivery}
           documents={documents}

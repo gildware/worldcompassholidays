@@ -387,7 +387,7 @@ function idList(formData: FormData, name: string) {
 
 async function coverIds(
   ids: string[],
-  kind: "feature" | "included" | "excluded" | "customer_document",
+  kind: "feature" | "included" | "excluded" | "customer_document" | "tag",
   fleet: string,
 ) {
   if (ids.length === 0) return null;
@@ -396,9 +396,9 @@ async function coverIds(
     select: { id: true, appliesTo: true },
   });
   if (rows.length !== ids.length || rows.some((row) => !appliesToFleet(row.appliesTo, fleet))) {
-    return kind === "customer_document"
-      ? "Choose required documents from bike configuration."
-      : "Choose included items, excluded items, and features from this fleet's configuration.";
+    if (kind === "customer_document") return "Choose required documents from bike configuration.";
+    if (kind === "tag") return "Choose tags from this fleet's configuration.";
+    return "Choose included items, excluded items, and features from this fleet's configuration.";
   }
   return null;
 }
@@ -480,6 +480,7 @@ export async function saveVehicle(
   }
 
   const featureIds = idList(formData, "featureIds");
+  const tagIds = idList(formData, "tagIds");
   const includedIds = idList(formData, "includedIds");
   const excludedIds = idList(formData, "excludedIds");
   const documentIds = data.kind === "bike" ? idList(formData, "documentIds") : [];
@@ -487,12 +488,23 @@ export async function saveVehicle(
   const coverError = (
     await Promise.all([
       coverIds(featureIds, "feature", data.kind),
+      coverIds(tagIds, "tag", data.kind),
       coverIds(includedIds, "included", data.kind),
       coverIds(excludedIds, "excluded", data.kind),
       coverIds(documentIds, "customer_document", data.kind),
     ])
   ).find(Boolean);
   if (coverError) return { error: coverError };
+  const relatedIds = idList(formData, "relatedIds").filter((id) => id !== data.id);
+  if (relatedIds.length > 0) {
+    const related = await prisma.vehicle.findMany({
+      where: { id: { in: relatedIds }, kind: data.kind },
+      select: { id: true },
+    });
+    if (related.length !== relatedIds.length) {
+      return { error: data.kind === "bike" ? "Choose related bikes from this fleet." : "Choose related cars from this fleet." };
+    }
+  }
   const locationIds = [...new Set(idList(formData, "locationIds"))];
   if (locationIds.length === 0) return { error: "Add a location." };
   const places = await prisma.rentalLocation.findMany({
@@ -610,11 +622,12 @@ export async function saveVehicle(
     prisma.vehicleAddon.deleteMany({ where: { vehicleId: vehicle.id } }),
     prisma.vehicleDestination.deleteMany({ where: { vehicleId: vehicle.id } }),
     prisma.vehicleLocation.deleteMany({ where: { vehicleId: vehicle.id } }),
+    prisma.vehicleRelated.deleteMany({ where: { vehicleId: vehicle.id } }),
     prisma.vehicleImage.deleteMany({ where: { vehicleId: vehicle.id } }),
-    ...([...featureIds, ...includedIds, ...excludedIds, ...documentIds].length
+    ...([...featureIds, ...tagIds, ...includedIds, ...excludedIds, ...documentIds].length
       ? [
           prisma.vehicleFeature.createMany({
-            data: [...featureIds, ...includedIds, ...excludedIds, ...documentIds].map((configId) => ({
+            data: [...featureIds, ...tagIds, ...includedIds, ...excludedIds, ...documentIds].map((configId) => ({
               vehicleId: vehicle.id,
               configId,
             })),
@@ -627,6 +640,20 @@ export async function saveVehicle(
     ...(locationIds.length
       ? [prisma.vehicleLocation.createMany({ data: locationIds.map((locationId) => ({ vehicleId: vehicle.id, locationId })) })]
       : []),
+    ...(() => {
+      const links = relatedIds.filter((relatedId) => relatedId !== vehicle.id);
+      return links.length
+        ? [
+            prisma.vehicleRelated.createMany({
+              data: links.map((relatedId, index) => ({
+                vehicleId: vehicle.id,
+                relatedId,
+                sortOrder: index,
+              })),
+            }),
+          ]
+        : [];
+    })(),
     ...(images.length
       ? [
           prisma.vehicleImage.createMany({

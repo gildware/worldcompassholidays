@@ -10,6 +10,8 @@ export const durationChoices = [
 
 const sorts: TourSort[] = ["recommended", "price-asc", "price-desc", "title"];
 
+export const tourOwnedKeys = ["q", "name", "type", "days", "min", "max", "sort"] as const;
+
 export type TourListQueryInput = Record<string, string | string[] | undefined>;
 
 export type TourListQuery = {
@@ -19,7 +21,6 @@ export type TourListQuery = {
   days: string[];
   price: [number, number];
   sort: TourSort;
-  page: number;
 };
 
 function one(value: string | string[] | undefined) {
@@ -40,7 +41,6 @@ export function readTourQuery(
 ): TourListQuery {
   const sortRaw = one(params.sort);
   const sort = sorts.includes(sortRaw as TourSort) ? (sortRaw as TourSort) : "recommended";
-  const page = Math.max(1, Math.floor(Number(one(params.page)) || 1));
   const minText = one(params.min).trim();
   const maxText = one(params.max).trim();
   const minRaw = minText === "" ? Number.NaN : Number(minText);
@@ -60,7 +60,6 @@ export function readTourQuery(
     days: list(params.days).filter((value) => knownDays.has(value)),
     price: low <= high ? [low, high] : [high, low],
     sort,
-    page,
   };
 }
 
@@ -76,6 +75,5 @@ export function tourQueryString(
   if (state.price[0] !== bounds.priceMin) params.set("min", String(state.price[0]));
   if (state.price[1] !== bounds.priceMax) params.set("max", String(state.price[1]));
   if (state.sort !== "recommended") params.set("sort", state.sort);
-  if (state.page > 1) params.set("page", String(state.page));
   return params.toString();
 }

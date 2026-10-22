@@ -1,117 +1,103 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookingList } from "@/components/account/BookingList";
-import { StatusPill } from "@/components/rentals/VehicleCard";
+import { RentalAccountList } from "@/components/account/FleetAccountPage";
 import { requireCustomer } from "@/lib/auth/guards";
+import { visibleAccountSections } from "@/lib/account-sections";
 import { prisma } from "@/lib/db";
-import { formatDateTime } from "@/lib/format";
-import { rentalStatusLabel } from "@/lib/rentals/labels";
 import { privateMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = privateMetadata("My account", "Your World Compass Holidays bookings and profile.");
 
-const closedRentals = ["completed", "cancelled", "rejected"];
-
 export default async function AccountPage() {
   const user = await requireCustomer("account.bookings.view");
+  const sections = visibleAccountSections();
 
-  const [bookingCount, openEnquiries, activeRentals, recentBookings, recentRentals] = await Promise.all([
-    prisma.booking.count({ where: { userId: user.id } }),
-    prisma.booking.count({ where: { userId: user.id, status: { in: ["enquiry", "quoted"] } } }),
-    prisma.rentalBooking.count({ where: { userId: user.id, status: { notIn: closedRentals } } }),
+  const [bookings, rentals] = await Promise.all([
     prisma.booking.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
-      take: 5,
     }),
     prisma.rentalBooking.findMany({
       where: { userId: user.id },
-      include: { vehicle: { select: { name: true } } },
+      include: { vehicle: { select: { name: true, registrationNumber: true, kind: true } } },
       orderBy: { pickupAt: "desc" },
-      take: 4,
     }),
   ]);
 
-  const stats = [
-    { href: "/account/bookings", label: "Bookings", value: bookingCount, hint: "Trips and enquiries" },
-    { href: "/account/bookings", label: "Open enquiries", value: openEnquiries, hint: "Waiting on the team" },
-    { href: "/account/rentals", label: "Rentals", value: activeRentals, hint: "Upcoming or on the road" },
-  ];
+  const knownModules = new Set(sections.map((section) => section.module));
+  const otherBookings = bookings.filter((booking) => !knownModules.has(booking.module));
+  const stats = sections.map((section) => {
+    const enquiries = bookings.filter((booking) => booking.module === section.module).length;
+    const fleet = section.fleet
+      ? rentals.filter((booking) => booking.vehicle.kind === section.fleet).length
+      : 0;
+    return { ...section, value: enquiries + fleet };
+  });
+  const hasAnything = stats.some((stat) => stat.value > 0) || otherBookings.length > 0;
 
   return (
     <div className="grid gap-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold leading-tight">Dashboard</h1>
-          <p className="mt-1 text-sm text-muted">Hello, {user.name}</p>
-        </div>
-        <Link href="/contact" className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white">
-          New enquiry
-        </Link>
+      <div>
+        <h1 className="text-xl font-semibold leading-tight">Dashboard</h1>
+        <p className="mt-1 text-sm text-muted">Hello, {user.name}</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => (
           <Link
-            key={stat.label}
+            key={stat.key}
             href={stat.href}
             className="rounded-lg border border-line bg-white px-4 py-3 hover:border-brand/40"
           >
             <p className="text-xs text-muted">{stat.label}</p>
             <p className="mt-1 text-2xl font-semibold leading-none">{stat.value}</p>
-            <p className="mt-1.5 text-xs text-muted">{stat.hint}</p>
+            <p className="mt-1.5 text-xs text-muted">{stat.description}</p>
           </Link>
         ))}
       </div>
 
-      <section className="grid gap-2">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold">Recent bookings</h2>
-          <Link href="/account/bookings" className="text-xs font-medium text-brand">
-            View all
-          </Link>
-        </div>
-        {recentBookings.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-line bg-white px-4 py-6 text-sm text-muted">
-            No bookings yet. Send an enquiry and it will show up here.
-          </p>
-        ) : (
-          <BookingList bookings={recentBookings} />
-        )}
-      </section>
-
-      <section className="grid gap-2">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold">Recent rentals</h2>
-          <Link href="/account/rentals" className="text-xs font-medium text-brand">
-            View all
-          </Link>
-        </div>
-        {recentRentals.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-line bg-white px-4 py-6 text-sm text-muted">
-            No rentals yet. <Link href="/rentals" className="text-brand">Browse the fleet</Link>
-          </p>
-        ) : (
-          <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-white">
-            {recentRentals.map((booking) => (
-              <li key={booking.id}>
-                <Link
-                  href={`/account/rentals/${booking.reference}`}
-                  className="flex items-center justify-between gap-3 px-3.5 py-2.5 text-sm hover:bg-surface"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{booking.vehicle.name}</p>
-                    <p className="truncate text-xs text-muted">
-                      {booking.reference} · {formatDateTime(booking.pickupAt)}
-                    </p>
+      {hasAnything ? (
+        <div className="grid gap-5">
+          {stats.map((stat) => {
+            const sectionBookings = bookings.filter((booking) => booking.module === stat.module).slice(0, 3);
+            const sectionRentals = stat.fleet
+              ? rentals.filter((booking) => booking.vehicle.kind === stat.fleet).slice(0, 3)
+              : [];
+            if (sectionBookings.length === 0 && sectionRentals.length === 0) return null;
+            return (
+              <section key={stat.key} className="grid gap-2">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-sm font-semibold">{stat.label}</h2>
+                  <Link href={stat.href} className="text-xs font-medium text-brand">
+                    View all
+                  </Link>
+                </div>
+                {sectionRentals.length > 0 ? <RentalAccountList bookings={sectionRentals} /> : null}
+                {sectionBookings.length > 0 && !stat.fleet ? (
+                  <BookingList bookings={sectionBookings} showModule={false} />
+                ) : null}
+                {sectionBookings.length > 0 && stat.fleet ? (
+                  <div className="grid gap-2">
+                    <h3 className="text-xs font-medium text-muted">Enquiries</h3>
+                    <BookingList bookings={sectionBookings} showModule={false} />
                   </div>
-                  <StatusPill status={booking.status} label={rentalStatusLabel(booking.status)} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                ) : null}
+              </section>
+            );
+          })}
+          {otherBookings.length > 0 ? (
+            <section className="grid gap-2">
+              <h2 className="text-sm font-semibold">Other</h2>
+              <BookingList bookings={otherBookings.slice(0, 3)} />
+            </section>
+          ) : null}
+        </div>
+      ) : (
+        <p className="rounded-lg border border-dashed border-line bg-white px-4 py-6 text-sm text-muted">
+          No bookings yet. Tour, hotel, visa, meet and assist, car, and bike each have their own list.
+        </p>
+      )}
     </div>
   );
 }

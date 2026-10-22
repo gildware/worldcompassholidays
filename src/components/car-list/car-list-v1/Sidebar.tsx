@@ -13,6 +13,7 @@ export type CarListFilters = {
   mileage: string[];
   transmissions: string[];
   fuelPolicies: string[];
+  tags: string[];
   price: [number, number];
 };
 

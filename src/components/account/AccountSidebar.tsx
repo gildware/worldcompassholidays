@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/actions/auth";
+import { visibleAccountSections, type AccountSectionKey } from "@/lib/account-sections";
 
 type Item = {
   href: string;
   label: string;
-  icon: "dashboard" | "bookings" | "rentals" | "settings";
+  icon: "dashboard" | "settings" | AccountSectionKey;
 };
 
 function isActive(pathname: string, href: string) {
@@ -45,21 +46,56 @@ function Icon({ name }: { name: Item["icon"] | "logout" }) {
       </svg>
     );
   }
-  if (name === "bookings") {
+  if (name === "tour") {
     return (
       <svg {...common}>
-        <rect x="4" y="5" width="16" height="15" rx="2" />
-        <path d="M8 3.5v3M16 3.5v3M4 10h16" />
+        <path d="M3.5 18.5 8.5 8l3.2 4.2 2.2-2.8 6.6 9.1" />
+        <path d="M3 18.5h18" />
       </svg>
     );
   }
-  if (name === "rentals") {
+  if (name === "hotel") {
+    return (
+      <svg {...common}>
+        <path d="M4 20V9.5L12 4l8 5.5V20" />
+        <path d="M9 20v-5h6v5" />
+        <path d="M9 11h.01M12 11h.01M15 11h.01" />
+      </svg>
+    );
+  }
+  if (name === "visa") {
+    return (
+      <svg {...common}>
+        <path d="M7 3.5h7l3.5 3.5V20.5H7z" />
+        <path d="M14 3.5V7h3.5" />
+        <path d="M9.5 12h5M9.5 15.5h3.5" />
+      </svg>
+    );
+  }
+  if (name === "assist") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="8" r="2.6" />
+        <path d="M6.5 19.5c1.2-2.8 3-4.2 5.5-4.2s4.3 1.4 5.5 4.2" />
+      </svg>
+    );
+  }
+  if (name === "car") {
     return (
       <svg {...common}>
         <path d="M4 15.5h16" />
         <path d="M6 15.5 7.5 10.5h9L18 15.5" />
         <circle cx="8" cy="17.5" r="1.4" />
         <circle cx="16" cy="17.5" r="1.4" />
+      </svg>
+    );
+  }
+  if (name === "bike") {
+    return (
+      <svg {...common}>
+        <circle cx="7" cy="16" r="2.4" />
+        <circle cx="17" cy="16" r="2.4" />
+        <path d="M9.4 16h3.2M7 16 11 8.5h3.2M11 8.5 8.8 8.5" />
       </svg>
     );
   }
@@ -112,8 +148,11 @@ export function AccountSidebar({
   const pathname = usePathname();
   const items: Item[] = [
     { href: "/account", label: "Dashboard", icon: "dashboard" },
-    { href: "/account/bookings", label: "Bookings", icon: "bookings" },
-    { href: "/account/rentals", label: "Rentals", icon: "rentals" },
+    ...visibleAccountSections().map((section) => ({
+      href: section.href,
+      label: section.label,
+      icon: section.key,
+    })),
     ...(showSettings ? [{ href: "/account/settings", label: "Settings", icon: "settings" as const }] : []),
   ];
 
@@ -129,7 +168,7 @@ export function AccountSidebar({
             {phone ? <p className="truncate text-xs text-muted">{phone}</p> : null}
           </div>
         </div>
-        <nav aria-label="Account" className="mt-4 grid gap-0.5">
+        <nav aria-label="Account" className="mt-4 grid min-h-0 flex-1 content-start gap-0.5 overflow-y-auto">
           {items.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -162,7 +201,7 @@ export function AccountSidebar({
             </div>
             <SignOut className="flex h-8 shrink-0 items-center gap-1.5 rounded px-2 text-xs font-medium text-navy hover:bg-surface" />
           </div>
-          <nav aria-label="Account" className="grid grid-cols-2 gap-1 px-3 pb-2 sm:grid-cols-4">
+          <nav aria-label="Account" className="flex gap-1 overflow-x-auto px-3 pb-2">
             {items.map((item) => {
               const active = isActive(pathname, item.href);
               return (
@@ -170,7 +209,7 @@ export function AccountSidebar({
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`${itemClass(active)} min-w-0 w-full`}
+                  className={`${itemClass(active)} shrink-0 whitespace-nowrap`}
                 >
                   <Icon name={item.icon} />
                   {item.label}

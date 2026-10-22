@@ -12,7 +12,13 @@ export type AccountBookingRow = {
   createdAt: Date;
 };
 
-export function BookingList({ bookings }: { bookings: AccountBookingRow[] }) {
+export function BookingList({
+  bookings,
+  showModule = true,
+}: {
+  bookings: AccountBookingRow[];
+  showModule?: boolean;
+}) {
   return (
     <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-white">
       {bookings.map((booking) => (
@@ -24,7 +30,8 @@ export function BookingList({ bookings }: { bookings: AccountBookingRow[] }) {
             <div className="min-w-0">
               <p className="truncate font-medium">{booking.title}</p>
               <p className="truncate text-xs text-muted">
-                {booking.reference} · {moduleLabel(booking.module)} · {booking.guests}{" "}
+                {booking.reference}
+                {showModule ? ` · ${moduleLabel(booking.module)}` : ""} · {booking.guests}{" "}
                 {booking.guests === 1 ? "guest" : "guests"}
               </p>
             </div>

@@ -7,6 +7,7 @@ import { CustomerDocumentForm } from "@/components/rentals/CustomerDocumentForm"
 import { PriceBreakdown } from "@/components/rentals/PriceBreakdown";
 import { StatusPill } from "@/components/rentals/VehicleCard";
 import { SubmitButton } from "@/components/forms/SubmitButton";
+import { accountSectionForFleet } from "@/lib/account-sections";
 import { requireCustomer } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
@@ -80,12 +81,13 @@ export default async function RentalBookingPage({ params }: Props) {
   const decision = canCancel
     ? cancellationRefund({ pickupAt: booking.pickupAt, cancelledAt: new Date(), policies })
     : null;
+  const section = accountSectionForFleet(booking.vehicle.kind);
 
   return (
     <div className="grid gap-5">
       <div>
-        <Link href="/account/rentals" className="text-sm font-medium text-brand">
-          Rentals
+        <Link href={section?.href ?? "/account"} className="text-sm font-medium text-brand">
+          {section?.label ?? "Account"}
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-semibold">{booking.vehicle.name}</h1>

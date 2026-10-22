@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth/guards";
 import { getCurrentUser } from "@/lib/auth/session";
+import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { bookingReference } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import type { FormState } from "@/lib/forms";
@@ -166,7 +167,7 @@ export async function submitVisaRequest(
 
   revalidatePath("/admin/bookings");
   revalidatePath("/admin/visa");
-  if (customer) revalidatePath("/account");
+  if (customer) revalidateCustomerBooking("visa", booking.reference);
 
   if (channel === "whatsapp") {
     const desk = whatsAppHref(theme.contact.whatsapp);

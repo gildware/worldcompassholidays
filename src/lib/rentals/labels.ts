@@ -1,6 +1,7 @@
 import { modules } from "@/config/modules";
 
 export const rentalConfigKinds = [
+  "tag",
   "vehicle_type",
   "fuel",
   "transmission",
@@ -15,6 +16,7 @@ export const rentalConfigKinds = [
 export type RentalConfigKind = (typeof rentalConfigKinds)[number];
 
 export const rentalConfigKindLabels: Record<RentalConfigKind, string> = {
+  tag: "Tags",
   vehicle_type: "Vehicle types",
   fuel: "Fuel types",
   transmission: "Transmission",

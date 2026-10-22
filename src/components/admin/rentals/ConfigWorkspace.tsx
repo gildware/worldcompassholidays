@@ -40,7 +40,7 @@ function kindIcon(kind: RentalConfigKind, fleet?: "car" | "bike"): RentalIconNam
   if (kind === "transmission") return "gear";
   if (kind === "included") return "check";
   if (kind === "excluded") return "minus";
-  if (kind === "addon") return "tag";
+  if (kind === "tag" || kind === "addon") return "tag";
   return "specs";
 }
 

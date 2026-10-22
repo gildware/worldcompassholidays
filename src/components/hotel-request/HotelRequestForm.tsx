@@ -20,6 +20,8 @@ export type HotelRequestDefaults = {
   adults: string;
   children: string;
   rooms: string;
+  hotelName: string;
+  message: string;
 };
 
 export function HotelRequestForm({
@@ -49,7 +51,7 @@ export function HotelRequestForm({
   const busy = pending || whatsappPending;
   const [stars, setStars] = useState(saved.stars || "any");
   const [destination, setDestination] = useState(saved.destination || defaults.destination);
-  const [note, setNote] = useState(saved.message ?? "");
+  const [note, setNote] = useState(saved.message || defaults.message || "");
 
   useEffect(() => {
     if (!presetKey) return;
@@ -159,7 +161,7 @@ export function HotelRequestForm({
           name="hotelName"
           placeholder="Optional"
           error={view.fields?.hotelName}
-          defaultValue={saved.hotelName}
+          defaultValue={saved.hotelName || defaults.hotelName}
         />
         <Field
           label="Check-in"

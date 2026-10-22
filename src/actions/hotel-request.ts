@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { theme } from "@/config/theme";
 import { getCurrentUser } from "@/lib/auth/session";
+import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { bookingReference } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
@@ -192,7 +193,7 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
   });
 
   revalidatePath("/admin/bookings");
-  if (customer) revalidatePath("/account");
+  if (customer) revalidateCustomerBooking("hotel", booking.reference);
 
   if (channel === "whatsapp") {
     const desk = whatsAppHref(theme.contact.whatsapp);
@@ -202,6 +203,15 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
       success: `Saved as ${booking.reference}. Send the WhatsApp message so the desk has the same request.`,
       reference: booking.reference,
       whatsappUrl: desk ? `${desk}?text=${encodeURIComponent(message)}` : null,
+      values,
+    };
+  }
+
+  if (text(formData.get("surface")) === "stay") {
+    return {
+      error: null,
+      success: `Saved as ${booking.reference}.`,
+      reference: booking.reference,
       values,
     };
   }

@@ -3,10 +3,11 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import DatePicker, { type DateObject } from "react-multi-date-picker";
 import type { CarSort } from "@/components/car-list/types";
+import { tagColor } from "@/lib/rentals/tag-colors";
 import type { CarListFilters } from "@/components/car-list/car-list-v1/Sidebar";
 import type { CountOption } from "@/components/hotel-list/types";
 
-type MenuKey = "city" | "type" | "sort";
+type MenuKey = "city" | "type" | "tag" | "sort";
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -73,10 +74,42 @@ function FuelIcon() {
   );
 }
 
+function FilterIcon() {
+  return (
+    <Icon>
+      <path
+        d="M2.4 3.2h11.2L9.4 8.1v3.4l-2.8 1.3V8.1L2.4 3.2Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </Icon>
+  );
+}
+
 function SortIcon() {
   return (
     <Icon>
       <path d="M5 3.2v9.6M5 3.2 2.8 5.4M5 3.2l2.2 2.2M11 12.8V3.2M11 12.8l-2.2-2.2M11 12.8l2.2-2.2" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </Icon>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <Icon>
+      <circle cx="7" cy="7" r="3.6" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <path d="m9.7 9.7 3.2 3.2" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </Icon>
+  );
+}
+
+function TagIcon() {
+  return (
+    <Icon>
+      <path d="M2.8 8.4 8 3.2h4.6v4.6L7.2 13.2a1.2 1.2 0 0 1-1.7 0L2.8 10.1a1.2 1.2 0 0 1 0-1.7Z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <circle cx="10.6" cy="5.4" r="0.8" fill="currentColor" />
     </Icon>
   );
 }
@@ -93,14 +126,16 @@ function TransmissionIcon() {
 function Field({
   icon,
   label,
+  className,
   children,
 }: {
   icon: ReactNode;
   label: string;
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <div className="bike-field">
+    <div className={`bike-field${className ? ` ${className}` : ""}`}>
       <span className="bike-field__label">
         {icon}
         {label}
@@ -128,7 +163,12 @@ export function BikeFilterBar({
   cities,
   types,
   fuels,
+  tags = [],
   transmissions = [],
+  query,
+  locationQuery = "",
+  onQuery,
+  searchPlaceholder,
   filters,
   sort,
   sorts,
@@ -137,13 +177,19 @@ export function BikeFilterBar({
   onPickupDate,
   onDropoffDate,
   onChange,
+  onReset,
   onSort,
   typeAsMenu = false,
 }: {
   cities: CountOption[];
   types: CountOption[];
   fuels: CountOption[];
+  tags?: CountOption[];
   transmissions?: CountOption[];
+  query: string;
+  locationQuery?: string;
+  onQuery: (value: string) => void;
+  searchPlaceholder: string;
   filters: CarListFilters;
   sort: CarSort;
   sorts: { value: CarSort; label: string }[];
@@ -152,16 +198,21 @@ export function BikeFilterBar({
   onPickupDate: (date: DateObject | null) => void;
   onDropoffDate: (date: DateObject | null) => void;
   onChange: (next: CarListFilters) => void;
+  onReset?: () => void;
   onSort: (next: CarSort) => void;
   typeAsMenu?: boolean;
 }) {
   const barRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState<MenuKey | null>(null);
+  const [drawer, setDrawer] = useState(false);
   const filtersActive =
+    query.trim().length > 0 ||
+    locationQuery.trim().length > 0 ||
     filters.locations.length > 0 ||
     filters.categories.length > 0 ||
     filters.fuelPolicies.length > 0 ||
-    filters.transmissions.length > 0;
+    filters.transmissions.length > 0 ||
+    filters.tags.length > 0;
   const baseId = useId();
 
   useEffect(() => {
@@ -186,11 +237,108 @@ export function BikeFilterBar({
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!drawer) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDrawer(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [drawer]);
+
   const toggleMenu = (key: MenuKey) => setOpen((current) => (current === key ? null : key));
+  const drawerActive =
+    locationQuery.trim().length > 0 ||
+    Boolean(pickupDate || dropoffDate) ||
+    filters.locations.length > 0 ||
+    filters.categories.length > 0 ||
+    filters.fuelPolicies.length > 0 ||
+    filters.transmissions.length > 0 ||
+    filters.tags.length > 0;
 
   return (
     <div className="bike-bar" ref={barRef}>
-      <div className="bike-bar__line" onScroll={() => setOpen(null)}>
+      <Field className="bike-field--search" icon={<SearchIcon />} label="Search">
+          <label className="bike-search">
+            <input
+              type="search"
+              value={query}
+              placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
+              onChange={(event) => onQuery(event.target.value)}
+            />
+            {query ? (
+              <button
+                type="button"
+                className="bike-search__clear"
+                aria-label="Clear search"
+                onClick={() => onQuery("")}
+              >
+                ×
+              </button>
+            ) : null}
+          </label>
+        </Field>
+
+        <button
+          type="button"
+          className={`list-filter-toggle${drawerActive ? " is-on" : ""}`}
+          aria-label="Filters"
+          aria-expanded={drawer}
+          onClick={() => {
+            setOpen(null);
+            setDrawer(true);
+          }}
+        >
+          <FilterIcon />
+        </button>
+
+        <Field className="bike-field--sort" icon={<SortIcon />} label="Sort">
+          <FilterMenu
+            id={`${baseId}-sort`}
+            label={sorts.find((option) => option.value === sort)?.label ?? "Sort"}
+            active={sort !== "recommended"}
+            open={open === "sort"}
+            onToggle={() => toggleMenu("sort")}
+            align="end"
+            width={200}
+            mark={<SortIcon />}
+          >
+            <div className="bike-menu__list" role="listbox" aria-label="Sort">
+              {sorts.map((option) => {
+                const on = option.value === sort;
+                return (
+                  <button
+                    type="button"
+                    key={option.value}
+                    className={`bike-menu__option${on ? " is-on" : ""}`}
+                    role="option"
+                    aria-selected={on}
+                    onClick={() => {
+                      onSort(option.value);
+                      setOpen(null);
+                    }}
+                  >
+                    <span>{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </FilterMenu>
+        </Field>
+
+        <div className={`bike-bar__filters${drawer ? " is-open" : ""}`} onScroll={() => setOpen(null)}>
+          <div className="list-filter-drawer__head">
+            <h2>Filters</h2>
+            <button type="button" aria-label="Close filters" onClick={() => setDrawer(false)}>
+              ×
+            </button>
+          </div>
         {cities.length > 1 ? (
           <Field icon={<PinIcon />} label="Location">
             <FilterMenu
@@ -200,6 +348,7 @@ export function BikeFilterBar({
               open={open === "city"}
               onToggle={() => toggleMenu("city")}
               width={240}
+              inline={drawer}
             >
               <OptionList
                 anyLabel="Any location"
@@ -231,6 +380,7 @@ export function BikeFilterBar({
               open={open === "type"}
               onToggle={() => toggleMenu("type")}
               width={220}
+              inline={drawer}
             >
               <OptionList
                 anyLabel="Any type"
@@ -274,6 +424,32 @@ export function BikeFilterBar({
             </div>
           )}
         </Field>
+
+        {tags.length > 0 ? (
+          <Field icon={<TagIcon />} label="Tag">
+            <FilterMenu
+              id={`${baseId}-tag`}
+              label={choiceLabel("Tag", filters.tags, "tags")}
+              swatch={filters.tags.length === 1 ? tagColor(filters.tags[0]) : undefined}
+              active={filters.tags.length > 0}
+              open={open === "tag"}
+              onToggle={() => toggleMenu("tag")}
+              width={230}
+              inline={drawer}
+            >
+              <OptionList
+                anyLabel="Any tag"
+                options={tags}
+                selected={filters.tags}
+                colorFor={tagColor}
+                onPick={(label) => {
+                  onChange({ ...filters, tags: label ? pickOne(filters.tags, label) : [] });
+                  setOpen(null);
+                }}
+              />
+            </FilterMenu>
+          </Field>
+        ) : null}
 
         {transmissions.length > 0 ? (
           <Field icon={<TransmissionIcon />} label="Gearbox">
@@ -350,52 +526,31 @@ export function BikeFilterBar({
             className="bike-bar__reset"
             onClick={() => {
               setOpen(null);
+              if (onReset) {
+                onReset();
+                return;
+              }
+              onQuery("");
               onChange({
                 ...filters,
                 locations: [],
                 categories: [],
                 fuelPolicies: [],
                 transmissions: [],
+                tags: [],
               });
             }}
           >
             Reset
           </button>
         ) : null}
-      </div>
-
-      <Field icon={<SortIcon />} label="Sort">
-      <FilterMenu
-        id={`${baseId}-sort`}
-        label={sorts.find((option) => option.value === sort)?.label ?? "Sort"}
-        active={sort !== "recommended"}
-        open={open === "sort"}
-        onToggle={() => toggleMenu("sort")}
-        align="end"
-        width={200}
-      >
-        <div className="bike-menu__list" role="listbox" aria-label="Sort">
-          {sorts.map((option) => {
-            const on = option.value === sort;
-            return (
-              <button
-                type="button"
-                key={option.value}
-                className={`bike-menu__option${on ? " is-on" : ""}`}
-                role="option"
-                aria-selected={on}
-                onClick={() => {
-                  onSort(option.value);
-                  setOpen(null);
-                }}
-              >
-                <span>{option.label}</span>
-              </button>
-            );
-          })}
+          <button type="button" className="list-filter-drawer__apply" onClick={() => setDrawer(false)}>
+            Show results
+          </button>
         </div>
-      </FilterMenu>
-      </Field>
+        {drawer ? (
+          <button type="button" className="list-filter-drawer__backdrop" aria-label="Close filters" onClick={() => setDrawer(false)} />
+        ) : null}
     </div>
   );
 }
@@ -415,6 +570,15 @@ function DateRange({
   const end = dropoffDate?.format("MMM D");
   const label = start && end ? `${start} – ${end}` : start || "Dates";
   const value = [pickupDate, dropoffDate].filter((date): date is DateObject => Boolean(date));
+  const [months, setMonths] = useState(1);
+
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 768px)");
+    const apply = () => setMonths(query.matches ? 2 : 1);
+    apply();
+    query.addEventListener("change", apply);
+    return () => query.removeEventListener("change", apply);
+  }, []);
 
   return (
     <div className="bike-date">
@@ -423,9 +587,9 @@ function DateRange({
         range
         rangeHover
         format="MMM D"
-        numberOfMonths={2}
+        numberOfMonths={months}
         portal
-        zIndex={80}
+        zIndex={2000}
         onChange={(next) => {
           const dates = !next ? [] : Array.isArray(next) ? next : [next];
           onPickupDate(dates[0] ?? null);
@@ -444,21 +608,27 @@ function DateRange({
 function FilterMenu({
   id,
   label,
+  swatch,
   active,
   open,
   onToggle,
   children,
   width = 220,
   align = "start",
+  mark,
+  inline = false,
 }: {
   id: string;
   label: string;
+  swatch?: string;
   active: boolean;
   open: boolean;
   onToggle: () => void;
   children: ReactNode;
   width?: number;
   align?: "start" | "end";
+  mark?: ReactNode;
+  inline?: boolean;
 }) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [box, setBox] = useState<{ top: number; left: number } | null>(null);
@@ -473,6 +643,16 @@ function FilterMenu({
     setBox({ top: rect.bottom + 6, left });
   }, [align, open, width]);
 
+  if (inline) {
+    return (
+      <div className="bike-menu bike-menu--inline">
+        <div id={id} className="bike-menu__panel bike-menu__panel--inline">
+          {children}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bike-menu">
       <button
@@ -483,7 +663,9 @@ function FilterMenu({
         aria-controls={id}
         onClick={onToggle}
       >
-        <span>{label}</span>
+        {swatch ? <span className="bike-menu__swatch" style={{ background: swatch }} /> : null}
+        {mark ? <span className="bike-menu__mark">{mark}</span> : null}
+        <span className="bike-menu__text">{label}</span>
         <Chevron />
       </button>
       {open && box ? (
@@ -499,11 +681,13 @@ function OptionList({
   anyLabel,
   options,
   selected,
+  colorFor,
   onPick,
 }: {
   anyLabel: string;
   options: CountOption[];
   selected: string[];
+  colorFor?: (label: string) => string;
   onPick: (label: string | null) => void;
 }) {
   return (
@@ -528,7 +712,10 @@ function OptionList({
             aria-selected={on}
             onClick={() => onPick(option.label)}
           >
-            <span>{option.label}</span>
+            <span className="bike-menu__name">
+              {colorFor ? <span className="bike-menu__swatch" style={{ background: colorFor(option.label) }} /> : null}
+              {option.label}
+            </span>
             <span className="bike-menu__count">{option.count}</span>
           </button>
         );

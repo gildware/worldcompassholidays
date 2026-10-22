@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dal Lake House, Srinagar — rooms, rates, and reviews</title>
+  <meta name="description" content="Dal Lake House on Boulevard Road, Srinagar. Lake-facing rooms, Kashmiri breakfast, and a total price with GST shown before you request the stay.">
+  <meta name="theme-color" content="#f6f3ed">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Hotel",
+    "name": "Dal Lake House",
+    "description": "A cedar house on Dal Lake with eighteen rooms, a private jetty, and Kashmiri breakfast.",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Boulevard Road",
+      "addressLocality": "Srinagar",
+      "addressRegion": "Jammu and Kashmir",
+      "addressCountry": "IN"
+    },
+    "starRating": { "@type": "Rating", "ratingValue": "5" },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "9.6",
+      "bestRating": "10",
+      "reviewCount": "1284"
+    },
+    "checkinTime": "14:00",
+    "checkoutTime": "11:00",
+    "priceRange": "₹₹₹"
+  }
+  </script>
+  <style>
+    :root {
+      --ink: #1c1915;
+      --muted: #5e584f;
+      --soft: #8a8175;
+      --line: #e4ddd2;
+      --paper: #f6f3ed;
+      --card: #fffcf8;
+      --blue: #3554d1;
+      --blue-dark: #243ea8;
+      --green: #0d6b52;
+      --gold: #8a6420;
+      --danger: #9f1239;
+      --shadow: 0 22px 50px rgba(48, 36, 18, 0.08);
+      --serif: "Fraunces", "Iowan Old Style", Palatino, Georgia, serif;
+      --sans: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16.5px;
+      line-height: 1.55;
+      accent-color: var(--blue);
+    }
+    img { max-width: 100%; display: block; }
+    button, input, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    h1, h2, h3, p { margin: 0; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+    .skip {
+      position: absolute; left: 12px; top: -40px; background: #fff; padding: 8px 12px; z-index: 80; border-radius: 8px;
+    }
+    .skip:focus { top: 12px; }
+    .wrap { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+    .sr {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;
+    }
+
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      width: min(1160px, calc(100% - 40px)); margin: 0 auto; padding: 18px 0 10px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo strong { font-family: var(--serif); font-size: 18px; font-weight: 560; display: block; line-height: 1; }
+    .logo em { font-style: normal; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); }
+    .header__actions { display: flex; align-items: center; gap: 8px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border-radius: 999px; border: 1px solid transparent; background: var(--blue); color: #fff;
+      padding: 12px 18px; font-weight: 600; text-decoration: none; line-height: 1;
+    }
+    .btn:hover { background: var(--blue-dark); }
+    .btn--ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+    .btn--ghost:hover { background: #fff; }
+    .btn--small { padding: 9px 14px; font-size: 14px; }
+    .btn--block { width: 100%; padding: 15px 18px; }
+    .btn[aria-pressed="true"] { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+    .crumb { display: flex; flex-wrap: wrap; gap: 8px; color: var(--soft); font-size: 14px; padding: 8px 0 18px; }
+    .crumb a { color: var(--muted); text-decoration: none; }
+    .crumb a:hover { text-decoration: underline; }
+
+    .hero-head { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; padding-bottom: 18px; }
+    .eyebrow { color: var(--gold); font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
+    h1 { font-family: var(--serif); font-weight: 560; font-size: clamp(36px, 5vw, 58px); letter-spacing: -0.035em; line-height: 0.98; }
+    .stars { color: var(--gold); letter-spacing: 2px; font-size: 14px; }
+    .place { margin-top: 10px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+    .place a { color: var(--blue); }
+    .score { display: flex; gap: 12px; align-items: center; text-align: left; background: transparent; border: 0; padding: 0; }
+    .score b {
+      width: 58px; height: 58px; border-radius: 16px; background: var(--green); color: #fff;
+      display: grid; place-items: center; font-family: var(--serif); font-size: 24px; font-weight: 560;
+    }
+    .score strong { display: block; font-size: 16px; color: var(--ink); }
+    .score span { color: var(--muted); font-size: 14px; }
+
+    .gallery {
+      display: grid; grid-template-columns: 1.45fr 1fr 1fr; grid-template-rows: 1fr 1fr;
+      gap: 6px; height: 520px; position: relative; border-radius: 22px; overflow: hidden;
+    }
+    .shot {
+      position: relative; overflow: hidden; border: 0; padding: 0; background: #e5dfd6; cursor: zoom-in;
+    }
+    .shot img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; transition: transform .6s ease; }
+    .shot:hover img { transform: scale(1.035); }
+    .g1 { grid-row: 1 / span 2; }
+    .gallery__all {
+      position: absolute; right: 16px; bottom: 16px; background: #fff; color: var(--ink);
+      border: 0; border-radius: 999px; padding: 10px 14px; font-weight: 600; box-shadow: var(--shadow);
+    }
+
+    .subnav {
+      position: sticky; top: 0; z-index: 20; margin-top: 22px;
+      background: rgba(246, 243, 237, 0.9); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
+    }
+    .subnav__in { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 58px; }
+    .subnav__links { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    .subnav__links::-webkit-scrollbar { display: none; }
+    .subnav__links a {
+      text-decoration: none; color: var(--muted); font-weight: 600; font-size: 14.5px;
+      padding: 8px 10px; border-bottom: 2px solid transparent; white-space: nowrap;
+    }
+    .subnav__links a.is-on { color: var(--ink); border-color: var(--ink); }
+    .subnav__cta { display: flex; align-items: center; gap: 12px; }
+    .subnav__cta .js-total { font-family: var(--serif); font-size: 22px; font-weight: 560; }
+
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 42px; align-items: start; padding: 34px 0 20px; }
+    section[id] { scroll-margin-top: 76px; }
+    .block { padding: 8px 0 28px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+    h2 { font-family: var(--serif); font-weight: 560; font-size: clamp(28px, 3vw, 36px); letter-spacing: -0.03em; margin-bottom: 14px; }
+    .lede { color: #3f3a33; font-size: 17.5px; max-width: 62ch; }
+    .lede + .lede { margin-top: 12px; }
+
+    .highlights { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+    .highlight {
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 14px 14px 16px;
+    }
+    .highlight strong { display: block; font-size: 15px; }
+    .highlight span { color: var(--muted); font-size: 14px; }
+
+    .segment { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: #efeae2; border-radius: 999px; margin: 4px 0 16px; }
+    .segment button { border: 0; background: transparent; border-radius: 999px; padding: 10px 8px; font-weight: 600; font-size: 14px; }
+    .segment button[aria-checked="true"] { background: #fff; box-shadow: 0 1px 3px rgba(40, 30, 10, 0.08); }
+
+    .room {
+      display: grid; grid-template-columns: 188px minmax(0, 1fr); gap: 16px;
+      padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); margin-bottom: 12px;
+    }
+    .room.is-on { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+    .room img { width: 100%; height: 148px; object-fit: cover; border-radius: 12px; background: #e5dfd6; }
+    .room h3 { font-size: 20px; font-family: var(--serif); font-weight: 560; }
+    .room__top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .meta { color: var(--muted); font-size: 14px; margin: 6px 0; }
+    .room__price { font-family: var(--serif); font-size: 28px; letter-spacing: -0.03em; margin-top: 8px; }
+    .room__price small { font-family: var(--sans); font-size: 14px; color: var(--muted); letter-spacing: 0; }
+    .room__for, .js-cancel { color: var(--muted); font-size: 13.5px; }
+    .ticks { display: flex; flex-wrap: wrap; gap: 6px 12px; list-style: none; padding: 8px 0 0; margin: 0; font-size: 13.5px; color: #3f3a33; }
+    .ticks li::before { content: "✓ "; color: var(--green); }
+
+    .amenity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .amenity {
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 16px 8px;
+    }
+    .amenity h3 { font-size: 16px; margin-bottom: 8px; }
+    .amenity ul, .plain { margin: 0; padding: 0; list-style: none; }
+    .amenity li, .dist li { padding: 7px 0; border-top: 1px solid #f0ebe3; display: flex; justify-content: space-between; gap: 12px; font-size: 14.5px; }
+    .amenity li span, .dist li span { color: var(--muted); }
+    .more-toggle { position: absolute; opacity: 0; pointer-events: none; }
+    .extra-amenities { display: none; margin-top: 12px; }
+    #all-amenities:checked ~ .extra-amenities { display: grid; }
+    .text-btn { display: inline-block; margin-top: 14px; color: var(--blue); font-weight: 600; cursor: pointer; }
+    .when-open { display: none; }
+    #all-amenities:checked ~ .text-btn .when-open { display: inline; }
+    #all-amenities:checked ~ .text-btn .when-closed { display: none; }
+    .honest { margin-top: 16px; color: var(--muted); font-size: 14.5px; }
+
+    .experiences { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .exp { background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; }
+    .exp img { height: 140px; width: 100%; object-fit: cover; background: #e5dfd6; }
+    .exp div { padding: 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .exp h3 { font-size: 18px; font-family: var(--serif); font-weight: 560; }
+    .exp p { color: var(--muted); font-size: 14px; flex: 1; }
+    .exp .btn { align-self: flex-start; }
+
+    .loc { display: grid; grid-template-columns: 1.25fr 0.85fr; gap: 16px; }
+    .map {
+      min-height: 320px; border: 0; width: 100%; height: 100%; border-radius: 18px; background: #e5dfd6;
+    }
+    .dist { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 8px 16px; margin: 0; list-style: none; }
+    .maps-link { display: inline-block; margin-top: 10px; color: var(--blue); font-weight: 600; }
+
+    .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; margin: 8px 0 18px; }
+    .bar-row { display: grid; grid-template-columns: 110px 1fr 32px; gap: 8px; align-items: center; font-size: 14px; }
+    .bar { height: 6px; background: #e7e1d8; border-radius: 99px; overflow: hidden; }
+    .bar i { display: block; height: 100%; background: var(--green); border-radius: 99px; }
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .filters button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 12px; font-weight: 600; font-size: 14px; }
+    .filters button.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .reviews { display: grid; gap: 12px; }
+    .review { display: grid; grid-template-columns: auto 1fr; gap: 12px; padding: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
+    .review[hidden] { display: none !important; }
+    .avatar { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px; background: var(--av, var(--blue)); }
+    .review header { display: flex; justify-content: space-between; gap: 8px; }
+    .review h3 { font-size: 15.5px; }
+    .review .who { color: var(--soft); font-size: 13px; }
+    .mark { color: var(--green); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .review p { margin-top: 6px; color: #3c3832; }
+
+    .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; }
+    .facts div { padding-top: 10px; border-top: 1px solid var(--line); }
+    .facts strong { display: block; font-size: 14px; }
+    .facts span { color: var(--muted); font-size: 14.5px; }
+    details { border-bottom: 1px solid var(--line); }
+    summary { cursor: pointer; padding: 14px 0; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; color: var(--soft); font-weight: 500; }
+    details[open] summary::after { content: "–"; }
+    details p { margin: 0 0 14px; color: var(--muted); max-width: 68ch; }
+
+    .book {
+      position: sticky; top: 76px; max-height: calc(100vh - 96px); overflow: auto;
+      background: #fff; border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 18px 18px 16px;
+    }
+    .sheet-handle, .book__close { display: none; }
+    .book__price { font-family: var(--serif); font-size: 42px; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+    .book__sub, .book__sentence { color: var(--muted); font-size: 14px; margin-top: 6px; }
+    .book__sentence { color: var(--ink); font-weight: 600; }
+    .change { color: var(--blue); font-size: 14px; font-weight: 600; }
+    .dates, .guests { display: grid; gap: 8px; margin-top: 14px; }
+    .dates { grid-template-columns: 1fr 1fr; }
+    .guests { grid-template-columns: repeat(3, 1fr); }
+    .field, .guest { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--muted); font-weight: 600; }
+    .field input, .guest, textarea, .reserve-form input, .reserve-form textarea {
+      border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 10px 12px;
+    }
+    .field input { padding: 10px; font-weight: 550; color: var(--ink); }
+    .guest { padding: 8px; }
+    .step { display: flex; align-items: center; justify-content: space-between; }
+    .step button {
+      width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: #fff; font-size: 18px; line-height: 1;
+    }
+    .step button:disabled { opacity: 0.35; cursor: not-allowed; }
+    .step b { font-variant-numeric: tabular-nums; color: var(--ink); }
+    .warn { margin: 10px 0 0; color: var(--danger); font-size: 13.5px; }
+    .warn[hidden] { display: none !important; }
+    .extras { border: 0; margin: 14px 0 0; padding: 0; }
+    .extras legend { font-size: 13px; font-weight: 700; padding: 0; margin-bottom: 4px; }
+    .extra { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 7px 0; font-size: 14px; }
+    .extra b { font-variant-numeric: tabular-nums; font-weight: 600; }
+    .receipt { margin: 12px 0; }
+    .receipt div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; font-size: 14.5px; }
+    .receipt dt { color: var(--muted); font-weight: 450; }
+    .receipt dd { margin: 0; font-variant-numeric: tabular-nums; }
+    .receipt__total { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 8px !important; }
+    .receipt__total dt, .receipt__total dd { color: var(--ink); font-weight: 700; font-size: 16px; }
+    .fine { color: var(--soft); font-size: 12.5px; margin-top: 8px; }
+    .book .segment { margin-top: 14px; }
+
+    .similar { padding: 10px 0 50px; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+    .card img { height: 170px; width: 100%; object-fit: cover; background: #e5dfd6; }
+    .card div { padding: 14px; }
+    .card h3 { font-family: var(--serif); font-weight: 560; font-size: 20px; }
+    .card p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+    .footer { border-top: 1px solid var(--line); padding: 22px 0 40px; color: var(--soft); font-size: 13.5px; }
+    .dock, .backdrop { display: none; }
+
+    dialog::backdrop { background: rgba(20, 16, 12, 0.62); }
+    #light { margin: 0; border: 0; padding: 0; width: 100%; height: 100%; max-width: none; max-height: none; background: rgba(14, 11, 8, 0.94); }
+    #light[open] { display: grid; place-items: center; position: fixed; inset: 0; }
+    #light figure { margin: 0; width: min(1040px, 88vw); }
+    #light img { width: 100%; max-height: 78vh; object-fit: contain; background: #111; border-radius: 12px; }
+    #light figcaption { color: #f6f1ea; text-align: center; padding-top: 12px; font-size: 14.5px; }
+    .light-x, .light-nav {
+      position: absolute; border: 0; background: rgba(255,255,255,.16); color: #fff; border-radius: 999px;
+    }
+    .light-x { top: 16px; right: 16px; padding: 10px 14px; }
+    .light-nav { top: 50%; width: 46px; height: 46px; font-size: 28px; transform: translateY(-50%); }
+    .light-prev { left: 16px; }
+    .light-next { right: 16px; }
+
+    #reserve { border: 0; padding: 0; background: #fff; border-radius: 22px; width: min(520px, calc(100% - 28px)); max-height: calc(100vh - 32px); overflow: auto; }
+    .reserve-form, #reserve-success { padding: 26px; }
+    .reserve-form h2, #reserve-success h2 { font-family: var(--serif); font-weight: 560; font-size: 32px; letter-spacing: -0.03em; margin-bottom: 8px; }
+    .reserve-form label, .reserve-form .stack { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 12px; }
+    .reserve-form input, .reserve-form textarea { font-weight: 500; color: var(--ink); }
+    .was-validated input:invalid, .was-validated textarea:invalid { border-color: var(--danger); }
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    #reserve-success p { color: var(--muted); margin-top: 8px; }
+    #reserve-success[hidden] { display: none; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(12px);
+      background: var(--ink); color: #fff; border-radius: 999px; padding: 12px 16px; font-size: 14px;
+      opacity: 0; pointer-events: none; transition: .25s ease; z-index: 60;
+    }
+    .toast.is-on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 980px) {
+      body { padding-bottom: 84px; }
+      .layout { grid-template-columns: 1fr; }
+      .gallery { height: auto; grid-template-columns: 1fr 1fr; grid-template-rows: 240px 112px 112px; }
+      .g1 { grid-column: 1 / -1; grid-row: auto; height: 240px; }
+      .loc, .experiences, .cards, .amenity-grid, .facts, .score-grid, .highlights { grid-template-columns: 1fr; }
+      .subnav__cta { display: none; }
+      .book {
+        position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 50;
+        max-height: min(92vh, 780px); border-radius: 22px 22px 0 0; transform: translateY(110%);
+        transition: transform .28s ease;
+      }
+      body.sheet-open .book { transform: none; }
+      body.sheet-open { overflow: hidden; }
+      .sheet-handle { display: block; width: 42px; height: 4px; border-radius: 4px; background: #ddd4c8; margin: 0 auto 10px; }
+      .book__close { display: inline-flex; position: absolute; right: 14px; top: 14px; }
+      .backdrop { position: fixed; inset: 0; background: rgba(20, 16, 12, .46); z-index: 40; border: 0; padding: 0; }
+      body.sheet-open .backdrop { display: block; }
+      .dock {
+        display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 35;
+        background: #fff; border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+        align-items: center; justify-content: space-between; gap: 12px;
+      }
+      body.sheet-open .dock { display: none; }
+      .dock strong { font-family: var(--serif); font-size: 26px; display: block; line-height: 1; }
+      .dock span { color: var(--muted); font-size: 13px; }
+      .toast { bottom: 92px; }
+      .header .btn--ghost span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+    }
+    @media (max-width: 640px) {
+      .wrap { width: min(1160px, calc(100% - 28px)); }
+      .hero-head, .room, .review { grid-template-columns: 1fr; display: grid; }
+      .room img { height: 190px; }
+      .score { margin-top: 8px; }
+      .guests { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition: none !important; }
+    }
+    @media print {
+      .header__actions, .subnav, .dock, .backdrop, dialog { display: none !important; }
+      .book { position: static; max-height: none; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#overview">Skip to stay details</a>
+  <header class="header">
+    <a class="logo" href="hotel-list-demo.html" data-list aria-label="World Compass Holidays">
+      <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="13.2" fill="none" stroke="#3554d1" stroke-width="1.6"/>
+        <path d="M16 5.5 19 16l-3-1.6L13 16Z" fill="#3554d1"/>
+        <path d="M16 26.5 13 16l3 1.6L19 16Z" fill="#1c1915"/>
+      </svg>
+      <span><strong>World Compass</strong><em>Holidays</em></span>
+    </a>
+    <div class="header__actions">
+      <button class="btn btn--ghost btn--small" type="button" id="save" aria-pressed="false">♡ <span>Save</span></button>
+      <button class="btn btn--ghost btn--small" type="button" id="share">↗ <span>Share</span></button>
+      <button class="btn btn--small" type="button" data-open-book>Reserve</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <nav class="crumb" aria-label="Breadcrumb">
+      <a href="hotel-list-demo.html" data-list>Hotels</a><span aria-hidden="true">/</span>
+      <a href="#location">Srinagar</a><span aria-hidden="true">/</span>
+      <span>Dal Lake House</span>
+    </nav>
+
+    <div class="hero-head">
+      <div>
+        <p class="eyebrow">Guest favourite · Srinagar</p>
+        <h1>Dal Lake House</h1>
+        <p class="place">
+          <span class="stars" aria-label="5 star house">★★★★★</span>
+          <a href="#location">Boulevard Road, Srinagar</a>
+          <span>18 rooms · private jetty</span>
+        </p>
+      </div>
+      <button class="score" type="button" id="jump-reviews">
+        <b>9.6</b>
+        <span><strong>Exceptional</strong><span>1,284 reviews</span></span>
+      </button>
+    </div>
+
+    <div class="gallery" aria-label="Photographs of Dal Lake House">
+      <button class="shot g1" type="button" data-index="0"><img alt="The house from the boulevard at dusk" fetchpriority="high" src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1600&q=75"></button>
+      <button class="shot" type="button" data-index="1"><img alt="Lakeview deluxe bedroom" src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=900&q=75"></button>
+      <button class="shot" type="button" data-index="2"><img alt="Heritage suite sitting room" src="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=900&q=75"></button>
+      <button class="shot" type="button" data-index="3"><img alt="Dining room set for dinner" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=900&q=75"></button>
+      <button class="shot" type="button" data-index="4"><img alt="The quiet pool court" src="https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=900&q=75"></button>
+      <button class="gallery__all" type="button" data-index="0">View all 8 photos</button>
+    </div>
+  </div>
+
+  <nav class="subnav" aria-label="On this page">
+    <div class="wrap subnav__in">
+      <div class="subnav__links">
+        <a href="#overview">Overview</a>
+        <a href="#rooms">Rooms</a>
+        <a href="#amenities">Amenities</a>
+        <a href="#experiences">Experiences</a>
+        <a href="#location">Location</a>
+        <a href="#reviews">Reviews</a>
+        <a href="#policies">Policies</a>
+      </div>
+      <div class="subnav__cta">
+        <span class="js-total">₹52,392</span>
+        <button class="btn btn--small" type="button" data-open-book>Reserve</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="wrap layout">
+    <main>
+      <section class="block" id="overview">
+        <h2>On the water, not above it</h2>
+        <p class="lede">The house sits on Boulevard Road with a private jetty and eighteen rooms turned toward Dal Lake. Mornings start with kahwa on the deck. By evening the lake goes quiet and the houseboats light up.</p>
+        <p class="lede">Rooms are cedar and plaster, with wool throws and a desk at the window. Breakfast is cooked to order. Dinner, if you want it, is Kashmiri.</p>
+        <div class="highlights">
+          <article class="highlight"><strong>Lake at the door</strong><span>Private jetty. Shikara leaves from the steps.</span></article>
+          <article class="highlight"><strong>Breakfast on every rate</strong><span>Kahwa, breads, and fruit from the valley.</span></article>
+          <article class="highlight"><strong>Free cancellation</strong><span>On the flexible rate, until 48 hours before arrival.</span></article>
+          <article class="highlight"><strong>One price</strong><span>GST is in the total before you request the stay.</span></article>
+        </div>
+      </section>
+
+      <section class="block" id="rooms">
+        <h2>Rooms for these dates</h2>
+        <div class="segment" role="radiogroup" aria-label="Rate type">
+          <button type="button" role="radio" data-rate="flex" aria-checked="true">Flexible</button>
+          <button type="button" role="radio" data-rate="saver" aria-checked="false">Saver · 12% less</button>
+        </div>
+        <article class="room is-on">
+          <img alt="" src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=700&q=75">
+          <div>
+            <div class="room__top">
+              <h3>Lakeview Deluxe</h3>
+              <button class="btn btn--small" type="button" data-select="deluxe" aria-pressed="true">Selected</button>
+            </div>
+            <p class="meta">Sleeps 2 · King or twin · 32 m² · Lake balcony · 4 available</p>
+            <p class="room__price"><span data-nightly="deluxe">₹14,800</span> <small>a night</small></p>
+            <p class="room__for" data-for="deluxe"></p>
+            <p class="js-cancel">Flexible · free cancellation until 10 Nov 2026</p>
+            <ul class="ticks"><li>Breakfast</li><li>Fibre Wi-Fi</li><li>Desk</li><li>Rain shower</li></ul>
+          </div>
+        </article>
+        <article class="room">
+          <img alt="" src="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=700&q=75">
+          <div>
+            <div class="room__top">
+              <h3>Heritage Suite</h3>
+              <button class="btn btn--ghost btn--small" type="button" data-select="suite" aria-pressed="false">Select</button>
+            </div>
+            <p class="meta">Sleeps 3 · King · 48 m² · Sitting room · 3 available</p>
+            <p class="room__price"><span data-nightly="suite">₹22,400</span> <small>a night</small></p>
+            <p class="room__for" data-for="suite"></p>
+            <p class="js-cancel">Flexible · free cancellation until 10 Nov 2026</p>
+            <ul class="ticks"><li>Breakfast</li><li>Soaking tub</li><li>Separate sitting room</li><li>Lake window</li></ul>
+          </div>
+        </article>
+        <article class="room">
+          <img alt="" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=700&q=75">
+          <div>
+            <div class="room__top">
+              <h3>Houseboat Pavilion</h3>
+              <button class="btn btn--ghost btn--small" type="button" data-select="pavilion" aria-pressed="false">Select</button>
+            </div>
+            <p class="meta">Sleeps 3 · King · 62 m² · Private deck · 2 available</p>
+            <p class="room__price"><span data-nightly="pavilion">₹31,500</span> <small>a night</small></p>
+            <p class="room__for" data-for="pavilion"></p>
+            <p class="js-cancel">Flexible · free cancellation until 10 Nov 2026</p>
+            <ul class="ticks"><li>Breakfast</li><li>Deck on the water</li><li>Bathtub</li><li>Evening tea</li></ul>
+          </div>
+        </article>
+      </section>
+
+      <section class="block" id="amenities">
+        <h2>What is in the house</h2>
+        <div class="amenity-grid">
+          <article class="amenity">
+            <h3>In the room</h3>
+            <ul>
+              <li>King or twin on request</li>
+              <li>Lake-facing balcony</li>
+              <li>Wool throws and blackout</li>
+              <li>Desk and reading lamp</li>
+              <li>In-room safe and kettle</li>
+              <li>Rain shower</li>
+            </ul>
+          </article>
+          <article class="amenity">
+            <h3>Food and drink</h3>
+            <ul>
+              <li>Kahwa on the deck</li>
+              <li>Breakfast cooked to order</li>
+              <li>Kashmiri dinner on request</li>
+              <li>Room service, 7:00–22:00</li>
+              <li>Still water in the room</li>
+            </ul>
+          </article>
+          <article class="amenity">
+            <h3>Wellness and outdoors</h3>
+            <ul>
+              <li>Cedar sauna</li>
+              <li>Treatment room</li>
+              <li>Morning yoga on the deck</li>
+              <li>Private shikara jetty</li>
+              <li>Walled garden</li>
+            </ul>
+          </article>
+          <article class="amenity">
+            <h3>Practical</h3>
+            <ul>
+              <li>Fibre Wi-Fi, fine for calls</li>
+              <li>Host on site, day and night</li>
+              <li>Lift to every floor</li>
+              <li>Same-day laundry</li>
+              <li>Free parking for 6 cars</li>
+              <li>Airport pickup on request</li>
+            </ul>
+          </article>
+        </div>
+        <input class="more-toggle" type="checkbox" id="all-amenities">
+        <div class="extra-amenities amenity-grid">
+          <article class="amenity">
+            <h3>Also in the room</h3>
+            <ul>
+              <li>Iron and board</li>
+              <li>Hair dryer</li>
+              <li>Cot on request</li>
+              <li>High chair</li>
+            </ul>
+          </article>
+          <article class="amenity">
+            <h3>For longer stays</h3>
+            <ul>
+              <li>Connecting rooms for families</li>
+              <li>Meeting corner for 8</li>
+              <li>Luggage storage</li>
+              <li>Housekeeping every day</li>
+            </ul>
+          </article>
+        </div>
+        <label class="text-btn" for="all-amenities"><span class="when-closed">Show 8 more</span><span class="when-open">Show fewer</span></label>
+        <p class="honest">Not included: airport transfer (₹1,800), dinner, and spa treatments. There is no EV charging. Smoking is outside only.</p>
+      </section>
+
+      <section class="block" id="experiences">
+        <h2>Add to the stay</h2>
+        <div class="experiences">
+          <article class="exp">
+            <img alt="" src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=75">
+            <div>
+              <h3>Sunrise shikara</h3>
+              <p>Two seats from the jetty, before the boulevard wakes. Tea is packed.</p>
+              <button class="btn btn--ghost btn--small" type="button" data-add="shikara" data-label="Add · ₹2,800" aria-pressed="false">Add · ₹2,800</button>
+            </div>
+          </article>
+          <article class="exp">
+            <img alt="" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=75">
+            <div>
+              <h3>Kashmiri dinner</h3>
+              <p>Rogan josh, haak, and rice for two, served in the dining room or the suite.</p>
+              <button class="btn btn--ghost btn--small" type="button" data-add="dinner" data-label="Add · ₹3,400" aria-pressed="false">Add · ₹3,400</button>
+            </div>
+          </article>
+          <article class="exp">
+            <img alt="" src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=75">
+            <div>
+              <h3>Airport pickup</h3>
+              <p>Sheikh ul-Alam Airport to the house, about 45 minutes, one car.</p>
+              <button class="btn btn--ghost btn--small" type="button" data-add="airport" data-label="Add · ₹1,800" aria-pressed="false">Add · ₹1,800</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="block" id="location">
+        <h2>Where you will be</h2>
+        <p class="lede">Boulevard Road, on the lake. The ghats are a short walk. The airport is a calm 45 minutes if you leave after the morning rush.</p>
+        <div class="loc" style="margin-top:16px">
+          <iframe class="map" title="Map showing Dal Lake House on Boulevard Road, Srinagar" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.openstreetmap.org/export/embed.html?bbox=74.835%2C34.095%2C74.890%2C34.140&amp;layer=mapnik&amp;marker=34.115%2C74.862"></iframe>
+          <ul class="dist">
+            <li>Private jetty <span>on the property</span></li>
+            <li>Boulevard ghats <span>3 min walk</span></li>
+            <li>Hazratbal Shrine <span>15 min drive</span></li>
+            <li>Jama Masjid, old city <span>20 min drive</span></li>
+            <li>Shalimar Bagh <span>25 min drive</span></li>
+            <li>Srinagar Airport <span>45 min drive</span></li>
+          </ul>
+        </div>
+        <a class="maps-link" href="https://www.openstreetmap.org/?mlat=34.115&mlon=74.862#map=15/34.115/74.862" target="_blank" rel="noopener noreferrer">Open the map</a>
+      </section>
+
+      <section class="block" id="reviews">
+        <h2>What guests noticed</h2>
+        <p class="lede">9.6 out of 10 from 1,284 reviews. 96% would stay again. Scores are out of 10, same as the number on the room.</p>
+        <div class="score-grid" style="margin-top:16px">
+          <div class="bar-row"><span>Location</span><span class="bar"><i style="width:98%"></i></span><b>9.8</b></div>
+          <div class="bar-row"><span>Staff</span><span class="bar"><i style="width:98%"></i></span><b>9.8</b></div>
+          <div class="bar-row"><span>Cleanliness</span><span class="bar"><i style="width:97%"></i></span><b>9.7</b></div>
+          <div class="bar-row"><span>Comfort</span><span class="bar"><i style="width:95%"></i></span><b>9.5</b></div>
+          <div class="bar-row"><span>Facilities</span><span class="bar"><i style="width:94%"></i></span><b>9.4</b></div>
+          <div class="bar-row"><span>Wi-Fi</span><span class="bar"><i style="width:93%"></i></span><b>9.3</b></div>
+          <div class="bar-row"><span>Value</span><span class="bar"><i style="width:91%"></i></span><b>9.1</b></div>
+        </div>
+        <div class="filters" role="toolbar" aria-label="Filter reviews">
+          <button type="button" class="is-on" data-filter="all">All</button>
+          <button type="button" data-filter="couples">Couples</button>
+          <button type="button" data-filter="families">Families</button>
+          <button type="button" data-filter="solo">Solo</button>
+          <button type="button" data-filter="business">Business</button>
+        </div>
+        <p class="meta" id="review-count">6 stories from 1,284 reviews</p>
+        <div class="reviews" style="margin-top:12px">
+          <article class="review" data-kind="couples">
+            <span class="avatar" style="--av:#3554d1">MA</span>
+            <div>
+              <header><h3>Meera and Arjun</h3><span class="mark">9.8</span></header>
+              <p class="who">Mumbai · Couple · October 2026</p>
+              <p>We took the shikara at dawn and came back to kahwa that was actually hot. The room smells of cedar, not cleaner. Ask for a balcony that faces the open water, not the boulevard.</p>
+            </div>
+          </article>
+          <article class="review" data-kind="families">
+            <span class="avatar" style="--av:#0d6b52">RK</span>
+            <div>
+              <header><h3>The Khanna family</h3><span class="mark">9.5</span></header>
+              <p class="who">Delhi · Family · September 2026</p>
+              <p>Two connecting rooms, a cot waiting, and staff who remembered our daughter’s name on the second morning. The garden is small and enough. Dinner was the best meal of the trip.</p>
+            </div>
+          </article>
+          <article class="review" data-kind="solo">
+            <span class="avatar" style="--av:#8a6420">SL</span>
+            <div>
+              <header><h3>S. Lal</h3><span class="mark">9.6</span></header>
+              <p class="who">Bengaluru · Solo · August 2026</p>
+              <p>I came to photograph the lake. The desk faces the window, the wifi held a long call, and nobody tried to entertain me. That is the review.</p>
+            </div>
+          </article>
+          <article class="review" data-kind="couples">
+            <span class="avatar" style="--av:#7c2d12">PN</span>
+            <div>
+              <header><h3>Priya N.</h3><span class="mark">8.7</span></header>
+              <p class="who">Singapore · Couple · July 2026</p>
+              <p>Beautiful room and a serious dinner. The boulevard is noisy until about ten. If you sleep early, ask for the pavilion or a courtyard side. They will tell you this if you ask. I wish the page had told me first.</p>
+            </div>
+          </article>
+          <article class="review" data-kind="business">
+            <span class="avatar" style="--av:#1e3a5f">AH</span>
+            <div>
+              <header><h3>Adil Hussain</h3><span class="mark">9.2</span></header>
+              <p class="who">Hyderabad · Business · June 2026</p>
+              <p>Early breakfast at 6:30 without a fuss, a quiet room, and a car to the airport that left when they said it would. I would stay here instead of a large hotel on the same road.</p>
+            </div>
+          </article>
+          <article class="review" data-kind="couples">
+            <span class="avatar" style="--av:#3f3a33">JT</span>
+            <div>
+              <header><h3>Joseph and Tara</h3><span class="mark">9.9</span></header>
+              <p class="who">London · Anniversary · May 2026</p>
+              <p>The suite bathtub looks over the lake, which sounds like a brochure and happens to be true. They put flowers in the room because we mentioned an anniversary in the note. Nothing else was fussy.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="block" id="policies">
+        <h2>Before you arrive</h2>
+        <div class="facts">
+          <div><strong>Check-in</strong><span>From 14:00. Early arrival if the room is ready. Bags can wait.</span></div>
+          <div><strong>Check-out</strong><span>By 11:00. A late noon departure is sometimes possible. Ask the night before.</span></div>
+          <div><strong>Cancellation</strong><span>Flexible is free until 48 hours before check-in. Saver is 12% less and non-refundable.</span></div>
+          <div><strong>Children</strong><span>All ages are welcome. Under 6 stay free in the beds already in the room.</span></div>
+          <div><strong>Quiet hours</strong><span>22:00 to 07:00. The boulevard itself is livelier early in the evening.</span></div>
+          <div><strong>Smoking and pets</strong><span>No smoking indoors. One dog is possible on request, not in the dining room.</span></div>
+          <div><strong>Payment</strong><span>Pay at the house, or by card when the stay is confirmed. This demo takes neither.</span></div>
+          <div><strong>Deposit</strong><span>None on Deluxe and Suite. The Pavilion holds ₹5,000, returned at checkout.</span></div>
+        </div>
+        <h2 style="margin-top:28px">Questions guests actually ask</h2>
+        <details>
+          <summary>Does every room face the lake?</summary>
+          <p>The three rooms on this page do. The house also has two quieter courtyard rooms that do not. They are not listed here.</p>
+        </details>
+        <details>
+          <summary>Is breakfast really included?</summary>
+          <p>Yes, on both the flexible and the saver rate. Dinner is separate, including the Kashmiri dinner you can add above.</p>
+        </details>
+        <details>
+          <summary>When does free cancellation end?</summary>
+          <p>48 hours before your check-in date, on the flexible rate. The booking card names the exact day as you change dates. The saver rate is not refundable.</p>
+        </details>
+        <details>
+          <summary>Can I work from the room?</summary>
+          <p>Every room has a desk and fibre Wi-Fi that holds video calls. There is also a meeting corner for up to eight, booked with the host.</p>
+        </details>
+        <details>
+          <summary>How do we get from the airport?</summary>
+          <p>About 45 minutes. Pickup is ₹1,800 for one car and can be added to the total on this page. Taxis are easy if you would rather not book it now.</p>
+        </details>
+      </section>
+    </main>
+
+    <aside class="book" id="book" aria-label="Price and request">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <button class="book__close btn btn--ghost btn--small" type="button" id="close-sheet">Close</button>
+      <p class="book__price js-total">₹52,392</p>
+      <p class="book__sub js-sub">₹14,800 a night · 3 nights · GST included in the total</p>
+      <p class="book__sentence js-sentence">2 adults · 12–15 Nov · 3 nights · Lakeview Deluxe</p>
+      <p><a class="change" href="#rooms" data-close-sheet>Change room</a></p>
+      <div class="dates">
+        <label class="field">Check-in <input id="checkin" type="date" value="2026-11-12" required></label>
+        <label class="field">Check-out <input id="checkout" type="date" value="2026-11-15" required></label>
+      </div>
+      <div class="guests">
+        <div class="guest"><span>Adults</span><div class="step"><button type="button" data-step="adults" data-dir="-1" aria-label="Fewer adults">−</button><b id="adults-n">2</b><button type="button" data-step="adults" data-dir="1" aria-label="More adults">+</button></div></div>
+        <div class="guest"><span>Children</span><div class="step"><button type="button" data-step="children" data-dir="-1" aria-label="Fewer children">−</button><b id="children-n">0</b><button type="button" data-step="children" data-dir="1" aria-label="More children">+</button></div></div>
+        <div class="guest"><span>Rooms</span><div class="step"><button type="button" data-step="roomsQty" data-dir="-1" aria-label="Fewer rooms">−</button><b id="rooms-n">1</b><button type="button" data-step="roomsQty" data-dir="1" aria-label="More rooms">+</button></div></div>
+      </div>
+      <p class="warn" id="sleep-warn" hidden></p>
+      <div class="segment" role="radiogroup" aria-label="Rate type in summary">
+        <button type="button" role="radio" data-rate="flex" aria-checked="true">Flexible</button>
+        <button type="button" role="radio" data-rate="saver" aria-checked="false">Saver</button>
+      </div>
+      <fieldset class="extras">
+        <legend>Add to this stay</legend>
+        <label class="extra"><input type="checkbox" data-extra="shikara"> <span>Sunrise shikara for two</span> <b>₹2,800</b></label>
+        <label class="extra"><input type="checkbox" data-extra="dinner"> <span>Kashmiri dinner for two</span> <b>₹3,400</b></label>
+        <label class="extra"><input type="checkbox" data-extra="airport"> <span>Airport pickup</span> <b>₹1,800</b></label>
+      </fieldset>
+      <dl class="receipt">
+        <div><dt class="js-room-line">Lakeview Deluxe</dt><dd class="js-room-sum"></dd></div>
+        <div><dt>GST 18% on the room</dt><dd class="js-tax"></dd></div>
+        <div class="js-extra-lines"></div>
+        <div class="receipt__total"><dt>Total</dt><dd class="js-total">₹52,392</dd></div>
+      </dl>
+      <button class="btn btn--block" type="button" id="reserve-open">Request this stay</button>
+      <p class="fine">Price is per room, not per guest. Children under 6 stay free. This page is a demo: nothing is held or charged.</p>
+    </aside>
+  </div>
+
+  <div class="wrap similar">
+    <h2>Other houses on the lake</h2>
+    <div class="cards">
+      <article class="card">
+        <img alt="" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=75">
+        <div><h3>Nigeen Water House</h3><p>Nigeen Lake · from ₹11,200 a night · 9.2</p></div>
+      </article>
+      <article class="card">
+        <img alt="" src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=900&q=75">
+        <div><h3>Boulevard Orchard</h3><p>Srinagar · from ₹9,400 a night · 9.0</p></div>
+      </article>
+      <article class="card">
+        <img alt="" src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=900&q=75">
+        <div><h3>Zabarwan Lodge</h3><p>Near the gardens · from ₹16,800 a night · 9.4</p></div>
+      </article>
+    </div>
+    <p class="fine" style="margin-top:12px">Sample neighbouring stays, shown so the page has a way onward. They are not bookable in this demo.</p>
+  </div>
+
+  <footer class="footer">
+    <div class="wrap">Dal Lake House is a sample stay for World Compass Holidays. Prices, reviews, and policies are written for this interface. Photographs are stock images, not pictures of the house. Nothing you submit leaves this page.</div>
+  </footer>
+
+  <button class="backdrop" type="button" id="backdrop" aria-label="Close booking panel"></button>
+  <div class="dock">
+    <div><strong class="js-total">₹52,392</strong><span class="js-dock-note">3 nights · taxes included</span></div>
+    <button class="btn" type="button" data-open-book>View deal</button>
+  </div>
+  <p class="sr" id="live" aria-live="polite"></p>
+
+  <dialog id="light" aria-label="Photographs">
+    <button class="light-x" type="button" id="light-x">Close</button>
+    <button class="light-nav light-prev" type="button" id="light-prev" aria-label="Previous photo">‹</button>
+    <figure>
+      <img id="light-img" alt="">
+      <figcaption id="light-cap"></figcaption>
+    </figure>
+    <button class="light-nav light-next" type="button" id="light-next" aria-label="Next photo">›</button>
+  </dialog>
+
+  <dialog id="reserve" aria-labelledby="reserve-title">
+    <form class="reserve-form" id="reserve-form">
+      <h2 id="reserve-title">Request this stay</h2>
+      <p id="reserve-summary" class="lede"></p>
+      <label>Full name <input name="name" required minlength="2" autocomplete="name"></label>
+      <label>Email <input name="email" type="email" required autocomplete="email"></label>
+      <label>Phone <input name="phone" type="tel" required autocomplete="tel" inputmode="tel"></label>
+      <label class="stack">Anything the house should know
+        <textarea name="note" rows="3" placeholder="Arrival time, a quiet room, a birthday"></textarea>
+      </label>
+      <div class="form-actions">
+        <button class="btn btn--ghost" type="button" id="reserve-cancel">Cancel</button>
+        <button class="btn" type="submit">Send request</button>
+      </div>
+      <p class="fine">Demo only. Nothing is sent, stored, or charged.</p>
+    </form>
+    <div id="reserve-success" hidden>
+      <h2>Noted on this page</h2>
+      <p id="success-copy"></p>
+      <div class="form-actions"><button class="btn" type="button" id="reserve-done">Close</button></div>
+    </div>
+  </dialog>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const ROOMS = {
+      deluxe: { name: "Lakeview Deluxe", flex: 14800, saver: 13024, cap: 4, sleeps: 2 },
+      suite: { name: "Heritage Suite", flex: 22400, saver: 19712, cap: 3, sleeps: 3 },
+      pavilion: { name: "Houseboat Pavilion", flex: 31500, saver: 27720, cap: 2, sleeps: 3 }
+    };
+    const EXTRAS = {
+      shikara: { label: "Sunrise shikara for two", price: 2800 },
+      dinner: { label: "Kashmiri dinner for two", price: 3400 },
+      airport: { label: "Airport pickup", price: 1800 }
+    };
+    const PHOTOS = [
+      ["https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1800&q=75", "The house from the boulevard at dusk", "The house from Boulevard Road"],
+      ["https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1800&q=75", "Lakeview deluxe bedroom", "Lakeview Deluxe"],
+      ["https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1800&q=75", "Heritage suite sitting room", "Heritage Suite"],
+      ["https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1800&q=75", "Dining room set for dinner", "The dining room"],
+      ["https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=1800&q=75", "The quiet pool court", "The pool court"],
+      ["https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=1800&q=75", "A marble bathroom", "Bathrooms"],
+      ["https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1800&q=75", "The treatment room", "The treatment room"],
+      ["https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1800&q=75", "A bright bedroom", "Morning light"]
+    ].map(([src, alt, cap]) => ({ src, alt, cap }));
+
+    const state = { room: "deluxe", rate: "flex", adults: 2, children: 0, roomsQty: 1, extras: new Set() };
+    const checkin = document.getElementById("checkin");
+    const checkout = document.getElementById("checkout");
+    const live = document.getElementById("live");
+    let summaryText = "";
+    let totalValue = 0;
+    let lastTotal = null;
+    let photoIndex = 0;
+    let toastTimer = 0;
+
+    const money = (n) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+    const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const parseISO = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+    const addDays = (date, n) => { const d = new Date(date); d.setDate(d.getDate() + n); return d; };
+    const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const pretty = (d) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    function rangeLabel(a, b) {
+      const short = { day: "numeric", month: "short" };
+      if (a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()) return `${a.getDate()}–${b.toLocaleDateString("en-GB", short)}`;
+      return `${a.toLocaleDateString("en-GB", short)} – ${b.toLocaleDateString("en-GB", short)}`;
+    }
+    function toast(text) {
+      const el = document.getElementById("toast");
+      el.textContent = text;
+      el.classList.add("is-on");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove("is-on"), 2400);
+    }
+    function setSheet(open) {
+      if (open && window.innerWidth > 980) return;
+      document.body.classList.toggle("sheet-open", open);
+    }
+    function openBook() {
+      if (window.matchMedia("(max-width: 980px)").matches) setSheet(true);
+      else checkin.focus();
+    }
+    function fixDates() {
+      const today = startOfDay(new Date());
+      checkin.min = iso(today);
+      let inn = parseISO(checkin.value);
+      if (Number.isNaN(inn.getTime()) || inn < today) inn = addDays(today, 21);
+      let out = parseISO(checkout.value);
+      if (Number.isNaN(out.getTime()) || out <= inn) out = addDays(inn, 3);
+      checkin.value = iso(inn);
+      checkout.value = iso(out);
+      checkout.min = iso(addDays(inn, 1));
+      return { inn, out, nights: Math.round((out - inn) / 86400000) };
+    }
+    function render() {
+      const { inn, out, nights } = fixDates();
+      const room = ROOMS[state.room];
+      if (state.roomsQty > room.cap) state.roomsQty = room.cap;
+      const nightly = room[state.rate];
+      const roomSum = nightly * nights * state.roomsQty;
+      const tax = Math.round(roomSum * 0.18);
+      let extrasSum = 0;
+      const extraRows = [];
+      state.extras.forEach((id) => {
+        const item = EXTRAS[id];
+        if (!item) return;
+        extrasSum += item.price;
+        extraRows.push(item);
+      });
+      const total = roomSum + tax + extrasSum;
+      totalValue = total;
+      const cancel = addDays(inn, -2);
+      const today = startOfDay(new Date());
+      const cancelText = state.rate === "saver"
+        ? "Saver · non-refundable · 12% less than flexible"
+        : cancel < today
+          ? "Flexible · the free-cancellation window has closed"
+          : `Flexible · free cancellation until ${pretty(cancel)}`;
+      const guests = [`${state.adults} adult${state.adults > 1 ? "s" : ""}`];
+      if (state.children) guests.push(`${state.children} ${state.children > 1 ? "children" : "child"}`);
+      const roomBit = state.roomsQty > 1 ? `${state.roomsQty} × ${room.name}` : room.name;
+      summaryText = `${guests.join(", ")} · ${rangeLabel(inn, out)} · ${nights} night${nights > 1 ? "s" : ""} · ${roomBit}`;
+      document.querySelectorAll(".js-total").forEach((el) => { el.textContent = money(total); });
+      document.querySelector(".js-sub").textContent = `${money(nightly)} a night · ${nights} night${nights > 1 ? "s" : ""} · GST included in the total`;
+      document.querySelector(".js-sentence").textContent = summaryText;
+      document.querySelector(".js-dock-note").textContent = extrasSum ? `${nights} nights · taxes and add-ons included` : `${nights} nights · taxes included`;
+      document.querySelector(".js-room-line").textContent = `${room.name} · ${nights} night${nights > 1 ? "s" : ""}${state.roomsQty > 1 ? ` · ${state.roomsQty} rooms` : ""}`;
+      document.querySelector(".js-room-sum").textContent = money(roomSum);
+      document.querySelector(".js-tax").textContent = money(tax);
+      const host = document.querySelector(".js-extra-lines");
+      host.replaceChildren();
+      extraRows.forEach((item) => {
+        const row = document.createElement("div");
+        const dt = document.createElement("dt");
+        const dd = document.createElement("dd");
+        dt.textContent = item.label;
+        dd.textContent = money(item.price);
+        row.append(dt, dd);
+        host.append(row);
+      });
+      document.querySelectorAll("[data-nightly]").forEach((el) => { el.textContent = money(ROOMS[el.dataset.nightly][state.rate]); });
+      document.querySelectorAll("[data-for]").forEach((el) => {
+        const amount = ROOMS[el.dataset.for][state.rate] * nights;
+        el.textContent = `${money(amount)} for ${nights} night${nights > 1 ? "s" : ""}, before tax`;
+      });
+      document.querySelectorAll(".js-cancel").forEach((el) => { el.textContent = cancelText; });
+      document.querySelectorAll("[data-rate]").forEach((btn) => btn.setAttribute("aria-checked", String(btn.dataset.rate === state.rate)));
+      document.querySelectorAll("[data-select]").forEach((btn) => {
+        const on = btn.dataset.select === state.room;
+        btn.setAttribute("aria-pressed", String(on));
+        btn.textContent = on ? "Selected" : "Select";
+        btn.classList.toggle("btn--ghost", !on);
+        btn.closest(".room").classList.toggle("is-on", on);
+      });
+      document.querySelectorAll("[data-extra]").forEach((input) => { input.checked = state.extras.has(input.dataset.extra); });
+      document.querySelectorAll("[data-add]").forEach((btn) => {
+        const on = state.extras.has(btn.dataset.add);
+        btn.setAttribute("aria-pressed", String(on));
+        btn.textContent = on ? "Added" : btn.dataset.label;
+        btn.classList.toggle("btn--ghost", !on);
+      });
+      document.getElementById("adults-n").textContent = state.adults;
+      document.getElementById("children-n").textContent = state.children;
+      document.getElementById("rooms-n").textContent = state.roomsQty;
+      document.querySelector("[data-step='adults'][data-dir='-1']").disabled = state.adults <= 1;
+      document.querySelector("[data-step='adults'][data-dir='1']").disabled = state.adults >= 8;
+      document.querySelector("[data-step='children'][data-dir='-1']").disabled = state.children <= 0;
+      document.querySelector("[data-step='children'][data-dir='1']").disabled = state.children >= 6;
+      document.querySelector("[data-step='roomsQty'][data-dir='-1']").disabled = state.roomsQty <= 1;
+      document.querySelector("[data-step='roomsQty'][data-dir='1']").disabled = state.roomsQty >= room.cap;
+      const sleeps = room.sleeps * state.roomsQty;
+      const people = state.adults + state.children;
+      const warn = document.getElementById("sleep-warn");
+      warn.hidden = people <= sleeps;
+      warn.textContent = `This selection sleeps ${sleeps}. You have ${people} guests — add a room, or choose one that sleeps more.`;
+      if (lastTotal !== null && lastTotal !== total) live.textContent = `Total ${money(total)}`;
+      lastTotal = total;
+    }
+
+    document.querySelectorAll("[data-open-book]").forEach((btn) => btn.addEventListener("click", openBook));
+    document.getElementById("close-sheet").addEventListener("click", () => setSheet(false));
+    document.getElementById("backdrop").addEventListener("click", () => setSheet(false));
+    document.querySelectorAll("[data-close-sheet]").forEach((link) => link.addEventListener("click", () => setSheet(false)));
+    window.addEventListener("resize", () => { if (window.innerWidth > 980) setSheet(false); });
+    checkin.addEventListener("change", render);
+    checkout.addEventListener("change", render);
+    document.body.addEventListener("click", (event) => {
+      const rate = event.target.closest("[data-rate]");
+      if (rate) { state.rate = rate.dataset.rate; render(); return; }
+      const select = event.target.closest("[data-select]");
+      if (select) { state.room = select.dataset.select; render(); return; }
+      const step = event.target.closest("[data-step]");
+      if (step && !step.disabled) {
+        const key = step.dataset.step;
+        state[key] += Number(step.dataset.dir);
+        render();
+        return;
+      }
+      const add = event.target.closest("[data-add]");
+      if (add) {
+        const id = add.dataset.add;
+        if (state.extras.has(id)) state.extras.delete(id);
+        else { state.extras.add(id); toast(`${EXTRAS[id].label} added to the total`); }
+        render();
+      }
+    });
+    document.querySelectorAll("[data-extra]").forEach((input) => input.addEventListener("change", () => {
+      if (input.checked) state.extras.add(input.dataset.extra);
+      else state.extras.delete(input.dataset.extra);
+      render();
+    }));
+
+    const light = document.getElementById("light");
+    const lightImg = document.getElementById("light-img");
+    const lightCap = document.getElementById("light-cap");
+    function paintLight() {
+      const photo = PHOTOS[photoIndex];
+      lightImg.src = photo.src;
+      lightImg.alt = photo.alt;
+      lightCap.textContent = `${photoIndex + 1} of ${PHOTOS.length} — ${photo.cap}`;
+    }
+    function openLight(index) { photoIndex = index; paintLight(); light.showModal(); }
+    document.querySelectorAll("[data-index]").forEach((btn) => btn.addEventListener("click", () => openLight(Number(btn.dataset.index))));
+    document.getElementById("light-x").addEventListener("click", () => light.close());
+    document.getElementById("light-prev").addEventListener("click", () => { photoIndex = (photoIndex - 1 + PHOTOS.length) % PHOTOS.length; paintLight(); });
+    document.getElementById("light-next").addEventListener("click", () => { photoIndex = (photoIndex + 1) % PHOTOS.length; paintLight(); });
+    document.addEventListener("keydown", (event) => {
+      if (!light.open) return;
+      if (event.key === "ArrowRight") document.getElementById("light-next").click();
+      if (event.key === "ArrowLeft") document.getElementById("light-prev").click();
+    });
+
+    const reserve = document.getElementById("reserve");
+    const form = document.getElementById("reserve-form");
+    const success = document.getElementById("reserve-success");
+    document.getElementById("reserve-open").addEventListener("click", () => {
+      setSheet(false);
+      document.getElementById("reserve-summary").textContent = `${summaryText}. Total ${money(totalValue)}, GST included.`;
+      reserve.showModal();
+    });
+    document.getElementById("reserve-cancel").addEventListener("click", () => reserve.close());
+    document.getElementById("reserve-done").addEventListener("click", () => reserve.close());
+    reserve.addEventListener("close", () => {
+      form.hidden = false;
+      success.hidden = true;
+      form.classList.remove("was-validated");
+      form.reset();
+    });
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      form.classList.add("was-validated");
+      if (!form.checkValidity()) return;
+      const name = new FormData(form).get("name");
+      document.getElementById("success-copy").textContent = `${name}, this request for ${summaryText} would total ${money(totalValue)}. It stays in this window. Nobody is contacted, and no room is held.`;
+      form.hidden = true;
+      success.hidden = false;
+    });
+
+    document.querySelectorAll("[data-filter]").forEach((btn) => btn.addEventListener("click", () => {
+      const kind = btn.dataset.filter;
+      document.querySelectorAll("[data-filter]").forEach((item) => item.classList.toggle("is-on", item === btn));
+      let count = 0;
+      document.querySelectorAll(".review").forEach((review) => {
+        const show = kind === "all" || review.dataset.kind === kind;
+        review.hidden = !show;
+        if (show) count += 1;
+      });
+      document.getElementById("review-count").textContent = kind === "all" ? "6 stories from 1,284 reviews" : `Showing ${count} ${count === 1 ? "story" : "stories"}`;
+    }));
+
+    const links = [...document.querySelectorAll(".subnav__links a")];
+    const sections = links.map((link) => document.querySelector(link.getAttribute("href"))).filter(Boolean);
+    if ("IntersectionObserver" in window) {
+      const watcher = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const id = `#${entry.target.id}`;
+          links.forEach((link) => link.classList.toggle("is-on", link.getAttribute("href") === id));
+        });
+      }, { rootMargin: "-40% 0px -50% 0px" });
+      sections.forEach((section) => watcher.observe(section));
+    }
+    document.getElementById("jump-reviews").addEventListener("click", () => {
+      document.getElementById("reviews").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    const saveBtn = document.getElementById("save");
+    const saveKey = "wch-dal-lake-house-saved";
+    const paintSave = () => {
+      const on = localStorage.getItem(saveKey) === "1";
+      saveBtn.setAttribute("aria-pressed", String(on));
+      saveBtn.firstChild.textContent = on ? "♥ " : "♡ ";
+    };
+    try { paintSave(); } catch (error) { /* private mode */ }
+    saveBtn.addEventListener("click", () => {
+      try {
+        const on = localStorage.getItem(saveKey) === "1";
+        localStorage.setItem(saveKey, on ? "0" : "1");
+        paintSave();
+        toast(on ? "Removed from this browser" : "Saved in this browser");
+      } catch (error) { toast("Saving is blocked in this browser"); }
+    });
+    document.getElementById("share").addEventListener("click", async () => {
+      const url = location.href;
+      if (navigator.share) {
+        try { await navigator.share({ title: document.title, url }); return; } catch (error) { if (error && error.name === "AbortError") return; }
+      }
+      try { await navigator.clipboard.writeText(url); toast("Link copied"); }
+      catch (error) { toast("Copy the address from the browser bar"); }
+    });
+
+    const incoming = new URLSearchParams(location.search);
+    const isoOk = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value || "");
+    if (isoOk(incoming.get("in"))) checkin.value = incoming.get("in");
+    if (isoOk(incoming.get("out"))) checkout.value = incoming.get("out");
+    const adultsIn = Number(incoming.get("adults"));
+    const childrenIn = Number(incoming.get("children"));
+    const roomsIn = Number(incoming.get("rooms"));
+    if (adultsIn >= 1 && adultsIn <= 8) state.adults = adultsIn;
+    if (childrenIn >= 0 && childrenIn <= 6) state.children = childrenIn;
+    if (roomsIn >= 1 && roomsIn <= 8) state.roomsQty = roomsIn;
+    try {
+      const stored = sessionStorage.getItem("wch-list-query");
+      const href = "hotel-list-demo.html" + (stored ? `?${stored}` : "");
+      document.querySelectorAll("[data-list]").forEach((link) => { link.href = href; });
+    } catch (error) { /* this browser is blocking storage */ }
+
+    render();
+  </script>
+</body>
+</html>

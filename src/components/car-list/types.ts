@@ -13,6 +13,7 @@ export type CarListCard = {
   mileage: string;
   mileageLabel: string;
   fuel: string;
+  tags: string[];
   specs: string[];
   images: string[];
   price: number;

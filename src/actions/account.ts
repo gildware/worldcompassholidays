@@ -7,7 +7,9 @@ import { firstIssue, type FormState } from "@/lib/forms";
 import { requireCustomer } from "@/lib/auth/guards";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSession, destroyUserSessions } from "@/lib/auth/session";
+import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { customerEditableStatuses } from "@/lib/bookings";
+import { bookedHotelStatuses, hotelReplyTopics, readBookingDetails } from "@/lib/hotel-reply";
 import { nameField, passwordField, phoneField } from "@/lib/validation";
 
 const profileSchema = z.object({
@@ -104,7 +106,51 @@ export async function updateMyBooking(
     },
   });
 
-  revalidatePath("/account");
-  revalidatePath(`/account/bookings/${booking.reference}`);
+  revalidateCustomerBooking(booking.module, booking.reference);
   return { error: null, success: "Booking updated." };
+}
+
+const replySchema = z.object({
+  reference: z.string().min(1),
+  comment: z.string().trim().min(2, "Write a short comment").max(2000),
+  ratings: z.record(z.string(), z.coerce.number().int().min(1).max(5)),
+});
+
+export async function leaveHotelReply(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const user = await requireCustomer("account.bookings.view");
+  const ratings = Object.fromEntries(hotelReplyTopics.map((topic) => [topic, formData.get(topic)]));
+  const parsed = replySchema.safeParse({
+    reference: formData.get("reference"),
+    comment: formData.get("comment") ?? "",
+    ratings,
+  });
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+
+  const booking = await prisma.booking.findUnique({
+    where: { reference: parsed.data.reference },
+  });
+  if (!booking || booking.userId !== user.id || booking.module !== "hotel") {
+    return { error: "Booking not found." };
+  }
+  if (!bookedHotelStatuses.includes(booking.status as (typeof bookedHotelStatuses)[number])) {
+    return { error: "You can reply after this hotel stay is booked." };
+  }
+
+  const details = readBookingDetails(booking.details);
+  details.review = {
+    ratings: parsed.data.ratings,
+    comment: parsed.data.comment,
+    submittedAt: new Date().toISOString(),
+  };
+
+  await prisma.booking.update({
+    where: { id: booking.id },
+    data: { details: JSON.stringify(details) },
+  });
+
+  revalidateCustomerBooking(booking.module, booking.reference);
+  return { error: null, success: "Reply saved." };
 }

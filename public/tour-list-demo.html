@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tours in India — pick one, see the total · World Compass Holidays</title>
+  <meta name="description" content="A split list of tours. Choose one on the left and read the day, the total for your party, and the cancellation deadline on the right.">
+  <meta name="theme-color" content="#f6f3ed">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1c1915;
+      --muted: #5e584f;
+      --soft: #8a8175;
+      --line: #e4ddd2;
+      --paper: #f6f3ed;
+      --card: #fffcf8;
+      --blue: #3554d1;
+      --blue-dark: #243ea8;
+      --green: #0d6b52;
+      --gold: #8a6420;
+      --sand: #f3ecdf;
+      --shadow: 0 18px 40px rgba(48, 36, 18, 0.12);
+      --serif: "Fraunces", "Iowan Old Style", Palatino, Georgia, serif;
+      --sans: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
+    }
+    [hidden] { display: none !important; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16.5px;
+      line-height: 1.5;
+      accent-color: var(--blue);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    img { max-width: 100%; display: block; }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    h1, h2, h3, p { margin: 0; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+    .sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+    .skip { position: absolute; left: 12px; top: -40px; background: #fff; padding: 8px 12px; z-index: 80; border-radius: 8px; }
+    .skip:focus { top: 12px; }
+
+    .top { flex: none; background: rgba(246, 243, 237, 0.94); border-bottom: 1px solid var(--line); z-index: 5; }
+    .header, .command, .rail, .chips { width: min(1280px, calc(100% - 28px)); margin: 0 auto; }
+    .header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0 8px; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo strong { font-family: var(--serif); font-size: 18px; font-weight: 560; display: block; line-height: 1; }
+    .logo em { font-style: normal; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); }
+    .header__nav, .header__actions { display: flex; align-items: center; gap: 8px; }
+    .header__nav a { text-decoration: none; font-weight: 600; font-size: 14.5px; color: var(--muted); padding: 8px 12px; border-radius: 999px; }
+    .header__nav a[aria-current="page"] { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border-radius: 999px; border: 1px solid transparent; background: var(--blue); color: #fff;
+      padding: 12px 18px; font-weight: 600; line-height: 1; white-space: nowrap; text-decoration: none;
+    }
+    .btn:hover { background: var(--blue-dark); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn--ghost { background: #fff; color: var(--ink); border-color: var(--line); }
+    .btn--ghost:hover { background: #fff; border-color: #cfc6b8; }
+    .btn--small { padding: 9px 14px; font-size: 14.5px; }
+    .btn--block { width: 100%; }
+    .btn[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+    .command { display: grid; grid-template-columns: minmax(0, 1.5fr) 170px 180px 190px; gap: 8px; padding-bottom: 8px; }
+    .field { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 7px 12px 8px; min-width: 0; }
+    .field label, .field .field__label { display: block; font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--soft); font-weight: 700; }
+    .field input, .field select, .who-btn {
+      display: block; width: 100%; border: 0; background: transparent; padding: 2px 0 0;
+      font-weight: 600; font-size: 15.5px; appearance: none; -webkit-appearance: none;
+    }
+    .field input:focus, .field select:focus, .who-btn:focus { outline: none; }
+    .field:focus-within { box-shadow: inset 0 0 0 2px var(--blue); }
+    .who-btn { text-align: left; }
+
+    .rail { display: flex; gap: 8px; overflow-x: auto; padding: 0 0 10px; scrollbar-width: none; }
+    .rail::-webkit-scrollbar { display: none; }
+    .pill {
+      border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 12px;
+      font-size: 14px; font-weight: 600; white-space: nowrap;
+    }
+    .pill[aria-pressed="true"], .pill.is-set { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .pill .n { color: var(--soft); font-weight: 600; margin-left: 4px; }
+    .pill[aria-pressed="true"] .n, .pill.is-set .n { color: #ddd; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 0 10px; }
+    .chips:empty { display: none; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 5px 10px; font-size: 13.5px; font-weight: 600; }
+    .chip button, .linkish { border: 0; background: transparent; color: var(--blue); font-weight: 600; padding: 0; }
+    .chip button { color: var(--muted); font-size: 16px; line-height: 1; }
+
+    .split { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(320px, 420px) minmax(0, 1fr); }
+    .index, .stage { min-height: 0; overflow: auto; }
+    .index { border-right: 1px solid var(--line); background: #f3efe8; }
+    .index__head { position: sticky; top: 0; z-index: 2; background: #f3efe8; padding: 14px 16px 10px; border-bottom: 1px solid transparent; }
+    .index__head h1 { font-family: var(--serif); font-weight: 560; font-size: 26px; letter-spacing: -0.03em; line-height: 1.1; }
+    .why, .note { color: var(--muted); font-size: 13.5px; margin-top: 4px; }
+    .note { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+    .note[hidden] { display: none; }
+    .rows { display: flex; flex-direction: column; }
+    .row {
+      display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+      width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line);
+      background: transparent; padding: 12px 14px; color: inherit;
+    }
+    .row:hover { background: rgba(255,252,248,0.7); }
+    .row.is-on { background: var(--card); box-shadow: inset 3px 0 0 var(--blue); }
+    .row.is-off { opacity: 0.72; }
+    .row img { width: 74px; height: 74px; object-fit: cover; border-radius: 12px; background: #e7e0d6; }
+    .row strong { display: block; font-family: var(--serif); font-weight: 560; font-size: 17px; letter-spacing: -0.02em; line-height: 1.2; }
+    .row__meta { display: block; color: var(--muted); font-size: 13.5px; margin-top: 3px; }
+    .row__flag { display: block; color: var(--gold); font-size: 12.5px; font-weight: 600; margin-top: 3px; }
+    .row__side { text-align: right; }
+    .row__price { font-family: var(--serif); font-size: 20px; letter-spacing: -0.03em; display: block; }
+    .row__score { color: var(--green); font-weight: 700; font-size: 13px; }
+    .row__tools { display: flex; gap: 4px; justify-content: flex-end; margin-top: 6px; }
+    .icon-btn {
+      border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 3px 8px; font-size: 12.5px; font-weight: 600;
+    }
+    .icon-btn[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .empty { padding: 18px 16px 28px; }
+    .empty h2 { font-family: var(--serif); font-weight: 560; font-size: 28px; letter-spacing: -0.03em; }
+    .empty p { color: var(--muted); margin: 8px 0 14px; }
+    .empty__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .stage { background: var(--card); }
+    .stage__back { display: none; margin: 12px 16px 0; }
+    .hero { width: 100%; height: min(42vh, 440px); object-fit: cover; background: #e7e0d6; }
+    .stage__pad { width: min(780px, calc(100% - 48px)); margin: 0 auto; padding: 22px 0 40px; }
+    .kicker { color: var(--muted); font-size: 14px; }
+    .stage h2 { font-family: var(--serif); font-weight: 560; font-size: clamp(32px, 4vw, 48px); letter-spacing: -0.035em; line-height: 1.02; margin: 4px 0 8px; }
+    .facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .facts span { background: var(--sand); border-radius: 999px; padding: 6px 10px; font-size: 13.5px; font-weight: 600; }
+    .lede { font-size: 17.5px; max-width: 62ch; }
+    .mention { color: var(--muted); margin-top: 8px; }
+    .cancel { margin-top: 8px; font-size: 15px; }
+    .cancel--yes { color: var(--green); font-weight: 600; }
+    .cancel--no, .cancel--closed { color: var(--muted); }
+    .split-copy { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 18px; }
+    .split-copy h3 { font-size: 15px; margin-bottom: 6px; }
+    .split-copy ul, .timeline { margin: 0; padding-left: 18px; }
+    .split-copy li, .timeline li { margin: 4px 0; }
+    .bill {
+      margin-top: 20px; display: flex; justify-content: space-between; gap: 16px; align-items: flex-end;
+      background: var(--paper); border-radius: 18px; padding: 16px 18px;
+    }
+    .bill__total { font-family: var(--serif); font-size: 40px; letter-spacing: -0.03em; line-height: 1; }
+    .bill__sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .stage__actions { display: flex; gap: 8px; margin-top: 14px; }
+    .form { display: grid; gap: 10px; margin-top: 16px; }
+    .form label { font-size: 13.5px; font-weight: 600; }
+    .form input, .form textarea { display: block; width: 100%; margin-top: 4px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; }
+    .err { color: #9f1239; font-size: 14px; min-height: 1.2em; }
+    .success { background: #e7f4ee; border-radius: 16px; padding: 14px 16px; margin-top: 14px; }
+    .flag { background: var(--sand); color: #6b5424; border-radius: 10px; padding: 8px 10px; font-size: 14px; font-weight: 600; margin-top: 10px; }
+    .fine { color: var(--soft); font-size: 13px; margin-top: 22px; }
+    .table-wrap { overflow-x: auto; margin-top: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 10px 12px; text-align: left; vertical-align: top; }
+    thead th { font-family: var(--serif); font-size: 18px; font-weight: 560; }
+    tbody th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+    td.best { background: #e7f4ee; }
+
+    .pop {
+      position: fixed; z-index: 40; width: min(340px, calc(100vw - 24px));
+      background: #fff; border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+      padding: 12px 14px; max-height: min(440px, 70vh); overflow: auto;
+    }
+    .pop[hidden] { display: none; }
+    .check { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 15px; }
+    .check input { width: 16px; height: 16px; margin: 0; }
+    .check .count { margin-left: auto; color: var(--soft); font-variant-numeric: tabular-nums; font-size: 13px; }
+    .check.is-zero { color: var(--soft); }
+    .step { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
+    .step + .step { border-top: 1px solid #f0ebe3; }
+    .step b { min-width: 1.2em; text-align: center; display: inline-block; }
+    .step__btns { display: flex; align-items: center; gap: 8px; }
+    .step__btns button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: #fff; }
+    .step__btns button:disabled { opacity: 0.35; }
+    .hint { color: var(--muted); font-size: 13.5px; }
+    .slider { position: relative; height: 32px; margin: 8px 4px; }
+    .slider__track, .slider__fill { position: absolute; top: 14px; height: 4px; border-radius: 99px; }
+    .slider__track { left: 0; right: 0; background: #e4ddd2; }
+    .slider__fill { background: var(--blue); }
+    .slider input[type="range"] { position: absolute; left: 0; width: 100%; top: 4px; margin: 0; height: 24px; background: none; pointer-events: none; appearance: none; }
+    .slider input::-webkit-slider-thumb { pointer-events: auto; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid var(--blue); cursor: grab; }
+    .slider input::-moz-range-thumb { pointer-events: auto; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid var(--blue); cursor: grab; }
+    .price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .price-row label { font-size: 12px; color: var(--soft); font-weight: 600; }
+    .price-row input { display: block; width: 100%; margin-top: 4px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-weight: 600; }
+    #toast {
+      position: fixed; z-index: 70; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(8px);
+      background: var(--ink); color: #fff; border-radius: 999px; padding: 10px 14px; font-size: 14.5px;
+      opacity: 0; pointer-events: none;
+    }
+    #toast.on { opacity: 1; transform: translateX(-50%); }
+
+    @media (max-width: 860px) {
+      body { height: auto; min-height: 100%; overflow: auto; }
+      .split { display: block; }
+      .index, .stage { overflow: visible; }
+      .stage { display: none; }
+      body.stage-open .index { display: none; }
+      body.stage-open .stage { display: block; }
+      .stage__back { display: inline-flex; }
+      .command, .split-copy, .bill { grid-template-columns: 1fr; display: grid; }
+      .bill { align-items: start; }
+      .header__nav { display: none; }
+      .hero { height: 220px; }
+      .stage__pad { width: min(780px, calc(100% - 28px)); }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#rows">Skip to the list</a>
+  <div class="top">
+    <header class="header">
+      <a class="logo" href="tour-list-demo.html" aria-label="World Compass Holidays">
+        <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="16" cy="16" r="13.2" fill="none" stroke="#3554d1" stroke-width="1.6"/>
+          <path d="M16 5.5 19 16l-3-1.6L13 16Z" fill="#3554d1"/>
+          <path d="M16 26.5 13 16l3 1.6L19 16Z" fill="#1c1915"/>
+        </svg>
+        <span><strong>World Compass</strong><em>Holidays</em></span>
+      </a>
+      <nav class="header__nav" aria-label="Sections">
+        <a href="hotel-details-demo.html">Hotels</a>
+        <a href="tour-list-demo.html" aria-current="page">Tours</a>
+      </nav>
+      <div class="header__actions">
+        <button class="btn btn--ghost btn--small" type="button" id="saved-toggle" aria-pressed="false">Saved</button>
+        <button class="btn btn--ghost btn--small" type="button" id="share" aria-label="Share this list">Share</button>
+        <button class="btn btn--small" type="button" id="compare-open" hidden>Compare</button>
+      </div>
+    </header>
+    <form class="command" id="command">
+      <div class="field">
+        <label for="q">Where or what</label>
+        <input id="q" type="search" placeholder="Srinagar, a fort, food" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="date">Date</label>
+        <input id="date" type="date" required>
+      </div>
+      <div class="field">
+        <span class="field__label" id="who-label">Travelers</span>
+        <button class="who-btn" type="button" id="who-btn" aria-labelledby="who-label who-btn" aria-expanded="false">2 adults</button>
+      </div>
+      <div class="field">
+        <label for="sort">Sort</label>
+        <select id="sort">
+          <option value="match">Best match</option>
+          <option value="price">Lowest total</option>
+          <option value="rating">Highest score</option>
+          <option value="reviews">Most reviews</option>
+          <option value="short">Shortest</option>
+          <option value="long">Longest</option>
+        </select>
+      </div>
+    </form>
+    <div class="rail" id="rail" role="toolbar" aria-label="Filters"></div>
+    <div class="chips" id="chips" aria-label="Active filters"></div>
+  </div>
+
+  <div class="split">
+    <section class="index" id="index" aria-label="Tour list">
+      <div class="index__head">
+        <h1 id="count">Tours</h1>
+        <p class="why" id="why"></p>
+        <p class="note" id="note" hidden></p>
+      </div>
+      <div class="rows" id="rows"></div>
+      <div class="empty" id="empty" hidden>
+        <h2>Nothing matches</h2>
+        <p id="empty-copy"></p>
+        <div class="empty__actions" id="empty-actions"></div>
+      </div>
+    </section>
+    <section class="stage" id="stage" aria-live="polite"></section>
+  </div>
+
+  <div class="pop" id="pop" hidden></div>
+  <div id="toast" role="status"></div>
+  <p class="sr" id="live" aria-live="polite"></p>
+
+  <script>
+    const PHOTO = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=70`;
+const TOURS = [
+      { id: "dal-sunrise", title: "Dal Lake before breakfast", place: "Srinagar", region: "Kashmir", category: "Water", days: 1, hours: 2, when: "morning", departHour: 6, departMin: 0, style: "small", groupMax: 8, priceKind: "person", price: 1800, langs: ["en", "hi", "ks"], pickup: true, cancelHours: 24, rating: 9.6, reviews: 842, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Empty_shikara_on_Dal_Lake%2C_Srinagar%2C_India_2013-08-23_%28flickr_9967093983%29.jpg/960px-Empty_shikara_on_Dal_Lake%2C_Srinagar%2C_India_2013-08-23_%28flickr_9967093983%29.jpg", alt: "An empty shikara on Dal Lake", mention: "Guests mention the quiet, and the tea.", includes: ["Shikara", "Kahwa on the boat", "Guide"], excludes: ["Breakfast"], story: "The boat leaves before the boulevard is busy. Two hours on the water, then you are back for breakfast.", timeline: ["6:00 Pickup from your Srinagar hotel", "6:20 Boat from the steps", "7:20 Tea on the lake", "8:00 Back at the hotel"], meet: "Hotel lobby in Srinagar, or Dal Gate if you are staying on the water.", meetShort: "Meet at Dal Gate" },
+      { id: "old-city", title: "Old Srinagar on foot", place: "Srinagar", region: "Kashmir", category: "Culture", days: 1, hours: 4, when: "afternoon", departHour: 14, departMin: 0, style: "small", groupMax: 6, priceKind: "person", price: 2400, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 9.4, reviews: 510, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Jama_Masjid%2C_Srinagar_%2814362862689%29.jpg/960px-Jama_Masjid%2C_Srinagar_%2814362862689%29.jpg", alt: "Jama Masjid in Srinagar", mention: "Guests mention the pace. Six people is the limit so the lanes stay walkable.", includes: ["Guide", "Jama Masjid entry", "Kahwa stop"], excludes: ["Lunch"], story: "A walk through the old city with someone who lives there. The mosque, a wood workshop, and a stop for kahwa.", timeline: ["2:00 Pickup", "2:30 Jama Masjid", "3:30 Workshop lane", "5:30 Back"], meet: "Hotel lobby in Srinagar.", meetShort: "Hotel pickup" },
+      { id: "gulmarg-day", title: "Gulmarg for the day", place: "Gulmarg", region: "Kashmir", category: "Nature", days: 1, hours: 10, when: "morning", departHour: 7, departMin: 30, style: "shared", groupMax: 16, priceKind: "person", price: 4200, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 9.1, reviews: 1204, weekdays: null, photo: "photo-1483664852095-d6cc6870702d", alt: "Snow and pine on a high meadow", mention: "Guests mention the meadow. The gondola is a separate ticket, and this price says so.", includes: ["Return drive", "Guide", "Time on the meadow"], excludes: ["Gondola ticket", "Lunch"], story: "A full day up to the meadow. You get about three hours there. The gondola, if you want it, is paid at the window.", timeline: ["7:30 Leave Srinagar", "10:00 Meadow", "1:00 Drive down", "4:30 Back"], meet: "Hotel lobby in Srinagar.", meetShort: "Hotel pickup" },
+      { id: "pahalgam-day", title: "Pahalgam and Betaab Valley", place: "Pahalgam", region: "Kashmir", category: "Nature", days: 1, hours: 11, when: "morning", departHour: 7, departMin: 0, style: "shared", groupMax: 16, priceKind: "person", price: 3900, langs: ["en", "hi"], pickup: true, cancelHours: 24, rating: 8.8, reviews: 640, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Pahalgam_Valley.jpg/960px-Pahalgam_Valley.jpg", alt: "The valley at Pahalgam", mention: "Guests mention the valley and the long drive.", includes: ["Return drive", "Guide", "Betaab entry"], excludes: ["Pony ride", "Lunch"], story: "South from Srinagar to the Lidder valley. The pony to the viewpoint is optional and paid there.", timeline: ["7:00 Leave Srinagar", "10:30 Pahalgam", "2:00 Betaab", "6:00 Back"], meet: "Hotel lobby in Srinagar.", meetShort: "Hotel pickup" },
+      { id: "sonamarg", title: "Sonamarg and the glacier meadow", place: "Sonamarg", region: "Kashmir", category: "Nature", days: 1, hours: 12, when: "morning", departHour: 7, departMin: 0, style: "small", groupMax: 10, priceKind: "person", price: 4600, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 9.2, reviews: 388, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Sonamarg_%22Meadow_of_Gold%22_%2814592437483%29.jpg/960px-Sonamarg_%22Meadow_of_Gold%22_%2814592437483%29.jpg", alt: "The meadow at Sonamarg", mention: "Guests mention the last stretch of road.", includes: ["Small coach", "Guide", "Thajiwas entry"], excludes: ["Pony to the snow", "Lunch"], story: "A smaller coach than the Gulmarg run, because the road asks for it. Snow is a pony ride away, paid on the spot.", timeline: ["7:00 Leave Srinagar", "11:00 Sonamarg", "3:00 Drive back", "7:00 Back"], meet: "Hotel lobby in Srinagar.", meetShort: "Hotel pickup" },
+      { id: "dal-lunch", title: "Lunch on a private houseboat", place: "Srinagar", region: "Kashmir", category: "Food", days: 1, hours: 3, when: "afternoon", departHour: 13, departMin: 0, style: "private", groupMax: 4, priceKind: "group", vehicle: "boat", price: 14000, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 9.7, reviews: 126, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Dal_Lake%2C_Srinagar%2C_Jammu_and_Kashmir.jpg/960px-Dal_Lake%2C_Srinagar%2C_Jammu_and_Kashmir.jpg", alt: "Houseboats on Dal Lake", mention: "Guests mention the wazwan and the fact the boat is only theirs.", includes: ["Private boat", "Wazwan lunch", "Pickup"], excludes: ["Drinks beyond the table"], story: "The boat is yours for three hours. Lunch is cooked on board. The price does not change if you are two or four.", timeline: ["1:00 Pickup", "1:20 On the boat", "2:00 Lunch", "4:00 Back"], meet: "Hotel lobby, or the jetty if you are already on the lake.", meetShort: "Hotel pickup" },
+      { id: "kashmir-3", title: "Three days in Pahalgam and Gulmarg", place: "Srinagar", region: "Kashmir", category: "Nature", days: 3, hours: 72, when: "multi", departHour: 8, departMin: 0, style: "small", groupMax: 8, priceKind: "person", price: 18600, langs: ["en"], pickup: true, cancelHours: 72, rating: 9.3, reviews: 214, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Trek_through_Kashmir_Valley%2C_Pahalgam_2.jpg/960px-Trek_through_Kashmir_Valley%2C_Pahalgam_2.jpg", alt: "A path through the Kashmir valley", mention: "Guests mention the two nights and the small group.", includes: ["Two nights", "Breakfast", "Drives and guide"], excludes: ["Gondola", "Dinner"], story: "Night one in Pahalgam, night two near Gulmarg, then back to Srinagar. Rooms are simple guesthouses, named in the confirmation.", timeline: ["Day 1 Srinagar to Pahalgam", "Day 2 Pahalgam to Gulmarg", "Day 3 Gulmarg to Srinagar by evening"], meet: "Hotel lobby in Srinagar on the morning you pick.", meetShort: "Hotel pickup" },
+      { id: "ladakh-5", title: "Five days on the Ladakh lakes", place: "Leh", region: "Ladakh", category: "Adventure", days: 5, hours: 120, when: "multi", departHour: 8, departMin: 0, style: "small", groupMax: 10, priceKind: "person", price: 42000, langs: ["en", "hi"], pickup: false, cancelHours: 168, rating: 9.5, reviews: 96, weekdays: [2, 5], photo: "photo-1544735716-392fe2489ffa", alt: "A Himalayan stupa with snow peaks behind it", mention: "Guests mention the acclimatisation day. The first night is in Leh on purpose.", includes: ["Four nights", "Breakfast", "Permits and vehicle"], excludes: ["Flights", "Dinner"], story: "Starts only on Tuesday and Friday, so the first day can be spent getting used to the altitude. Pangong and the high lakes follow.", timeline: ["Day 1 Leh, on foot", "Day 2 Sham valley", "Day 3 Pangong", "Day 4 High lakes", "Day 5 Back to Leh"], meet: "Your hotel lobby in Leh. This one does not collect you from the airport.", meetShort: "Meet at your Leh hotel" },
+      { id: "amber", title: "Amber Fort and old Jaipur", place: "Jaipur", region: "Rajasthan", category: "Culture", days: 1, hours: 5, when: "morning", departHour: 8, departMin: 0, style: "shared", groupMax: 18, priceKind: "person", price: 2200, langs: ["en", "hi", "fr"], pickup: true, cancelHours: 24, rating: 8.6, reviews: 2104, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Jaipur_03-2016_02_Amber_Fort.jpg/960px-Jaipur_03-2016_02_Amber_Fort.jpg", alt: "Amber Fort above Jaipur", mention: "Guests mention the fort. The elephant ride is not part of this.", includes: ["Fort entry", "Guide", "Old-city walk"], excludes: ["Elephant ride", "Lunch"], story: "Morning at Amber, then the lanes below the palace. Eighteen is the cap, and you will feel the group.", timeline: ["8:00 Pickup", "9:00 Amber", "11:30 Old city", "1:00 Back"], meet: "Hotel lobby in Jaipur.", meetShort: "Hotel pickup" },
+      { id: "jaipur-private", title: "Jaipur with your own car", place: "Jaipur", region: "Rajasthan", category: "Culture", days: 1, hours: 8, when: "morning", departHour: 9, departMin: 0, style: "private", groupMax: 3, priceKind: "group", vehicle: "car", price: 16000, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 9.4, reviews: 340, weekdays: null, photo: "photo-1477587458883-47145ed94245", alt: "A pink sandstone facade", mention: "Guests mention choosing the stops. The car takes three.", includes: ["Car and driver", "Guide", "Fort entries"], excludes: ["Lunch", "Elephant"], story: "Amber, the observatory, and the old city, in the order you care about. The price is for the car, not per person.", timeline: ["9:00 Pickup", "Stops you agree that morning", "5:00 Back"], meet: "Hotel lobby in Jaipur.", meetShort: "Hotel pickup" },
+      { id: "alleppey", title: "A day on the Alleppey backwaters", place: "Alleppey", region: "Kerala", category: "Water", days: 1, hours: 8, when: "morning", departHour: 8, departMin: 30, style: "small", groupMax: 8, priceKind: "person", price: 3800, langs: ["en"], pickup: true, cancelHours: 24, rating: 9.0, reviews: 870, weekdays: null, photo: "photo-1602216056096-3b40cc0c9944", alt: "A narrow boat on a palm-lined canal", mention: "Guests mention lunch on the boat.", includes: ["Boat", "Lunch", "Guide"], excludes: ["A houseboat overnight"], story: "Eight people, one boat, a cooked lunch, and the canals south of Alleppey. This is a day, not an overnight houseboat.", timeline: ["8:30 Pickup in Alleppey", "9:00 On the water", "1:00 Lunch", "4:30 Back"], meet: "Hotel lobby in Alleppey.", meetShort: "Hotel pickup" },
+      { id: "kochi-food", title: "Fort Kochi after dark, eating", place: "Fort Kochi", region: "Kerala", category: "Food", days: 1, hours: 3.5, when: "evening", departHour: 17, departMin: 30, style: "small", groupMax: 8, priceKind: "person", price: 1900, langs: ["en"], pickup: false, cancelHours: 24, rating: 9.5, reviews: 456, weekdays: null, photo: "photo-1585937421612-70a008356fbe", alt: "A shared plate of food", mention: "Guests mention the tastings. Come hungry; this is dinner.", includes: ["Six tastings", "Guide", "Water"], excludes: ["Alcohol", "Hotel pickup"], story: "A walk through Fort Kochi that is mostly eating. You meet at the parade ground. There is no hotel pickup.", timeline: ["5:30 Meet at the parade ground", "Six stops", "9:00 End near the Chinese nets"], meet: "Parade ground, Fort Kochi.", meetShort: "Meet at the parade ground" },
+      { id: "goa-spice", title: "Spice plantation, then an hour at the beach", place: "Ponda", region: "Goa", category: "Food", days: 1, hours: 6, when: "afternoon", departHour: 13, departMin: 0, style: "shared", groupMax: 20, priceKind: "person", price: 2100, langs: ["en", "hi"], pickup: true, cancelHours: 0, rating: 8.2, reviews: 980, weekdays: [1, 3, 5, 6], photo: "photo-1512343879784-a960bf40e7f2", alt: "A wide sandy beach", mention: "Guests mention the plantation lunch. The beach stop is short.", includes: ["Plantation entry", "Lunch", "Beach stop"], excludes: ["A refund — this date is non-refundable"], story: "Runs Monday, Wednesday, Friday, and Saturday. Lunch is at the plantation. The price is non-refundable once you request it.", timeline: ["1:00 Pickup from North Goa", "2:00 Plantation", "4:30 Beach", "7:00 Back"], meet: "Hotel lobby in North Goa.", meetShort: "Hotel pickup" },
+      { id: "rohtang", title: "Rohtang from Manali, if the pass is open", place: "Manali", region: "Himachal", category: "Adventure", days: 1, hours: 10, when: "morning", departHour: 7, departMin: 0, style: "shared", groupMax: 12, priceKind: "person", price: 3500, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 8.4, reviews: 1502, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Manali_to_Rohtang_Pass_01.jpg/960px-Manali_to_Rohtang_Pass_01.jpg", alt: "The road from Manali toward Rohtang Pass", mention: "Guests mention the permit, which is included. If the pass is shut, the day goes to Solang and the price stays.", includes: ["Permit", "Return drive", "Guide"], excludes: ["Snow gear", "Lunch"], story: "The pass decides the day. If it is closed, you still go out, to Solang, for the same price.", timeline: ["7:00 Leave Manali", "Morning at the pass or Solang", "5:00 Back"], meet: "Hotel lobby in Manali.", meetShort: "Hotel pickup" },
+      { id: "varanasi", title: "Dawn on the ghats", place: "Varanasi", region: "Uttar Pradesh", category: "Culture", days: 1, hours: 4, when: "morning", departHour: 5, departMin: 0, style: "small", groupMax: 8, priceKind: "person", price: 1600, langs: ["en", "hi"], pickup: false, cancelHours: 24, rating: 9.6, reviews: 2200, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Dawn_in_the_ghats%2C_Varanasi_%284758053194%29.jpg/960px-Dawn_in_the_ghats%2C_Varanasi_%284758053194%29.jpg", alt: "The ghats of Varanasi at dawn", mention: "Guests mention the boat, which is included, and the early start.", includes: ["Boat", "Guide", "Tea"], excludes: ["Hotel pickup", "Temple donations"], story: "Meet at Assi Ghat before first light. A boat, a walk north, and tea. You make your own way there.", timeline: ["5:00 Assi Ghat", "5:20 Boat", "7:00 Walk", "9:00 End near Dashashwamedh"], meet: "Assi Ghat steps.", meetShort: "Meet at Assi Ghat" },
+      { id: "ranthambore", title: "A private morning jeep in Ranthambore", place: "Sawai Madhopur", region: "Rajasthan", category: "Wildlife", days: 1, hours: 4, when: "morning", departHour: 6, departMin: 0, style: "private", groupMax: 6, priceKind: "group", vehicle: "jeep", price: 7200, langs: ["en", "hi"], pickup: true, cancelHours: 72, rating: 9.1, reviews: 640, weekdays: [0, 1, 2, 4, 5, 6], photo: "photo-1561731216-c3a4d99437d5", alt: "A tiger in dry grass", mention: "Guests mention that the park fee is already in the price. The park is closed on Wednesday.", includes: ["Private jeep", "Park fee", "Naturalist"], excludes: ["A guarantee of a tiger", "Camera"], story: "One jeep, up to six, park fee included. Closed Wednesday, which is the park’s rule. Seeing a tiger is not a promise.", timeline: ["6:00 Pickup from a Sawai Madhopur hotel", "Park gate", "About three hours inside", "Back mid-morning"], meet: "Hotel lobby in Sawai Madhopur.", meetShort: "Hotel pickup" },
+      { id: "jaisalmer", title: "A night in the dunes", place: "Jaisalmer", region: "Rajasthan", category: "Adventure", days: 2, hours: 36, when: "multi", departHour: 14, departMin: 0, style: "small", groupMax: 12, priceKind: "person", price: 9800, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 8.9, reviews: 410, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Sunset_Sand_Dunes_Jaisalmer_Dec14_DSC_6540.jpg/960px-Sunset_Sand_Dunes_Jaisalmer_Dec14_DSC_6540.jpg", alt: "Sand dunes near Jaisalmer at sunset", mention: "Guests mention the camp dinner and the early return.", includes: ["Camp night", "Dinner and breakfast", "Jeep to the dunes"], excludes: ["Lunch", "A private tent"], story: "Leave Jaisalmer after lunch, sleep at the camp, and be back the next morning. Tents are shared in pairs unless you ask, and asking changes the price.", timeline: ["2:00 Leave Jaisalmer", "Sunset at the dunes", "Dinner at camp", "Back by 11:00 the next day"], meet: "Hotel lobby in Jaisalmer.", meetShort: "Hotel pickup" },
+      { id: "munnar", title: "Tea hills of Munnar, from Kochi", place: "Munnar", region: "Kerala", category: "Nature", days: 1, hours: 9, when: "morning", departHour: 7, departMin: 30, style: "shared", groupMax: 16, priceKind: "person", price: 3200, langs: ["en"], pickup: true, cancelHours: 24, rating: 8.7, reviews: 705, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Munnar_tea_gardens.jpg/960px-Munnar_tea_gardens.jpg", alt: "Tea gardens at Munnar", mention: "Guests mention the drive. Four hours of this day is the road.", includes: ["Return drive from Kochi", "Tea-factory visit", "Guide"], excludes: ["Lunch"], story: "A long day from Kochi. You are in the hills for about three hours. The rest is the drive, and the price assumes you know that.", timeline: ["7:30 Leave Kochi", "11:30 Munnar", "2:30 Drive down", "6:30 Back"], meet: "Hotel lobby in Kochi or Fort Kochi.", meetShort: "Hotel pickup" },
+      { id: "srinagar-bus", title: "Srinagar from a coach seat", place: "Srinagar", region: "Kashmir", category: "Culture", days: 1, hours: 7, when: "morning", departHour: 9, departMin: 0, style: "shared", groupMax: 30, priceKind: "person", price: 1200, langs: ["en", "hi"], pickup: true, cancelHours: 24, rating: 7.6, reviews: 310, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Dal_Lake_Hazratbal_Srinagar.jpg/960px-Dal_Lake_Hazratbal_Srinagar.jpg", alt: "Dal Lake with the hills behind Hazratbal", mention: "Guests mention the pace. You will not linger anywhere.", includes: ["Coach", "Guide", "Mughal garden entry"], excludes: ["A small group"], story: "The inexpensive way around the gardens and the lake. Thirty seats, short stops. Sold out on Wednesdays in this sample.", timeline: ["9:00 Pickup", "Gardens and a lake stop", "4:00 Back"], meet: "Hotel lobby in Srinagar.", meetShort: "Hotel pickup" }
+    ];
+
+
+    const DURS = [["half", "Under 5 hours"], ["day", "A full day"], ["2", "2 days"], ["mid", "3–4 days"], ["long", "5 days or more"]];
+    const WHENS = [["morning", "Morning"], ["afternoon", "Afternoon"], ["evening", "Evening"], ["multi", "Multi-day"]];
+    const STYLES = [["private", "Private"], ["small", "Small group, 12 or fewer"], ["shared", "Larger group"]];
+    const LANGS = [["en", "English"], ["hi", "Hindi"], ["ks", "Kashmiri"], ["fr", "French"]];
+    const LANG_NAME = { en: "English", hi: "Hindi", ks: "Kashmiri", fr: "French" };
+    const DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const money = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+    const num = new Intl.NumberFormat("en-IN");
+    const prettyFmt = new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short" });
+    const cancelFmt = new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+
+    const state = {
+      q: "", date: "", adults: 2, children: 0, min: null, max: null,
+      dur: new Set(), region: new Set(), cat: new Set(), when: new Set(), style: new Set(), lang: new Set(),
+      cancel: false, pickup: false, rating: 0, sort: "match",
+      showOff: false, showSold: false, savedOnly: false,
+      compare: [], saved: new Set(), selected: "", stageMode: "tour", menu: null
+    };
+    const $ = (id) => document.getElementById(id);
+    let booted = false;
+    let toastTimer = 0;
+    let indexScroll = 0;
+
+    function isoOf(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+    function parseIso(iso) { return new Date(iso + "T12:00:00"); }
+    function todayIso() { const d = new Date(); d.setHours(12, 0, 0, 0); return isoOf(d); }
+    function defaultDate() { const d = new Date(); d.setDate(d.getDate() + 14); return isoOf(d); }
+    function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+    function pretty(iso) { return prettyFmt.format(parseIso(iso)); }
+    function inr(n) { return money.format(n); }
+    function picture(t) { return t.img || PHOTO(t.photo); }
+    function tourById(id) { return TOURS.find((t) => t.id === id); }
+    function bucket(t) {
+      if (t.days >= 5) return "long";
+      if (t.days >= 3) return "mid";
+      if (t.days === 2) return "2";
+      if (t.hours < 5) return "half";
+      return "day";
+    }
+    function whoLabel() {
+      const a = state.adults + " adult" + (state.adults > 1 ? "s" : "");
+      if (!state.children) return a;
+      return a + ", " + state.children + " child" + (state.children > 1 ? "ren" : "");
+    }
+    function childUnit(t) { return Math.round(t.price * 0.7); }
+    function vehicles(t) { return Math.ceil((state.adults + state.children) / t.groupMax); }
+    function partyTotal(t) {
+      if (t.priceKind === "group") return t.price * vehicles(t);
+      return t.price * state.adults + childUnit(t) * state.children;
+    }
+    function bounds() {
+      const totals = TOURS.map(partyTotal);
+      const lo = Math.floor(Math.min(...totals) / 500) * 500;
+      const hi = Math.ceil(Math.max(...totals) / 500) * 500;
+      return [Math.max(0, lo), Math.max(lo + 500, hi)];
+    }
+    function seatsLeft(t, iso) {
+      const day = parseIso(iso).getDay();
+      if (t.id === "pahalgam-day") return 3;
+      if (t.id === "srinagar-bus" && day === 3) return 0;
+      if (t.priceKind === "group") return day === 0 ? 0 : 1;
+      let n = 0;
+      for (const ch of t.id) n += ch.charCodeAt(0);
+      return Math.min(t.groupMax, 6 + ((n + day) % 8));
+    }
+    function runsOn(t, iso) { return !t.weekdays || t.weekdays.includes(parseIso(iso).getDay()); }
+    function status(t, iso = state.date) {
+      if (!runsOn(t, iso)) return "off";
+      if (seatsLeft(t, iso) === 0) return "sold";
+      return "ok";
+    }
+    function nextOpen(t, fromIso) {
+      const start = parseIso(fromIso);
+      for (let i = 1; i <= 21; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const iso = isoOf(d);
+        if (runsOn(t, iso) && seatsLeft(t, iso) > 0) return iso;
+      }
+      return null;
+    }
+    function durationLabel(t) {
+      if (t.days > 1) return t.days + " days";
+      const h = Math.floor(t.hours);
+      const mins = Math.round((t.hours - h) * 60);
+      if (!mins) return h === 1 ? "1 hour" : h + " hours";
+      return h + " h " + mins + " min";
+    }
+    function groupLabel(t) {
+      if (t.style === "private") return "Private · up to " + t.groupMax;
+      if (t.style === "small") return "Small group · max " + t.groupMax;
+      return "Group tour · max " + t.groupMax;
+    }
+    function departLabel(t) {
+      if (t.when === "multi") {
+        if (!t.weekdays) return t.days + " days · starts any day";
+        return t.days + " days · starts " + t.weekdays.map((d) => DAY[d].slice(0, 3)).join(", ");
+      }
+      const ampm = t.departHour >= 12 ? "pm" : "am";
+      const hr = ((t.departHour + 11) % 12) + 1;
+      const mm = String(t.departMin).padStart(2, "0");
+      return { morning: "Morning", afternoon: "Afternoon", evening: "Evening" }[t.when] + " · leaves " + hr + ":" + mm + " " + ampm;
+    }
+    function langLabel(t) { return t.langs.map((c) => LANG_NAME[c]).join(", "); }
+    function words(r) {
+      if (r >= 9.5) return "Exceptional";
+      if (r >= 9) return "Excellent";
+      if (r >= 8.5) return "Very good";
+      if (r >= 8) return "Good";
+      return "Pleasant";
+    }
+    function cancelInfo(t) {
+      if (!t.cancelHours) return { kind: "no", text: "Non-refundable" };
+      const start = parseIso(state.date);
+      start.setHours(t.departHour, t.departMin, 0, 0);
+      const deadline = new Date(start.getTime() - t.cancelHours * 3600000);
+      if (deadline.getTime() <= Date.now()) return { kind: "closed", text: "Free cancellation has closed for this date" };
+      return { kind: "yes", text: "Free cancellation until " + cancelFmt.format(deadline) };
+    }
+    function priceDetail(t) {
+      if (t.priceKind === "group") {
+        const n = vehicles(t);
+        const noun = n > 1 ? t.vehicle + "s" : t.vehicle;
+        return n === 1 ? inr(t.price) + " for the " + t.vehicle + ", up to " + t.groupMax : n + " " + noun + " · your party is " + (state.adults + state.children);
+      }
+      if (state.children) return inr(t.price) + " an adult · children " + inr(childUnit(t));
+      return inr(t.price) + " a person";
+    }
+    function scoreOf(t) {
+      const trusted = (t.reviews * t.rating + 40 * 8.4) / (t.reviews + 40);
+      return trusted + (t.style !== "shared" ? 0.12 : 0) + (t.cancelHours >= 24 ? 0.06 : 0) + (t.pickup ? 0.03 : 0);
+    }
+    function pass(t, ignore) {
+      const st = status(t);
+      if (st === "off" && !state.showOff && ignore !== "avail") return false;
+      if (st === "sold" && !state.showSold && ignore !== "avail") return false;
+      if (state.savedOnly && !state.saved.has(t.id) && ignore !== "saved") return false;
+      if (state.q && ignore !== "q") {
+        const hay = [t.title, t.place, t.region, t.category, t.includes.join(" "), langLabel(t)].join(" ").toLowerCase();
+        if (!hay.includes(state.q.trim().toLowerCase())) return false;
+      }
+      const [lo, hi] = bounds();
+      const min = state.min == null ? lo : state.min;
+      const max = state.max == null ? hi : state.max;
+      if (ignore !== "price" && (partyTotal(t) < min || partyTotal(t) > max)) return false;
+      if (ignore !== "region" && state.region.size && !state.region.has(t.region)) return false;
+      if (ignore !== "cat" && state.cat.size && !state.cat.has(t.category)) return false;
+      if (ignore !== "dur" && state.dur.size && !state.dur.has(bucket(t))) return false;
+      if (ignore !== "when" && state.when.size && !state.when.has(t.when)) return false;
+      if (ignore !== "style" && state.style.size && !state.style.has(t.style)) return false;
+      if (ignore !== "lang" && state.lang.size && !t.langs.some((l) => state.lang.has(l))) return false;
+      if (ignore !== "cancel" && state.cancel && !(t.cancelHours > 0)) return false;
+      if (ignore !== "pickup" && state.pickup && !t.pickup) return false;
+      if (ignore !== "rating" && state.rating && t.rating < state.rating) return false;
+      return true;
+    }
+    function visible() {
+      const rows = TOURS.filter((t) => pass(t));
+      const rank = {
+        match: (a, b) => scoreOf(b) - scoreOf(a),
+        price: (a, b) => partyTotal(a) - partyTotal(b),
+        rating: (a, b) => b.rating - a.rating || b.reviews - a.reviews,
+        reviews: (a, b) => b.reviews - a.reviews,
+        short: (a, b) => a.hours - b.hours,
+        long: (a, b) => b.hours - a.hours
+      };
+      rows.sort((a, b) => (status(a) === "ok" ? 0 : 1) - (status(b) === "ok" ? 0 : 1) || rank[state.sort](a, b) || a.title.localeCompare(b.title));
+      return rows;
+    }
+    function facetCount(kind, value) {
+      return TOURS.filter((t) => {
+        if (!pass(t, kind)) return false;
+        if (kind === "region") return t.region === value;
+        if (kind === "cat") return t.category === value;
+        if (kind === "dur") return bucket(t) === value;
+        if (kind === "when") return t.when === value;
+        if (kind === "style") return t.style === value;
+        if (kind === "lang") return t.langs.includes(value);
+        return false;
+      }).length;
+    }
+    function narrow() { return window.innerWidth <= 860; }
+
+    function readUrl() {
+      const p = new URLSearchParams(location.search);
+      state.q = p.get("q") || "";
+      const date = p.get("date") || "";
+      state.date = /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= todayIso() ? date : defaultDate();
+      const adults = Number(p.get("adults"));
+      const children = Number(p.get("children"));
+      if (adults >= 1 && adults <= 8) state.adults = adults;
+      if (children >= 0 && children <= 6) state.children = children;
+      if (p.has("min") && Number.isFinite(Number(p.get("min")))) state.min = Number(p.get("min"));
+      if (p.has("max") && Number.isFinite(Number(p.get("max")))) state.max = Number(p.get("max"));
+      const take = (key, set, allowed) => (p.get(key) || "").split(",").filter((v) => allowed.has(v)).forEach((v) => set.add(v));
+      take("dur", state.dur, new Set(DURS.map((d) => d[0])));
+      take("region", state.region, new Set(TOURS.map((t) => t.region)));
+      take("cat", state.cat, new Set(TOURS.map((t) => t.category)));
+      take("when", state.when, new Set(WHENS.map((d) => d[0])));
+      take("style", state.style, new Set(STYLES.map((d) => d[0])));
+      take("lang", state.lang, new Set(LANGS.map((d) => d[0])));
+      state.cancel = p.get("cancel") === "1";
+      state.pickup = p.get("pickup") === "1";
+      if (Number(p.get("rating")) === 8 || Number(p.get("rating")) === 9) state.rating = Number(p.get("rating"));
+      if (["match", "price", "rating", "reviews", "short", "long"].includes(p.get("sort"))) state.sort = p.get("sort");
+      state.showOff = p.get("off") === "1";
+      state.showSold = p.get("sold") === "1";
+      state.savedOnly = p.get("saved") === "1";
+      state.compare = (p.get("cmp") || "").split(",").filter((id) => tourById(id)).slice(0, 3);
+      if (tourById(p.get("sel"))) state.selected = p.get("sel");
+      if (p.get("view") === "compare") state.stageMode = "compare";
+      try {
+        const raw = JSON.parse(localStorage.getItem("wch-tours-saved") || "[]");
+        if (Array.isArray(raw)) raw.forEach((id) => { if (tourById(id)) state.saved.add(id); });
+      } catch (err) { /* keep saved empty */ }
+    }
+    function writeUrl() {
+      const p = new URLSearchParams();
+      if (state.q) p.set("q", state.q);
+      p.set("date", state.date);
+      if (state.adults !== 2) p.set("adults", String(state.adults));
+      if (state.children) p.set("children", String(state.children));
+      if (state.min != null) p.set("min", String(state.min));
+      if (state.max != null) p.set("max", String(state.max));
+      const put = (key, set) => { if (set.size) p.set(key, [...set].join(",")); };
+      put("dur", state.dur); put("region", state.region); put("cat", state.cat);
+      put("when", state.when); put("style", state.style); put("lang", state.lang);
+      if (state.cancel) p.set("cancel", "1");
+      if (state.pickup) p.set("pickup", "1");
+      if (state.rating) p.set("rating", String(state.rating));
+      if (state.sort !== "match") p.set("sort", state.sort);
+      if (state.showOff) p.set("off", "1");
+      if (state.showSold) p.set("sold", "1");
+      if (state.savedOnly) p.set("saved", "1");
+      if (state.compare.length) p.set("cmp", state.compare.join(","));
+      if (state.selected) p.set("sel", state.selected);
+      if (state.stageMode === "compare") p.set("view", "compare");
+      const qs = p.toString();
+      history.replaceState(null, "", qs ? "?" + qs : location.pathname);
+    }
+    function persistSaved() { try { localStorage.setItem("wch-tours-saved", JSON.stringify([...state.saved])); } catch (err) { /* private mode */ } }
+    function toast(text) {
+      const el = $("toast");
+      el.textContent = text;
+      el.classList.add("on");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove("on"), 2400);
+    }
+    function dump() {
+      return JSON.stringify({
+        q: state.q, min: state.min, max: state.max, dur: [...state.dur], region: [...state.region], cat: [...state.cat],
+        when: [...state.when], style: [...state.style], lang: [...state.lang], cancel: state.cancel, pickup: state.pickup,
+        rating: state.rating, showOff: state.showOff, showSold: state.showSold, savedOnly: state.savedOnly
+      });
+    }
+    function load(raw) {
+      const o = JSON.parse(raw);
+      state.q = o.q; state.min = o.min; state.max = o.max;
+      state.dur = new Set(o.dur); state.region = new Set(o.region); state.cat = new Set(o.cat);
+      state.when = new Set(o.when); state.style = new Set(o.style); state.lang = new Set(o.lang);
+      state.cancel = o.cancel; state.pickup = o.pickup; state.rating = o.rating;
+      state.showOff = o.showOff; state.showSold = o.showSold; state.savedOnly = o.savedOnly;
+    }
+    function clearFilters() {
+      state.q = ""; state.min = null; state.max = null;
+      state.dur.clear(); state.region.clear(); state.cat.clear(); state.when.clear(); state.style.clear(); state.lang.clear();
+      state.cancel = false; state.pickup = false; state.rating = 0;
+      state.showOff = false; state.showSold = false; state.savedOnly = false;
+    }
+    function suggestions() {
+      const ideas = [];
+      const attempt = (label, apply) => {
+        const snap = dump();
+        apply();
+        const n = TOURS.filter((t) => pass(t)).length;
+        load(snap);
+        if (n > 0) ideas.push({ label: label + " · " + n, apply });
+      };
+      if (state.q) attempt("Clear the search", () => { state.q = ""; });
+      if (state.min != null || state.max != null) attempt("Clear the price", () => { state.min = null; state.max = null; });
+      if (state.region.size) attempt("Clear place", () => state.region.clear());
+      if (state.cat.size) attempt("Clear type", () => state.cat.clear());
+      if (state.dur.size) attempt("Clear duration", () => state.dur.clear());
+      if (state.when.size) attempt("Clear start time", () => state.when.clear());
+      if (state.style.size) attempt("Clear group", () => state.style.clear());
+      if (state.lang.size) attempt("Clear language", () => state.lang.clear());
+      if (state.cancel) attempt("Allow non-refundable", () => { state.cancel = false; });
+      if (state.pickup) attempt("Include no pickup", () => { state.pickup = false; });
+      if (state.rating) attempt("Any score", () => { state.rating = 0; });
+      if (state.savedOnly) attempt("Show all tours", () => { state.savedOnly = false; });
+      if (!state.showOff) attempt("Other dates", () => { state.showOff = true; });
+      if (!state.showSold) attempt("Sold out", () => { state.showSold = true; });
+      return ideas.slice(0, 3);
+    }
+    function clampPrice() {
+      const [lo, hi] = bounds();
+      if (state.min != null && state.min <= lo) state.min = null;
+      if (state.max != null && state.max >= hi) state.max = null;
+      if (state.min != null && state.min > hi) state.min = hi;
+      if (state.max != null && state.max < lo) state.max = lo;
+      if (state.min != null && state.max != null && state.min > state.max) state.max = state.min;
+    }
+    function sameSet(set, values) { return set.size === values.length && values.every((v) => set.has(v)); }
+    function activeCount() {
+      let n = (state.q ? 1 : 0) + state.dur.size + state.region.size + state.cat.size + state.when.size + state.style.size + state.lang.size;
+      if (state.min != null || state.max != null) n += 1;
+      if (state.cancel) n += 1;
+      if (state.pickup) n += 1;
+      if (state.rating) n += 1;
+      if (state.savedOnly) n += 1;
+      return n;
+    }
+    function flagText(t) {
+      const st = status(t);
+      if (st === "ok") {
+        const seats = seatsLeft(t, state.date);
+        if (t.priceKind === "person" && seats <= 4) return seats + " seat" + (seats === 1 ? "" : "s") + " left";
+        return "";
+      }
+      const next = nextOpen(t, state.date);
+      if (st === "off") return "Not on " + DAY[parseIso(state.date).getDay()] + (next ? " · next " + pretty(next) : "");
+      return "Sold out" + (next ? " · next " + pretty(next) : "");
+    }
+
+    function rowHtml(t) {
+      const on = t.id === state.selected && state.stageMode === "tour";
+      const pinned = state.compare.includes(t.id);
+      const saved = state.saved.has(t.id);
+      const flag = flagText(t);
+      return `<div class="row${on ? " is-on" : ""}${status(t) === "ok" ? "" : " is-off"}" data-id="${esc(t.id)}" tabindex="0"${on ? ' aria-current="true"' : ""} aria-label="${esc(t.title)}, ${esc(inr(partyTotal(t)))}">
+        <img alt="" width="74" height="74" src="${esc(picture(t))}">
+        <span>
+          <strong>${esc(t.title)}</strong>
+          <span class="row__meta">${esc(t.place)} · ${esc(durationLabel(t))} · ${esc(groupLabel(t).split(" · ")[0])}</span>
+          ${flag ? `<span class="row__flag">${esc(flag)}</span>` : ""}
+        </span>
+        <span class="row__side">
+          <span class="row__price">${esc(inr(partyTotal(t)))}</span>
+          <span class="row__score">${t.rating.toFixed(1)} ${esc(words(t.rating))}</span>
+          <span class="row__tools">
+            <button class="icon-btn" type="button" data-pin aria-pressed="${pinned}">${pinned ? "Pinned" : "Pin"}</button>
+            <button class="icon-btn" type="button" data-save aria-pressed="${saved}" aria-label="${saved ? "Remove saved" : "Save"} ${esc(t.title)}">${saved ? "♥" : "♡"}</button>
+          </span>
+        </span>
+      </div>`;
+    }
+    function stageTour(t) {
+      const cancel = cancelInfo(t);
+      const st = status(t);
+      const next = st === "ok" ? null : nextOpen(t, state.date);
+      const lines = t.priceKind === "group"
+        ? [`${vehicles(t)} × ${inr(t.price)}`]
+        : [`${state.adults} × ${inr(t.price)} adult`].concat(state.children ? [`${state.children} × ${inr(childUnit(t))} child`] : []);
+      const pinned = state.compare.includes(t.id);
+      const saved = state.saved.has(t.id);
+      return `<button class="btn btn--ghost btn--small stage__back" type="button" data-back>Back to the list</button>
+        <img class="hero" alt="${esc(t.alt)}" src="${esc(picture(t))}">
+        <div class="stage__pad">
+          <p class="kicker">${esc(t.place)} · ${esc(t.region)} · ${esc(t.category)}</p>
+          <h2>${esc(t.title)}</h2>
+          <div class="facts">
+            <span>${esc(durationLabel(t))}</span>
+            <span>${esc(groupLabel(t))}</span>
+            <span>${esc(departLabel(t))}</span>
+            <span>${esc(langLabel(t))}</span>
+            <span>${t.rating.toFixed(1)} · ${esc(words(t.rating))} · ${num.format(t.reviews)}</span>
+          </div>
+          <p class="lede">${esc(t.story)}</p>
+          <p class="mention">${esc(t.mention)}</p>
+          <p class="cancel cancel--${cancel.kind}">${esc(cancel.text)}</p>
+          <p class="mention">${esc(t.meet)}</p>
+          ${st !== "ok" ? `<p class="flag">${st === "off" ? "This tour does not run that day." : "Sold out on that date."}${next ? " Next open date: " + esc(pretty(next)) + "." : ""}</p>` : ""}
+          <div class="split-copy">
+            <div><h3>The day</h3><ol class="timeline">${t.timeline.map((step) => `<li>${esc(step)}</li>`).join("")}</ol></div>
+            <div>
+              <h3>Included</h3><ul>${t.includes.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
+              <h3 style="margin-top:12px">Not included</h3><ul>${t.excludes.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
+            </div>
+          </div>
+          <div class="bill">
+            <div>
+              <p class="bill__sub">${lines.map(esc).join("<br>")}</p>
+              <p class="bill__total">${esc(inr(partyTotal(t)))}</p>
+              <p class="bill__sub">for ${esc(whoLabel())} on ${esc(pretty(state.date))}<br>${esc(priceDetail(t))} · GST included</p>
+            </div>
+          </div>
+          <div class="stage__actions">
+            <button class="btn btn--ghost btn--small" type="button" data-pin data-id="${esc(t.id)}" aria-pressed="${pinned}">${pinned ? "Pinned for compare" : "Pin to compare"}</button>
+            <button class="btn btn--ghost btn--small" type="button" data-save data-id="${esc(t.id)}" aria-pressed="${saved}">${saved ? "♥ Saved" : "♡ Save"}</button>
+          </div>
+          ${st !== "ok" ? "" : `<form class="form" novalidate data-request="${esc(t.id)}">
+            <label>Name <input name="name" autocomplete="name"></label>
+            <label>Phone <input name="phone" inputmode="tel" autocomplete="tel"></label>
+            <label>Note <textarea name="note" rows="2" placeholder="A hotel name, or a question"></textarea></label>
+            <p class="err" data-err></p>
+            <button class="btn btn--block" type="submit">Request this tour</button>
+          </form>`}
+          <p class="fine">A sample list. Prices, seats, and reviews are written for this interface. Photographs are of the places. Nothing you type leaves this page.</p>
+        </div>`;
+    }
+    function stageCompare() {
+      const tours = state.compare.map(tourById).filter(Boolean);
+      if (tours.length < 2) return `<div class="stage__pad"><h2>Pin two tours</h2><p class="lede">Pin tours from the list, then compare them for this party and this date.</p></div>`;
+      const totals = tours.map(partyTotal);
+      const low = Math.min(...totals);
+      const cell = (html, best) => `<td class="${best ? "best" : ""}">${html}</td>`;
+      const row = (label, cells) => `<tr><th scope="row">${label}</th>${cells}</tr>`;
+      const body = [
+        row("Total", tours.map((t) => cell(esc(inr(partyTotal(t))), partyTotal(t) === low)).join("")),
+        row("Price", tours.map((t) => cell(esc(priceDetail(t)))).join("")),
+        row("Time", tours.map((t) => cell(esc(durationLabel(t)))).join("")),
+        row("Group", tours.map((t) => cell(esc(groupLabel(t)))).join("")),
+        row("Leaves", tours.map((t) => cell(esc(departLabel(t)))).join("")),
+        row("Language", tours.map((t) => cell(esc(langLabel(t)))).join("")),
+        row("Pickup", tours.map((t) => cell(t.pickup ? "Hotel pickup" : esc(t.meetShort))).join("")),
+        row("Included", tours.map((t) => cell(t.includes.map(esc).join(", "))).join("")),
+        row("Cancellation", tours.map((t) => cell(esc(cancelInfo(t).text))).join("")),
+        row("On this date", tours.map((t) => cell(status(t) === "ok" ? "Running" : status(t) === "off" ? "Does not run" : "Sold out")).join(""))
+      ].join("");
+      return `<button class="btn btn--ghost btn--small stage__back" type="button" data-back>Back to the list</button>
+        <div class="stage__pad">
+          <p class="kicker">Same party, same date</p>
+          <h2>Compare ${tours.length}</h2>
+          <p class="why">Totals are for ${esc(whoLabel())} on ${esc(pretty(state.date))}. The lowest total is marked.</p>
+          <div class="table-wrap"><table><thead><tr><th></th>${tours.map((t) => `<th>${esc(t.title)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div>
+          <div class="stage__actions">${tours.map((t) => `<button class="btn btn--ghost btn--small" type="button" data-open="${esc(t.id)}">Open ${esc(t.title)}</button>`).join("")}</div>
+        </div>`;
+    }
+    function menuHtml() {
+      if (!state.menu) return "";
+      if (state.menu === "who") {
+        return `<div class="step"><span>Adults</span><div class="step__btns"><button type="button" data-step="adults" data-dir="-1" aria-label="Fewer adults" ${state.adults <= 1 ? "disabled" : ""}>−</button><b>${state.adults}</b><button type="button" data-step="adults" data-dir="1" aria-label="More adults" ${state.adults >= 8 ? "disabled" : ""}>+</button></div></div>
+          <div class="step"><span>Children under 12</span><div class="step__btns"><button type="button" data-step="children" data-dir="-1" aria-label="Fewer children" ${state.children <= 0 ? "disabled" : ""}>−</button><b>${state.children}</b><button type="button" data-step="children" data-dir="1" aria-label="More children" ${state.children >= 6 ? "disabled" : ""}>+</button></div></div>
+          <p class="hint">Children count toward the seats. On a shared tour they pay 70%. On a private vehicle they ride in the same price.</p>`;
+      }
+      if (state.menu === "price") {
+        const [lo, hi] = bounds();
+        const min = state.min == null ? lo : state.min;
+        const max = state.max == null ? hi : state.max;
+        const span = hi - lo || 1;
+        return `<p class="hint">The total for ${esc(whoLabel())}, GST included.</p>
+          <div class="slider"><div class="slider__track"></div><div class="slider__fill" style="left:${((min - lo) / span * 100)}%;right:${((hi - max) / span * 100)}%"></div>
+            <input id="rmin" type="range" aria-label="Minimum total" min="${lo}" max="${hi}" step="500" value="${min}">
+            <input id="rmax" type="range" aria-label="Maximum total" min="${lo}" max="${hi}" step="500" value="${max}">
+          </div>
+          <div class="price-row"><label>Minimum <input id="nmin" inputmode="numeric" value="${min}"></label><label>Maximum <input id="nmax" inputmode="numeric" value="${max}"></label></div>`;
+      }
+      const groups = {
+        place: ["region", [...new Set(TOURS.map((t) => t.region))].map((v) => [v, v])],
+        type: ["cat", [...new Set(TOURS.map((t) => t.category))].map((v) => [v, v])],
+        time: ["when", WHENS],
+        group: ["style", STYLES],
+        language: ["lang", LANGS]
+      };
+      const spec = groups[state.menu];
+      if (!spec) return "";
+      const [kind, pairs] = spec;
+      return pairs.map(([value, label]) => {
+        const count = facetCount(kind, value);
+        const checked = state[kind].has(value);
+        return `<label class="check${count === 0 && !checked ? " is-zero" : ""}"><input type="checkbox" data-kind="${kind}" value="${esc(value)}" ${checked ? "checked" : ""} ${count === 0 && !checked ? "disabled" : ""}> ${esc(label)} <span class="count">${count}</span></label>`;
+      }).join("");
+    }
+    function railHtml() {
+      const [lo, hi] = bounds();
+      const priceOn = state.min != null || state.max != null;
+      const priceLabel = priceOn ? inr(state.min == null ? lo : state.min) + "–" + inr(state.max == null ? hi : state.max) : "Any total";
+      const menus = [
+        ["price", priceLabel, priceOn],
+        ["place", "Place", state.region.size],
+        ["type", "Type", state.cat.size],
+        ["time", "Starts", state.when.size],
+        ["group", "Group", state.style.size],
+        ["language", "Language", state.lang.size]
+      ];
+      const toggles = [
+        ["day", "Day trips", sameSet(state.dur, ["half", "day"])],
+        ["multi", "Multi-day", sameSet(state.dur, ["2", "mid", "long"])],
+        ["cancel", "Free cancellation", state.cancel],
+        ["pickup", "Hotel pickup", state.pickup],
+        ["nine", "Score 9+", state.rating === 9]
+      ];
+      return menus.map(([id, label, on]) => `<button class="pill${on ? " is-set" : ""}" type="button" data-menu="${id}" aria-expanded="${state.menu === id}">${esc(label)}${typeof on === "number" && on ? `<span class="n">${on}</span>` : ""}</button>`).join("")
+        + toggles.map(([id, label, on]) => `<button class="pill" type="button" data-quick="${id}" aria-pressed="${on}">${label}</button>`).join("");
+    }
+    function chipsHtml() {
+      const chips = [];
+      const add = (text, key) => chips.push(`<span class="chip">${esc(text)} <button type="button" data-clear="${esc(key)}" aria-label="Remove ${esc(text)}">×</button></span>`);
+      if (state.q) add(state.q, "q");
+      if (state.min != null || state.max != null) {
+        const [lo, hi] = bounds();
+        add(inr(state.min == null ? lo : state.min) + " – " + inr(state.max == null ? hi : state.max), "price");
+      }
+      const names = { dur: Object.fromEntries(DURS), when: Object.fromEntries(WHENS), style: Object.fromEntries(STYLES), lang: Object.fromEntries(LANGS) };
+      for (const kind of ["region", "cat", "dur", "when", "style", "lang"]) {
+        for (const value of state[kind]) add((names[kind] && names[kind][value]) || value, kind + ":" + value);
+      }
+      if (state.cancel) add("Free cancellation", "cancel");
+      if (state.pickup) add("Hotel pickup", "pickup");
+      if (state.rating) add(state.rating + " and above", "rating");
+      if (state.savedOnly) add("Saved only", "saved");
+      if (state.showOff) add("Other dates", "off");
+      if (state.showSold) add("Sold out", "sold");
+      if (chips.length) chips.push(`<button class="linkish" type="button" data-clear="all">Clear filters</button>`);
+      return chips.join("");
+    }
+
+    function render() {
+      clampPrice();
+      const rows = visible();
+      if (!rows.some((t) => t.id === state.selected)) {
+        state.selected = rows[0] ? rows[0].id : "";
+        state.stageMode = "tour";
+      }
+      if (state.stageMode === "compare" && state.compare.length < 2) state.stageMode = "tour";
+      writeUrl();
+      const prevMode = $("stage").dataset.mode;
+      const prevId = $("stage").dataset.id;
+      const noun = rows.length === 1 ? "tour" : "tours";
+      $("count").textContent = rows.length ? rows.length + " " + noun : "No tours";
+      const why = {
+        match: "Best match is the score, with a small lift for smaller groups and free cancellation.",
+        price: "Lowest total for this party.",
+        rating: "Highest score first. More reviews win a tie.",
+        reviews: "Most reviews first.",
+        short: "Shortest time first.",
+        long: "Longest time first."
+      }[state.sort];
+      $("why").textContent = why + " · " + whoLabel() + " · " + pretty(state.date);
+      const pool = TOURS.filter((t) => pass(t, "avail"));
+      const off = pool.filter((t) => status(t) === "off").length;
+      const sold = pool.filter((t) => status(t) === "sold").length;
+      const bits = [];
+      if (off && !state.showOff) bits.push(off + (off === 1 ? " does not run" : " do not run"));
+      if (sold && !state.showSold) bits.push(sold + (sold === 1 ? " is sold out" : " are sold out"));
+      if (bits.length) {
+        $("note").hidden = false;
+        const actions = [];
+        if (off && !state.showOff) actions.push(`<button class="linkish" type="button" data-clear="show-off">Show other dates</button>`);
+        if (sold && !state.showSold) actions.push(`<button class="linkish" type="button" data-clear="show-sold">Show sold out</button>`);
+        $("note").innerHTML = `<span>${esc(bits.join(". ") + " on " + pretty(state.date) + ".")}</span>` + actions.join("");
+      } else { $("note").hidden = true; $("note").innerHTML = ""; }
+      $("rows").innerHTML = rows.map(rowHtml).join("");
+      $("empty").hidden = rows.length > 0;
+      if (!rows.length) {
+        const ideas = suggestions();
+        $("empty-copy").textContent = "The date and the party stay. Loosen one filter.";
+        $("empty-actions").innerHTML = ideas.map((idea, i) => `<button class="btn ${i ? "btn--ghost" : ""} btn--small" type="button" data-relax="${i}">${esc(idea.label)}</button>`).join("") + `<button class="btn btn--ghost btn--small" type="button" data-clear="all">Clear filters</button>`;
+        $("empty-actions")._ideas = ideas;
+      }
+      const selected = tourById(state.selected);
+      const mode = state.stageMode;
+      $("stage").dataset.mode = mode;
+      $("stage").dataset.id = state.selected;
+      $("stage").innerHTML = mode === "compare" ? stageCompare() : (selected ? stageTour(selected) : `<div class="stage__pad"><h2>No tour in this list</h2></div>`);
+      if (mode !== prevMode || state.selected !== prevId) $("stage").scrollTop = 0;
+      $("index").scrollTop = indexScroll;
+      $("rail").innerHTML = railHtml();
+      $("chips").innerHTML = chipsHtml();
+      if (document.activeElement !== $("q")) $("q").value = state.q;
+      $("date").value = state.date;
+      $("date").min = todayIso();
+      if ($("sort").value !== state.sort) $("sort").value = state.sort;
+      $("who-btn").textContent = whoLabel();
+      $("who-btn").setAttribute("aria-expanded", String(state.menu === "who"));
+      $("saved-toggle").setAttribute("aria-pressed", String(state.savedOnly));
+      $("saved-toggle").textContent = "Saved" + (state.saved.size ? " · " + state.saved.size : "");
+      const cmp = $("compare-open");
+      cmp.hidden = state.compare.length < 2;
+      cmp.textContent = "Compare " + state.compare.length;
+      cmp.setAttribute("aria-pressed", String(state.stageMode === "compare"));
+      const pop = $("pop");
+      if (!state.menu) pop.hidden = true;
+      else {
+        const focus = document.activeElement;
+        const keepSlider = state.menu === "price" && focus && (focus.id === "rmin" || focus.id === "rmax");
+        if (!keepSlider) pop.innerHTML = menuHtml();
+        pop.hidden = false;
+        const anchor = document.querySelector(`[data-menu="${state.menu}"], #who-btn`);
+        if (anchor) {
+          const r = anchor.getBoundingClientRect();
+          pop.style.top = Math.min(r.bottom + 8, window.innerHeight - 80) + "px";
+          pop.style.left = Math.max(12, Math.min(r.left, window.innerWidth - pop.offsetWidth - 12)) + "px";
+        }
+      }
+      document.body.classList.toggle("stage-open", narrow() && Boolean(state.selected) && state._opened);
+      if (booted) $("live").textContent = $("count").textContent + ". " + (selected ? selected.title : "");
+      booted = true;
+    }
+    function selectTour(id, open) {
+      state.selected = id;
+      state.stageMode = "tour";
+      if (open) state._opened = true;
+      render();
+      const row = document.querySelector(`.row[data-id="${CSS.escape(id)}"]`);
+      if (row) row.focus();
+    }
+    function toggleCompare(id) {
+      const at = state.compare.indexOf(id);
+      if (at >= 0) state.compare.splice(at, 1);
+      else if (state.compare.length >= 3) { toast("Pin up to 3 tours."); return; }
+      else state.compare.push(id);
+      if (state.compare.length < 2) state.stageMode = "tour";
+      render();
+    }
+    function toggleSave(id) {
+      if (state.saved.has(id)) state.saved.delete(id);
+      else state.saved.add(id);
+      persistSaved();
+      render();
+    }
+    function applyQuick(id) {
+      const on = { day: sameSet(state.dur, ["half", "day"]), multi: sameSet(state.dur, ["2", "mid", "long"]), cancel: state.cancel, pickup: state.pickup, nine: state.rating === 9 }[id];
+      if (id === "day") state.dur = on ? new Set() : new Set(["half", "day"]);
+      if (id === "multi") state.dur = on ? new Set() : new Set(["2", "mid", "long"]);
+      if (id === "cancel") state.cancel = !state.cancel;
+      if (id === "pickup") state.pickup = !state.pickup;
+      if (id === "nine") state.rating = on ? 0 : 9;
+      render();
+    }
+    function applyClear(key) {
+      if (key === "all") clearFilters();
+      else if (key === "q") state.q = "";
+      else if (key === "price") { state.min = null; state.max = null; }
+      else if (key === "cancel") state.cancel = false;
+      else if (key === "pickup") state.pickup = false;
+      else if (key === "rating") state.rating = 0;
+      else if (key === "saved") state.savedOnly = false;
+      else if (key === "off") state.showOff = false;
+      else if (key === "sold") state.showSold = false;
+      else if (key === "show-off") state.showOff = true;
+      else if (key === "show-sold") state.showSold = true;
+      else { const [kind, value] = key.split(":"); state[kind].delete(value); }
+      render();
+    }
+    function setPriceFromSlider() {
+      const [lo, hi] = bounds();
+      let min = Number($("rmin").value);
+      let max = Number($("rmax").value);
+      if (min > max) { if (document.activeElement === $("rmin")) min = max; else max = min; }
+      state.min = min <= lo ? null : min;
+      state.max = max >= hi ? null : max;
+      render();
+    }
+
+    $("index").addEventListener("scroll", () => { indexScroll = $("index").scrollTop; });
+    $("rows").addEventListener("click", (e) => {
+      const row = e.target.closest("[data-id]");
+      if (!row) return;
+      if (e.target.closest("[data-pin]")) { toggleCompare(row.dataset.id); return; }
+      if (e.target.closest("[data-save]")) { toggleSave(row.dataset.id); return; }
+      state._opened = true;
+      selectTour(row.dataset.id, true);
+    });
+    $("rows").addEventListener("keydown", (e) => {
+      const row = e.target.closest(".row");
+      if (!row) return;
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); state._opened = true; selectTour(row.dataset.id, true); }
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        const all = [...document.querySelectorAll(".row")];
+        const i = all.indexOf(row);
+        const next = all[i + (e.key === "ArrowDown" ? 1 : -1)];
+        if (next) { state._opened = !narrow(); selectTour(next.dataset.id, !narrow()); }
+      }
+    });
+    $("stage").addEventListener("click", (e) => {
+      if (e.target.closest("[data-back]")) { state._opened = false; document.body.classList.remove("stage-open"); return; }
+      const pin = e.target.closest("[data-pin]");
+      if (pin) { toggleCompare(pin.dataset.id || state.selected); return; }
+      const save = e.target.closest("[data-save]");
+      if (save) { toggleSave(save.dataset.id || state.selected); return; }
+      const open = e.target.closest("[data-open]");
+      if (open) { state._opened = true; selectTour(open.dataset.open, true); }
+    });
+    $("stage").addEventListener("submit", (e) => {
+      const form = e.target.closest("form");
+      if (!form) return;
+      e.preventDefault();
+      const err = form.querySelector("[data-err]");
+      const name = form.name.value.trim();
+      const phone = form.phone.value.replace(/[\s-]/g, "");
+      if (name.length < 2) { err.textContent = "Add the name we should ask for."; form.name.focus(); return; }
+      if (!/^[0-9+]{8,15}$/.test(phone)) { err.textContent = "Add a phone number with at least 8 digits."; form.phone.focus(); return; }
+      const t = tourById(form.dataset.request);
+      form.replaceWith(Object.assign(document.createElement("div"), {
+        className: "success",
+        innerHTML: `<strong>Noted on this page only.</strong><p style="margin-top:6px">${esc(name)}, a real request for ${esc(t.title)} would come back with the meeting time before you pay. The total was ${esc(inr(partyTotal(t)))}.</p>`
+      }));
+    });
+    $("rail").addEventListener("click", (e) => {
+      const menu = e.target.closest("[data-menu]");
+      const quick = e.target.closest("[data-quick]");
+      if (menu) { state.menu = state.menu === menu.dataset.menu ? null : menu.dataset.menu; render(); }
+      if (quick) applyQuick(quick.dataset.quick);
+    });
+    $("who-btn").addEventListener("click", () => { state.menu = state.menu === "who" ? null : "who"; render(); });
+    $("pop").addEventListener("change", (e) => {
+      const el = e.target;
+      if (!el.dataset || !el.dataset.kind) return;
+      if (el.checked) state[el.dataset.kind].add(el.value);
+      else state[el.dataset.kind].delete(el.value);
+      render();
+    });
+    $("pop").addEventListener("input", (e) => { if (e.target.id === "rmin" || e.target.id === "rmax") setPriceFromSlider(); });
+    $("pop").addEventListener("change", (e) => {
+      if (e.target.id !== "nmin" && e.target.id !== "nmax") return;
+      const [lo, hi] = bounds();
+      const raw = Number(String(e.target.value).replace(/[^\d]/g, ""));
+      if (!Number.isFinite(raw)) { render(); return; }
+      const value = Math.min(hi, Math.max(lo, raw));
+      if (e.target.id === "nmin") state.min = value <= lo ? null : value;
+      else state.max = value >= hi ? null : value;
+      if (state.min != null && state.max != null && state.min > state.max) {
+        if (e.target.id === "nmin") state.max = state.min;
+        else state.min = state.max;
+      }
+      render();
+    });
+    $("pop").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-step]");
+      if (!btn) return;
+      const key = btn.dataset.step;
+      const next = state[key] + Number(btn.dataset.dir);
+      if (key === "adults" && next >= 1 && next <= 8) state.adults = next;
+      if (key === "children" && next >= 0 && next <= 6) state.children = next;
+      render();
+    });
+    document.addEventListener("click", (e) => {
+      const path = e.composedPath();
+      const inside = path.some((node) => node === $("pop") || node === $("who-btn") || (node.matches && node.matches("[data-menu]")));
+      if (inside) return;
+      if (state.menu) { state.menu = null; render(); }
+      const clear = e.target.closest("[data-clear]");
+      if (clear) applyClear(clear.dataset.clear);
+      const relax = e.target.closest("[data-relax]");
+      if (relax && $("empty-actions")._ideas) {
+        const idea = $("empty-actions")._ideas[Number(relax.dataset.relax)];
+        if (idea) { idea.apply(); render(); }
+      }
+    });
+    $("q").addEventListener("input", () => { state.q = $("q").value; render(); });
+    $("date").addEventListener("change", () => {
+      if (!$("date").value || $("date").value < todayIso()) $("date").value = state.date;
+      else { state.date = $("date").value; render(); }
+    });
+    $("sort").addEventListener("change", () => { state.sort = $("sort").value; render(); });
+    $("command").addEventListener("submit", (e) => e.preventDefault());
+    $("saved-toggle").addEventListener("click", () => { state.savedOnly = !state.savedOnly; render(); });
+    $("compare-open").addEventListener("click", () => {
+      state.stageMode = state.stageMode === "compare" ? "tour" : "compare";
+      state._opened = true;
+      render();
+    });
+    $("share").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(location.href); toast("Link copied. It keeps the date, party, filters, and the open tour."); }
+      catch (err) { toast("Copy the address from the browser bar."); }
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && state.menu) { state.menu = null; render(); }
+      if (e.key === "Escape" && narrow() && state._opened) { state._opened = false; document.body.classList.remove("stage-open"); }
+    });
+    window.addEventListener("resize", () => {
+      if (!narrow()) state._opened = false;
+      render();
+    });
+
+    readUrl();
+    state._opened = false;
+    render();
+  </script>
+</body>
+</html>

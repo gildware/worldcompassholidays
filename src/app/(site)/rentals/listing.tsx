@@ -39,9 +39,6 @@ export async function RentalListing({
   const kind =
     lockedKind ??
     (kinds.includes(requestedKind as "car" | "bike") ? (requestedKind as "car" | "bike") : "");
-  const locationId = one(params.location);
-  const seats = Number(one(params.seats) || 0);
-
   const [vehicles, rentalLocations, freeCancellation] = await Promise.all([
     prisma.vehicle.findMany({
       where: {
@@ -114,6 +111,7 @@ export async function RentalListing({
       mileage: vehicle.includedKmPerDay > 0 ? "Limited" : "Unlimited",
       mileageLabel: vehicle.includedKmPerDay > 0 ? `${vehicle.includedKmPerDay} km included` : "Unlimited km",
       fuel: vehicle.fuelType?.name ?? "",
+      tags: linked.filter((feature) => feature.kind === "tag").map((feature) => feature.name),
       specs,
       images: vehicle.images.map((image) => image.url).filter(Boolean),
       price: vehicle.pricePerDay,
@@ -132,19 +130,13 @@ export async function RentalListing({
     lng: coord(location.mapLng),
   }));
 
-  const selectedLocation = rentalLocations.find((location) => location.id === locationId);
-  const initialPickup = one(params.q).trim() || selectedLocation?.name || "";
   const fleet = kind || (kinds.length === 1 ? kinds[0] : "mixed");
 
   return (
     <CarListV1
       cars={cars}
       locations={locations}
-      initialPickup={initialPickup}
-      initialDropoff={one(params.dropoff)}
-      initialPickupDate={one(params.pickup)}
-      initialDropoffDate={one(params.return)}
-      initialSeats={kind === "bike" ? 0 : Number.isFinite(seats) ? seats : 0}
+      params={params}
       fleet={fleet === "bike" ? "bike" : fleet === "car" ? "car" : "mixed"}
     />
   );

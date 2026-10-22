@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { createContext, useCallback, useContext, useId, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { BookingCheckout } from "@/components/rentals/BookingCheckout";
 import { PlaceFields, startingPlace, type PlaceValue } from "@/components/rentals/PlaceFields";
 import { RentalIcon, type RentalIconName } from "@/components/rentals/rental-icons";
@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { formatPhone } from "@/lib/auth/phone";
 import { formatMoney } from "@/lib/format";
 import { parseMapPoint } from "@/lib/maps";
+import { earliestPickupLocal, pickupLeadMessage } from "@/lib/rentals/dates";
 
 type LocationOption = { id: string; name: string; address: string };
 type AddonOption = { id: string; name: string; price: number; priceUnit: string };
@@ -141,6 +142,7 @@ function DateTimeField({
   value,
   error,
   inputRef,
+  min,
   onChange,
 }: {
   label: string;
@@ -148,6 +150,7 @@ function DateTimeField({
   value: string;
   error?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
+  min?: string;
   onChange: (value: string) => void;
 }) {
   const [picking, setPicking] = useState(false);
@@ -159,10 +162,14 @@ function DateTimeField({
         type={value || picking ? "datetime-local" : "text"}
         placeholder="Date and time"
         value={value}
+        min={min || undefined}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
         onInvalid={(event) => event.preventDefault()}
-        onFocus={() => setPicking(true)}
+        onFocus={() => {
+          setPicking(true);
+          if (!value && min) onChange(min);
+        }}
         onBlur={() => setPicking(false)}
         onChange={(event) => onChange(event.target.value)}
       />
@@ -181,14 +188,18 @@ type StepErrors = {
 
 function dateProblems(pickup: string, ret: string): Pick<StepErrors, "pickup" | "return"> {
   const next: Pick<StepErrors, "pickup" | "return"> = {};
-  if (!pickup) next.pickup = "Choose a pickup date and time.";
-  if (!ret) next.return = "Choose a return date and time.";
-  else if (pickup) {
-    const start = new Date(pickup);
-    const end = new Date(ret);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
-      next.return = "Return must be after pickup.";
-    }
+  const start = pickup ? new Date(pickup) : null;
+  const end = ret ? new Date(ret) : null;
+  if (!start || Number.isNaN(start.getTime())) {
+    next.pickup = "Choose a pickup date and time.";
+  } else {
+    const lead = pickupLeadMessage(start);
+    if (lead) next.pickup = lead;
+  }
+  if (!end || Number.isNaN(end.getTime())) {
+    next.return = "Choose a return date and time.";
+  } else if (start && !Number.isNaN(start.getTime()) && end <= start) {
+    next.return = "Return must be after pickup.";
   }
   return next;
 }
@@ -221,6 +232,12 @@ function BookRentalModal({
   const [errors, setErrors] = useState<StepErrors>({});
   const pickupRef = useRef<HTMLInputElement>(null);
   const returnRef = useRef<HTMLInputElement>(null);
+  const earliestPickup = earliestPickupLocal();
+
+  useEffect(() => {
+    if (!open) return;
+    setPickup((current) => current || earliestPickupLocal());
+  }, [open]);
 
   const returnPath = useMemo(() => {
     const params = new URLSearchParams({
@@ -380,6 +397,7 @@ function BookRentalModal({
               value={pickup}
               error={errors.pickup}
               inputRef={pickupRef}
+              min={earliestPickup}
               onChange={changePickup}
             />
             <DateTimeField

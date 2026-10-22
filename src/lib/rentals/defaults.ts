@@ -34,6 +34,10 @@ const configs: Array<{
   { kind: "fuel", name: "Electric", sortOrder: 40 },
   { kind: "transmission", name: "Manual", sortOrder: 10 },
   { kind: "transmission", name: "Automatic", sortOrder: 20 },
+  { kind: "tag", name: "Mostly rented", sortOrder: 10 },
+  { kind: "tag", name: "Popular", sortOrder: 20 },
+  { kind: "tag", name: "Best for comfort", sortOrder: 30 },
+  { kind: "tag", name: "Best for spacing", sortOrder: 40 },
   { kind: "feature", name: "AC", sortOrder: 10 },
   { kind: "feature", name: "Bluetooth", sortOrder: 20 },
   { kind: "feature", name: "GPS", sortOrder: 30 },
@@ -553,6 +557,26 @@ async function ensureBikeTypes() {
   }
 }
 
+async function ensureTags() {
+  const tags: Array<[string, number]> = [
+    ["Mostly rented", 10],
+    ["Popular", 20],
+    ["Best for comfort", 30],
+    ["Best for spacing", 40],
+  ];
+  for (const [name, sortOrder] of tags) {
+    const slug = slugify(name);
+    const existing = await prisma.rentalConfig.findUnique({
+      where: { kind_slug: { kind: "tag", slug } },
+      select: { id: true },
+    });
+    if (existing) continue;
+    await prisma.rentalConfig.create({
+      data: { kind: "tag", name, slug, appliesTo: "all", sortOrder, active: true },
+    });
+  }
+}
+
 async function ensureCoverLists() {
   const helmet = await prisma.rentalConfig.findFirst({
     where: { kind: "feature", slug: "helmet-included" },
@@ -900,6 +924,7 @@ async function seedRentalDefaults() {
   }
 
   await ensureCoverLists();
+  await ensureTags();
   await ensureBikeTypes();
 
   if ((await prisma.rentalPolicy.count()) === 0) {

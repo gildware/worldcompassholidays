@@ -4,7 +4,9 @@ export type HotelRoomCard = {
   id: string;
   name: string;
   image: string;
+  images: string[];
   occupancy: number;
+  sizeSqm: number | null;
   bedLabel: string;
   summary: string;
   price: number;
@@ -40,6 +42,9 @@ export type HotelSingleData = {
   priceLabel: string;
   images: string[];
   mapUrl: string;
+  mapLat: string;
+  mapLng: string;
+  mapZoom: number;
   amenities: string[];
   checkIn: string;
   checkOut: string;

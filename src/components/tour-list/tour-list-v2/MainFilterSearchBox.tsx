@@ -4,6 +4,13 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import "rc-slider/assets/index.css";
 import { PriceSlider } from "@/components/hotel-list/sidebar/PriceSlider";
 import { LocationSearch } from "@/components/tour-list/tour-list-v2/LocationSearch";
+import {
+  FilterChoiceChips,
+  FilterLocationField,
+  FilterPriceField,
+  FilterSheet,
+  FilterSheetClear,
+} from "@/components/listing/FilterSheet";
 import type { TourListFilters } from "@/components/tour-list/tour-list-v2/Sidebar";
 import type { TourListLocation } from "@/components/tour-list/types";
 import { formatMoney } from "@/lib/format";
@@ -121,6 +128,7 @@ export function MainFilterSearchBox({
   currency,
   onClear,
   showSearch = false,
+  sheet = false,
 }: {
   locations: TourListLocation[];
   location: string;
@@ -135,6 +143,7 @@ export function MainFilterSearchBox({
   currency: string;
   onClear: () => void;
   showSearch?: boolean;
+  sheet?: boolean;
 }) {
   const setPrice = (next: [number, number]) => onFilters({ ...filters, price: clampPrice(next, priceMin, priceMax) });
   const low = Math.min(filters.price[0], filters.price[1]);
@@ -146,6 +155,38 @@ export function MainFilterSearchBox({
     filters.durations.length > 0 ||
     low > priceMin ||
     high < priceMax;
+
+  if (sheet) {
+    return (
+      <FilterSheet>
+        <FilterLocationField locations={locations} value={location} onChange={onLocation} />
+        <FilterChoiceChips
+          label="Tour type"
+          anyLabel="All types"
+          options={categories}
+          values={filters.categories}
+          onChange={(next) => onFilters({ ...filters, categories: next })}
+        />
+        <FilterPriceField
+          low={low}
+          high={high}
+          min={priceMin}
+          max={priceMax}
+          step={priceStep}
+          currency={currency}
+          onChange={setPrice}
+        />
+        <FilterChoiceChips
+          label="Duration"
+          anyLabel="Any length"
+          options={durations}
+          values={filters.durations}
+          onChange={(next) => onFilters({ ...filters, durations: next })}
+        />
+        {filtered ? <FilterSheetClear onClick={onClear} /> : null}
+      </FilterSheet>
+    );
+  }
 
   return (
     <div

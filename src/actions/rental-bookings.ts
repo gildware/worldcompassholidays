@@ -10,7 +10,7 @@ import { handoverModes, cancellationRefund } from "@/lib/rentals/availability";
 import { documentsRequiredToBook } from "@/lib/rentals/booking-documents";
 import { expiredDocumentMessage, isExpiredDocumentDate } from "@/lib/rentals/document-dates";
 import { rememberCustomerDocuments, releaseUnusedDocumentFiles } from "@/lib/rentals/profile-documents";
-import { parseDateTimeLocal, rentalReference } from "@/lib/rentals/dates";
+import { parseDateTimeLocal, pickupLeadMessage, rentalReference } from "@/lib/rentals/dates";
 import {
   blockingBookingStatuses,
   bookingTransitions,
@@ -27,7 +27,10 @@ function fail(error: unknown): FormState {
 
 function revalidateBooking(reference?: string, slug?: string) {
   revalidatePath("/rentals");
+  revalidatePath("/account");
   revalidatePath("/account/rentals");
+  revalidatePath("/account/cars");
+  revalidatePath("/account/bikes");
   revalidatePath("/admin/rentals");
   revalidatePath("/admin/rentals/bookings");
   revalidatePath("/admin/rentals/payments");
@@ -79,6 +82,8 @@ export async function confirmRentalBooking(
     const notes = String(formData.get("notes") ?? "").trim().slice(0, 500);
     const addonIds = formData.getAll("addonIds").map(String).filter(Boolean);
     if (!pickupAt || !returnAt) return { error: "Choose a pickup and return time." };
+    const lead = pickupLeadMessage(pickupAt);
+    if (lead) return { error: lead };
 
     let documents: UploadedDoc[] = [];
     try {

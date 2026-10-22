@@ -10,6 +10,7 @@ import { requireStaff } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { isCatalogKind } from "@/lib/catalog";
 import { prisma } from "@/lib/db";
+import { getHotelSettings } from "@/lib/hotels/settings";
 import { isRentalConfigKind } from "@/lib/rentals/labels";
 import { getRentalSetup } from "@/lib/rentals/setup";
 
@@ -47,6 +48,8 @@ export default async function ConfigurationPage({
       ];
     });
   }
+
+  const hotelTaxEnabled = hotelsOn ? (await getHotelSettings()).taxEnabled : false;
 
   let rentalItems: ConfigRow[] | undefined;
   if (rentalsOn) {
@@ -88,6 +91,7 @@ export default async function ConfigurationPage({
       rentalItems={rentalItems}
       sections={sections}
       initialSection={initialSection}
+      hotelTaxEnabled={hotelTaxEnabled}
     />
   );
 }

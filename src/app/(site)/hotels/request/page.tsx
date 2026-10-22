@@ -40,6 +40,8 @@ export default async function HotelRequestPage({
     adults?: string;
     children?: string;
     rooms?: string;
+    hotelName?: string;
+    message?: string;
   }>;
 }) {
   if (!modules.hotels) notFound();
@@ -61,6 +63,8 @@ export default async function HotelRequestPage({
     adults: countParam(params.adults, "2"),
     children: countParam(params.children, "0"),
     rooms: countParam(params.rooms, "1"),
+    hotelName: (params.hotelName ?? "").slice(0, 120),
+    message: (params.message ?? "").slice(0, 500),
   };
   const places: HotelRequestPlace[] = destinations.map((place) => ({
     name: place.name,

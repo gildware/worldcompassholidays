@@ -52,3 +52,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local sqlite at repo root
+/dev.db
+# accidental nested build tree
+/travel/

@@ -13,6 +13,7 @@ import {
   assistWhatsAppText,
   whatsAppHref,
 } from "@/lib/assist";
+import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { bookingReference } from "@/lib/bookings";
 import { theme } from "@/config/theme";
 import { airportLabel, findAirport } from "@/lib/data/airports";
@@ -208,7 +209,7 @@ export async function submitAssistRequest(
 
   revalidatePath("/admin/bookings");
   revalidatePath("/admin/meet-and-assist");
-  if (customer) revalidatePath("/account");
+  if (customer) revalidateCustomerBooking("assist", booking.reference);
 
   if (channel === "whatsapp") {
     const desk = whatsAppHref(theme.contact.whatsapp);

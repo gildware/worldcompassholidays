@@ -108,6 +108,21 @@ body > .worldcompassholiday-page > main > .footer {
   margin-top: 12px;
 }
 
+.worldcompassholiday-page .site-footer__reach a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.worldcompassholiday-page .site-footer__reach svg {
+  display: block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  overflow: visible;
+  color: #e7c98a;
+}
+
 .worldcompassholiday-page .site-footer h2 {
   margin: 0 0 10px;
   color: #e7c98a;
@@ -169,7 +184,8 @@ body > .worldcompassholiday-page > main > .footer {
   }
 
   .worldcompassholiday-page .site-footer__main {
-    gap: 18px 20px;
+    grid-template-columns: 1fr;
+    gap: 22px;
     padding-top: 20px;
   }
 
@@ -414,8 +430,12 @@ body > .worldcompassholiday-page > main > .footer {
   }
 }
 
+.worldcompassholiday-page .hotel-single-v2 .hotel-hero {
+  padding-top: 20px;
+}
+
 .worldcompassholiday-page .hotel-single-v2 .galleryGrid.-type-2 {
-  height: 460px;
+  height: 380px;
   grid-template-columns: 0.6fr 0.2fr 0.2fr;
   grid-template-rows: 0.4fr 0.6fr;
 }
@@ -448,27 +468,1200 @@ body > .worldcompassholiday-page > main > .footer {
 
 .worldcompassholiday-page .hotel-single-v2 .galleryGrid.-type-2 img {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100%;
+  height: 135%;
   object-fit: cover;
+  object-position: center top;
 }
 
-.worldcompassholiday-page .hotel-single-v2 .hotel-overview:not(.is-open),
-.worldcompassholiday-page .tour-single .tour-overview:not(.is-open) {
-  max-height: 7.5rem;
+.worldcompassholiday-page .hotel-single-v2 .hotelSingleGrid {
+  align-items: start;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side {
+  display: block;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__map {
+  height: 168px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #e7eef8;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__map > div {
+  height: 168px;
+  min-height: 168px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__open {
+  font-size: 13px;
+  color: #3554d1;
+  text-decoration: underline;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__map .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  color: #3554d1;
+  font-size: 16px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__rows {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__card h3 {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__row > i {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e5f0fd;
+  color: #3554d1;
+  font-size: 13px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__address {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-light-1);
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__score {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__score-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #3554d1;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__score-label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-side__score-type {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--color-light-1);
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-overview-block {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-overview-block h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-overview-block p,
+.worldcompassholiday-page .hotel-single-v2 .hotel-overview-block__more {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-dark-1);
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-overview-block__more p {
+  margin: 0;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-facts {
+  margin-top: 28px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-facts__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-facts__notes {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-facts__notes p {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #f7f8fb;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-facts__notes i {
+  flex: none;
+  margin-top: 1px;
+  color: #3554d1;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #e7ebf3;
+  border-radius: 16px;
+  background: #f7f8fb;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__badge,
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  color: #3554d1;
+  background: #e5f0fd;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__list--facts {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__row--wide {
+  grid-column: 1 / -1;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__chips span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__chips i {
+  color: #3554d1;
+  font-size: 14px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 13px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__row strong,
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__row em {
+  display: block;
+  font-style: normal;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__row strong {
+  font-weight: 600;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-info-card__row em {
+  margin-top: 1px;
+  color: var(--color-light-1);
+}
+
+.worldcompassholiday-page .hotel-single-v2 .similar-stays {
+  padding: 56px 0 48px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .similar-stays__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .similar-stays__nav {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .similar-stays__arrow {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: #fff;
+  color: #051036;
+  cursor: pointer;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .similar-stays__arrow::after {
+  content: none;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .similar-stays__arrow.swiper-button-disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .similar-stays__head h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .similar-stays__head p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--color-light-1);
+}
+
+.worldcompassholiday-page .hotel-single-v2 .similar-stays__swiper {
   overflow: hidden;
 }
 
-.worldcompassholiday-page .tour-single .tour-hero-slide {
+.worldcompassholiday-page .hotel-single-v2 .similar-stays__photo {
+  overflow: hidden;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .similar-stays__photo::before {
+  display: block;
+  padding-bottom: 62%;
+  content: "";
+}
+
+.worldcompassholiday-page .hotel-single-v2 .similar-stays .cardImage__content > img {
+  object-position: center top;
+  height: 145%;
+}
+
+.worldcompassholiday-page .hotel-single-v2 #rooms,
+.worldcompassholiday-page .hotel-single-v2 #overview,
+.worldcompassholiday-page .hotel-single-v2 #facilities,
+.worldcompassholiday-page .hotel-single-v2 #faq,
+.worldcompassholiday-page .hotel-single-v2 #reviews {
+  scroll-margin-top: 96px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-faq {
+  margin-top: 48px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-faq__list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-faq .accordion__item {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-faq__icon {
+  width: 28px;
+  height: 28px;
+  margin-right: 10px;
+  font-size: 12px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-faq__answer {
+  padding: 8px 0 2px 38px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-reviews {
+  margin-top: 48px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-health {
+  margin-top: 18px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-health__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f5f5f5;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-health__bar p {
+  margin: 0;
+}
+
+@media (max-width: 767px) {
+  .worldcompassholiday-page .hotel-single-v2 .hotel-info-card__list,
+  .worldcompassholiday-page .hotel-single-v2 .hotel-info-card__list--facts {
+    grid-template-columns: 1fr;
+  }
+}
+
+.worldcompassholiday-page main:has(.tour-detail) {
+  overflow: visible;
+}
+
+.tour-detail {
+  color: #243049;
+}
+
+.tour-detail__crumb {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  padding-top: 14px;
+  font-size: 13px;
+}
+
+.tour-detail__crumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #697488;
+}
+
+.tour-detail__crumb a {
+  color: #697488;
+}
+
+.tour-detail__crumb [aria-current="page"] {
+  color: #051036;
+}
+
+.tour-detail__all {
+  flex: none;
+  color: #3554d1;
+  font-weight: 500;
+}
+
+.tour-detail__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin: 14px 0 16px;
+}
+
+.tour-detail__copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.tour-detail__kicker {
+  margin: 0 0 4px;
+  color: #3554d1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tour-detail__title {
+  margin: 0;
+  color: #051036;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.tour-detail__where {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 8px 0 0;
+  color: #697488;
+  font-size: 14px;
+}
+
+.tour-detail__where a {
+  color: #3554d1;
+  font-weight: 500;
+}
+
+.tour-detail__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tour-detail__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f3f6fb;
+  color: #051036;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.tour-detail__chip i {
+  color: #3554d1;
+  font-size: 14px;
+}
+
+.tour-detail__chip.is-soft {
+  border: 1px solid #e1e6ef;
+  background: transparent;
+  color: #3d4a66;
+}
+
+.tour-detail__tools {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+.tour-detail__tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #e1e6ef;
+  border-radius: 999px;
+  background: #fff;
+  color: #051036;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tour-detail__tool.is-on {
+  border-color: #c5d4f5;
+  background: #e5f0fd;
+  color: #3554d1;
+}
+
+.tour-detail__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-areas:
+    "gallery book"
+    "content book";
+  gap: 22px 28px;
+  align-items: start;
+}
+
+.tour-detail__gallery {
+  grid-area: gallery;
+}
+
+.tour-detail__book {
+  grid-area: book;
+  position: sticky;
+  top: 106px;
+}
+
+.tour-detail__content {
+  grid-area: content;
+  min-width: 0;
+}
+
+.tour-detail__photos {
+  display: grid;
+  gap: 8px;
+  overflow: hidden;
+  height: 280px;
+  border-radius: 16px;
+}
+
+.tour-detail__photos.is-single {
+  grid-template-columns: 1fr;
+}
+
+.tour-detail__photos.is-pair {
+  grid-template-columns: 1.45fr 1fr;
+}
+
+.tour-detail__photos.is-mosaic {
+  grid-template-columns: 1.6fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  height: 300px;
+}
+
+.tour-detail__photos.is-mosaic .tour-detail__photo:first-child {
+  grid-row: 1 / span 2;
+}
+
+.tour-detail__photo {
+  position: relative;
+  display: block;
   width: 100%;
-  height: 501px;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: #d9e2ef;
+  cursor: zoom-in;
+}
+
+.tour-detail__photo.is-extra {
+  display: none;
+}
+
+.tour-detail__img {
   object-fit: cover;
 }
 
-.worldcompassholiday-page .tour-single .itinerary-map {
-  min-height: 450px;
-  height: 100%;
+.tour-detail__photo-count {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #fff;
+  color: #051036;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 6px 18px rgba(5, 16, 54, 0.16);
+}
+
+.tour-detail__card {
+  padding: 18px 18px 16px;
+  border: 1px solid #e6ebf2;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(5, 16, 54, 0.08);
+}
+
+.tour-detail__from {
+  margin: 0;
+  color: #697488;
+  font-size: 13px;
+}
+
+.tour-detail__price {
+  margin: 2px 0 0;
+  color: #051036;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.tour-detail__price-meta {
+  margin: 6px 0 0;
+  color: #697488;
+  font-size: 13px;
+}
+
+.tour-detail__book-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 46px;
+  margin-top: 14px;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.tour-detail__reassure {
+  margin: 10px 0 0;
+  color: #697488;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tour-detail__jumps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 2px;
+}
+
+.tour-detail__jumps a {
+  color: #3554d1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tour-detail__section {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #e7ebf3;
+  scroll-margin-top: 106px;
+}
+
+.tour-detail__section h2 {
+  margin: 0 0 10px;
+  color: #051036;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.tour-detail__prose {
+  color: #243049;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.tour-detail__prose p {
+  margin: 0 0 8px;
+}
+
+.tour-detail__prose p:last-child {
+  margin-bottom: 0;
+}
+
+.tour-detail__overview.is-clamped {
+  max-height: 4.65em;
+  overflow: hidden;
+}
+
+.tour-detail__more {
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #3554d1;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.tour-detail__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 28px;
+}
+
+.tour-detail__split h3 {
+  margin: 0 0 6px;
+  color: #051036;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tour-detail__line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.tour-detail__line i {
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.tour-detail__yes i {
+  color: #0f9d58;
+}
+
+.tour-detail__no i {
+  color: #c24141;
+}
+
+.tour-detail__days {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tour-detail__day {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  column-gap: 12px;
+}
+
+.tour-detail__day-num {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e5f0fd;
+  color: #3554d1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tour-detail__day-body {
+  min-width: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eef1f6;
+}
+
+.tour-detail__day-body.has-photo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px;
+  gap: 12px;
+  align-items: start;
+}
+
+.tour-detail__day + .tour-detail__day {
+  margin-top: 12px;
+}
+
+.tour-detail__day:last-child .tour-detail__day-body {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.tour-detail__day h3 {
+  margin: 3px 0 0;
+  color: #051036;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.tour-detail__day p {
+  margin: 4px 0 0;
+  color: #3d4a66;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.worldcompassholiday-page .tour-detail__day-img {
+  width: 132px;
+  height: 88px;
+  margin-top: 0;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.tour-detail__map {
+  position: relative;
+  overflow: hidden;
+  height: 220px;
+  border-radius: 14px;
+}
+
+.tour-detail__map-link {
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  bottom: 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #fff;
+  color: #051036;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 6px 18px rgba(5, 16, 54, 0.16);
+}
+
+.tour-detail__facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 24px;
+  margin: 0;
+}
+
+.tour-detail__facts div {
+  min-width: 0;
+}
+
+.tour-detail__facts dt {
+  margin: 0 0 2px;
+  color: #697488;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tour-detail__facts dd {
+  margin: 0;
+  color: #051036;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.tour-detail__faq + .tour-detail__faq {
+  border-top: 1px solid #eef1f6;
+}
+
+.tour-detail__faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 0;
+  border: 0;
+  background: transparent;
+  color: #051036;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.tour-detail__faq-q i {
+  flex: none;
+  color: #3554d1;
+  font-size: 12px;
+}
+
+.tour-detail__faq-a {
+  margin: 0;
+  padding: 0 24px 12px 0;
+  color: #3d4a66;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tour-detail__similar {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #e7ebf3;
+}
+
+.tour-detail__similar-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.tour-detail__similar h2 {
+  margin: 0;
+  color: #051036;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.tour-detail__similar-head a {
+  flex: none;
+  color: #3554d1;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tour-detail .tourCard .ratio-1\:1:before {
+  padding-bottom: 72%;
+}
+
+.tour-detail__dock {
+  display: none;
+}
+
+.tour-detail a:focus-visible,
+.tour-detail button:focus-visible {
+  outline: 2px solid #3554d1;
+  outline-offset: 2px;
+}
+
+@media (max-width: 991px) {
+  .tour-detail__layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "gallery"
+      "book"
+      "content";
+  }
+
+  .tour-detail__book {
+    position: static;
+  }
+
+  .tour-detail {
+    padding-bottom: 76px;
+  }
+
+  .tour-detail__dock {
+    position: fixed;
+    z-index: 40;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid #e6ebf2;
+    background: #fff;
+    box-shadow: 0 -8px 24px rgba(5, 16, 54, 0.08);
+  }
+
+  .tour-detail__dock span {
+    display: block;
+    color: #697488;
+    font-size: 12px;
+  }
+
+  .tour-detail__dock strong {
+    color: #051036;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .tour-detail__dock a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 10px;
+    background: #3554d1;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
+
+@media (max-width: 767px) {
+  .tour-detail__head {
+    flex-direction: column;
+  }
+
+  .tour-detail__title {
+    font-size: 26px;
+  }
+
+  .tour-detail__crumb {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .tour-detail__photos,
+  .tour-detail__photos.is-pair,
+  .tour-detail__photos.is-mosaic,
+  .tour-detail__photos.is-single {
+    grid-template-columns: 1fr;
+    grid-template-rows: 200px;
+    height: 200px;
+  }
+
+  .tour-detail__photos.is-mosaic .tour-detail__photo:first-child {
+    grid-row: auto;
+  }
+
+  .tour-detail__photo:not(:first-child) {
+    display: none;
+  }
+
+  .tour-detail__split,
+  .tour-detail__facts,
+  .tour-detail__day-body.has-photo {
+    grid-template-columns: 1fr;
+  }
+
+  .worldcompassholiday-page .tour-detail__day-img {
+    width: 100%;
+    height: 120px;
+  }
+}
+
+.worldcompassholiday-page .tour-detail h1.tour-detail__title {
+  margin: 0;
+  color: #051036;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.worldcompassholiday-page .tour-detail h2 {
+  margin: 0 0 10px;
+  color: #051036;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.worldcompassholiday-page .tour-detail h3 {
+  margin: 0;
+  color: #051036;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.worldcompassholiday-page .tour-detail .tour-detail__split h3 {
+  margin: 0 0 6px;
+}
+
+.worldcompassholiday-page .tour-detail .tour-detail__day h3 {
+  margin: 2px 0 0;
+}
+
+.worldcompassholiday-page .tour-detail p,
+.worldcompassholiday-page .tour-detail .tour-detail__from,
+.worldcompassholiday-page .tour-detail .tour-detail__price,
+.worldcompassholiday-page .tour-detail .tour-detail__price-meta,
+.worldcompassholiday-page .tour-detail .tour-detail__reassure,
+.worldcompassholiday-page .tour-detail .tour-detail__faq-q,
+.worldcompassholiday-page .tour-detail .tour-detail__faq-a {
+  line-height: 1.45;
+}
+
+.worldcompassholiday-page .tour-detail .tour-detail__prose,
+.worldcompassholiday-page .tour-detail .tour-detail__prose p,
+.worldcompassholiday-page .tour-detail .tour-detail__day p {
+  color: #243049;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.worldcompassholiday-page .tour-detail .tour-detail__prose p {
+  margin: 0 0 8px;
+}
+
+.worldcompassholiday-page .tour-detail .tour-detail__price {
+  margin: 2px 0 0;
+  color: #051036;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.worldcompassholiday-page .tour-detail .tour-detail__from,
+.worldcompassholiday-page .tour-detail .tour-detail__price-meta,
+.worldcompassholiday-page .tour-detail .tour-detail__reassure {
+  color: #697488;
+  font-size: 13px;
+}
+
+.worldcompassholiday-page .tour-detail .tour-detail__faq-q {
+  color: #051036;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.worldcompassholiday-page .tour-detail .tour-detail__faq-a {
+  color: #3d4a66;
+  font-size: 14px;
+}
+
+@media (max-width: 767px) {
+  .worldcompassholiday-page .tour-detail h1.tour-detail__title {
+    font-size: 26px;
+  }
 }
 
 @media (max-width: 767px) {
@@ -496,6 +1689,231 @@ body > .worldcompassholiday-page > main > .footer {
   .worldcompassholiday-page .hotel-single-v2 .galleryGrid.-type-2 > *:nth-child(4) {
     grid-column: 1 / span 2;
     grid-row: 3;
+  }
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) auto;
+  gap: 12px 16px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--color-blue-2);
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__photo {
+  display: block;
+  width: 120px;
+  height: 88px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--color-dark-1);
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 6px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__facts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__facts i {
+  font-size: 13px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__summary {
+  display: -webkit-box;
+  margin: 6px 0 0;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-light-1);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__book {
+  display: grid;
+  grid-template-columns: auto auto minmax(148px, max-content);
+  align-items: end;
+  gap: 12px 16px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__sleeps {
+  min-width: 56px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__label,
+.worldcompassholiday-page .hotel-single-v2 .room-card__for {
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--color-light-1);
+  white-space: nowrap;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__people {
+  display: flex;
+  margin-top: 4px;
+  color: var(--color-light-1);
+  font-size: 16px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__select {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__select select {
+  min-width: 148px;
+  height: 36px;
+  padding: 0 28px 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 13px;
+  color: var(--color-dark-1);
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__price {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 148px;
+  text-align: right;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__amount {
+  margin-top: 2px;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--color-dark-1);
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__reserve {
+  display: inline-flex;
+  width: 100%;
+  height: 36px;
+  margin-top: 8px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .room-card__reserve .icon-arrow-top-right {
+  margin-left: 8px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-reviews__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-reviews__head h3 {
+  margin: 0;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-reviews__score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  background: var(--color-blue-1);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-reviews__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 32px;
+  margin-top: 14px;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-reviews__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 8px;
+  align-items: center;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-reviews__row .progressBar {
+  grid-column: 1 / -1;
+}
+
+.worldcompassholiday-page .hotel-single-v2 .hotel-reviews__summary {
+  max-width: 720px;
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-dark-1);
+}
+
+@media (max-width: 1100px) {
+  .worldcompassholiday-page .hotel-single-v2 .room-card {
+    grid-template-columns: 96px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .worldcompassholiday-page .hotel-single-v2 .room-card__photo {
+    width: 96px;
+    height: 76px;
+  }
+
+  .worldcompassholiday-page .hotel-single-v2 .room-card__book {
+    display: flex;
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  .worldcompassholiday-page .hotel-single-v2 .room-card__price {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .worldcompassholiday-page .hotel-single-v2 .hotel-reviews__head {
+    flex-wrap: wrap;
+  }
+
+  .worldcompassholiday-page .hotel-single-v2 .hotel-reviews__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .worldcompassholiday-page .hotel-single-v2 .room-card__price {
+    min-width: 0;
+    text-align: left;
   }
 }
 
@@ -1028,6 +2446,242 @@ body > .worldcompassholiday-page > main > .footer {
   vertical-align: middle;
 }
 
+.worldcompassholiday-page .tour-toolbar-request {
+  margin-left: auto;
+}
+
+.list-filter-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #e4e7ef;
+  border-radius: 100px;
+  background: #fff;
+  color: #051036;
+  cursor: pointer;
+}
+
+.list-filter-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.list-filter-toggle.is-on {
+  border-color: #3554d1;
+  color: #3554d1;
+}
+
+.list-filter-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+}
+
+.list-filter-drawer__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(5, 16, 54, 0.45);
+  cursor: pointer;
+}
+
+.list-filter-drawer__panel {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1401;
+  display: flex;
+  flex-direction: column;
+  width: min(400px, 92vw);
+  background: #fff;
+  box-shadow: 12px 0 40px rgba(5, 16, 54, 0.18);
+}
+
+.list-filter-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid #eef0f4;
+}
+
+.list-filter-drawer__head h2 {
+  margin: 0;
+  color: #051036;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.list-filter-drawer__head button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #f4f6fa;
+  color: #051036;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.list-filter-sheet {
+  flex: 1;
+  overflow: auto;
+  padding: 8px 18px 20px;
+}
+
+.list-filter-sheet .mainSearch {
+  width: 100%;
+  margin: 0;
+  padding: 12px !important;
+  border-radius: 12px;
+}
+
+.list-filter-sheet .button-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.list-filter-sheet .tour-mast-menu,
+.list-filter-sheet .tour-mast-menu--wide {
+  position: static;
+  width: 100%;
+  min-width: 0;
+  margin-top: 8px;
+  box-shadow: none;
+}
+
+.list-filter-drawer__apply {
+  flex: none;
+  height: 46px;
+  margin: 0 18px 18px;
+  border: 0;
+  border-radius: 100px;
+  background: #3554d1;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.worldcompassholiday-page .filter-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.worldcompassholiday-page .filter-sheet__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 0;
+  border-bottom: 1px solid #eef0f4;
+}
+
+.worldcompassholiday-page .filter-sheet__label {
+  margin: 0;
+  color: #697488;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.worldcompassholiday-page .filter-sheet input.filter-sheet__search {
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  padding: 0 14px;
+  border: 1px solid #e4e7ef;
+  border-radius: 12px;
+  background: #f7f8fb;
+  color: #051036;
+  font-size: 14px;
+}
+
+.worldcompassholiday-page .filter-sheet input.filter-sheet__search:focus {
+  border-color: #3554d1;
+  background: #fff;
+  outline: none;
+}
+
+.worldcompassholiday-page .filter-sheet__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.worldcompassholiday-page button.filter-sheet__chip {
+  margin: 0;
+  padding: 8px 14px;
+  border: 1px solid #e4e7ef;
+  border-radius: 100px;
+  background: #fff;
+  color: #051036;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.worldcompassholiday-page button.filter-sheet__chip.is-on {
+  border-color: #3554d1;
+  background: #3554d1;
+  color: #fff;
+}
+
+.worldcompassholiday-page .filter-sheet__price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #051036;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.worldcompassholiday-page .filter-sheet .rc-slider {
+  width: 100% !important;
+  max-width: 100%;
+  margin: 4px 6px 0 !important;
+}
+
+.worldcompassholiday-page button.filter-sheet__clear {
+  align-self: flex-start;
+  margin: 14px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #3554d1;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.worldcompassholiday-page button.list-filter-drawer__apply {
+  border-radius: 100px;
+  background: #3554d1;
+  color: #fff;
+}
+
 .tour-workspace__tours {
   flex: 1 1 auto;
   min-height: 0;
@@ -1063,6 +2717,10 @@ body > .worldcompassholiday-page > main > .footer {
 .tour-workspace__empty {
   grid-column: 1 / -1;
   padding: 24px 8px;
+}
+
+.tour-workspace__more {
+  height: 1px;
 }
 
 .tour-workspace .tourCard {
@@ -1147,6 +2805,55 @@ body > .worldcompassholiday-page > main > .footer {
 }
 
 @media (max-width: 767px) {
+  .list-filters-inline {
+    display: none;
+  }
+
+  .list-filter-toggle {
+    display: inline-flex;
+  }
+
+  .worldcompassholiday-page .tour-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 40px 40px;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .worldcompassholiday-page .tour-toolbar-search {
+    width: auto;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .worldcompassholiday-page .tour-toolbar .list-filter-toggle {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .worldcompassholiday-page .tour-toolbar-sort {
+    grid-column: 3;
+    grid-row: 1;
+    margin: 0;
+  }
+
+  .worldcompassholiday-page .tour-toolbar-sort .button {
+    width: 40px;
+    padding: 0;
+  }
+
+  .worldcompassholiday-page .tour-toolbar-sort-label,
+  .worldcompassholiday-page .tour-toolbar-sort .mr-10 {
+    display: none;
+  }
+
+  .worldcompassholiday-page .tour-toolbar-request {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin: 0;
+    justify-self: start;
+  }
+
   .tour-workspace__mast {
     padding: 20px 16px;
   }
@@ -1341,6 +3048,38 @@ body > .worldcompassholiday-page > main > .footer {
   margin-bottom: 14px;
 }
 
+:is(.bike-fleet, .car-fleet) .bike-field--search {
+  order: 1;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-bar__filters {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  order: 2;
+  gap: 14px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-bar__filters::-webkit-scrollbar {
+  display: none;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-field--sort {
+  order: 3;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-bar__filters .list-filter-drawer__head,
+:is(.bike-fleet, .car-fleet) .bike-bar__filters .list-filter-drawer__apply {
+  display: none;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__mark {
+  display: none;
+}
+
 :is(.bike-fleet, .car-fleet) .bike-field {
   display: flex;
   flex: none;
@@ -1398,6 +3137,81 @@ body > .worldcompassholiday-page > main > .footer {
   width: 1px;
   height: 18px;
   background: var(--fleet-line-2);
+}
+
+.worldcompassholiday-page :is(.bike-fleet, .car-fleet) .bike-search {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  width: 200px;
+  height: 36px;
+  margin: 0;
+  padding: 0 8px 0 12px;
+  border: 1px solid var(--fleet-line-2);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.worldcompassholiday-page :is(.bike-fleet, .car-fleet) .bike-search:focus-within {
+  border-color: var(--fleet-ink);
+}
+
+.worldcompassholiday-page :is(.bike-fleet, .car-fleet) .bike-search input {
+  flex: 1 1 auto;
+  width: 100% !important;
+  min-width: 0;
+  height: 20px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  color: var(--fleet-ink);
+  font-size: 13px !important;
+  font-weight: 500;
+  line-height: 20px !important;
+  outline: none;
+  box-shadow: none !important;
+  appearance: none;
+}
+
+.worldcompassholiday-page :is(.bike-fleet, .car-fleet) .bike-search input::placeholder {
+  color: var(--fleet-label);
+  font-weight: 500;
+}
+
+.worldcompassholiday-page :is(.bike-fleet, .car-fleet) .bike-search input::-webkit-search-decoration,
+.worldcompassholiday-page :is(.bike-fleet, .car-fleet) .bike-search input::-webkit-search-cancel-button {
+  appearance: none;
+  display: none;
+}
+
+.worldcompassholiday-page :is(.bike-fleet, .car-fleet) .bike-search__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--fleet-paper);
+  color: var(--fleet-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.worldcompassholiday-page :is(.bike-fleet, .car-fleet) .bike-search__clear:hover {
+  color: var(--fleet-ink);
+}
+
+.worldcompassholiday-page :is(.bike-fleet, .car-fleet) .bike-more {
+  height: 1px;
 }
 
 :is(.bike-fleet, .car-fleet) .bike-bar__reset {
@@ -1474,6 +3288,8 @@ body > .worldcompassholiday-page > main > .footer {
 :is(.bike-fleet, .car-fleet) .bike-menu__btn:focus-visible,
 :is(.bike-fleet, .car-fleet) .bike-seg__btn:focus-visible,
 :is(.bike-fleet, .car-fleet) .bike-menu__option:focus-visible,
+:is(.bike-fleet, .car-fleet) .bike-search input:focus-visible,
+:is(.bike-fleet, .car-fleet) .bike-search__clear:focus-visible,
 :is(.bike-fleet, .car-fleet) .bike-bar__reset:focus-visible {
   outline: 2px solid var(--fleet-ink);
   outline-offset: 2px;
@@ -1487,6 +3303,16 @@ body > .worldcompassholiday-page > main > .footer {
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 16px 40px var(--fleet-ink-12);
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__panel--inline {
+  position: static;
+  width: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 :is(.bike-fleet, .car-fleet) .bike-menu__list {
@@ -1532,6 +3358,20 @@ body > .worldcompassholiday-page > main > .footer {
   color: #8b4a3a;
   font-size: 12px;
   line-height: 1.4;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+:is(.bike-fleet, .car-fleet) .bike-menu__swatch {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 999px;
 }
 
 :is(.bike-fleet, .car-fleet) .bike-menu__count {
@@ -1634,6 +3474,7 @@ body > .worldcompassholiday-page > main > .footer {
 }
 
 .bike-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -1645,6 +3486,55 @@ body > .worldcompassholiday-page > main > .footer {
   color: inherit;
   text-decoration: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bike-card__book {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #3554d1;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+.bike-card__book::after {
+  content: "→";
+  transition: transform 0.2s ease;
+}
+
+.bike-card:hover .bike-card__book,
+.bike-card:focus-within .bike-card__book {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.bike-card:hover .bike-card__book::after,
+.bike-card:focus-within .bike-card__book::after,
+a.bike-card__book:hover::after {
+  transform: translateX(3px);
+}
+
+a.bike-card__book:hover {
+  color: #2b46b8;
+}
+
+@media (hover: none) {
+  .bike-card__book {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
 }
 
 .bike-card:hover {
@@ -1672,12 +3562,104 @@ body > .worldcompassholiday-page > main > .footer {
   background: var(--fleet-wash);
 }
 
-.bike-card__media.is-photo img {
+.bike-card__shot {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  color: inherit;
+}
+
+.bike-card__track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.28s ease;
+}
+
+.bike-card__frame {
+  position: relative;
+  flex: 0 0 100%;
+  height: 100%;
+}
+
+.bike-card__frame.is-photo img {
   padding: 10px 12px 4px;
+}
+
+.bike-card__nav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--fleet-ink);
+  box-shadow: 0 1px 4px var(--fleet-ink-12);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.bike-card__nav svg {
+  width: 14px;
+  height: 14px;
+}
+
+.bike-card__nav.is-prev {
+  left: 6px;
+}
+
+.bike-card__nav.is-next {
+  right: 6px;
+}
+
+.bike-card__nav:hover {
+  background: var(--fleet-ink);
+  color: #fff;
+}
+
+.bike-card__dots {
+  position: absolute;
+  right: 8px;
+  bottom: 7px;
+  left: 8px;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.bike-card__dots button {
+  width: 5px;
+  height: 5px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 0 0 1px var(--fleet-ink-12);
+  cursor: pointer;
+}
+
+.bike-card__dots button.is-on {
+  width: 12px;
+  background: var(--fleet-ink);
+}
+
+a.bike-card__body {
+  color: inherit;
+  text-decoration: none;
 }
 
 .bike-card__fuel {
   position: absolute;
+  z-index: 2;
   top: 10px;
   left: 10px;
   display: inline-flex;
@@ -1699,6 +3681,32 @@ body > .worldcompassholiday-page > main > .footer {
   width: 12px;
   height: 12px;
   flex: none;
+}
+
+.bike-card__tags {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  max-width: 68%;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.bike-card__tag {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: var(--fleet-ink);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bike-card__kicker svg,
@@ -1794,8 +3802,10 @@ body > .worldcompassholiday-page > main > .footer {
   gap: 4px;
   margin: auto 0 0;
   padding-top: 6px;
+  padding-right: 92px;
   border-top: 1px solid var(--fleet-rule);
   color: var(--fleet-ink);
+  white-space: nowrap;
 }
 
 .bike-card__price strong {
@@ -1828,7 +3838,7 @@ body > .worldcompassholiday-page > main > .footer {
   overflow: visible;
 }
 
-.car-fleet .bike-card__media.is-photo img {
+.car-fleet .bike-card__frame.is-photo img {
   padding: 0;
   object-fit: cover;
 }
@@ -1841,6 +3851,178 @@ body > .worldcompassholiday-page > main > .footer {
   .car-fleet .bike-banner {
     height: 220px;
   }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 36px 36px;
+    align-items: center;
+    gap: 8px;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-field--search,
+  :is(.bike-fleet, .car-fleet) .bike-field--sort,
+  :is(.bike-fleet, .car-fleet) .list-filter-toggle {
+    order: 0;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-field--search {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  :is(.bike-fleet, .car-fleet) .list-filter-toggle {
+    display: inline-flex;
+    grid-column: 2;
+    grid-row: 1;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border-color: var(--fleet-line-2);
+    color: var(--fleet-ink);
+  }
+
+  :is(.bike-fleet, .car-fleet) .list-filter-toggle.is-on {
+    border-color: var(--fleet-ink);
+    color: var(--fleet-ink);
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-field--sort {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-field--search .bike-field__label,
+  :is(.bike-fleet, .car-fleet) .bike-field--sort .bike-field__label,
+  :is(.bike-fleet, .car-fleet) .bike-field--sort .bike-menu__text,
+  :is(.bike-fleet, .car-fleet) .bike-field--sort .bike-menu__btn > svg {
+    display: none;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-field--sort .bike-menu__mark {
+    display: inline-flex;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-field--search .bike-search,
+  :is(.bike-fleet, .car-fleet) .bike-field--sort .bike-menu__btn {
+    width: 100%;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-field--sort .bike-menu__btn {
+    width: 36px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters {
+    display: none;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1401;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: min(400px, 92vw);
+    margin: 0;
+    padding: 0 0 12px;
+    overflow: auto;
+    background: #fff;
+    box-shadow: 12px 0 40px rgba(5, 16, 54, 0.18);
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .list-filter-drawer__head,
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .list-filter-drawer__apply {
+    display: flex;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .list-filter-drawer__head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #fff;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .bike-field {
+    width: 100%;
+    gap: 10px;
+    padding: 16px 18px 0;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .bike-field__label {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .bike-seg {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    gap: 8px;
+    background: transparent;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .bike-seg__btn {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #e4e7ef;
+    border-radius: 100px;
+    background: #fff;
+    color: #051036;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .bike-seg__btn.is-on {
+    border-color: #3554d1;
+    background: #3554d1;
+    color: #fff;
+    box-shadow: none;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .bike-date,
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .bike-date .rmdp-container,
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .bike-menu__btn {
+    width: 100%;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .bike-menu__btn {
+    height: 44px;
+    justify-content: space-between;
+    padding: 0 14px;
+    border-radius: 12px;
+    background: #f8f9fc;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .bike-menu__option.is-on {
+    background: #eef2ff;
+    color: #3554d1;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .bike-bar__reset {
+    align-self: flex-start;
+    margin: 16px 18px 0;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-bar__filters.is-open .list-filter-drawer__apply {
+    margin: 16px 18px 8px;
+  }
+
+  :is(.bike-fleet, .car-fleet) .list-filter-drawer__backdrop {
+    z-index: 1400;
+  }
+}
+
+.site-shell:has(.stay) .site-footer-scope,
+.site-shell:has(.stay-list) .site-footer-scope,
+.site-shell:has(.road) .site-footer-scope,
+.site-shell:has(.tour-catalog) .site-footer-scope {
+  display: none;
 }
 
 .public-header-offset {
@@ -3415,6 +5597,147 @@ button[aria-invalid="true"]:focus-visible {
   display: none;
 }
 
+.rental-related {
+  margin-top: 48px;
+}
+
+.rental-related h2 {
+  margin: 0 0 14px;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.rental-related__list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rental-related__item {
+  position: relative;
+}
+
+.rental-related__book {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #3554d1;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+.rental-related__book::after {
+  content: "→";
+  transition: transform 0.2s ease;
+}
+
+.rental-related__item:hover .rental-related__book,
+.rental-related__item:focus-within .rental-related__book {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.rental-related__item:hover .rental-related__book::after,
+.rental-related__item:focus-within .rental-related__book::after,
+a.rental-related__book:hover::after {
+  transform: translateX(3px);
+}
+
+a.rental-related__book:hover {
+  color: #2b46b8;
+}
+
+.rental-related__row {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e4eaf3;
+  border-radius: 18px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+}
+
+.rental-related__row:hover {
+  border-color: #c9d4ea;
+}
+
+.rental-related__photo {
+  width: 168px;
+  height: 112px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #f4f6fa;
+}
+
+.rental-related__photo.is-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #697488;
+  font-size: 12px;
+}
+
+.rental-related__copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rental-related__type,
+.rental-related__meta {
+  color: #697488;
+  font-size: 13px;
+}
+
+.rental-related__copy strong {
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.rental-related__price {
+  display: grid;
+  justify-items: end;
+  padding-right: 8px;
+  text-align: right;
+}
+
+.rental-related__price strong {
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.rental-related__price span {
+  color: #697488;
+  font-size: 13px;
+}
+
+@media (hover: none) {
+  .rental-related__book {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+}
+
 @media (max-width: 900px) {
   .rental-detail__layout {
     grid-template-columns: 1fr;
@@ -3494,6 +5817,79 @@ button[aria-invalid="true"]:focus-visible {
 
   .rental-detail {
     padding-bottom: 96px;
+  }
+
+  .rental-related__row {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .rental-related__photo {
+    width: 96px;
+    height: 72px;
+  }
+
+  .rental-related__price {
+    grid-column: 2;
+    justify-items: start;
+    padding-right: 0;
+    text-align: left;
+  }
+}
+
+.worldcompassholiday-page.worldcompassholiday-header-scope .header .header-menu .menu__nav > li > a,
+.worldcompassholiday-page.worldcompassholiday-header-scope .nav-drawer-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.45em;
+  white-space: nowrap;
+}
+
+.worldcompassholiday-page.worldcompassholiday-header-scope .nav-icon {
+  flex: none;
+  width: 1em;
+  height: 1em;
+}
+
+.worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-icon {
+  color: #e7c98a;
+}
+
+.worldcompassholiday-page.worldcompassholiday-header-scope .nav-drawer-link {
+  color: #051036;
+}
+
+.worldcompassholiday-page.worldcompassholiday-header-scope .nav-drawer-link .nav-icon {
+  color: #8a6230;
+}
+
+@media (min-width: 1200px) {
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-menu .menu__nav > li > a {
+    gap: 0.4em;
+    padding-right: 11px;
+    padding-left: 11px;
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1499px) {
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .header__container {
+    padding-right: 16px !important;
+    padding-left: 16px !important;
+  }
+
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-menu .menu__nav > li > a {
+    gap: 0.35em;
+    padding-right: 7px;
+    padding-left: 7px;
+    font-size: 14px;
+  }
+
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header a.button {
+    height: 42px;
+    padding-right: 14px !important;
+    padding-left: 14px !important;
+    font-size: 13px;
   }
 }
 

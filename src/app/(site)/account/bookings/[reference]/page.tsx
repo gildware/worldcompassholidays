@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BookingEditForm } from "@/components/account/BookingEditForm";
+import { HotelStayReply } from "@/components/account/HotelStayReply";
 import { requireCustomer } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
+import { accountSectionForModule } from "@/lib/account-sections";
 import { customerEditableStatuses, moduleLabel, statusLabel } from "@/lib/bookings";
+import { bookedHotelStatuses, readHotelReply } from "@/lib/hotel-reply";
 import { prisma } from "@/lib/db";
 import { formatDate, formatMoney } from "@/lib/format";
 import { privateMetadata } from "@/lib/seo";
@@ -31,9 +34,13 @@ export default async function AccountBookingPage({
   const booking = await prisma.booking.findUnique({ where: { reference } });
   if (!booking || booking.userId !== user.id) notFound();
 
+  const section = accountSectionForModule(booking.module);
   const editable =
     can(user, "account.bookings.update") &&
     customerEditableStatuses.includes(booking.status);
+  const canReply =
+    booking.module === "hotel" &&
+    bookedHotelStatuses.includes(booking.status as (typeof bookedHotelStatuses)[number]);
 
   const rows = [
     ["Status", statusLabel(booking.status)],
@@ -46,8 +53,8 @@ export default async function AccountBookingPage({
 
   return (
     <div className="grid max-w-3xl gap-5">
-      <Link href="/account/bookings" className="text-sm font-medium text-brand">
-        Bookings
+      <Link href={section?.href ?? "/account"} className="text-sm font-medium text-brand">
+        {section?.label ?? "Account"}
       </Link>
       {created ? (
         <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
@@ -72,6 +79,9 @@ export default async function AccountBookingPage({
           </div>
         ) : null}
       </dl>
+      {canReply ? (
+        <HotelStayReply reference={booking.reference} review={readHotelReply(booking.details)} />
+      ) : null}
       {editable ? (
         <BookingEditForm
           reference={booking.reference}

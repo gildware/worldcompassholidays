@@ -1,39 +1,21 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { TourListV2 } from "@/components/tour-list/tour-list-v2/TourListV2";
-import type { TourListCard, TourListLocation } from "@/components/tour-list/types";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { TourCatalog } from "@/components/tour-list/catalog/TourCatalog";
+import { catalogToday, readCatalogQuery } from "@/components/tour-list/catalog/logic";
 import { modules } from "@/config/modules";
+import { getCurrentUser } from "@/lib/auth/session";
 import { loadTourCatalog } from "@/lib/catalog-query";
 import { prisma } from "@/lib/db";
-import { resolveTitles } from "@/lib/hotels/labels";
-import { formatTourDuration, parseDurationUnit, parseJsonArray, type GalleryItem } from "@/lib/tours/json";
-import { pageMetadata } from "@/lib/seo";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
+import { toCatalogTour } from "@/lib/tours/catalog-card";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Tours and treks",
+  title: "Tours",
   description:
-    "Guided tours and treks with duration, group size, and a starting price. Filter by place, type, and length, then send a booking request.",
+    "Search tours by date, party, price, and pace. Every card shows the total for your group, the cancellation deadline, and what you still pay on the day.",
   path: "/tours",
 });
-
-const languageNames = ["English", "Spanish", "French", "Turkish"];
-
-function plainText(value: string) {
-  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function durationInDays(count: number, unit: string) {
-  const amount = Number.isFinite(count) && count > 0 ? count : 0;
-  if (unit === "hours") return Math.max(1, Math.ceil(amount / 24));
-  if (unit === "weeks") return Math.round(amount * 7);
-  return Math.round(amount);
-}
-
-function durationText(count: number, unit: string, label: string) {
-  if (label.trim()) return label.trim();
-  if (unit === "hours") return `${count}+ hours`;
-  return formatTourDuration(count, parseDurationUnit(unit));
-}
 
 export default async function ToursPage({
   searchParams,
@@ -42,92 +24,58 @@ export default async function ToursPage({
 }) {
   if (!modules.tours) notFound();
   const params = await searchParams;
-
-  const [rows, catalog, destinations] = await Promise.all([
+  const [rows, catalog, user] = await Promise.all([
     prisma.tour.findMany({
       where: { published: true },
       include: {
-        destination: {
-          select: { name: true, slug: true, region: true, country: true },
-        },
+        destination: { select: { name: true, region: true, country: true } },
         destinationLinks: {
-          include: {
-            destination: {
-              select: { name: true, slug: true, region: true, country: true },
-            },
-          },
+          include: { destination: { select: { name: true, region: true, country: true } } },
           take: 1,
         },
+        days: { orderBy: { dayNumber: "asc" }, select: { dayNumber: true, title: true, description: true } },
+        departures: { select: { id: true, startDate: true, seatsTotal: true, price: true, status: true } },
       },
       orderBy: [{ isFeatured: "desc" }, { title: "asc" }],
     }),
     loadTourCatalog(),
-    prisma.destination.findMany({
-      where: {
-        published: true,
-        OR: [
-          { tours: { some: { published: true } } },
-          { tourLinks: { some: { tour: { published: true } } } },
-        ],
-      },
-      select: { id: true, name: true, region: true, country: true },
-      orderBy: { name: "asc" },
-    }),
+    getCurrentUser(),
   ]);
 
-  const tours: TourListCard[] = rows.map((tour) => {
-    const place = tour.destination ?? tour.destinationLinks[0]?.destination ?? null;
-    const gallery = parseJsonArray<GalleryItem>(tour.galleryJson).flatMap((item) =>
-      item?.url ? [item.url] : [],
-    );
-    const images = [...new Set([tour.imageUrl, tour.featuredImageUrl, ...gallery].filter(Boolean))];
-    const includes = resolveTitles(tour.includesJson, catalog.includes);
-    const unit = parseDurationUnit(tour.durationUnit);
-    const haystack = `${tour.title} ${tour.summary} ${plainText(tour.description)} ${includes.join(" ")}`;
-    const languages = languageNames.filter((name) => haystack.toLowerCase().includes(name.toLowerCase()));
-    const tag = tour.isFeatured
-      ? "best seller"
-      : tour.maxGroupSize > 0 && tour.maxGroupSize <= 8
-        ? "likely to sell out*"
-        : "";
-
-    return {
-      id: tour.id,
-      slug: tour.slug,
-      title: tour.title,
-      summary: tour.summary,
-      location: place?.name ?? "",
-      address: tour.address,
-      durationLabel: durationText(tour.durationDays, unit, tour.durationLabel),
-      durationDays: durationInDays(tour.durationDays, unit),
-      category: tour.category.trim() || "Tours",
-      images,
-      price: tour.priceFrom,
-      currency: tour.currency || "INR",
-      tag,
-      freeCancellation: /free cancellation/i.test(haystack),
-      languages,
-      href: `/tours/${tour.slug}`,
-    };
-  });
-
-  const locations: TourListLocation[] = destinations.map((destination) => ({
-    id: destination.id,
-    name: destination.name,
-    address: [destination.region, destination.country].filter(Boolean).join(", "),
-  }));
-
-  const prices = tours.map((tour) => tour.price);
-  const priceMin = prices.length ? Math.min(...prices) : 0;
-  const priceMax = prices.length ? Math.max(...prices) : priceMin;
+  const tours = rows.map((tour) =>
+    toCatalogTour(
+      { ...tour, destination: tour.destination ?? tour.destinationLinks[0]?.destination ?? null },
+      catalog.includes,
+      catalog.excludes,
+    ),
+  );
+  const today = catalogToday();
+  const featured = tours.find((tour) => tour.featured) ?? tours[0] ?? null;
+  const customer = user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null;
 
   return (
-    <TourListV2
-      tours={tours}
-      locations={locations}
-      query={params}
-      priceMin={priceMin}
-      priceMax={priceMax}
-    />
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Tours from World Compass Holidays",
+          numberOfItems: tours.length,
+          itemListElement: tours.map((tour, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            name: tour.title,
+            url: absoluteUrl(tour.href),
+          })),
+        }}
+      />
+      <TourCatalog tours={tours} initial={readCatalogQuery(params, tours, today)} today={today} customer={customer} featured={featured ? { href: featured.href, title: featured.title } : null} />
+    </>
   );
 }

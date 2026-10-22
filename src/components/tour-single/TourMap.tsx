@@ -7,15 +7,17 @@ export default function TourMap({
   lat,
   lng,
   zoom,
+  minHeight = 220,
 }: {
   apiKey: string;
   lat: number;
   lng: number;
   zoom: number;
+  minHeight?: number;
 }) {
   return (
-    <div style={{ height: "100%", width: "100%", minHeight: 450, position: "relative", zIndex: 0 }}>
-      <GooglePlaceMap apiKey={apiKey} lat={lat} lng={lng} zoom={zoom} minHeight={450} />
+    <div style={{ height: "100%", width: "100%", minHeight, position: "relative", zIndex: 0 }}>
+      <GooglePlaceMap apiKey={apiKey} lat={lat} lng={lng} zoom={zoom} minHeight={minHeight} />
     </div>
   );
 }

@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { TourSingle } from "@/components/tour-single/TourSingle";
-import type { PopularTourCard, TourSingleData } from "@/components/tour-single/types";
+import { TourStay } from "@/components/tour-single/TourStay";
+import type { TourStayData } from "@/components/tour-single/TourStay";
 import { modules } from "@/config/modules";
+import { getCurrentUser } from "@/lib/auth/session";
 import { loadTourCatalog } from "@/lib/catalog-query";
 import { prisma } from "@/lib/db";
-import { formatMoney, formatDate } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { resolveFaqs, resolveTitles } from "@/lib/hotels/labels";
-import { mapApiKey } from "@/lib/map-key";
 import { parseMapPoint } from "@/lib/maps";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
@@ -41,6 +41,17 @@ function durationText(count: number, unit: string, label: string) {
 function galleryUrls(imageUrl: string, featuredImageUrl: string, galleryJson: string) {
   const gallery = parseJsonArray<GalleryItem>(galleryJson).flatMap((item) => (item?.url ? [item.url] : []));
   return [...new Set([imageUrl, featuredImageUrl, ...gallery].filter(Boolean))];
+}
+
+function isoDay(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function departureLabel(iso: string) {
+  const date = new Date(`${iso}T00:00:00`);
+  const weekday = date.toLocaleDateString("en-GB", { weekday: "short" });
+  const month = date.toLocaleDateString("en-GB", { month: "short" });
+  return `${weekday} ${date.getDate()} ${month}`;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -88,7 +99,7 @@ export default async function TourPage({ params }: Props) {
   if (!modules.tours) notFound();
   const { slug } = await params;
 
-  const [tour, catalog] = await Promise.all([
+  const [tour, catalog, user] = await Promise.all([
     prisma.tour.findUnique({
       where: { slug },
       include: {
@@ -98,10 +109,11 @@ export default async function TourPage({ params }: Props) {
           take: 1,
         },
         days: { orderBy: { dayNumber: "asc" } },
-        departures: { orderBy: { startDate: "asc" }, take: 4 },
+        departures: { orderBy: { startDate: "asc" }, take: 12 },
       },
     }),
     loadTourCatalog(),
+    getCurrentUser(),
   ]);
   if (!tour || !tour.published) notFound();
 
@@ -130,68 +142,64 @@ export default async function TourPage({ params }: Props) {
   const unit = parseDurationUnit(tour.durationUnit);
   const durationLabel = durationText(tour.durationDays, unit, tour.durationLabel);
   const map = parseMapPoint(tour.mapLat, tour.mapLng, tour.mapZoom);
-  const mapUrl = map
-    ? `https://www.google.com/maps?q=${encodeURIComponent(`${map.lat},${map.lng}`)}`
-    : "";
-  const openDepartures = tour.departures.filter((item) => item.status !== "closed");
-  const departureText = openDepartures.length
-    ? openDepartures
-        .map((item) => `Departs ${formatDate(item.startDate)}${item.endDate ? ` and returns ${formatDate(item.endDate)}` : ""}`)
-        .join(". ")
-    : tour.address;
+  const today = new Date().toISOString().slice(0, 10);
+  const openDepartures = tour.departures.filter((item) => item.status !== "closed" && isoDay(item.startDate) >= today);
 
-  const similar: PopularTourCard[] = similarRows.map((item) => {
+  const similar = similarRows.map((item) => {
     const itemPlace = item.destination ?? item.destinationLinks[0]?.destination ?? null;
     const slides = galleryUrls(item.imageUrl, item.featuredImageUrl, item.galleryJson);
     return {
-      id: item.id,
       href: `/tours/${item.slug}`,
       title: item.title,
       location: itemPlace?.name ?? "",
       duration: durationText(item.durationDays, item.durationUnit, item.durationLabel),
-      tourType: item.category.trim(),
       price: formatMoney(item.priceFrom, item.currency || "INR"),
-      tag: item.isFeatured ? "best seller" : "",
-      slideImg: slides.length > 0 ? slides : ["/img/tours/5.png"],
+      image: slides[0] ?? "",
     };
   });
 
-  const extraNotes = [
-    tour.summary.trim(),
-    tour.address.trim() ? `Meeting point: ${tour.address.trim()}` : "",
-    ...styles,
-  ].filter(Boolean);
-
-  const data: TourSingleData = {
+  const data: TourStayData = {
     title: tour.title,
     slug: tour.slug,
     location: place?.name ?? "",
     destinationHref: place?.slug ? `/destinations/${place.slug}` : "/tours",
-    address: tour.address,
-    category: tour.category.trim(),
+    category: tour.category.trim() || styles[0] || "",
     durationLabel,
-    groupSize: tour.maxGroupSize > 0 ? tour.maxGroupSize : 1,
-    priceLabel: formatMoney(tour.priceFrom, tour.currency || "INR"),
+    durationDays: tour.durationDays,
+    difficulty: tour.difficulty.trim(),
+    minPeople: tour.minPeople,
+    maxGroupSize: tour.maxGroupSize,
+    priceFrom: tour.priceFrom,
+    currency: tour.currency || "INR",
+    cancelDays: tour.minDayBeforeBooking && tour.minDayBeforeBooking > 0 ? tour.minDayBeforeBooking : 7,
     images,
     summary: tour.summary,
-    descriptionHtml: tour.description,
+    description: plainText(tour.description),
     includes,
     excludes,
+    facilities: facilities.length > 0 ? facilities : styles,
     languages,
-    highlights: facilities.length > 0 ? facilities : styles,
     faqs,
     days: tour.days.map((day) => ({
       dayNumber: day.dayNumber,
       title: day.title,
-      description: day.description,
+      description: plainText(day.description),
       imageUrl: day.imageUrl,
     })),
-    map,
-    mapUrl,
-    departureText,
-    extraNotes,
+    departures: openDepartures.map((item) => {
+      const iso = isoDay(item.startDate);
+      return {
+        id: item.id,
+        iso,
+        endIso: item.endDate ? isoDay(item.endDate) : "",
+        label: departureLabel(iso),
+        seats: item.seatsTotal,
+        price: item.price > 0 ? item.price : tour.priceFrom,
+      };
+    }),
+    address: tour.address,
+    map: map ? { lat: map.lat, lng: map.lng } : null,
     similar,
-    freeCancellation: /free cancellation/i.test(haystack),
   };
 
   const path = `/tours/${tour.slug}`;
@@ -245,7 +253,13 @@ export default async function TourPage({ params }: Props) {
           },
         ])}
       />
-      <TourSingle tour={data} mapApiKey={mapApiKey()} />
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+      <TourStay tour={data} customer={user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null} />
     </>
   );
 }

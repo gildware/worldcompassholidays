@@ -69,7 +69,7 @@ export function iconForConfig(kind: string, name: string): RentalIconName {
     if (/motor|bike|naked/.test(value)) return "motorcycle";
     return kind === "vehicle_type" ? "vehicle" : "specs";
   }
-  if (kind === "addon") return "tag";
+  if (kind === "tag" || kind === "addon") return "tag";
   if (kind === "vehicle_document" || kind === "customer_document") return "specs";
   return "specs";
 }

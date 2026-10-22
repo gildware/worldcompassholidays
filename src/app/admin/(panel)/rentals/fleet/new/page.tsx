@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { VehicleForm, type VehicleFormValues } from "@/components/admin/rentals/VehicleForm";
 import { requirePermission } from "@/lib/auth/guards";
+import { prisma } from "@/lib/db";
 import { fleetKinds } from "@/lib/rentals/labels";
 import { modules } from "@/config/modules";
 import { configsOf, getRentalSetup } from "@/lib/rentals/setup";
@@ -53,11 +54,13 @@ const blank: VehicleFormValues = {
   discountType: "none",
   discountValue: "0",
   featureIds: [],
+  tagIds: [],
   includedIds: [],
   excludedIds: [],
   documentIds: [],
   addonIds: [],
   locationIds: [],
+  relatedIds: [],
   images: [],
 };
 
@@ -70,7 +73,14 @@ export default async function NewVehiclePage({
   const { kind: requested } = await searchParams;
   const kinds = fleetKinds();
   const kind = requestedKind(requested) ?? kinds[0] ?? "car";
-  const setup = await getRentalSetup(kind);
+  const [setup, relatedVehicles] = await Promise.all([
+    getRentalSetup(kind),
+    prisma.vehicle.findMany({
+      where: { kind },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, registrationNumber: true, published: true },
+    }),
+  ]);
   const listHref = kind === "bike" ? "/admin/rentals/bikes" : "/admin/rentals/cars";
   const noun = kind === "bike" ? "bike" : "car";
 
@@ -82,7 +92,7 @@ export default async function NewVehiclePage({
         </Link>
         <h1 className="mt-1 text-xl font-semibold tracking-tight text-navy">Add {noun}</h1>
         <p className="mt-0.5 text-xs text-muted">
-          Choose type, fuel, transmission, included items, and features from configuration.
+          Choose tags, type, fuel, transmission, included items, and features from configuration.
         </p>
       </div>
       <VehicleForm
@@ -93,11 +103,13 @@ export default async function NewVehiclePage({
         fuels={configsOf(setup.configs, "fuel")}
         transmissions={configsOf(setup.configs, "transmission")}
         features={configsOf(setup.configs, "feature")}
+        tags={configsOf(setup.configs, "tag")}
         included={configsOf(setup.configs, "included")}
         excluded={configsOf(setup.configs, "excluded")}
         bookingDocuments={configsOf(setup.configs, "customer_document")}
         addons={configsOf(setup.configs, "addon")}
         locations={setup.locations.filter((location) => location.active)}
+        relatedVehicles={relatedVehicles}
         systemPickup={setup.settings.allowCounterPickup}
         systemDelivery={setup.settings.allowHomeDelivery}
       />

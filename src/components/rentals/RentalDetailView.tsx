@@ -10,6 +10,15 @@ type Named = { id: string; name: string };
 type Rule = { id: string; name: string; description: string };
 type Addon = { id: string; name: string; price: number; priceUnit: string };
 type Place = { id: string; name: string; address: string };
+type RelatedVehicle = {
+  slug: string;
+  name: string;
+  typeName: string;
+  meta: string;
+  priceLabel: string;
+  imageUrl: string;
+  href: string;
+};
 
 export type RentalDetailViewProps = {
   name: string;
@@ -42,6 +51,8 @@ export type RentalDetailViewProps = {
   backHref: string;
   available: boolean;
   availabilityNote: string;
+  relatedTitle: string;
+  related: RelatedVehicle[];
   booking: RentalBookingOptions;
 };
 
@@ -81,6 +92,8 @@ export function RentalDetailView(props: RentalDetailViewProps) {
     backHref,
     available,
     availabilityNote,
+    relatedTitle,
+    related,
     booking,
   } = props;
   const tripKm = quote && includedKmPerDay > 0 ? includedKmPerDay * quote.days : 0;
@@ -329,6 +342,38 @@ export function RentalDetailView(props: RentalDetailViewProps) {
             </div>
           </aside>
         </div>
+
+        {related.length > 0 ? (
+          <section className="rental-related" aria-labelledby="related-vehicles">
+            <h2 id="related-vehicles">{relatedTitle}</h2>
+            <ul className="rental-related__list">
+              {related.map((item) => (
+                <li key={item.slug} className="rental-related__item">
+                  <Link href={item.href} className="rental-related__row">
+                    {item.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.imageUrl} alt="" className="rental-related__photo" />
+                    ) : (
+                      <span className="rental-related__photo is-empty">No photo</span>
+                    )}
+                    <span className="rental-related__copy">
+                      {item.typeName ? <span className="rental-related__type">{item.typeName}</span> : null}
+                      <strong>{item.name}</strong>
+                      {item.meta ? <span className="rental-related__meta">{item.meta}</span> : null}
+                    </span>
+                    <span className="rental-related__price">
+                      <strong>{item.priceLabel}</strong>
+                      <span>/ day</span>
+                    </span>
+                  </Link>
+                  <Link href={item.href} className="rental-related__book">
+                    View more
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <div className="rental-detail__dock">
           <p>

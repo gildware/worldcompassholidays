@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
 import { requirePermission } from "@/lib/auth/guards";
+import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { bookingStatuses } from "@/lib/bookings";
 
 const statusSchema = z.object({
@@ -32,7 +33,6 @@ export async function updateBookingStatus(
   revalidatePath("/admin/bookings");
   revalidatePath("/admin/visa");
   revalidatePath("/admin/meet-and-assist");
-  revalidatePath("/account");
-  revalidatePath(`/account/bookings/${booking.reference}`);
+  revalidateCustomerBooking(booking.module, booking.reference);
   return { error: null, success: "Status updated." };
 }

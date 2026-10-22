@@ -18,12 +18,6 @@ export async function HomeAccountActions() {
       >
         {account.label}
       </Link>
-      <Link
-        href="/contact"
-        className="button px-30 fw-400 text-14 border-white -outline-white h-50 text-white ml-20"
-      >
-        Enquire
-      </Link>
     </div>
   );
 }

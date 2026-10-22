@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tours · World Compass Holidays</title>
+  <meta name="description" content="Search India tours by date, party, price, and pace. Every card shows the total for your group, the cancellation deadline, and what you still pay on the day.">
+  <meta name="theme-color" content="#f6f3ed">
+  <meta property="og:title" content="Tours · World Compass Holidays">
+  <meta property="og:description" content="The total for your party, the cancellation deadline for your date, and what is not included — on the list, before you open a tour.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="prefetch" href="tour-details-demo.html">
+  <script type="application/ld+json" id="ld">{"@context":"https://schema.org","@type":"ItemList","name":"Tours"}</script>
+  <style>
+    :root {
+      --ink: #1c1915;
+      --muted: #5e584f;
+      --soft: #8a8175;
+      --line: #e4ddd2;
+      --paper: #f6f3ed;
+      --card: #fffcf8;
+      --blue: #3554d1;
+      --blue-dark: #243ea8;
+      --green: #0d6b52;
+      --gold: #8a6420;
+      --danger: #9f1239;
+      --sand: #f3ecdf;
+      --shadow: 0 22px 50px rgba(48, 36, 18, 0.08);
+      --serif: "Fraunces", "Iowan Old Style", Palatino, Georgia, serif;
+      --sans: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16.5px;
+      line-height: 1.5;
+      accent-color: var(--blue);
+    }
+    body.locked { overflow: hidden; }
+    img { max-width: 100%; display: block; }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    h1, h2, h3, p { margin: 0; }
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+    .skip { position: absolute; left: 12px; top: -48px; background: #fff; padding: 8px 12px; z-index: 80; border-radius: 8px; }
+    .skip:focus { top: 12px; }
+    .wrap { width: min(1220px, calc(100% - 32px)); margin: 0 auto; }
+    .sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+    .header {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      width: min(1220px, calc(100% - 32px)); margin: 0 auto; padding: 16px 0 4px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; }
+    .logo strong { font-family: var(--serif); font-size: 18px; font-weight: 560; display: block; line-height: 1; }
+    .logo em { font-style: normal; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); }
+    .header__nav { display: flex; align-items: center; gap: 4px; }
+    .header__nav a { text-decoration: none; font-weight: 600; font-size: 14.5px; color: var(--muted); padding: 8px 12px; border-radius: 999px; }
+    .header__nav a[aria-current="page"] { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+    .header__actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border-radius: 999px; border: 1px solid transparent; background: var(--blue); color: #fff;
+      padding: 12px 18px; font-weight: 600; text-decoration: none; line-height: 1; min-height: 44px;
+    }
+    .btn:hover { background: var(--blue-dark); }
+    .btn--ghost { background: #fff; color: var(--ink); border-color: var(--line); }
+    .btn--ghost:hover { background: #fff; border-color: #cfc6b8; }
+    .btn--small { padding: 9px 14px; font-size: 14.5px; min-height: 40px; }
+    .btn--block { width: 100%; }
+    .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+    .btn[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .textlink { border: 0; background: none; padding: 0; color: var(--blue); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+
+    .search-wrap {
+      position: sticky; top: 0; z-index: 25;
+      background: rgba(246, 243, 237, 0.94);
+      backdrop-filter: blur(14px);
+      padding: 10px 0 8px;
+    }
+    .search-summary {
+      display: none; width: 100%; text-align: left; background: #fff; border: 1px solid var(--line);
+      border-radius: 16px; padding: 10px 14px; box-shadow: var(--shadow);
+    }
+    .search-summary strong { display: block; font-size: 15.5px; }
+    .search-summary span { color: var(--muted); font-size: 13.5px; }
+    .search {
+      display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(140px, 0.85fr) minmax(150px, 0.9fr) auto;
+      background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow);
+    }
+    .field { position: relative; min-width: 0; padding: 10px 16px 12px; border-right: 1px solid var(--line); }
+    .field .k, .field label { display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); font-weight: 700; }
+    .field input, .field select, .who-btn {
+      display: block; width: 100%; border: 0; background: transparent; padding: 3px 0 0;
+      font-weight: 600; font-size: 16px; text-align: left;
+    }
+    .field input:focus, .field select:focus, .who-btn:focus { outline: none; }
+    .field:focus-within { box-shadow: inset 0 0 0 2px var(--blue); }
+    .search .btn { margin: 8px; border-radius: 14px; padding: 0 18px; }
+    .who-panel {
+      position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; width: min(300px, 80vw);
+      background: #fff; border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 8px 8px 12px;
+    }
+    .guest { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 8px; }
+    .guest small { display: block; color: var(--muted); font-size: 13px; font-weight: 500; }
+    .step { display: inline-flex; align-items: center; gap: 8px; }
+    .step button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: #fff; font-size: 18px; }
+    .step button:disabled { opacity: 0.35; cursor: not-allowed; }
+    .step b { min-width: 1.2ch; text-align: center; }
+    .who-note { color: var(--muted); font-size: 13.5px; padding: 4px 8px 0; }
+
+    .head { padding: 8px 0 4px; }
+    .eyebrow { color: var(--gold); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+    h1 { font-family: var(--serif); font-weight: 560; font-size: clamp(32px, 4vw, 48px); letter-spacing: -0.035em; line-height: 1; }
+    .promise { color: #3f3a33; max-width: 68ch; margin-top: 8px; }
+
+    .chips, .applied { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0; scrollbar-width: none; }
+    .chips::-webkit-scrollbar, .applied::-webkit-scrollbar { display: none; }
+    .applied:empty { display: none; }
+    .chip, .applied button {
+      flex: 0 0 auto; border: 1px solid var(--line); background: #fff; border-radius: 999px;
+      padding: 8px 12px; font-weight: 600; font-size: 14.5px; color: var(--ink); min-height: 40px;
+    }
+    .chip.is-on, .chip[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .chip .n { color: var(--soft); font-weight: 600; margin-left: 4px; }
+    .chip[aria-pressed="true"] .n { color: #ddd; }
+    .applied button { background: var(--sand); }
+
+    .page { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 22px; align-items: start; padding-bottom: 72px; }
+    .filters {
+      position: sticky; top: 92px; max-height: calc(100vh - 108px); overflow: auto;
+      padding-bottom: 12px; scrollbar-width: thin;
+    }
+    .filters h2 { font-family: var(--serif); font-size: 28px; font-weight: 560; letter-spacing: -0.03em; }
+    .filters__top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .filters__close { display: none; }
+    .filters fieldset { border: 0; padding: 14px 0; margin: 0; border-top: 1px solid var(--line); }
+    .filters legend { font-weight: 700; padding: 0; margin-bottom: 8px; }
+    .hint { color: var(--soft); font-weight: 500; font-size: 13px; display: block; margin: -4px 0 8px; }
+    .check { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 15.5px; }
+    .check:focus-within { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 8px; }
+    .check .n { margin-left: auto; color: var(--soft); font-variant-numeric: tabular-nums; }
+    .check.is-zero { color: var(--soft); }
+    .check input { width: 16px; height: 16px; margin: 0; }
+    .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pill { position: relative; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 10px; font-weight: 600; font-size: 14px; }
+    .pill input { position: absolute; inset: 0; opacity: 0; margin: 0; }
+    .pill:has(input:checked) { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .pill:focus-within { outline: 2px solid var(--blue); outline-offset: 2px; }
+    .pill:has(input:disabled) { opacity: 0.4; }
+    .pill .n { opacity: 0.72; margin-left: 4px; font-weight: 500; }
+    .hist { display: flex; align-items: flex-end; gap: 3px; height: 56px; margin: 4px 0 8px; }
+    .hist button { flex: 1; border: 0; background: #e4ddd2; border-radius: 3px 3px 0 0; min-height: 4px; padding: 0; }
+    .hist button.is-in { background: var(--blue); }
+    .hist button[disabled] { opacity: 0.35; }
+    .price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .price-row label { font-size: 12px; color: var(--soft); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+    .price-row input { display: block; width: 100%; margin-top: 4px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-weight: 600; font-size: 16px; background: #fff; }
+    .sheet-apply { display: none; position: sticky; bottom: 0; padding: 12px 0 4px; background: linear-gradient(transparent, var(--paper) 28%); }
+
+    #results { scroll-margin-top: 96px; }
+    .toolbar { display: flex; justify-content: space-between; gap: 12px; align-items: flex-end; margin-bottom: 8px; }
+    .sort { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--soft); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .sort select {
+      text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 15px; color: var(--ink);
+      border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 8px 12px; min-height: 40px;
+    }
+    .layout-switch { display: inline-flex; padding: 3px; background: #efeae2; border-radius: 999px; }
+    .layout-switch button { border: 0; background: transparent; border-radius: 999px; padding: 8px 12px; font-weight: 600; font-size: 14px; min-height: 36px; }
+    .layout-switch button[aria-pressed="true"] { background: #fff; }
+    .sort-note { color: var(--muted); font-size: 13.5px; margin: 0 0 10px; }
+    .insight {
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin-bottom: 12px;
+      display: flex; justify-content: space-between; gap: 12px; align-items: center;
+    }
+    .insight p { color: var(--muted); }
+
+    .list { display: flex; flex-direction: column; gap: 14px; }
+    .list.is-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+    .card {
+      display: grid; grid-template-columns: 240px minmax(0, 1fr) 210px;
+      background: var(--card); border: 1px solid var(--line); border-radius: 20px; overflow: hidden;
+    }
+    .card.is-compared { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+    .card.is-dim { background: #f7f4ef; }
+    .card.is-dim .photo img { filter: grayscale(0.35); }
+    .photo { position: relative; min-height: 220px; background: #e5dfd6; }
+    .photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .badge {
+      position: absolute; left: 10px; top: 10px; z-index: 1; background: #fff; border-radius: 999px;
+      padding: 4px 8px; font-size: 12.5px; font-weight: 700;
+    }
+    .badge.is-hot { background: var(--ink); color: #fff; }
+    .badge.is-low { background: #fff4e5; color: #8a4b08; }
+    .save {
+      position: absolute; right: 10px; top: 10px; z-index: 1; width: 36px; height: 36px; border: 0; border-radius: 50%;
+      background: #fff; box-shadow: 0 6px 16px rgba(28, 25, 21, 0.16); font-size: 16px;
+    }
+    .save[aria-pressed="true"] { color: var(--danger); }
+    .main { padding: 14px 16px 16px; min-width: 0; }
+    .kicker { color: var(--soft); font-size: 12.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+    .card h2 { font-family: var(--serif); font-weight: 560; font-size: 26px; letter-spacing: -0.03em; line-height: 1.08; margin: 2px 0 6px; }
+    .card h2 a, .card h2 button { border: 0; background: none; padding: 0; font: inherit; text-align: left; text-decoration: none; color: inherit; }
+    .card h2 a:hover, .card h2 button:hover { text-decoration: underline; }
+    .score { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+    .score b {
+      min-width: 42px; height: 42px; padding: 0 6px; border-radius: 12px; background: var(--green); color: #fff;
+      display: grid; place-items: center; font-family: var(--serif); font-size: 18px; font-weight: 560;
+    }
+    .score b.is-mid { background: #1e6b4e; }
+    .score b.is-low { background: #6d5b3a; }
+    .score strong { display: block; font-size: 15px; line-height: 1.2; color: var(--ink); }
+    .score span { color: var(--muted); font-size: 13.5px; }
+    .meta { color: #3f3a33; font-size: 14.5px; }
+    .mention { color: var(--muted); font-size: 14.5px; margin-top: 4px; }
+    .expect { background: var(--sand); color: #6b5424; border-radius: 10px; padding: 8px 10px; font-size: 14px; font-weight: 600; margin-top: 8px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag { font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; color: #3f3a33; background: #fff; }
+    .miss { color: var(--gold); font-size: 14px; font-weight: 650; margin-top: 8px; }
+    .buy {
+      display: flex; flex-direction: column; align-items: flex-end; text-align: right; gap: 4px;
+      padding: 16px; border-left: 1px solid var(--line);
+    }
+    .total { font-family: var(--serif); font-size: 32px; font-weight: 560; letter-spacing: -0.03em; line-height: 1; }
+    .sub { color: var(--muted); font-size: 13.5px; }
+    .ok { color: var(--green); font-weight: 650; font-size: 14px; }
+    .warn { color: var(--danger); font-weight: 650; font-size: 14px; }
+    .muted { color: var(--muted); font-size: 14px; }
+    .cmp { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; margin-top: 4px; }
+    .list.is-grid .card { grid-template-columns: 1fr; }
+    .list.is-grid .photo { min-height: 180px; height: 180px; }
+    .list.is-grid .buy { align-items: flex-start; text-align: left; border-left: 0; border-top: 1px solid var(--line); }
+    .list.is-grid .card h2 { font-size: 24px; }
+
+    .empty { background: var(--card); border: 1px dashed var(--line); border-radius: 18px; padding: 28px 20px; }
+    .empty h2 { font-family: var(--serif); font-size: 32px; font-weight: 560; letter-spacing: -0.03em; margin-bottom: 8px; }
+    .empty p { color: var(--muted); margin-bottom: 14px; }
+    .empty__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .pager { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 16px; }
+    .pager button { min-width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font-weight: 650; }
+    .pager button[aria-current="page"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .pager button:disabled { opacity: 0.4; }
+
+    .dock {
+      display: none; position: fixed; z-index: 28; left: 0; right: 0; bottom: 0;
+      gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(246, 243, 237, 0.96); border-top: 1px solid var(--line); backdrop-filter: blur(12px);
+    }
+    .dock .btn, .dock .sort { flex: 1; }
+    .dock .sort select { width: 100%; }
+    .count-pip {
+      display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px;
+      border-radius: 999px; background: var(--blue); color: #fff; font-size: 12px;
+    }
+
+    .shade { position: fixed; inset: 0; z-index: 35; border: 0; background: rgba(20, 16, 12, 0.46); }
+    .comparebar {
+      position: fixed; z-index: 32; left: 50%; bottom: 14px; transform: translateX(-50%);
+      width: min(860px, calc(100% - 20px)); background: var(--ink); color: #fff;
+      border-radius: 18px; display: flex; align-items: center; gap: 10px; padding: 10px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.22);
+    }
+    .slots { display: flex; gap: 8px; flex: 1; min-width: 0; overflow: auto; }
+    .slot { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.08); border-radius: 12px; padding: 4px 8px 4px 4px; min-width: 0; }
+    .slot img { width: 42px; height: 42px; object-fit: cover; border-radius: 8px; }
+    .slot span { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    .slot button { border: 0; background: transparent; color: #fff; font-size: 18px; min-width: 28px; min-height: 28px; }
+    .comparebar .btn { background: #fff; color: var(--ink); }
+    .comparebar .btn:hover { background: #f3efe8; }
+
+    dialog { border: 0; padding: 0; background: #fff; color: var(--ink); max-height: min(92vh, 900px); }
+    dialog::backdrop { background: rgba(20, 16, 12, 0.62); }
+    #preview { width: min(680px, calc(100% - 24px)); border-radius: 22px; }
+    #compare { width: min(980px, calc(100% - 24px)); border-radius: 22px; }
+    .dialog-pad { padding: 18px 18px 22px; }
+    .dialog-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+    .dialog-pad h2 { font-family: var(--serif); font-weight: 560; font-size: clamp(28px, 4vw, 36px); letter-spacing: -0.03em; line-height: 1.05; }
+    .preview-photo { width: 100%; height: 240px; object-fit: cover; border-radius: 16px; background: #e5dfd6; margin-bottom: 12px; }
+    .lede { font-size: 17px; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+    .split h3 { font-size: 15px; margin-bottom: 6px; }
+    .split ul, .timeline { margin: 0; padding-left: 18px; }
+    .split li, .timeline li { margin: 4px 0; }
+    .bill { margin-top: 14px; background: var(--paper); border-radius: 16px; padding: 14px; display: flex; justify-content: space-between; gap: 12px; align-items: flex-end; }
+    .bill__total { font-family: var(--serif); font-size: 36px; letter-spacing: -0.03em; line-height: 1; }
+    .form { display: grid; gap: 10px; margin-top: 14px; }
+    .form label { font-size: 13.5px; font-weight: 700; }
+    .form input, .form textarea { display: block; width: 100%; margin-top: 4px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; font-size: 16px; }
+    .err { color: var(--danger); font-size: 14px; min-height: 1.2em; }
+    .success { background: #e7f4ee; border-radius: 16px; padding: 14px 16px; margin-top: 14px; }
+    .fine { color: var(--soft); font-size: 13px; }
+    .scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 10px 8px; text-align: left; vertical-align: top; }
+    thead th { font-family: var(--serif); font-weight: 560; font-size: 16px; }
+    td.is-best { background: #e7f4ee; color: var(--green); font-weight: 700; }
+    .footer { border-top: 1px solid var(--line); padding: 22px 0 28px; color: var(--muted); font-size: 14px; }
+    .footer a { color: var(--blue); font-weight: 650; }
+    .toast {
+      position: fixed; z-index: 60; left: 50%; top: 12px; transform: translateX(-50%) translateY(-8px);
+      background: var(--ink); color: #fff; border-radius: 999px; padding: 10px 14px; opacity: 0; pointer-events: none;
+    }
+    .toast.is-on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 980px) {
+      .header__nav { display: none; }
+      .page { grid-template-columns: 1fr; }
+      .filters {
+        display: none; position: fixed; z-index: 40; inset: 0 auto 0 0; width: min(420px, 100%);
+        max-height: none; top: 0; background: var(--paper); padding: 16px 16px 24px;
+        box-shadow: var(--shadow);
+      }
+      .filters.is-open { display: block; }
+      .filters__close, .sheet-apply, .dock { display: flex; }
+      .comparebar { bottom: calc(72px + env(safe-area-inset-bottom)); }
+      body { padding-bottom: 8px; }
+    }
+    @media (max-width: 860px) {
+      .card { grid-template-columns: 1fr; }
+      .photo { height: 210px; min-height: 210px; }
+      .buy { align-items: flex-start; text-align: left; border-left: 0; border-top: 1px solid var(--line); }
+      .split, .bill { grid-template-columns: 1fr; display: grid; }
+    }
+    @media (max-width: 720px) {
+      .search-summary { display: flex; flex-direction: column; }
+      .search { display: none; }
+      .search.is-open { display: grid; grid-template-columns: 1fr; }
+      .field { border-right: 0; border-bottom: 1px solid var(--line); }
+      .search .btn { margin: 10px; }
+      .who-panel { left: 8px; right: 8px; width: auto; }
+      .insight { flex-direction: column; align-items: flex-start; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .header__actions .btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .toast { transition: none; }
+    }
+    @media print {
+      .search-wrap, .chips, .applied, .filters, .dock, .comparebar, .header__actions, .save, .cmp, .pager { display: none !important; }
+      .page { display: block; }
+      .card { break-inside: avoid; grid-template-columns: 160px 1fr 160px; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#results">Skip to tours</a>
+  <header class="header">
+    <a class="logo" href="tour-list.html" aria-label="World Compass Holidays, tours">
+      <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="13.2" fill="none" stroke="#3554d1" stroke-width="1.6"/>
+        <path d="M16 5.5 19 16l-3-1.6L13 16Z" fill="#3554d1"/>
+        <path d="M16 26.5 13 16l3 1.6L19 16Z" fill="#1c1915"/>
+      </svg>
+      <span><strong>World Compass</strong><em>Holidays</em></span>
+    </a>
+    <nav class="header__nav" aria-label="Sections">
+      <a href="hotel-list-demo.html">Hotels</a>
+      <a href="tour-list.html" aria-current="page">Tours</a>
+      <a href="tour-details-demo.html">Kashmir High Road</a>
+    </nav>
+    <div class="header__actions">
+      <button class="btn btn--ghost btn--small" type="button" id="saved-toggle" aria-pressed="false">Saved <span id="saved-n"></span></button>
+      <button class="btn btn--ghost btn--small" type="button" id="share">Share <span>link</span></button>
+    </div>
+  </header>
+
+  <div class="search-wrap">
+    <div class="wrap">
+      <button class="search-summary" type="button" id="search-summary" aria-expanded="false" aria-controls="search">
+        <strong id="summary-title">Anywhere</strong>
+        <span id="summary-sub">Pick a date and who is going</span>
+      </button>
+      <form class="search" id="search" role="search">
+        <div class="field">
+          <label for="q">Where or what</label>
+          <input id="q" type="search" placeholder="Srinagar, a fort, food" autocomplete="off" enterkeyhint="search" maxlength="80">
+        </div>
+        <div class="field">
+          <label for="date">Date</label>
+          <input id="date" type="date" required>
+        </div>
+        <div class="field">
+          <span class="k" id="who-label">Travelers</span>
+          <button class="who-btn" type="button" id="who-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="who-panel">2 adults</button>
+          <div class="who-panel" id="who-panel" hidden role="dialog" aria-label="Travelers">
+            <div class="guest">
+              <span>Adults <small>Age 12 and over</small></span>
+              <span class="step">
+                <button type="button" data-step="adults" data-dir="-1" aria-label="Fewer adults">−</button>
+                <b id="adults-n">2</b>
+                <button type="button" data-step="adults" data-dir="1" aria-label="More adults">+</button>
+              </span>
+            </div>
+            <div class="guest">
+              <span>Children <small>Ages 3–11, at 70%</small></span>
+              <span class="step">
+                <button type="button" data-step="children" data-dir="-1" aria-label="Fewer children">−</button>
+                <b id="children-n">0</b>
+                <button type="button" data-step="children" data-dir="1" aria-label="More children">+</button>
+              </span>
+            </div>
+            <p class="who-note">A private car, jeep, or boat is priced for the vehicle. If your party is larger than one vehicle, the total adds another.</p>
+          </div>
+        </div>
+        <button class="btn" type="submit">Search</button>
+      </form>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <div class="head">
+      <p class="eyebrow">India · departures you can compare</p>
+      <h1 id="count">Tours</h1>
+      <p class="promise">The price is the total for the travelers and date you chose, tax included. Cancellation is for that date. Anything you still pay on the spot is written on the card.</p>
+    </div>
+
+    <div class="chips" id="quick" role="toolbar" aria-label="Recommended filters">
+      <button class="chip" type="button" data-quick="cancel">Free cancellation <span class="n"></span></button>
+      <button class="chip" type="button" data-quick="style" data-value="private">Private <span class="n"></span></button>
+      <button class="chip" type="button" data-quick="rating" data-value="9">Rated 9+ <span class="n"></span></button>
+      <button class="chip" type="button" data-quick="pickup">Hotel pickup <span class="n"></span></button>
+      <button class="chip" type="button" data-quick="when" data-value="morning">Morning <span class="n"></span></button>
+      <button class="chip" type="button" data-quick="style" data-value="small">Small group <span class="n"></span></button>
+    </div>
+    <div class="applied" id="applied" aria-label="Filters in use"></div>
+
+    <div class="page">
+      <aside class="filters" id="filters" aria-label="Filters">
+        <div class="filters__top">
+          <h2>Filters</h2>
+          <button class="textlink" type="button" id="clear">Clear</button>
+          <button class="btn btn--ghost btn--small filters__close" type="button" id="close-filters">Close</button>
+        </div>
+        <fieldset>
+          <legend>Total for your party</legend>
+          <span class="hint" id="price-label"></span>
+          <div class="hist" id="hist"></div>
+          <div class="price-row">
+            <label>Minimum <input id="min" inputmode="numeric" type="number" min="0" step="100"></label>
+            <label>Maximum <input id="max" inputmode="numeric" type="number" min="0" step="100"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Duration</legend>
+          <div class="pills" id="facet-dur"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Region</legend>
+          <div id="facet-region"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Type</legend>
+          <div id="facet-cat"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Starts</legend>
+          <div class="pills" id="facet-when"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Group</legend>
+          <span class="hint">Private is a car, jeep, or boat for your party.</span>
+          <div class="pills" id="facet-style"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Pace</legend>
+          <span class="hint">Easy is a short walk or a seat. Demanding means altitude or a pass.</span>
+          <div class="pills" id="facet-level"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Language</legend>
+          <span class="hint">A tour stays in the list if it runs in any language you tick.</span>
+          <div id="facet-lang"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Guest score</legend>
+          <div class="pills" id="facet-rating">
+            <label class="pill">Any <input type="radio" name="rating" value="0"></label>
+            <label class="pill">8+ <input type="radio" name="rating" value="8"></label>
+            <label class="pill">9+ <input type="radio" name="rating" value="9"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>On this date</legend>
+          <label class="check"><input type="checkbox" data-toggle="showOff"> Show tours that do not run</label>
+          <label class="check"><input type="checkbox" data-toggle="showSold"> Show sold out tours</label>
+        </fieldset>
+        <div class="sheet-apply">
+          <button class="btn btn--block" type="button" id="apply-filters">Show tours</button>
+        </div>
+      </aside>
+
+      <section id="results" aria-labelledby="count">
+        <div class="toolbar">
+          <p class="sort-note" id="sort-note"></p>
+          <div>
+            <label class="sort">Sort
+              <select id="sort">
+                <option value="match">Best match</option>
+                <option value="price">Lowest total</option>
+                <option value="value">Best value</option>
+                <option value="rating">Highest score</option>
+                <option value="reviews">Most reviews</option>
+                <option value="short">Shortest</option>
+                <option value="long">Longest</option>
+              </select>
+            </label>
+            <div class="layout-switch" role="group" aria-label="Layout">
+              <button type="button" id="view-list" aria-pressed="true">List</button>
+              <button type="button" id="view-grid" aria-pressed="false">Grid</button>
+            </div>
+          </div>
+        </div>
+        <div class="insight" id="insight" hidden>
+          <p id="insight-copy"></p>
+          <button class="btn btn--ghost btn--small" type="button" id="show-hidden">Show them</button>
+        </div>
+        <div class="list" id="list"></div>
+        <div class="empty" id="empty" hidden>
+          <h2>Nothing matches</h2>
+          <p id="empty-copy"></p>
+          <div class="empty__actions" id="empty-actions"></div>
+        </div>
+        <nav class="pager" id="pager" aria-label="Pages" hidden></nav>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      Sample catalog for World Compass Holidays. A request is kept in this browser and nothing is charged.
+      <a href="tour-details-demo.html">Kashmir High Road</a> ·
+      <a href="hotel-list-demo.html">Hotels</a> ·
+      <a href="tour-list-demo.html">Split list</a>
+    </div>
+  </footer>
+
+  <div class="dock" id="dock">
+    <button class="btn btn--ghost" type="button" id="open-filters">Filters <span class="count-pip" id="filter-n" hidden>0</span></button>
+    <label class="sort">Sort
+      <select id="sort-dock" aria-label="Sort tours">
+        <option value="match">Best match</option>
+        <option value="price">Lowest total</option>
+        <option value="value">Best value</option>
+        <option value="rating">Highest score</option>
+        <option value="reviews">Most reviews</option>
+        <option value="short">Shortest</option>
+        <option value="long">Longest</option>
+      </select>
+    </label>
+  </div>
+  <button class="shade" type="button" id="shade" hidden aria-label="Close filters"></button>
+
+  <div class="comparebar" id="comparebar" hidden>
+    <div class="slots" id="slots"></div>
+    <button class="btn btn--small" type="button" id="compare-open" disabled>Compare</button>
+    <button class="btn btn--ghost btn--small" type="button" id="compare-clear">Clear</button>
+  </div>
+
+  <dialog id="preview" aria-labelledby="tour-title"></dialog>
+  <dialog id="compare" aria-labelledby="compare-title"></dialog>
+  <div class="toast" id="toast" role="status"></div>
+  <p class="sr" id="live" aria-live="polite"></p>
+
+  <noscript><p class="wrap">Search, sort, and filters on this page need JavaScript.</p></noscript>
+
+  <script>
+    "use strict";
+    const PHOTO = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=70`;
+    const TOURS = [
+      { id: "dal-sunrise", title: "Dal Lake before breakfast", place: "Srinagar", region: "Kashmir", category: "Water", days: 1, hours: 2, when: "morning", departHour: 6, departMin: 0, style: "small", groupMax: 8, level: "easy", priceKind: "person", price: 1800, langs: ["en", "hi", "ks"], pickup: true, cancelHours: 24, rating: 9.6, reviews: 842, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Empty_shikara_on_Dal_Lake%2C_Srinagar%2C_India_2013-08-23_%28flickr_9967093983%29.jpg/960px-Empty_shikara_on_Dal_Lake%2C_Srinagar%2C_India_2013-08-23_%28flickr_9967093983%29.jpg", alt: "An empty shikara on Dal Lake", mention: "Guests mention the quiet, and the tea.", includes: ["Shikara", "Kahwa on the boat", "Guide"], excludes: ["Breakfast"], story: "The boat leaves before the boulevard is busy. Two hours on the water, then you are back for breakfast.", timeline: ["6:00 Pickup from your Srinagar hotel", "6:20 Boat from the steps", "7:20 Tea on the lake", "8:00 Back at the hotel"], meet: "Hotel lobby in Srinagar, or Dal Gate if you are staying on the water.", meetShort: "Hotel pickup, or Dal Gate" },
+      { id: "old-city", title: "Old Srinagar on foot", place: "Srinagar", region: "Kashmir", category: "Culture", days: 1, hours: 4, when: "afternoon", departHour: 14, departMin: 0, style: "small", groupMax: 6, level: "easy", priceKind: "person", price: 2400, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 9.4, reviews: 510, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Jama_Masjid%2C_Srinagar_%2814362862689%29.jpg/960px-Jama_Masjid%2C_Srinagar_%2814362862689%29.jpg", alt: "Jama Masjid in Srinagar", mention: "Guests mention the pace. Six people is the limit so the lanes stay walkable.", includes: ["Guide", "Jama Masjid entry", "Kahwa stop"], excludes: ["Lunch"], story: "A walk through the old city with someone who lives there. The mosque, a wood workshop, and a stop for kahwa.", timeline: ["2:00 Pickup", "2:30 Jama Masjid", "3:30 Workshop lane", "5:30 Back"], meet: "Hotel lobby in Srinagar.", meetShort: "Hotel pickup" },
+      { id: "gulmarg-day", title: "Gulmarg for the day", place: "Gulmarg", region: "Kashmir", category: "Nature", days: 1, hours: 10, when: "morning", departHour: 7, departMin: 30, style: "shared", groupMax: 16, level: "moderate", priceKind: "person", price: 4200, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 9.1, reviews: 1204, weekdays: null, photo: "photo-1483664852095-d6cc6870702d", alt: "Snow and pine on a high meadow", mention: "Guests mention the meadow. The gondola is a separate ticket.", includes: ["Return drive", "Guide", "Time on the meadow"], excludes: ["Gondola ticket", "Lunch"], story: "A full day up to the meadow. You get about three hours there. The gondola, if you want it, is paid at the window.", timeline: ["7:30 Leave Srinagar", "10:00 Meadow", "1:00 Drive down", "4:30 Back"], meet: "Hotel lobby in Srinagar.", meetShort: "Hotel pickup in Srinagar" },
+      { id: "pahalgam-day", title: "Pahalgam and Betaab Valley", place: "Pahalgam", region: "Kashmir", category: "Nature", days: 1, hours: 11, when: "morning", departHour: 7, departMin: 0, style: "shared", groupMax: 16, level: "moderate", priceKind: "person", price: 3900, langs: ["en", "hi"], pickup: true, cancelHours: 24, rating: 8.8, reviews: 640, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Pahalgam_Valley.jpg/960px-Pahalgam_Valley.jpg", alt: "The valley at Pahalgam", mention: "Guests mention the valley and the long drive.", includes: ["Return drive", "Guide", "Betaab entry"], excludes: ["Pony ride", "Lunch"], story: "South from Srinagar to the Lidder valley. The pony to the viewpoint is optional and paid there.", timeline: ["7:00 Leave Srinagar", "10:30 Pahalgam", "2:00 Betaab", "6:00 Back"], meet: "Hotel lobby in Srinagar.", meetShort: "Hotel pickup in Srinagar" },
+      { id: "sonamarg", title: "Sonamarg and the glacier meadow", place: "Sonamarg", region: "Kashmir", category: "Nature", days: 1, hours: 12, when: "morning", departHour: 7, departMin: 0, style: "small", groupMax: 10, level: "moderate", priceKind: "person", price: 4600, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 9.2, reviews: 388, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Sonamarg_%22Meadow_of_Gold%22_%2814592437483%29.jpg/960px-Sonamarg_%22Meadow_of_Gold%22_%2814592437483%29.jpg", alt: "The meadow at Sonamarg", mention: "Guests mention the last stretch of road.", includes: ["Small coach", "Guide", "Thajiwas entry"], excludes: ["Pony to the snow", "Lunch"], story: "A smaller coach than the Gulmarg run, because the road asks for it. Snow is a pony ride away, paid on the spot.", timeline: ["7:00 Leave Srinagar", "11:00 Sonamarg", "3:00 Drive back", "7:00 Back"], meet: "Hotel lobby in Srinagar.", meetShort: "Hotel pickup in Srinagar" },
+      { id: "dal-lunch", title: "Lunch on a private houseboat", place: "Srinagar", region: "Kashmir", category: "Food", days: 1, hours: 3, when: "afternoon", departHour: 13, departMin: 0, style: "private", groupMax: 4, level: "easy", priceKind: "group", vehicle: "boat", price: 14000, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 9.7, reviews: 126, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Dal_Lake%2C_Srinagar%2C_Jammu_and_Kashmir.jpg/960px-Dal_Lake%2C_Srinagar%2C_Jammu_and_Kashmir.jpg", alt: "Houseboats on Dal Lake", mention: "Guests mention the wazwan and the fact the boat is only theirs.", includes: ["Private boat", "Wazwan lunch", "Pickup"], excludes: ["Drinks beyond the table"], story: "The boat is yours for three hours. Lunch is cooked on board. The price does not change if you are two or four.", timeline: ["1:00 Pickup", "1:20 On the boat", "2:00 Lunch", "4:00 Back"], meet: "Hotel lobby, or the jetty if you are already on the lake.", meetShort: "Hotel pickup" },
+      { id: "kashmir-3", title: "Three days in Pahalgam and Gulmarg", place: "Srinagar", region: "Kashmir", category: "Nature", days: 3, hours: 72, when: "multi", departHour: 8, departMin: 0, style: "small", groupMax: 8, level: "moderate", priceKind: "person", price: 18600, langs: ["en"], pickup: true, cancelHours: 72, rating: 9.3, reviews: 214, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Trek_through_Kashmir_Valley%2C_Pahalgam_2.jpg/960px-Trek_through_Kashmir_Valley%2C_Pahalgam_2.jpg", alt: "A path through the Kashmir valley", mention: "Guests mention the two nights and the small group.", includes: ["Two nights", "Breakfast", "Drives and guide"], excludes: ["Gondola", "Dinner"], story: "Night one in Pahalgam, night two near Gulmarg, then back to Srinagar. Rooms are simple guesthouses, named in the confirmation.", timeline: ["Day 1 Srinagar to Pahalgam", "Day 2 Pahalgam to Gulmarg", "Day 3 Gulmarg to Srinagar by evening"], meet: "Hotel lobby in Srinagar on the morning you pick.", meetShort: "Hotel pickup in Srinagar" },
+      { id: "kashmir-high-road", title: "Kashmir High Road", place: "Srinagar", region: "Kashmir", category: "Nature", days: 6, hours: 144, when: "multi", departHour: 8, departMin: 0, style: "small", groupMax: 12, level: "moderate", priceKind: "person", price: 42800, langs: ["en", "hi"], pickup: true, cancelHours: 168, rating: 9.4, reviews: 186, weekdays: [1, 4], levelNote: "Moderate pace. Five nights are in named hotels, not a camp.", photo: "photo-1464822759023-fed622ff2c3b", alt: "A high mountain road with snow on the ridges", mention: "Guests mention the named hotels and the quiet morning on the boulevard.", includes: ["5 nights", "Breakfast", "Guide and drives"], excludes: ["Flights", "Gondola"], story: "Srinagar, Gulmarg, and Pahalgam over six days. You meet on Boulevard Road. The first night is in Srinagar so the rest of the road is unhurried.", timeline: ["Day 1 Srinagar", "Day 2 Gulmarg", "Day 3–4 Pahalgam", "Day 5 Srinagar gardens", "Day 6 Departure"], meet: "Boulevard Road, Srinagar.", meetShort: "Meet on Boulevard Road", href: "tour-details-demo.html" },
+      { id: "ladakh-5", title: "Five days on the Ladakh lakes", place: "Leh", region: "Ladakh", category: "Adventure", days: 5, hours: 120, when: "multi", departHour: 8, departMin: 0, style: "small", groupMax: 10, level: "hard", priceKind: "person", price: 42000, langs: ["en", "hi"], pickup: false, cancelHours: 168, rating: 9.5, reviews: 96, weekdays: [2, 5], levelNote: "Demanding. The first day stays in Leh so you can get used to the altitude.", photo: "photo-1544735716-392fe2489ffa", alt: "A Himalayan stupa with snow peaks behind it", mention: "Guests mention the acclimatisation day. The first night is in Leh on purpose.", includes: ["Four nights", "Breakfast", "Permits and vehicle"], excludes: ["Flights", "Dinner"], story: "Starts only on Tuesday and Friday, so the first day can be spent getting used to the altitude. Pangong and the high lakes follow.", timeline: ["Day 1 Leh, on foot", "Day 2 Sham valley", "Day 3 Pangong", "Day 4 High lakes", "Day 5 Back to Leh"], meet: "Your hotel lobby in Leh. This one does not collect you from the airport.", meetShort: "Meet at your Leh hotel" },
+      { id: "amber", title: "Amber Fort and old Jaipur", place: "Jaipur", region: "Rajasthan", category: "Culture", days: 1, hours: 5, when: "morning", departHour: 8, departMin: 0, style: "shared", groupMax: 18, level: "easy", priceKind: "person", price: 2200, langs: ["en", "hi", "fr"], pickup: true, cancelHours: 24, rating: 8.6, reviews: 2104, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Jaipur_03-2016_02_Amber_Fort.jpg/960px-Jaipur_03-2016_02_Amber_Fort.jpg", alt: "Amber Fort above Jaipur", mention: "Guests mention the fort. The elephant ride is not part of this.", includes: ["Fort entry", "Guide", "Old-city walk"], excludes: ["Elephant ride", "Lunch"], story: "Morning at Amber, then the lanes below the palace. Eighteen is the cap, and you will feel the group.", timeline: ["8:00 Pickup", "9:00 Amber", "11:30 Old city", "1:00 Back"], meet: "Hotel lobby in Jaipur.", meetShort: "Hotel pickup in Jaipur" },
+      { id: "jaipur-private", title: "Jaipur with your own car", place: "Jaipur", region: "Rajasthan", category: "Culture", days: 1, hours: 8, when: "morning", departHour: 9, departMin: 0, style: "private", groupMax: 3, level: "easy", priceKind: "group", vehicle: "car", price: 16000, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 9.4, reviews: 340, weekdays: null, photo: "photo-1477587458883-47145ed94245", alt: "A pink sandstone facade", mention: "Guests mention choosing the stops. The car takes three.", includes: ["Car and driver", "Guide", "Fort entries"], excludes: ["Lunch", "Elephant"], story: "Amber, the observatory, and the old city, in the order you care about. The price is for the car, not per person.", timeline: ["9:00 Pickup", "Stops you agree that morning", "5:00 Back"], meet: "Hotel lobby in Jaipur.", meetShort: "Hotel pickup in Jaipur" },
+      { id: "alleppey", title: "A day on the Alleppey backwaters", place: "Alleppey", region: "Kerala", category: "Water", days: 1, hours: 8, when: "morning", departHour: 8, departMin: 30, style: "small", groupMax: 8, level: "easy", priceKind: "person", price: 3800, langs: ["en"], pickup: true, cancelHours: 24, rating: 9.0, reviews: 870, weekdays: null, photo: "photo-1602216056096-3b40cc0c9944", alt: "A narrow boat on a palm-lined canal", mention: "Guests mention lunch on the boat.", includes: ["Boat", "Lunch", "Guide"], excludes: ["A houseboat overnight"], story: "Eight people, one boat, a cooked lunch, and the canals south of Alleppey. This is a day, not an overnight houseboat.", timeline: ["8:30 Pickup in Alleppey", "9:00 On the water", "1:00 Lunch", "4:30 Back"], meet: "Hotel lobby in Alleppey.", meetShort: "Hotel pickup in Alleppey" },
+      { id: "kochi-food", title: "Fort Kochi after dark, eating", place: "Fort Kochi", region: "Kerala", category: "Food", days: 1, hours: 3.5, when: "evening", departHour: 17, departMin: 30, style: "small", groupMax: 8, level: "easy", priceKind: "person", price: 1900, langs: ["en"], pickup: false, cancelHours: 24, rating: 9.5, reviews: 456, weekdays: null, photo: "photo-1585937421612-70a008356fbe", alt: "A shared plate of food", mention: "Guests mention the tastings. Come hungry; this is dinner.", includes: ["Six tastings", "Guide", "Water"], excludes: ["Alcohol"], story: "A walk through Fort Kochi that is mostly eating. You meet at the parade ground. There is no hotel pickup.", timeline: ["5:30 Meet at the parade ground", "Six stops", "9:00 End near the Chinese nets"], meet: "Parade ground, Fort Kochi.", meetShort: "Meet at the parade ground" },
+      { id: "goa-spice", title: "Spice plantation, then an hour at the beach", place: "Ponda", region: "Goa", category: "Food", days: 1, hours: 6, when: "afternoon", departHour: 13, departMin: 0, style: "shared", groupMax: 20, level: "easy", priceKind: "person", price: 2100, langs: ["en", "hi"], pickup: true, cancelHours: 0, rating: 8.2, reviews: 980, weekdays: [1, 3, 5, 6], photo: "photo-1512343879784-a960bf40e7f2", alt: "A wide sandy beach", mention: "Guests mention the plantation lunch. The beach stop is short.", includes: ["Plantation entry", "Lunch", "Beach stop"], excludes: ["Hotel drinks"], story: "Runs Monday, Wednesday, Friday, and Saturday. Lunch is at the plantation. The price is non-refundable once you request it.", timeline: ["1:00 Pickup from North Goa", "2:00 Plantation", "4:30 Beach", "7:00 Back"], meet: "Hotel lobby in North Goa.", meetShort: "Hotel pickup in North Goa" },
+      { id: "rohtang", title: "Rohtang from Manali, if the pass is open", place: "Manali", region: "Himachal", category: "Adventure", days: 1, hours: 10, when: "morning", departHour: 7, departMin: 0, style: "shared", groupMax: 12, level: "hard", priceKind: "person", price: 3500, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 8.4, reviews: 1502, weekdays: null, levelNote: "Demanding. If the pass is closed, the day goes to Solang for the same price.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Manali_to_Rohtang_Pass_01.jpg/960px-Manali_to_Rohtang_Pass_01.jpg", alt: "The road from Manali toward Rohtang Pass", mention: "Guests mention the permit, which is included.", includes: ["Permit", "Return drive", "Guide"], excludes: ["Snow gear", "Lunch"], story: "The pass decides the day. If it is closed, you still go out, to Solang, for the same price.", timeline: ["7:00 Leave Manali", "Morning at the pass or Solang", "5:00 Back"], meet: "Hotel lobby in Manali.", meetShort: "Hotel pickup in Manali" },
+      { id: "varanasi", title: "Dawn on the ghats", place: "Varanasi", region: "Uttar Pradesh", category: "Culture", days: 1, hours: 4, when: "morning", departHour: 5, departMin: 0, style: "small", groupMax: 8, level: "easy", priceKind: "person", price: 1600, langs: ["en", "hi"], pickup: false, cancelHours: 24, rating: 9.6, reviews: 2200, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Dawn_in_the_ghats%2C_Varanasi_%284758053194%29.jpg/960px-Dawn_in_the_ghats%2C_Varanasi_%284758053194%29.jpg", alt: "The ghats of Varanasi at dawn", mention: "Guests mention the boat, which is included, and the early start.", includes: ["Boat", "Guide", "Tea"], excludes: ["Temple donations"], story: "Meet at Assi Ghat before first light. A boat, a walk north, and tea. You make your own way there.", timeline: ["5:00 Assi Ghat", "5:20 Boat", "7:00 Walk", "9:00 End near Dashashwamedh"], meet: "Assi Ghat steps.", meetShort: "Meet at Assi Ghat" },
+      { id: "ranthambore", title: "A private morning jeep in Ranthambore", place: "Sawai Madhopur", region: "Rajasthan", category: "Wildlife", days: 1, hours: 4, when: "morning", departHour: 6, departMin: 0, style: "private", groupMax: 6, level: "moderate", priceKind: "group", vehicle: "jeep", price: 7200, langs: ["en", "hi"], pickup: true, cancelHours: 72, rating: 9.1, reviews: 640, weekdays: [0, 1, 2, 4, 5, 6], levelNote: "The park is closed on Wednesday. Seeing a tiger is not a promise.", photo: "photo-1561731216-c3a4d99437d5", alt: "A tiger in dry grass", mention: "Guests mention that the park fee is already in the price.", includes: ["Private jeep", "Park fee", "Naturalist"], excludes: ["A camera"], story: "One jeep, up to six, park fee included. Closed Wednesday, which is the park’s rule. Seeing a tiger is not a promise.", timeline: ["6:00 Pickup from a Sawai Madhopur hotel", "Park gate", "About three hours inside", "Back mid-morning"], meet: "Hotel lobby in Sawai Madhopur.", meetShort: "Hotel pickup" },
+      { id: "jaisalmer", title: "A night in the dunes", place: "Jaisalmer", region: "Rajasthan", category: "Adventure", days: 2, hours: 36, when: "multi", departHour: 14, departMin: 0, style: "small", groupMax: 12, level: "moderate", priceKind: "person", price: 9800, langs: ["en", "hi"], pickup: true, cancelHours: 48, rating: 8.9, reviews: 410, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Sunset_Sand_Dunes_Jaisalmer_Dec14_DSC_6540.jpg/960px-Sunset_Sand_Dunes_Jaisalmer_Dec14_DSC_6540.jpg", alt: "Sand dunes near Jaisalmer at sunset", mention: "Guests mention the camp dinner and the early return.", includes: ["Camp night", "Dinner and breakfast", "Jeep to the dunes"], excludes: ["Lunch", "A private tent"], story: "Leave Jaisalmer after lunch, sleep at the camp, and be back the next morning. Tents are shared in pairs unless you ask, and asking changes the price.", timeline: ["2:00 Leave Jaisalmer", "Sunset at the dunes", "Dinner at camp", "Back by 11:00 the next day"], meet: "Hotel lobby in Jaisalmer.", meetShort: "Hotel pickup in Jaisalmer" },
+      { id: "munnar", title: "Tea hills of Munnar, from Kochi", place: "Munnar", region: "Kerala", category: "Nature", days: 1, hours: 9, when: "morning", departHour: 7, departMin: 30, style: "shared", groupMax: 16, level: "moderate", priceKind: "person", price: 3200, langs: ["en"], pickup: true, cancelHours: 24, rating: 8.7, reviews: 705, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Munnar_tea_gardens.jpg/960px-Munnar_tea_gardens.jpg", alt: "Tea gardens at Munnar", mention: "Guests mention the drive. Four hours of this day is the road.", includes: ["Return drive from Kochi", "Tea-factory visit", "Guide"], excludes: ["Lunch"], story: "A long day from Kochi. You are in the hills for about three hours. The rest is the drive, and the price assumes you know that.", timeline: ["7:30 Leave Kochi", "11:30 Munnar", "2:30 Drive down", "6:30 Back"], meet: "Hotel lobby in Kochi or Fort Kochi.", meetShort: "Hotel pickup in Kochi" },
+      { id: "srinagar-bus", title: "Srinagar from a coach seat", place: "Srinagar", region: "Kashmir", category: "Culture", days: 1, hours: 7, when: "morning", departHour: 9, departMin: 0, style: "shared", groupMax: 30, level: "easy", priceKind: "person", price: 1200, langs: ["en", "hi"], pickup: true, cancelHours: 24, rating: 7.6, reviews: 310, weekdays: null, img: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Dal_Lake_Hazratbal_Srinagar.jpg/960px-Dal_Lake_Hazratbal_Srinagar.jpg", alt: "Dal Lake with the hills behind Hazratbal", mention: "Guests mention the pace. You will not linger anywhere.", includes: ["Coach", "Guide", "Mughal garden entry"], excludes: ["Long stops"], story: "The inexpensive way around the gardens and the lake. Thirty seats, short stops. Sold out on Wednesdays in this sample.", timeline: ["9:00 Pickup", "Gardens and a lake stop", "4:00 Back"], meet: "Hotel lobby in Srinagar.", meetShort: "Hotel pickup in Srinagar" }
+    ];
+
+    const DURS = [["half", "Under 5 hours"], ["day", "A full day"], ["2", "2 days"], ["mid", "3–5 days"], ["long", "6 days or more"]];
+    const WHENS = [["morning", "Morning"], ["afternoon", "Afternoon"], ["evening", "Evening"], ["multi", "Multi-day"]];
+    const STYLES = [["private", "Private"], ["small", "Small group"], ["shared", "Larger group"]];
+    const LEVELS = [["easy", "Easy"], ["moderate", "Moderate"], ["hard", "Demanding"]];
+    const LANGS = [["en", "English"], ["hi", "Hindi"], ["ks", "Kashmiri"], ["fr", "French"]];
+    const LANG_NAME = { en: "English", hi: "Hindi", ks: "Kashmiri", fr: "French" };
+    const DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const PAGE = 8;
+    const money = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+    const num = new Intl.NumberFormat("en-IN");
+    const prettyFmt = new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short" });
+    const cancelFmt = new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+
+    const state = {
+      q: "", date: "", adults: 2, children: 0, min: null, max: null,
+      dur: new Set(), region: new Set(), cat: new Set(), when: new Set(), style: new Set(), lang: new Set(), level: new Set(),
+      cancel: false, pickup: false, rating: 0, sort: "match", view: "list", page: 1,
+      showOff: false, showSold: false, savedOnly: false,
+      compare: [], saved: new Set()
+    };
+
+    const $ = (id) => document.getElementById(id);
+    let toastTimer = 0;
+    let priceTimer = 0;
+    let searchTimer = 0;
+    let lastLive = "";
+    let filterReturn = null;
+
+    function isoOf(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+    function parseIso(iso) { return new Date(iso + "T12:00:00"); }
+    function todayIso() { const d = new Date(); d.setHours(12, 0, 0, 0); return isoOf(d); }
+    function defaultDate() { const d = new Date(); d.setDate(d.getDate() + 14); return isoOf(d); }
+    function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+    function pretty(iso) { return prettyFmt.format(parseIso(iso)); }
+    function inr(n) { return money.format(Math.round(n)); }
+    function picture(t) { return t.img || PHOTO(t.photo); }
+    function tourById(id) { return TOURS.find((t) => t.id === id); }
+    function bucket(t) {
+      if (t.days >= 6) return "long";
+      if (t.days >= 3) return "mid";
+      if (t.days === 2) return "2";
+      if (t.hours < 5) return "half";
+      return "day";
+    }
+    function whoLabel() {
+      const a = state.adults + " adult" + (state.adults === 1 ? "" : "s");
+      if (!state.children) return a;
+      return a + ", " + state.children + " child" + (state.children === 1 ? "" : "ren");
+    }
+    function people() { return state.adults + state.children; }
+    function childUnit(t) { return Math.round(t.price * 0.7); }
+    function vehicles(t) { return Math.ceil(people() / t.groupMax); }
+    function partyTotal(t) {
+      if (t.priceKind === "group") return t.price * vehicles(t);
+      return t.price * state.adults + childUnit(t) * state.children;
+    }
+    function bounds() {
+      const totals = TOURS.map(partyTotal);
+      const lo = Math.floor(Math.min(...totals) / 500) * 500;
+      const hi = Math.ceil(Math.max(...totals) / 500) * 500;
+      return [Math.max(0, lo), Math.max(lo + 500, hi)];
+    }
+    function rangeNow() {
+      const [lo, hi] = bounds();
+      return [state.min == null ? lo : state.min, state.max == null ? hi : state.max];
+    }
+    function seatsLeft(t, iso) {
+      const day = parseIso(iso).getDay();
+      if (t.id === "pahalgam-day") return 3;
+      if (t.id === "srinagar-bus" && day === 3) return 0;
+      if (t.priceKind === "group" && day === 0) return 0;
+      let n = 0;
+      for (const ch of t.id) n += ch.charCodeAt(0);
+      return Math.min(t.groupMax, 6 + ((n + day) % 8));
+    }
+    function runsOn(t, iso) { return !t.weekdays || t.weekdays.includes(parseIso(iso).getDay()); }
+    function status(t, iso = state.date) {
+      if (!runsOn(t, iso)) return "off";
+      if (seatsLeft(t, iso) === 0) return "sold";
+      return "ok";
+    }
+    function nextOpen(t, fromIso) {
+      const start = parseIso(fromIso);
+      for (let i = 1; i <= 21; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const iso = isoOf(d);
+        if (runsOn(t, iso) && seatsLeft(t, iso) > 0) return iso;
+      }
+      return null;
+    }
+    function durationLabel(t) {
+      if (t.days > 1) return t.days + " days";
+      const h = Math.floor(t.hours);
+      const mins = Math.round((t.hours - h) * 60);
+      if (!mins) return h === 1 ? "1 hour" : h + " hours";
+      return h + " h " + mins + " min";
+    }
+    function departClock(t) {
+      const ampm = t.departHour >= 12 ? "pm" : "am";
+      const hr = ((t.departHour + 11) % 12) + 1;
+      const mm = String(t.departMin).padStart(2, "0");
+      return hr + ":" + mm + " " + ampm;
+    }
+    function groupLabel(t) {
+      if (t.style === "private") return "Private · up to " + t.groupMax;
+      if (t.style === "small") return "Small group · max " + t.groupMax;
+      return "Shared · max " + t.groupMax;
+    }
+    function runsLabel(t) {
+      if (!t.weekdays) return "";
+      return "Runs " + t.weekdays.map((d) => DAY[d].slice(0, 3)).join(", ");
+    }
+    function langLabel(t) { return t.langs.map((c) => LANG_NAME[c]).join(", "); }
+    function words(r) {
+      if (r >= 9.5) return "Exceptional";
+      if (r >= 9) return "Excellent";
+      if (r >= 8.5) return "Very good";
+      if (r >= 8) return "Good";
+      return "Pleasant";
+    }
+    function scoreClass(r) { return r >= 9 ? "" : r >= 8 ? "is-mid" : "is-low"; }
+    function cancelInfo(t) {
+      if (!t.cancelHours) return { kind: "no", text: "Non-refundable" };
+      const start = parseIso(state.date);
+      start.setHours(t.departHour, t.departMin, 0, 0);
+      const deadline = new Date(start.getTime() - t.cancelHours * 3600000);
+      if (deadline.getTime() <= Date.now()) return { kind: "closed", text: "Free cancellation has closed for this date" };
+      return { kind: "yes", text: "Free cancellation until " + cancelFmt.format(deadline) };
+    }
+    function priceDetail(t) {
+      const each = inr(partyTotal(t) / people());
+      if (t.priceKind === "group") {
+        const n = vehicles(t);
+        const noun = n > 1 ? t.vehicle + "s" : t.vehicle;
+        if (n === 1) return inr(t.price) + " for the " + noun + " · " + each + " a person";
+        return "Needs " + n + " " + noun + " · " + each + " a person";
+      }
+      if (state.children) return inr(t.price) + " an adult · children " + inr(childUnit(t));
+      return each + " a person";
+    }
+    function extraLine(t) {
+      const items = t.excludes.filter((item) => !/refund|small group/i.test(item));
+      if (!items.length) return "";
+      return "Not included: " + items.slice(0, 2).join(", ");
+    }
+    function matchScore(t) {
+      const trusted = (t.reviews * t.rating + 40 * 8.4) / (t.reviews + 40);
+      return trusted + (t.style !== "shared" ? 0.15 : 0) + (cancelInfo(t).kind === "yes" ? 0.08 : 0) + (t.pickup ? 0.04 : 0);
+    }
+    function valueScore(t) { return t.rating / (partyTotal(t) / 1000); }
+    function pass(t, ignore) {
+      const st = status(t);
+      if (st === "off" && !state.showOff && ignore !== "avail") return false;
+      if (st === "sold" && !state.showSold && ignore !== "avail") return false;
+      if (state.savedOnly && !state.saved.has(t.id) && ignore !== "saved") return false;
+      if (state.q && ignore !== "q") {
+        const hay = [t.title, t.place, t.region, t.category, t.mention, t.includes.join(" "), langLabel(t)].join(" ").toLowerCase();
+        if (!hay.includes(state.q.trim().toLowerCase())) return false;
+      }
+      const [min, max] = rangeNow();
+      const [lo, hi] = bounds();
+      const full = min <= lo && max >= hi;
+      if (!full && ignore !== "price" && (partyTotal(t) < min || partyTotal(t) > max)) return false;
+      if (ignore !== "region" && state.region.size && !state.region.has(t.region)) return false;
+      if (ignore !== "cat" && state.cat.size && !state.cat.has(t.category)) return false;
+      if (ignore !== "dur" && state.dur.size && !state.dur.has(bucket(t))) return false;
+      if (ignore !== "when" && state.when.size && !state.when.has(t.when)) return false;
+      if (ignore !== "style" && state.style.size && !state.style.has(t.style)) return false;
+      if (ignore !== "level" && state.level.size && !state.level.has(t.level)) return false;
+      if (ignore !== "lang" && state.lang.size && !t.langs.some((code) => state.lang.has(code))) return false;
+      if (ignore !== "cancel" && state.cancel && cancelInfo(t).kind !== "yes") return false;
+      if (ignore !== "pickup" && state.pickup && !t.pickup) return false;
+      if (ignore !== "rating" && state.rating && t.rating < state.rating) return false;
+      return true;
+    }
+    function visible() {
+      const rows = TOURS.filter((t) => pass(t));
+      const rank = {
+        match: (a, b) => matchScore(b) - matchScore(a),
+        price: (a, b) => partyTotal(a) - partyTotal(b),
+        value: (a, b) => valueScore(b) - valueScore(a),
+        rating: (a, b) => b.rating - a.rating || b.reviews - a.reviews,
+        reviews: (a, b) => b.reviews - a.reviews,
+        short: (a, b) => a.hours - b.hours,
+        long: (a, b) => b.hours - a.hours
+      };
+      rows.sort((a, b) => (status(a) === "ok" ? 0 : 1) - (status(b) === "ok" ? 0 : 1) || rank[state.sort](a, b) || a.title.localeCompare(b.title));
+      return rows;
+    }
+    function facetCount(kind, value) {
+      return TOURS.filter((t) => {
+        if (!pass(t, kind)) return false;
+        if (kind === "region") return t.region === value;
+        if (kind === "cat") return t.category === value;
+        if (kind === "dur") return bucket(t) === value;
+        if (kind === "when") return t.when === value;
+        if (kind === "style") return t.style === value;
+        if (kind === "level") return t.level === value;
+        if (kind === "lang") return t.langs.includes(value);
+        if (kind === "cancel") return cancelInfo(t).kind === "yes";
+        if (kind === "pickup") return t.pickup;
+        if (kind === "rating") return t.rating >= Number(value);
+        return false;
+      }).length;
+    }
+    function activeCount() {
+      let n = 0;
+      if (state.q) n += 1;
+      if (state.min != null || state.max != null) n += 1;
+      n += state.dur.size + state.region.size + state.cat.size + state.when.size + state.style.size + state.lang.size + state.level.size;
+      if (state.cancel) n += 1;
+      if (state.pickup) n += 1;
+      if (state.rating) n += 1;
+      if (state.savedOnly) n += 1;
+      if (state.showOff) n += 1;
+      if (state.showSold) n += 1;
+      return n;
+    }
+
+    function readUrl() {
+      const p = new URLSearchParams(location.search);
+      state.q = (p.get("q") || "").slice(0, 80);
+      const date = p.get("date") || "";
+      state.date = /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= todayIso() ? date : defaultDate();
+      const adults = Number(p.get("adults"));
+      const children = Number(p.get("children"));
+      if (adults >= 1 && adults <= 8) state.adults = adults;
+      if (children >= 0 && children <= 6) state.children = children;
+      if (p.has("min") && Number.isFinite(Number(p.get("min")))) state.min = Number(p.get("min"));
+      if (p.has("max") && Number.isFinite(Number(p.get("max")))) state.max = Number(p.get("max"));
+      const take = (key, set, allowed) => (p.get(key) || "").split(",").filter((v) => allowed.has(v)).forEach((v) => set.add(v));
+      take("dur", state.dur, new Set(DURS.map((d) => d[0])));
+      take("region", state.region, new Set(TOURS.map((t) => t.region)));
+      take("cat", state.cat, new Set(TOURS.map((t) => t.category)));
+      take("when", state.when, new Set(WHENS.map((d) => d[0])));
+      take("style", state.style, new Set(STYLES.map((d) => d[0])));
+      take("lang", state.lang, new Set(LANGS.map((d) => d[0])));
+      take("level", state.level, new Set(LEVELS.map((d) => d[0])));
+      state.cancel = p.get("cancel") === "1";
+      state.pickup = p.get("pickup") === "1";
+      const rating = Number(p.get("rating"));
+      if (rating === 8 || rating === 9) state.rating = rating;
+      const sorts = ["match", "price", "value", "rating", "reviews", "short", "long"];
+      if (sorts.includes(p.get("sort"))) state.sort = p.get("sort");
+      if (p.get("view") === "grid") state.view = "grid";
+      const page = Number(p.get("page"));
+      if (page >= 1 && page <= 20) state.page = page;
+      state.showOff = p.get("off") === "1";
+      state.showSold = p.get("sold") === "1";
+      state.savedOnly = p.get("saved") === "1";
+      state.compare = (p.get("cmp") || "").split(",").filter((id, i, all) => tourById(id) && all.indexOf(id) === i).slice(0, 3);
+      try {
+        const raw = JSON.parse(localStorage.getItem("wch-tours-saved") || "[]");
+        if (Array.isArray(raw)) raw.forEach((id) => { if (tourById(id)) state.saved.add(id); });
+      } catch (err) { /* keep an empty saved set */ }
+    }
+    function writeUrl() {
+      const p = new URLSearchParams();
+      if (state.q) p.set("q", state.q);
+      p.set("date", state.date);
+      if (state.adults !== 2) p.set("adults", String(state.adults));
+      if (state.children) p.set("children", String(state.children));
+      if (state.min != null) p.set("min", String(state.min));
+      if (state.max != null) p.set("max", String(state.max));
+      const put = (key, set) => { if (set.size) p.set(key, [...set].join(",")); };
+      put("dur", state.dur); put("region", state.region); put("cat", state.cat);
+      put("when", state.when); put("style", state.style); put("lang", state.lang); put("level", state.level);
+      if (state.cancel) p.set("cancel", "1");
+      if (state.pickup) p.set("pickup", "1");
+      if (state.rating) p.set("rating", String(state.rating));
+      if (state.sort !== "match") p.set("sort", state.sort);
+      if (state.view === "grid") p.set("view", "grid");
+      if (state.page > 1) p.set("page", String(state.page));
+      if (state.showOff) p.set("off", "1");
+      if (state.showSold) p.set("sold", "1");
+      if (state.savedOnly) p.set("saved", "1");
+      if (state.compare.length) p.set("cmp", state.compare.join(","));
+      const url = p.toString() ? location.pathname + "?" + p.toString() : location.pathname;
+      if (url !== location.pathname + location.search) history.replaceState(null, "", url);
+    }
+    function saveSaved() {
+      try { localStorage.setItem("wch-tours-saved", JSON.stringify([...state.saved])); } catch (err) { /* ignore quota */ }
+    }
+    function toast(text) {
+      const el = $("toast");
+      el.textContent = text;
+      el.classList.add("is-on");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove("is-on"), 2400);
+    }
+
+    function pillBox(id, key, options) {
+      $(id).innerHTML = options.map(([value, label]) =>
+        `<label class="pill">${esc(label)} <span class="n"></span><input type="checkbox" data-facet="${key}" value="${esc(value)}"></label>`
+      ).join("");
+    }
+    function checkBox(id, key, values) {
+      $(id).innerHTML = values.map((value) =>
+        `<label class="check"><input type="checkbox" data-facet="${key}" value="${esc(value)}"><span>${esc(value)}</span><span class="n"></span></label>`
+      ).join("");
+    }
+    function buildFacets() {
+      pillBox("facet-dur", "dur", DURS);
+      pillBox("facet-when", "when", WHENS);
+      pillBox("facet-style", "style", STYLES);
+      pillBox("facet-level", "level", LEVELS);
+      checkBox("facet-region", "region", [...new Set(TOURS.map((t) => t.region))].sort());
+      checkBox("facet-cat", "cat", [...new Set(TOURS.map((t) => t.category))].sort());
+      checkBox("facet-lang", "lang", LANGS.map(([code, label]) => code).map((code) => code));
+      $("facet-lang").querySelectorAll(".check").forEach((label) => {
+        const input = label.querySelector("input");
+        label.querySelector("span").textContent = LANG_NAME[input.value];
+      });
+    }
+
+    function readMoney(el, which) {
+      const [lo, hi] = bounds();
+      if (el.value.trim() === "") return null;
+      let n = Math.round(Number(el.value));
+      if (!Number.isFinite(n)) return null;
+      n = Math.min(hi, Math.max(0, n));
+      if (which === "min" && state.max != null) n = Math.min(n, state.max);
+      if (which === "max" && state.min != null) n = Math.max(n, state.min);
+      if (which === "min" && n <= lo) return null;
+      if (which === "max" && n >= hi) return null;
+      return n;
+    }
+    function sortCopy() {
+      const who = whoLabel();
+      const when = pretty(state.date);
+      if (state.sort === "price") return "Lowest total for " + who + " on " + when + ". Tours that do not run that day stay at the bottom.";
+      if (state.sort === "value") return "Best value is the guest score for each ₹1,000 of your total, so a strong cheaper tour can rank above a pricey one.";
+      if (state.sort === "rating") return "Highest score first. A 9.6 from 2,200 reviews and a 9.6 from 100 reviews are not treated as the same once you switch to Best match.";
+      if (state.sort === "reviews") return "Most reviews first. Useful when you want the tours other people actually finished.";
+      if (state.sort === "short") return "Shortest first, by hours on the ground.";
+      if (state.sort === "long") return "Longest first. Multi-day tours rise to the top.";
+      return "Best match trusts a score more when more people have reviewed it, then gives a small lift to a small group, free cancellation that is still open, and hotel pickup.";
+    }
+    function badgeFor(t, topId) {
+      if (t.id === topId && status(t) === "ok") {
+        const labels = { match: "Best match", price: "Lowest total", value: "Best value", rating: "Highest score", reviews: "Most reviewed", short: "Shortest", long: "Longest" };
+        return { text: labels[state.sort], hot: true };
+      }
+      const seats = seatsLeft(t, state.date);
+      if (status(t) === "ok" && seats > 0 && seats <= 4) return { text: seats + " seat" + (seats === 1 ? "" : "s") + " left", hot: false };
+      if (t.reviews >= 1000 && t.rating >= 9) return { text: "Best seller", hot: true };
+      return null;
+    }
+    function cardHtml(t, index, topId) {
+      const st = status(t);
+      const cancel = cancelInfo(t);
+      const badge = badgeFor(t, topId);
+      const place = t.place === t.region ? t.place : t.place + ", " + t.region;
+      const bits = [durationLabel(t), t.when === "multi" ? (runsLabel(t) || "Starts any day") : "Leaves " + departClock(t), groupLabel(t)];
+      const saved = state.saved.has(t.id);
+      const compared = state.compare.includes(t.id);
+      const eager = state.page === 1 && index < 2;
+      const titleInner = t.href
+        ? `<a href="${esc(t.href)}">${esc(t.title)}</a>`
+        : `<button type="button" data-open="${esc(t.id)}">${esc(t.title)}</button>`;
+      let action = "";
+      if (st === "ok") {
+        action = t.href
+          ? `<a class="btn btn--small" href="${esc(t.href)}">See the tour</a>`
+          : `<button class="btn btn--small" type="button" data-open="${esc(t.id)}">Quick look</button>`;
+      } else {
+        const next = nextOpen(t, state.date);
+        const why = st === "sold" ? "Sold out on " + pretty(state.date) : "Does not run on " + DAY[parseIso(state.date).getDay()];
+        action = `<p class="warn">${esc(why)}</p>` + (next ? `<button class="btn btn--small" type="button" data-date="${next}">Next date · ${esc(pretty(next))}</button>` : `<p class="muted">No open date in the next 3 weeks</p>`);
+      }
+      const cancelClass = cancel.kind === "yes" ? "ok" : cancel.kind === "no" ? "warn" : "muted";
+      return `<article class="card${compared ? " is-compared" : ""}${st === "ok" ? "" : " is-dim"}">
+        <div class="photo">
+          <img src="${esc(picture(t))}" alt="${esc(t.alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">
+          ${badge ? `<span class="badge${badge.hot ? " is-hot" : " is-low"}">${esc(badge.text)}</span>` : ""}
+          <button class="save" type="button" data-save="${esc(t.id)}" aria-pressed="${saved ? "true" : "false"}" aria-label="${saved ? "Remove from saved" : "Save"} ${esc(t.title)}">${saved ? "♥" : "♡"}</button>
+        </div>
+        <div class="main">
+          <p class="kicker">${esc(t.category)} · ${esc(place)}</p>
+          <h2>${titleInner}</h2>
+          <div class="score"><b class="${scoreClass(t.rating)}">${t.rating.toFixed(1)}</b><span><strong>${words(t.rating)}</strong><span>${num.format(t.reviews)} reviews</span></span></div>
+          <p class="meta">${esc(bits.join(" · "))}${runsLabel(t) && t.when !== "multi" ? " · " + esc(runsLabel(t)) : ""}</p>
+          <p class="meta">${esc(t.meetShort)} · ${esc(langLabel(t))}</p>
+          <p class="mention">${esc(t.mention)}</p>
+          ${t.levelNote ? `<p class="expect">${esc(t.levelNote)}</p>` : ""}
+          <div class="tags">${t.includes.slice(0, 3).map((item) => `<span class="tag">${esc(item)}</span>`).join("")}</div>
+          ${extraLine(t) ? `<p class="miss">${esc(extraLine(t))}</p>` : ""}
+        </div>
+        <div class="buy">
+          <p class="total">${inr(partyTotal(t))}</p>
+          <p class="sub">for ${esc(whoLabel())}</p>
+          <p class="sub">${esc(priceDetail(t))}</p>
+          <p class="${cancelClass}">${esc(cancel.text)}</p>
+          ${action}
+          ${(t.href && st === "ok") || st !== "ok" ? `<button class="textlink" type="button" data-open="${esc(t.id)}">Quick look</button>` : ""}
+          <label class="cmp"><input type="checkbox" data-cmp="${esc(t.id)}" ${compared ? "checked" : ""}> Compare</label>
+        </div>
+      </article>`;
+    }
+
+    function appliedChips() {
+      const chips = [];
+      if (state.q) chips.push(["q", "", "“" + state.q + "”"]);
+      if (state.min != null || state.max != null) {
+        const [min, max] = rangeNow();
+        chips.push(["price", "", inr(min) + "–" + inr(max)]);
+      }
+      const named = [
+        ["dur", state.dur, DURS], ["when", state.when, WHENS], ["style", state.style, STYLES],
+        ["level", state.level, LEVELS], ["lang", state.lang, LANGS]
+      ];
+      named.forEach(([key, set, options]) => {
+        set.forEach((value) => {
+          const label = (options.find((item) => item[0] === value) || [value, value])[1];
+          chips.push([key, value, label]);
+        });
+      });
+      state.region.forEach((value) => chips.push(["region", value, value]));
+      state.cat.forEach((value) => chips.push(["cat", value, value]));
+      if (state.rating) chips.push(["rating", "", state.rating + "+ score"]);
+      if (state.cancel) chips.push(["cancel", "", "Free cancellation"]);
+      if (state.pickup) chips.push(["pickup", "", "Hotel pickup"]);
+      if (state.savedOnly) chips.push(["savedOnly", "", "Saved"]);
+      if (state.showOff) chips.push(["showOff", "", "Including closed days"]);
+      if (state.showSold) chips.push(["showSold", "", "Including sold out"]);
+      $("applied").innerHTML = chips.map(([key, value, label]) =>
+        `<button type="button" data-drop="${esc(key)}" data-value="${esc(value)}">${esc(label)} ×</button>`
+      ).join("");
+    }
+    function updateFacetInputs() {
+      document.querySelectorAll("[data-facet]").forEach((input) => {
+        const set = state[input.dataset.facet];
+        input.checked = set.has(input.value);
+        const n = facetCount(input.dataset.facet, input.value);
+        const count = input.parentElement.querySelector(".n");
+        if (count) count.textContent = String(n);
+        input.disabled = n === 0 && !input.checked;
+        input.parentElement.classList.toggle("is-zero", n === 0 && !input.checked);
+      });
+      document.querySelectorAll('input[name="rating"]').forEach((input) => { input.checked = Number(input.value) === state.rating; });
+      document.querySelectorAll("[data-toggle]").forEach((input) => { input.checked = !!state[input.dataset.toggle]; });
+      document.querySelectorAll("[data-quick]").forEach((button) => {
+        const kind = button.dataset.quick;
+        const value = button.dataset.value;
+        let on = false;
+        let n = 0;
+        if (kind === "cancel") { on = state.cancel; n = facetCount("cancel", "1"); }
+        else if (kind === "pickup") { on = state.pickup; n = facetCount("pickup", "1"); }
+        else if (kind === "rating") { on = state.rating >= Number(value); n = facetCount("rating", value); }
+        else { on = state[kind].has(value); n = facetCount(kind, value); }
+        button.setAttribute("aria-pressed", on ? "true" : "false");
+        button.querySelector(".n").textContent = String(n);
+        button.disabled = n === 0 && !on;
+      });
+    }
+    function drawHist() {
+      const [lo, hi] = bounds();
+      const [min, max] = rangeNow();
+      const bins = 14;
+      const step = (hi - lo) / bins || 1;
+      const counts = Array(bins).fill(0);
+      TOURS.forEach((t) => {
+        if (!pass(t, "price")) return;
+        let i = Math.floor((partyTotal(t) - lo) / step);
+        if (i < 0) i = 0;
+        if (i >= bins) i = bins - 1;
+        counts[i] += 1;
+      });
+      const peak = Math.max(1, ...counts);
+      $("hist").innerHTML = counts.map((count, i) => {
+        const start = Math.round(lo + i * step);
+        const end = Math.round(lo + (i + 1) * step);
+        const inside = end >= min && start <= max;
+        const h = Math.max(4, Math.round((count / peak) * 52));
+        const noun = count === 1 ? "tour" : "tours";
+        return `<button type="button" data-bin="${i}" class="${inside && (state.min != null || state.max != null) ? "is-in" : ""}" style="height:${h}px" ${count ? "" : "disabled"} aria-label="${count} ${noun} from ${inr(start)} to ${inr(end)}"></button>`;
+      }).join("");
+      $("hist").querySelectorAll("[data-bin]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const i = Number(button.dataset.bin);
+          state.min = Math.round(lo + i * step);
+          state.max = Math.round(lo + (i + 1) * step);
+          if (state.min <= lo) state.min = null;
+          if (state.max >= hi) state.max = null;
+          state.page = 1;
+          render();
+        });
+      });
+      $("price-label").textContent = inr(min) + " – " + inr(max) + " for " + whoLabel();
+      if (document.activeElement !== $("min")) $("min").value = state.min == null ? "" : String(state.min);
+      if (document.activeElement !== $("max")) $("max").value = state.max == null ? "" : String(state.max);
+      $("min").placeholder = "Any";
+      $("max").placeholder = "Any";
+    }
+    function hiddenNote(rows) {
+      const blocked = TOURS.filter((t) => status(t) !== "ok" && pass(t, "avail") && !rows.includes(t));
+      const off = blocked.filter((t) => status(t) === "off").length;
+      const sold = blocked.filter((t) => status(t) === "sold").length;
+      if (!blocked.length) { $("insight").hidden = true; return; }
+      const bits = [];
+      if (off) bits.push(off + (off === 1 ? " tour does not run" : " tours do not run"));
+      if (sold) bits.push(sold + (sold === 1 ? " is sold out" : " are sold out"));
+      $("insight-copy").textContent = bits.join(", and ") + " on " + pretty(state.date) + ". They are hidden so the list stays bookable.";
+      $("insight").hidden = false;
+    }
+    function emptyState() {
+      const ideas = [];
+      const checks = [
+        ["q", "Clear the search"],
+        ["price", "Clear the price"],
+        ["region", "Clear regions"],
+        ["cat", "Clear types"],
+        ["dur", "Clear duration"],
+        ["when", "Clear start time"],
+        ["style", "Clear group"],
+        ["level", "Clear pace"],
+        ["lang", "Clear language"],
+        ["cancel", "Drop free cancellation"],
+        ["pickup", "Drop hotel pickup"],
+        ["rating", "Drop the score filter"],
+        ["saved", "Show more than saved"],
+        ["avail", "Show tours that do not run this date"]
+      ];
+      checks.forEach(([key, label]) => {
+        if (key === "q" && !state.q) return;
+        if (key === "price" && state.min == null && state.max == null) return;
+        if (["region", "cat", "dur", "when", "style", "level", "lang"].includes(key) && !state[key].size) return;
+        if (key === "cancel" && !state.cancel) return;
+        if (key === "pickup" && !state.pickup) return;
+        if (key === "rating" && !state.rating) return;
+        if (key === "saved" && !state.savedOnly) return;
+        const n = TOURS.filter((t) => pass(t, key === "saved" ? "saved" : key)).length;
+        if (n > 0) ideas.push({ key, label: label + " · " + n });
+      });
+      $("empty-copy").textContent = ideas.length
+        ? "One of these filters is doing the blocking. Removing it brings tours back."
+        : "Nothing in this sample runs for that combination. Move the date, or clear the filters.";
+      const buttons = ideas.slice(0, 3).map((idea) => `<button class="btn btn--ghost btn--small" type="button" data-relax="${idea.key}">${esc(idea.label)}</button>`);
+      buttons.push(`<button class="btn btn--small" type="button" id="empty-clear">Clear filters</button>`);
+      $("empty-actions").innerHTML = buttons.join("");
+    }
+    function updateLd(rows) {
+      const data = {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        name: "Tours from World Compass Holidays",
+        numberOfItems: rows.length,
+        itemListElement: rows.map((t, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: t.title,
+          url: t.href || undefined
+        }))
+      };
+      $("ld").textContent = JSON.stringify(data);
+    }
+    function render() {
+      const rows = visible();
+      const pages = Math.max(1, Math.ceil(rows.length / PAGE));
+      if (state.page > pages) state.page = pages;
+      if (state.page < 1) state.page = 1;
+      const start = (state.page - 1) * PAGE;
+      const slice = rows.slice(start, start + PAGE);
+      const topId = rows.find((t) => status(t) === "ok")?.id || "";
+
+      const noun = rows.length === 1 ? "tour" : "tours";
+      const where = state.q ? " matching “" + state.q.trim() + "”" : "";
+      $("count").textContent = rows.length + " " + noun + where;
+      document.title = rows.length + " " + noun + " · World Compass Holidays";
+      $("sort-note").textContent = sortCopy();
+      $("sort").value = state.sort;
+      $("sort-dock").value = state.sort;
+      $("view-list").setAttribute("aria-pressed", state.view === "list" ? "true" : "false");
+      $("view-grid").setAttribute("aria-pressed", state.view === "grid" ? "true" : "false");
+      $("list").classList.toggle("is-grid", state.view === "grid");
+      $("list").innerHTML = slice.map((t, i) => cardHtml(t, i, topId)).join("");
+      $("empty").hidden = rows.length > 0;
+      $("list").hidden = rows.length === 0;
+      if (!rows.length) emptyState();
+      hiddenNote(rows);
+
+      const pageButtons = [];
+      pageButtons.push(`<button type="button" data-page="${state.page - 1}" ${state.page === 1 ? "disabled" : ""}>Previous</button>`);
+      for (let i = 1; i <= pages; i++) pageButtons.push(`<button type="button" data-page="${i}" ${i === state.page ? 'aria-current="page"' : ""}>${i}</button>`);
+      pageButtons.push(`<button type="button" data-page="${state.page + 1}" ${state.page === pages ? "disabled" : ""}>Next</button>`);
+      $("pager").hidden = pages < 2;
+      $("pager").innerHTML = pages < 2 ? "" : pageButtons.join("");
+
+      if (document.activeElement !== $("q")) $("q").value = state.q;
+      $("date").value = state.date;
+      $("date").min = todayIso();
+      $("who-btn").textContent = whoLabel();
+      $("adults-n").textContent = String(state.adults);
+      $("children-n").textContent = String(state.children);
+      $("who-panel").querySelector('[data-step="adults"][data-dir="-1"]').disabled = state.adults <= 1;
+      $("who-panel").querySelector('[data-step="adults"][data-dir="1"]').disabled = state.adults >= 8;
+      $("who-panel").querySelector('[data-step="children"][data-dir="-1"]').disabled = state.children <= 0;
+      $("who-panel").querySelector('[data-step="children"][data-dir="1"]').disabled = state.children >= 6;
+      $("summary-title").textContent = state.q.trim() || "Anywhere in this list";
+      $("summary-sub").textContent = pretty(state.date) + " · " + whoLabel();
+      $("saved-toggle").setAttribute("aria-pressed", state.savedOnly ? "true" : "false");
+      $("saved-n").textContent = state.saved.size ? "(" + state.saved.size + ")" : "";
+      const filtersOn = activeCount();
+      $("filter-n").hidden = filtersOn === 0;
+      $("filter-n").textContent = String(filtersOn);
+      $("apply-filters").textContent = "Show " + rows.length + " " + noun;
+
+      appliedChips();
+      updateFacetInputs();
+      drawHist();
+      renderCompare();
+      updateLd(rows);
+      writeUrl();
+      const live = rows.length + " " + noun + " for " + whoLabel() + " on " + pretty(state.date);
+      if (live !== lastLive) { lastLive = live; $("live").textContent = live; }
+    }
+    function renderCompare() {
+      const bar = $("comparebar");
+      bar.hidden = state.compare.length === 0;
+      $("slots").innerHTML = state.compare.map((id) => {
+        const t = tourById(id);
+        return `<div class="slot"><img alt="" src="${esc(picture(t))}"><span>${esc(t.title)}</span><button type="button" data-uncompare="${esc(id)}" aria-label="Remove ${esc(t.title)} from compare">×</button></div>`;
+      }).join("");
+      $("compare-open").disabled = state.compare.length < 2;
+    }
+
+    function dropFilter(key, value) {
+      if (key === "q") state.q = "";
+      else if (key === "price") { state.min = null; state.max = null; }
+      else if (key === "rating") state.rating = 0;
+      else if (key === "cancel" || key === "pickup" || key === "showOff" || key === "showSold" || key === "savedOnly") state[key] = false;
+      else if (state[key] && state[key].delete) state[key].delete(value);
+      state.page = 1;
+    }
+    function relax(key) {
+      if (key === "avail") { state.showOff = true; state.showSold = true; }
+      else if (key === "saved") state.savedOnly = false;
+      else if (key === "q") state.q = "";
+      else if (key === "price") { state.min = null; state.max = null; }
+      else if (key === "rating") state.rating = 0;
+      else if (key === "cancel" || key === "pickup") state[key] = false;
+      else if (state[key] && state[key].clear) state[key].clear();
+      state.page = 1;
+    }
+    function clearFilters() {
+      state.q = "";
+      state.min = null; state.max = null;
+      ["dur", "region", "cat", "when", "style", "lang", "level"].forEach((key) => state[key].clear());
+      state.cancel = false; state.pickup = false; state.rating = 0;
+      state.savedOnly = false; state.showOff = false; state.showSold = false;
+      state.page = 1;
+    }
+    function toggleSave(id) {
+      if (state.saved.has(id)) state.saved.delete(id);
+      else state.saved.add(id);
+      saveSaved();
+      if (state.savedOnly && !state.saved.has(id)) state.page = 1;
+    }
+    function toggleCompare(id, on) {
+      if (on) {
+        if (state.compare.includes(id)) return;
+        if (state.compare.length >= 3) { toast("Compare holds three tours. Remove one first."); return; }
+        state.compare.push(id);
+      } else state.compare = state.compare.filter((item) => item !== id);
+    }
+    function openFilters() {
+      filterReturn = document.activeElement;
+      $("filters").classList.add("is-open");
+      $("shade").hidden = false;
+      document.body.classList.add("locked");
+      $("close-filters").focus();
+    }
+    function closeFilters() {
+      const wasOpen = $("filters").classList.contains("is-open");
+      $("filters").classList.remove("is-open");
+      $("shade").hidden = true;
+      document.body.classList.remove("locked");
+      if (wasOpen && filterReturn && filterReturn.focus) filterReturn.focus();
+      filterReturn = null;
+    }
+    function openTour(id) {
+      const t = tourById(id);
+      if (!t) return;
+      const st = status(t);
+      const cancel = cancelInfo(t);
+      const next = st === "ok" ? null : nextOpen(t, state.date);
+      const cancelClass = cancel.kind === "yes" ? "ok" : cancel.kind === "no" ? "warn" : "muted";
+      $("preview").innerHTML = `<div class="dialog-pad">
+        <div class="dialog-head">
+          <div>
+            <p class="kicker">${esc(t.category)} · ${esc(t.place)}, ${esc(t.region)}</p>
+            <h2 id="tour-title">${esc(t.title)}</h2>
+          </div>
+          <button class="btn btn--ghost btn--small" type="button" data-close>Close</button>
+        </div>
+        <img class="preview-photo" alt="${esc(t.alt)}" src="${esc(picture(t))}">
+        <p class="lede">${esc(t.story)}</p>
+        <p class="meta" style="margin-top:8px">${esc(durationLabel(t))} · ${esc(groupLabel(t))} · ${esc(langLabel(t))}</p>
+        <p class="mention">${esc(t.meet)}</p>
+        ${t.levelNote ? `<p class="expect">${esc(t.levelNote)}</p>` : ""}
+        <div class="split">
+          <div><h3>Included</h3><ul>${t.includes.map((item) => `<li>${esc(item)}</li>`).join("")}</ul></div>
+          <div><h3>Not included</h3><ul>${t.excludes.map((item) => `<li>${esc(item)}</li>`).join("")}</ul></div>
+        </div>
+        <h3 style="margin-top:14px">The day</h3>
+        <ol class="timeline">${t.timeline.map((item) => `<li>${esc(item)}</li>`).join("")}</ol>
+        <div class="bill">
+          <div>
+            <p class="bill__total">${inr(partyTotal(t))}</p>
+            <p class="sub">for ${esc(whoLabel())} · ${esc(priceDetail(t))}</p>
+            <p class="${cancelClass}">${esc(cancel.text)}</p>
+          </div>
+          ${t.href ? `<a class="btn btn--small" href="${esc(t.href)}">Full page</a>` : ""}
+        </div>
+        ${next ? `<p style="margin-top:10px"><button class="btn btn--ghost btn--small" type="button" data-date="${next}">Move the search to ${esc(pretty(next))}</button></p>` : ""}
+        <form class="form" id="request">
+          <label>Name <input name="name" required minlength="2" autocomplete="name"></label>
+          <label>Email <input name="email" type="email" required autocomplete="email"></label>
+          <label>Note <textarea name="note" rows="3" maxlength="400" placeholder="Hotel name, or a question"></textarea></label>
+          <p class="err" id="req-err"></p>
+          <button class="btn" type="submit">Send a request</button>
+          <p class="fine">Nothing is charged. This demo keeps the request in the browser.</p>
+        </form>
+        <div class="success" id="req-done" hidden></div>
+      </div>`;
+      $("preview").showModal();
+      $("request").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const data = new FormData(event.target);
+        const name = String(data.get("name") || "").trim();
+        const email = String(data.get("email") || "").trim();
+        const err = $("req-err");
+        if (name.length < 2) { err.textContent = "Add your name."; return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = "Add a real email."; return; }
+        event.target.hidden = true;
+        const done = $("req-done");
+        done.hidden = false;
+        done.textContent = "Request noted for " + t.title + " on " + pretty(state.date) + ". Nothing was charged.";
+      });
+    }
+    function bestIndexes(values, dir) {
+      const nums = values.map((value) => Number.isFinite(value) ? value : null);
+      const present = nums.filter((value) => value != null);
+      if (!present.length) return new Set();
+      const target = dir === "low" ? Math.min(...present) : Math.max(...present);
+      return new Set(nums.map((value, index) => value === target ? index : -1).filter((index) => index >= 0));
+    }
+    function openCompare() {
+      const chosen = state.compare.map(tourById).filter(Boolean);
+      if (chosen.length < 2) return;
+      const totals = chosen.map(partyTotal);
+      const ratings = chosen.map((t) => t.rating);
+      const bestPrice = bestIndexes(totals, "low");
+      const bestRate = bestIndexes(ratings, "high");
+      const head = chosen.map((t) => `<th>${esc(t.title)}</th>`).join("");
+      const cell = (html, best, index) => `<td class="${best.has(index) ? "is-best" : ""}">${html}</td>`;
+      const row = (label, fn, best) => `<tr><th>${label}</th>${chosen.map((t, i) => cell(fn(t), best || new Set(), i)).join("")}</tr>`;
+      $("compare").innerHTML = `<div class="dialog-pad">
+        <div class="dialog-head">
+          <h2 id="compare-title">Compare ${chosen.length} tours</h2>
+          <button class="btn btn--ghost btn--small" type="button" data-close>Close</button>
+        </div>
+        <p class="mention">Totals are for ${esc(whoLabel())} on ${esc(pretty(state.date))}. Green marks the lower total and the higher score.</p>
+        <div class="scroll"><table>
+          <thead><tr><th></th>${head}</tr></thead>
+          <tbody>
+            ${row("Total", (t) => inr(partyTotal(t)), bestPrice)}
+            ${row("How the price works", (t) => esc(priceDetail(t)))}
+            ${row("Score", (t) => t.rating.toFixed(1) + " · " + words(t.rating), bestRate)}
+            ${row("Reviews", (t) => num.format(t.reviews))}
+            ${row("Length", (t) => esc(durationLabel(t)))}
+            ${row("Start", (t) => esc(t.when === "multi" ? (runsLabel(t) || "Any day") : departClock(t)))}
+            ${row("Group", (t) => esc(groupLabel(t)))}
+            ${row("This date", (t) => status(t) === "ok" ? "Open" : status(t) === "sold" ? "Sold out" : "Does not run")}
+            ${row("Cancellation", (t) => esc(cancelInfo(t).text))}
+            ${row("Meeting", (t) => esc(t.meetShort))}
+            ${row("Languages", (t) => esc(langLabel(t)))}
+            ${row("Not included", (t) => esc(extraLine(t) || "—"))}
+          </tbody>
+        </table></div>
+      </div>`;
+      $("compare").showModal();
+    }
+
+    function onQuick(button) {
+      const kind = button.dataset.quick;
+      const value = button.dataset.value;
+      if (kind === "cancel") state.cancel = !state.cancel;
+      else if (kind === "pickup") state.pickup = !state.pickup;
+      else if (kind === "rating") state.rating = state.rating >= Number(value) ? 0 : Number(value);
+      else if (state[kind].has(value)) state[kind].delete(value);
+      else state[kind].add(value);
+      state.page = 1;
+      render();
+    }
+
+    $("search").addEventListener("submit", (event) => {
+      event.preventDefault();
+      state.q = $("q").value.trim().slice(0, 80);
+      state.date = $("date").value || state.date;
+      state.page = 1;
+      $("search").classList.remove("is-open");
+      $("search-summary").setAttribute("aria-expanded", "false");
+      $("who-panel").hidden = true;
+      render();
+      $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    $("q").addEventListener("input", () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.q = $("q").value.trim().slice(0, 80);
+        state.page = 1;
+        render();
+      }, 180);
+    });
+    $("date").addEventListener("change", () => {
+      if ($("date").value >= todayIso()) { state.date = $("date").value; state.page = 1; render(); }
+    });
+    $("who-btn").addEventListener("click", () => {
+      const open = $("who-panel").hidden;
+      $("who-panel").hidden = !open;
+      $("who-btn").setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    $("search-summary").addEventListener("click", () => {
+      const open = !$("search").classList.contains("is-open");
+      $("search").classList.toggle("is-open", open);
+      $("search-summary").setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) $("q").focus();
+    });
+    $("sort").addEventListener("change", () => { state.sort = $("sort").value; state.page = 1; render(); });
+    $("sort-dock").addEventListener("change", () => { state.sort = $("sort-dock").value; state.page = 1; render(); });
+    $("view-list").addEventListener("click", () => { state.view = "list"; render(); });
+    $("view-grid").addEventListener("click", () => { state.view = "grid"; render(); });
+    $("saved-toggle").addEventListener("click", () => { state.savedOnly = !state.savedOnly; state.page = 1; render(); });
+    $("share").addEventListener("click", async () => {
+      writeUrl();
+      const url = location.href;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast("Link copied. It keeps the date, the party, and the filters.");
+      } catch (err) {
+        toast(url);
+      }
+    });
+    $("clear").addEventListener("click", () => { clearFilters(); render(); });
+    $("show-hidden").addEventListener("click", () => { state.showOff = true; state.showSold = true; state.page = 1; render(); });
+    $("open-filters").addEventListener("click", openFilters);
+    $("close-filters").addEventListener("click", closeFilters);
+    $("shade").addEventListener("click", closeFilters);
+    $("apply-filters").addEventListener("click", closeFilters);
+    $("compare-open").addEventListener("click", openCompare);
+    $("compare-clear").addEventListener("click", () => { state.compare = []; render(); });
+    ["min", "max"].forEach((id) => {
+      $(id).addEventListener("input", () => {
+        clearTimeout(priceTimer);
+        priceTimer = setTimeout(() => {
+          state[id] = readMoney($(id), id);
+          state.page = 1;
+          render();
+        }, 220);
+      });
+    });
+    $("filters").addEventListener("change", (event) => {
+      const el = event.target;
+      if (el.dataset.facet) {
+        if (el.checked) state[el.dataset.facet].add(el.value);
+        else state[el.dataset.facet].delete(el.value);
+      } else if (el.name === "rating") state.rating = Number(el.value);
+      else if (el.dataset.toggle) state[el.dataset.toggle] = el.checked;
+      else return;
+      state.page = 1;
+      render();
+    });
+    $("filters").addEventListener("keydown", (event) => {
+      if (!$("filters").classList.contains("is-open") || event.key !== "Tab") return;
+      const nodes = [...$("filters").querySelectorAll("button, input, select, a")].filter((el) => !el.disabled && el.offsetParent);
+      if (!nodes.length) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
+    document.body.addEventListener("click", (event) => {
+      const step = event.target.closest("[data-step]");
+      if (step) {
+        const key = step.dataset.step;
+        const cap = key === "adults" ? [1, 8] : [0, 6];
+        state[key] = Math.min(cap[1], Math.max(cap[0], state[key] + Number(step.dataset.dir)));
+        state.page = 1;
+        render();
+        return;
+      }
+      const quick = event.target.closest("[data-quick]");
+      if (quick && !quick.disabled) { onQuick(quick); return; }
+      const drop = event.target.closest("[data-drop]");
+      if (drop) { dropFilter(drop.dataset.drop, drop.dataset.value || ""); render(); return; }
+      const relaxBtn = event.target.closest("[data-relax]");
+      if (relaxBtn) { relax(relaxBtn.dataset.relax); render(); return; }
+      if (event.target.id === "empty-clear") { clearFilters(); render(); return; }
+      const pageBtn = event.target.closest("[data-page]");
+      if (pageBtn && !pageBtn.disabled) {
+        state.page = Number(pageBtn.dataset.page);
+        render();
+        $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      const save = event.target.closest("[data-save]");
+      if (save) { toggleSave(save.dataset.save); render(); return; }
+      const opener = event.target.closest("[data-open]");
+      if (opener) { openTour(opener.dataset.open); return; }
+      const jump = event.target.closest("[data-date]");
+      if (jump) {
+        state.date = jump.dataset.date;
+        state.showOff = false;
+        state.showSold = false;
+        state.page = 1;
+        const dialog = jump.closest("dialog");
+        if (dialog && dialog.open) dialog.close();
+        render();
+        return;
+      }
+      const uncompare = event.target.closest("[data-uncompare]");
+      if (uncompare) { toggleCompare(uncompare.dataset.uncompare, false); render(); return; }
+      const closer = event.target.closest("[data-close]");
+      if (closer) closer.closest("dialog").close();
+    });
+    document.body.addEventListener("change", (event) => {
+      if (event.target.matches("[data-cmp]")) {
+        toggleCompare(event.target.dataset.cmp, event.target.checked);
+        render();
+      }
+    });
+    document.addEventListener("click", (event) => {
+      if ($("who-panel").hidden) return;
+      if (event.target.closest("#who-panel") || event.target.closest("#who-btn")) return;
+      $("who-panel").hidden = true;
+      $("who-btn").setAttribute("aria-expanded", "false");
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if (!$("who-panel").hidden) { $("who-panel").hidden = true; $("who-btn").setAttribute("aria-expanded", "false"); }
+      if ($("filters").classList.contains("is-open")) closeFilters();
+    });
+    $("preview").addEventListener("click", (event) => { if (event.target === $("preview")) $("preview").close(); });
+    $("compare").addEventListener("click", (event) => { if (event.target === $("compare")) $("compare").close(); });
+    window.addEventListener("resize", () => { if (window.innerWidth > 980) closeFilters(); });
+
+    readUrl();
+    buildFacets();
+    render();
+  </script>
+</body>
+</html>

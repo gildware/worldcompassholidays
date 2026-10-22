@@ -3,6 +3,9 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteCatalogItem, saveCatalogItem } from "@/actions/catalog";
+import { saveHotelSettings } from "@/actions/hotel-settings";
+import { ActionForm } from "@/components/rentals/ActionForm";
+import { SubmitButton } from "@/components/forms/SubmitButton";
 import { Field } from "@/components/forms/Field";
 import { FormMessage } from "@/components/forms/FormMessage";
 import { Button } from "@/components/ui/Button";
@@ -78,11 +81,13 @@ export function CatalogWorkspace({
   rentalItems,
   initialSection = "tours",
   sections,
+  hotelTaxEnabled = false,
 }: {
   items: CatalogRow[];
   rentalItems?: ConfigRow[];
   initialSection?: string;
   sections?: string[];
+  hotelTaxEnabled?: boolean;
 }) {
   const router = useRouter();
   const groups = [
@@ -160,6 +165,26 @@ export function CatalogWorkspace({
       </div>
 
       <p className="text-sm text-muted">{group.description}</p>
+
+      {group.id === "hotels" ? (
+        <ActionForm
+          key={hotelTaxEnabled ? "tax-on" : "tax-off"}
+          action={saveHotelSettings}
+          className="grid max-w-xl gap-3 rounded-lg border border-line bg-white p-4"
+        >
+          <div>
+            <p className="text-sm font-medium text-navy">Tax</p>
+            <p className="mt-1 text-sm text-muted">
+              Off by default. Turn it on to add GST at 18% to stay totals. While it is off, hotel prices show the room total only, with no tax line.
+            </p>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="taxEnabled" defaultChecked={hotelTaxEnabled} />
+            Charge tax
+          </label>
+          <SubmitButton pendingLabel="Saving">Save tax setting</SubmitButton>
+        </ActionForm>
+      ) : null}
 
       {group.id === "rentals" && rentalItems ? (
         <ConfigWorkspace items={rentalItems} />

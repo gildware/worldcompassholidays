@@ -11,7 +11,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { handoverModes, unavailableReason } from "@/lib/rentals/availability";
 import { findAvailabilityConflicts } from "@/lib/rentals/availability";
-import { parseDateTimeLocal } from "@/lib/rentals/dates";
+import { earliestPickupLocal, parseDateTimeLocal, pickupLeadMessage } from "@/lib/rentals/dates";
 import { documentsRequiredToBook } from "@/lib/rentals/booking-documents";
 import { listProfileDocuments } from "@/lib/rentals/profile-documents";
 import { fleetKinds } from "@/lib/rentals/labels";
@@ -100,7 +100,9 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
   let availabilityError = "";
   let quote = null as ReturnType<typeof quoteRental> | null;
   if (pickup && ret) {
+    const lead = pickupAt ? pickupLeadMessage(pickupAt) : "";
     if (!pickupAt || !returnAt) quoteError = "Enter a valid pickup and return time.";
+    else if (lead) quoteError = lead;
     else {
       try {
         quote = quoteRental({
@@ -196,7 +198,7 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
         <form method="get" className="grid gap-4 rounded-2xl border border-line bg-white p-5">
           <label className="grid gap-1 text-sm">
             Pickup
-            <input name="pickup" type="datetime-local" defaultValue={pickup} required />
+            <input name="pickup" type="datetime-local" defaultValue={pickup || earliestPickupLocal()} min={earliestPickupLocal()} required />
           </label>
           <label className="grid gap-1 text-sm">
             Return

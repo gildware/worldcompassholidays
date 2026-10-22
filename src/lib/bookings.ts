@@ -1,3 +1,5 @@
+import { accountSectionForModule } from "@/lib/account-sections";
+
 export const bookingStatuses = [
   "enquiry",
   "quoted",
@@ -24,11 +26,13 @@ export function statusLabel(status: string) {
   return bookingStatusLabels[status as BookingStatus] ?? status;
 }
 
+const extraModuleLabels: Record<string, string> = {
+  general: "Something else",
+  bus: "Bus",
+};
+
 export function moduleLabel(module: string) {
-  if (module === "visa") return "Visa";
-  if (module === "assist") return "Meet and assist";
-  if (module === "hotel") return "Hotel";
-  return module;
+  return accountSectionForModule(module)?.serviceLabel ?? extraModuleLabels[module] ?? module;
 }
 
 export function bookingReference() {

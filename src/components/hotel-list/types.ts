@@ -16,7 +16,10 @@ export type HotelListCard = {
   currency: string;
   propertyType: string;
   mapUrl: string;
+  tag: string;
 };
+
+export type HotelSort = "recommended" | "price-asc" | "price-desc" | "name";
 
 export type HotelListLocation = {
   id: string;

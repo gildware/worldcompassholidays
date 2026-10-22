@@ -79,6 +79,19 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
       features: { include: { config: true } },
       addonLinks: { include: { config: true } },
       locationLinks: { include: { location: true } },
+      relatedLinks: {
+        orderBy: { sortOrder: "asc" },
+        include: {
+          related: {
+            include: {
+              images: { orderBy: { sortOrder: "asc" }, take: 1 },
+              vehicleType: { select: { name: true } },
+              transmission: { select: { name: true } },
+              fuelType: { select: { name: true } },
+            },
+          },
+        },
+      },
     },
   });
   const kinds = fleetKinds();
@@ -318,6 +331,25 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
         backHref={backHref}
         available={available}
         availabilityNote={availabilityNote}
+        relatedTitle={vehicle.kind === "bike" ? "Related bikes" : "Related cars"}
+        related={vehicle.relatedLinks
+          .map((link) => link.related)
+          .filter((item) => item.published && item.kind === vehicle.kind)
+          .map((item) => ({
+            slug: item.slug,
+            name: item.name,
+            typeName: item.vehicleType?.name || "",
+            meta: [
+              item.seats ? `${item.seats} seats` : "",
+              item.transmission?.name || "",
+              item.fuelType?.name || "",
+            ]
+              .filter(Boolean)
+              .join(" · "),
+            priceLabel: formatMoney(item.pricePerDay, item.currency || currency),
+            imageUrl: item.images[0]?.url || "",
+            href: keptQuery ? `/rentals/${item.slug}?${keptQuery}` : `/rentals/${item.slug}`,
+          }))}
         booking={{
           slug: vehicle.slug,
           vehicleId: vehicle.id,

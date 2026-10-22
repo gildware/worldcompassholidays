@@ -157,6 +157,12 @@ model ItineraryDay {
   @@unique([tourId, dayNumber])
 }
 
+model HotelSettings {
+  id         String   @id @default("default")
+  taxEnabled Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
+}
+
 model Hotel {
   id                  String       @id @default(cuid())
   slug                String       @unique
@@ -268,6 +274,8 @@ model Vehicle {
   locationLinks      VehicleLocation[]
   documents          VehicleDocument[]
   blocks             VehicleBlock[]
+  relatedLinks       VehicleRelated[] @relation("RelatedSource")
+  relatedMentions    VehicleRelated[] @relation("RelatedTarget")
   maintenance        MaintenanceRecord[]
   rentalBookings     RentalBooking[]
   createdAt          DateTime    @default(now())
@@ -359,6 +367,17 @@ model RentalPolicy {
   @@unique([fleet, slug])
   @@index([kind, active])
   @@index([fleet])
+}
+
+model VehicleRelated {
+  vehicleId String
+  relatedId String
+  sortOrder Int     @default(0)
+  vehicle   Vehicle @relation("RelatedSource", fields: [vehicleId], references: [id], onDelete: Cascade)
+  related   Vehicle @relation("RelatedTarget", fields: [relatedId], references: [id], onDelete: Cascade)
+
+  @@id([vehicleId, relatedId])
+  @@index([relatedId])
 }
 
 model VehicleDestination {

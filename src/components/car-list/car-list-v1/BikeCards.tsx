@@ -1,8 +1,11 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useRef, useState, type PointerEvent, type ReactNode } from "react";
 import type { CarListCard } from "@/components/car-list/types";
 import { formatMoney } from "@/lib/format";
+import { tagColor } from "@/lib/rentals/tag-colors";
 
 function Mini({ children }: { children: ReactNode }) {
   return (
@@ -72,20 +75,162 @@ function gear(value: string) {
   return value;
 }
 
+function Chevron({ direction }: { direction: "left" | "right" }) {
+  return (
+    <Mini>
+      <path
+        d={direction === "left" ? "M9.5 3.5 5.2 8l4.3 4.5" : "M6.5 3.5 10.8 8 6.5 12.5"}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Mini>
+  );
+}
+
+function CardPhotos({
+  images,
+  href,
+  name,
+  eager,
+  fuel,
+  tags,
+}: {
+  images: string[];
+  href: string;
+  name: string;
+  eager: boolean;
+  fuel: string;
+  tags: string[];
+}) {
+  const [index, setIndex] = useState(0);
+  const startX = useRef(0);
+  const dragged = useRef(false);
+  const count = images.length;
+  const current = Math.min(index, Math.max(count - 1, 0));
+
+  const step = (delta: number) => {
+    if (count < 2) return;
+    setIndex((value) => (value + delta + count) % count);
+  };
+
+  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    startX.current = event.clientX;
+    dragged.current = false;
+  };
+
+  const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    if (count < 2) return;
+    const delta = event.clientX - startX.current;
+    if (Math.abs(delta) < 28) return;
+    dragged.current = true;
+    step(delta < 0 ? 1 : -1);
+  };
+
+  return (
+    <div className="bike-card__media" onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
+      {count > 0 ? (
+        <Link
+          href={href}
+          className="bike-card__shot"
+          aria-label={name}
+          onClick={(event) => {
+            if (!dragged.current) return;
+            event.preventDefault();
+            dragged.current = false;
+          }}
+        >
+          <span className="bike-card__track" style={{ transform: `translateX(-${current * 100}%)` }}>
+            {images.map((src, slide) => (
+              <span
+                className={`bike-card__frame${src.includes(".svg") ? " is-drawing" : " is-photo"}`}
+                key={`${src}-${slide}`}
+              >
+                <Image
+                  src={src}
+                  alt={slide === 0 ? name : ""}
+                  fill
+                  loading={eager && slide === 0 ? "eager" : "lazy"}
+                  sizes="(max-width: 575px) 50vw, (max-width: 1199px) 33vw, 20vw"
+                />
+              </span>
+            ))}
+          </span>
+        </Link>
+      ) : (
+        <div className="bike-card__fallback" />
+      )}
+      {count > 1 ? (
+        <>
+          <button
+            type="button"
+            className="bike-card__nav is-prev"
+            aria-label="Previous photo"
+            onClick={() => step(-1)}
+          >
+            <Chevron direction="left" />
+          </button>
+          <button
+            type="button"
+            className="bike-card__nav is-next"
+            aria-label="Next photo"
+            onClick={() => step(1)}
+          >
+            <Chevron direction="right" />
+          </button>
+          <div className="bike-card__dots" role="tablist" aria-label={`${name} photos`}>
+            {images.map((src, slide) => (
+              <button
+                type="button"
+                key={`${src}-dot-${slide}`}
+                className={slide === current ? "is-on" : ""}
+                role="tab"
+                aria-selected={slide === current}
+                aria-label={`Photo ${slide + 1}`}
+                onClick={() => setIndex(slide)}
+              />
+            ))}
+          </div>
+        </>
+      ) : null}
+      {fuel ? (
+        <span className="bike-card__fuel">
+          <DropIcon />
+          {fuel}
+        </span>
+      ) : null}
+      {tags.length > 0 ? (
+        <span className="bike-card__tags">
+          {tags.map((tag) => (
+            <span className="bike-card__tag" key={tag} style={{ background: tagColor(tag) }}>
+              {tag}
+            </span>
+          ))}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 export function BikeCards({
   bikes,
   noun = "bikes",
   showSeats = false,
+  detailQuery = "",
 }: {
   bikes: CarListCard[];
   noun?: string;
   showSeats?: boolean;
+  detailQuery?: string;
 }) {
   if (bikes.length === 0) {
     return (
       <div className="bike-empty">
         <h3 className="text-16 fw-500">No {noun} match these filters</h3>
-        <p className="text-14 text-light-1 mt-5">Try another type or fuel.</p>
+        <p className="text-14 text-light-1 mt-5">Try a different search or filter.</p>
       </div>
     );
   }
@@ -93,33 +238,20 @@ export function BikeCards({
   return (
     <>
       {bikes.map((item, index) => {
-        const href = `/rentals/${item.slug}`;
-        const photo = item.images[0] ?? "";
-        const drawing = photo.includes(".svg");
+        const query = detailQuery ? `?${detailQuery}` : "";
+        const href = `/rentals/${item.slug}${query}`;
 
         return (
-          <Link href={href} className="bike-card" key={item.id}>
-            <div className={`bike-card__media${drawing ? " is-drawing" : " is-photo"}`}>
-              {photo ? (
-                <Image
-                  src={photo}
-                  alt=""
-                  width={640}
-                  height={400}
-                  loading={index < 8 ? "eager" : "lazy"}
-                  sizes="(max-width: 575px) 50vw, (max-width: 1199px) 33vw, 20vw"
-                />
-              ) : (
-                <div className="bike-card__fallback" />
-              )}
-              {item.fuel ? (
-                <span className="bike-card__fuel">
-                  <DropIcon />
-                  {item.fuel}
-                </span>
-              ) : null}
-            </div>
-            <div className="bike-card__body">
+          <article className="bike-card" key={item.id}>
+            <CardPhotos
+              images={item.images}
+              href={href}
+              name={item.name}
+              eager={index < 8}
+              fuel={item.fuel}
+              tags={item.tags}
+            />
+            <Link href={href} className="bike-card__body">
               <div className="bike-card__topline">
                 {item.category ? (
                   <p className="bike-card__kicker">
@@ -161,8 +293,11 @@ export function BikeCards({
                 <strong>{formatMoney(item.price, item.currency)}</strong>
                 <span>/ day</span>
               </p>
-            </div>
-          </Link>
+            </Link>
+            <Link href={href} className="bike-card__book">
+              View more
+            </Link>
+          </article>
         );
       })}
     </>

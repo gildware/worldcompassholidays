@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { HotelSingleV2 } from "@/components/hotel-single/HotelSingleV2";
+import { HotelStay } from "@/components/hotel-single/HotelStay";
 import type { HotelListLocation } from "@/components/hotel-list/types";
 import type { HotelRoomCard, HotelSingleData, SimilarHotelCard } from "@/components/hotel-single/types";
 import { modules } from "@/config/modules";
 import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
+import { getCurrentUser } from "@/lib/auth/session";
 import { loadHotelCatalog } from "@/lib/catalog-query";
 import type { CatalogOption } from "@/lib/catalog";
 import { resolveFaqs, resolveTitles } from "@/lib/hotels/labels";
 import { mealPlanLabel, propertyTypeLabel } from "@/lib/hotels/options";
+import { getHotelSettings } from "@/lib/hotels/settings";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   absoluteUrl,
@@ -23,9 +25,19 @@ import {
 } from "@/lib/seo";
 import { parseJsonArray, type GalleryItem } from "@/lib/tours/json";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
 
 const ratingLabels = ["", "Pleasant", "Good", "Very good", "Excellent", "Exceptional"];
+
+function stayDate(daysAhead: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysAhead);
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
 
 function amenityNames(stored: string, catalog: CatalogOption[]) {
   const resolved = resolveTitles(stored, catalog);
@@ -69,11 +81,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function HotelPage({ params }: Props) {
+function one(value: string | string[] | undefined) {
+  return (Array.isArray(value) ? value[0] : value) ?? "";
+}
+
+function bounded(value: string, min: number, max: number, fallback: number) {
+  const number = Number(value);
+  return number >= min && number <= max ? number : fallback;
+}
+
+export default async function HotelPage({ params, searchParams }: Props) {
   if (!modules.hotels) notFound();
   const { slug } = await params;
+  const query = searchParams ? await searchParams : {};
 
-  const [hotel, catalog, destinations] = await Promise.all([
+  const [hotel, catalog, destinations, user, settings] = await Promise.all([
     prisma.hotel.findUnique({
       where: { slug },
       include: {
@@ -87,6 +109,8 @@ export default async function HotelPage({ params }: Props) {
       select: { id: true, name: true, region: true, country: true },
       orderBy: { name: "asc" },
     }),
+    getCurrentUser(),
+    getHotelSettings(),
   ]);
   if (!hotel || !hotel.published) notFound();
 
@@ -114,11 +138,14 @@ export default async function HotelPage({ params }: Props) {
       ...resolveTitles(room.featuresJson, catalog.features),
       ...resolveTitles(room.amenitiesJson, catalog.roomAmenities),
     ];
+    const roomImages = [...new Set([room.imageUrl, ...images].filter(Boolean))];
     return {
       id: room.id,
       name: room.name,
-      image: room.imageUrl || images[0] || "/img/general/map.svg",
+      image: roomImages[0] || "/img/general/map.svg",
+      images: roomImages.length > 0 ? roomImages : ["/img/general/map.svg"],
       occupancy: room.occupancy,
+      sizeSqm: room.sizeSqm,
       bedLabel: room.bedType ? `1 ${room.bedType.toLowerCase()} bed` : "",
       summary: room.summary,
       price: room.pricePerNight,
@@ -161,6 +188,9 @@ export default async function HotelPage({ params }: Props) {
     priceLabel: formatMoney(hotel.priceFrom, hotel.currency || "INR"),
     images: images.length > 0 ? images : ["/img/general/map.svg"],
     mapUrl,
+    mapLat: hotel.mapLat,
+    mapLng: hotel.mapLng,
+    mapZoom: hotel.mapZoom,
     amenities,
     checkIn: hotel.checkIn || "2:00 PM",
     checkOut: hotel.checkOut || "11:00 AM",
@@ -239,7 +269,22 @@ export default async function HotelPage({ params }: Props) {
           },
         ])}
       />
-      <HotelSingleV2 hotel={data} />
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+      <HotelStay
+        hotel={data}
+        customer={user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null}
+        defaultCheckIn={/^\d{4}-\d{2}-\d{2}$/.test(one(query.in)) ? one(query.in) : stayDate(0)}
+        defaultCheckOut={/^\d{4}-\d{2}-\d{2}$/.test(one(query.out)) ? one(query.out) : stayDate(1)}
+        defaultAdults={bounded(one(query.adults), 1, 8, 2)}
+        defaultChildren={bounded(one(query.children), 0, 6, 0)}
+        defaultRooms={bounded(one(query.rooms), 1, 4, 1)}
+        taxEnabled={settings.taxEnabled}
+      />
     </>
   );
 }

@@ -7,6 +7,7 @@ import { theme } from "@/config/theme";
 import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
 import { getCurrentUser } from "@/lib/auth/session";
+import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { bookingReference } from "@/lib/bookings";
 import { enquiryInterests } from "@/lib/navigation";
 import { emailField } from "@/lib/validation";
@@ -107,7 +108,7 @@ export async function submitEnquiry(
   });
 
   revalidatePath("/admin/bookings");
-  if (customer) revalidatePath("/account");
+  if (customer) revalidateCustomerBooking(parsed.data.interest, booking.reference);
 
   if (channel === "whatsapp") {
     const desk = whatsAppHref(theme.contact.whatsapp);

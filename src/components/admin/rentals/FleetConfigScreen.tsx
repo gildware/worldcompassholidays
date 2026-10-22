@@ -3,7 +3,7 @@ import { requirePermission } from "@/lib/auth/guards";
 import { isRentalConfigKind } from "@/lib/rentals/labels";
 import { getRentalSetup } from "@/lib/rentals/setup";
 
-const sharedKinds = ["vehicle_type", "fuel", "transmission", "included", "excluded", "feature"] as const;
+const sharedKinds = ["tag", "vehicle_type", "fuel", "transmission", "included", "excluded", "feature"] as const;
 
 export async function FleetConfigScreen({ fleet }: { fleet: "car" | "bike" }) {
   await requirePermission("vehicles.manage");
@@ -38,7 +38,7 @@ export async function FleetConfigScreen({ fleet }: { fleet: "car" | "bike" }) {
           {noun === "bike" ? "Bike" : "Car"} configuration
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-muted">
-          {`Add ${noun} types, fuel, transmission, included items, excluded items${
+          {`Add tags, ${noun} types, fuel, transmission, included items, excluded items${
             fleet === "bike" ? ", features, and the documents a customer must upload" : ", and features"
           } here. Then choose them on each ${noun}.`}
         </p>
