@@ -14,6 +14,7 @@
     "db:seed": "prisma db seed",
     "db:seed-admin": "node prisma/seed-admin.mjs",
     "db:seed-fresh-bookings": "node scripts/seed-fresh-bookings.mjs",
+    "db:seed-demo": "tsx scripts/seed-demo-catalog.ts",
     "db:studio": "prisma studio"
   },
   "prisma": {

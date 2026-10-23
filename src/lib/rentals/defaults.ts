@@ -612,27 +612,52 @@ async function ensureNamedConfig(kind: string, name: string, appliesTo: string, 
   });
 }
 
-async function ensureCalanguteLocation() {
+async function ensureSrinagarCarDesk() {
   const existing = await prisma.rentalLocation.findFirst({
-    where: { fleet: "car", slug: "calangute" },
+    where: { fleet: "car", slug: { in: ["srinagar-desk", "calangute"] } },
   });
-  if (existing) return existing;
-  const goa = await prisma.destination.findUnique({
-    where: { slug: "goa" },
+  if (existing) {
+    if (existing.slug === "calangute") {
+      const kashmir = await prisma.destination.findUnique({
+        where: { slug: "kashmir" },
+        select: { id: true, imageUrl: true, imageKey: true, imageDriver: true },
+      });
+      return prisma.rentalLocation.update({
+        where: { id: existing.id },
+        data: {
+          name: "Srinagar desk",
+          slug: "srinagar-desk",
+          address: "Boulevard Road, Srinagar",
+          destinationId: kashmir?.id,
+          mapLat: "34.0837",
+          mapLng: "74.7973",
+          mapZoom: 13,
+          imageUrl: kashmir?.imageUrl ?? existing.imageUrl,
+          imageKey: kashmir?.imageKey ?? existing.imageKey,
+          imageDriver: kashmir?.imageDriver || existing.imageDriver,
+          active: true,
+          fleet: "car",
+        },
+      });
+    }
+    return existing;
+  }
+  const kashmir = await prisma.destination.findUnique({
+    where: { slug: "kashmir" },
     select: { id: true, imageUrl: true, imageKey: true, imageDriver: true },
   });
   return prisma.rentalLocation.create({
     data: {
-      name: "Calangute",
-      slug: "calangute",
-      address: "Calangute Beach Road, Goa",
-      destinationId: goa?.id,
-      mapLat: "15.5474",
-      mapLng: "73.7553",
-      mapZoom: 14,
-      imageUrl: goa?.imageUrl ?? "",
-      imageKey: goa?.imageKey ?? "",
-      imageDriver: goa?.imageDriver || "local",
+      name: "Srinagar desk",
+      slug: "srinagar-desk",
+      address: "Boulevard Road, Srinagar",
+      destinationId: kashmir?.id,
+      mapLat: "34.0837",
+      mapLng: "74.7973",
+      mapZoom: 13,
+      imageUrl: kashmir?.imageUrl ?? "",
+      imageKey: kashmir?.imageKey ?? "",
+      imageDriver: kashmir?.imageDriver || "local",
       active: true,
       fleet: "car",
     },
@@ -650,7 +675,7 @@ async function seedCarCatalog() {
   ] as const) {
     await ensureNamedConfig("vehicle_type", name, "car", sortOrder);
   }
-  await ensureCalanguteLocation();
+  await ensureSrinagarCarDesk();
 
   const [types, fuels, gears, features, locations, takenRegs] = await Promise.all([
     prisma.rentalConfig.findMany({ where: { kind: "vehicle_type", active: true } }),
@@ -658,7 +683,7 @@ async function seedCarCatalog() {
     prisma.rentalConfig.findMany({ where: { kind: "transmission", active: true } }),
     prisma.rentalConfig.findMany({ where: { kind: "feature", active: true } }),
     prisma.rentalLocation.findMany({
-      where: { fleet: "car", active: true, slug: "calangute" },
+      where: { fleet: "car", active: true, slug: "srinagar-desk" },
       select: { id: true },
     }),
     prisma.vehicle.findMany({ select: { registrationNumber: true } }),
@@ -677,13 +702,53 @@ async function seedCarCatalog() {
   let serial = 5100;
 
   for (const item of carCatalog) {
-    const existing = await prisma.vehicle.findUnique({ where: { slug: item.slug } });
-    if (existing) continue;
     const destination = await prisma.destination.findUnique({
       where: { slug: item.destination },
       select: { id: true },
     });
     if (!destination) continue;
+
+    const photoFile = path.join(process.cwd(), "public", "uploads", "vehicles", "photos", `${item.slug}.jpg`);
+    const image = existsSync(photoFile)
+      ? { url: `/uploads/vehicles/photos/${item.slug}.jpg`, key: `vehicles/photos/${item.slug}.jpg` }
+      : await carImage(item);
+    const existing = await prisma.vehicle.findUnique({
+      where: { slug: item.slug },
+      include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+    });
+    if (existing) {
+      await prisma.vehicle.update({
+        where: { id: existing.id },
+        data: {
+          name: item.name,
+          brand: item.brand,
+          modelName: item.modelName,
+          year: item.year,
+          summary: item.summary,
+          seats: item.seats,
+          doors: item.doors,
+          luggage: item.luggage,
+          pricePerDay: item.pricePerDay,
+          status: "available",
+          published: true,
+          destinationId: destination.id,
+          vehicleTypeId: types.find((row) => row.name === item.type)?.id,
+          fuelTypeId: fuels.find((row) => row.name === item.fuel)?.id,
+          transmissionId: gears.find((row) => row.name === item.transmission)?.id,
+        },
+      });
+      if (existing.images[0]) {
+        await prisma.vehicleImage.update({
+          where: { id: existing.images[0].id },
+          data: { url: image.url, key: image.key, driver: "local" },
+        });
+      } else {
+        await prisma.vehicleImage.create({
+          data: { vehicleId: existing.id, url: image.url, key: image.key, driver: "local", sortOrder: 0 },
+        });
+      }
+      continue;
+    }
 
     let registrationNumber = "";
     do {
@@ -692,10 +757,6 @@ async function seedCarCatalog() {
     } while (usedRegs.has(registrationNumber));
     usedRegs.add(registrationNumber);
 
-    const photoFile = path.join(process.cwd(), "public", "uploads", "vehicles", "photos", `${item.slug}.jpg`);
-    const image = existsSync(photoFile)
-      ? { url: `/uploads/vehicles/photos/${item.slug}.jpg`, key: `vehicles/photos/${item.slug}.jpg` }
-      : await carImage(item);
     const location = locations[0];
     const featureNames = ["AC"];
     if (item.pricePerDay >= 2200) featureNames.push("Bluetooth");
@@ -805,13 +866,50 @@ async function seedBikeCatalog() {
   let serial = 3200;
 
   for (const item of bikeCatalog) {
-    const existing = await prisma.vehicle.findUnique({ where: { slug: item.slug } });
-    if (existing) continue;
     const destination = await prisma.destination.findUnique({
       where: { slug: item.destination },
       select: { id: true },
     });
     if (!destination) continue;
+
+    const photoFile = path.join(process.cwd(), "public", "uploads", "vehicles", "photos", `${item.slug}.jpg`);
+    const image = existsSync(photoFile)
+      ? { url: `/uploads/vehicles/photos/${item.slug}.jpg`, key: `vehicles/photos/${item.slug}.jpg` }
+      : await bikeImage(item);
+    const existing = await prisma.vehicle.findUnique({
+      where: { slug: item.slug },
+      include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+    });
+    if (existing) {
+      await prisma.vehicle.update({
+        where: { id: existing.id },
+        data: {
+          name: item.name,
+          brand: item.brand,
+          modelName: item.modelName,
+          year: item.year,
+          summary: item.summary,
+          pricePerDay: item.pricePerDay,
+          status: "available",
+          published: true,
+          destinationId: destination.id,
+          vehicleTypeId: types.find((row) => row.name === item.type)?.id,
+          fuelTypeId: fuels.find((row) => row.name === item.fuel)?.id,
+          transmissionId: gears.find((row) => row.name === item.transmission)?.id,
+        },
+      });
+      if (existing.images[0]) {
+        await prisma.vehicleImage.update({
+          where: { id: existing.images[0].id },
+          data: { url: image.url, key: image.key, driver: "local" },
+        });
+      } else {
+        await prisma.vehicleImage.create({
+          data: { vehicleId: existing.id, url: image.url, key: image.key, driver: "local", sortOrder: 0 },
+        });
+      }
+      continue;
+    }
 
     let registrationNumber = "";
     do {
@@ -820,10 +918,6 @@ async function seedBikeCatalog() {
     } while (usedRegs.has(registrationNumber));
     usedRegs.add(registrationNumber);
 
-    const photoFile = path.join(process.cwd(), "public", "uploads", "vehicles", "photos", `${item.slug}.jpg`);
-    const image = existsSync(photoFile)
-      ? { url: `/uploads/vehicles/photos/${item.slug}.jpg`, key: `vehicles/photos/${item.slug}.jpg` }
-      : await bikeImage(item);
     const location = locations[0];
     const featureNames: string[] = [];
     if (item.fuel === "Electric") featureNames.push("USB");

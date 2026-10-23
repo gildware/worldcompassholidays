@@ -439,7 +439,6 @@ export function NearbyDestinations({ destinations }) {
     <>
       <Swiper
         spaceBetween={30}
-        className="overflow-visible"
         modules={[Navigation]}
         navigation={{
           nextEl: ".js-top-desti2-next_active",

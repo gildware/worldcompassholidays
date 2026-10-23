@@ -742,6 +742,9 @@ async function main() {
   const { ensureRentalDefaults } = await import("../src/lib/rentals/defaults");
   await ensureRentalDefaults();
 
+  const { runDemoCatalogSeed } = await import("../scripts/seed-demo-catalog");
+  await runDemoCatalogSeed();
+
   if (process.env.NODE_ENV === "production") {
     await seedAdminFromEnv();
     return;

@@ -79,7 +79,6 @@ export function HotelStayList({
   const [saved, setSaved] = useState<string[]>([]);
   const [photos, setPhotos] = useState<Record<string, number>>({});
   const [menu, setMenu] = useState<null | "place" | "in" | "out" | "who" | "sort" | "dock-sort" | "m-place" | "trip">(null);
-  const [view, setView] = useState<"list" | "grid">("grid");
   const [searching, setSearching] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
@@ -536,26 +535,6 @@ export function HotelStayList({
                   autoComplete="off"
                 />
               </form>
-              <button
-                className="m-bar__view"
-                type="button"
-                aria-label={view === "grid" ? "Show as list" : "Show as grid"}
-                aria-pressed={view === "grid"}
-                onClick={() => setView((current) => (current === "grid" ? "list" : "grid"))}
-              >
-                {view === "grid" ? (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-                    <path d="M5 7h14M5 12h14M5 17h14" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-                    <rect x="4" y="4" width="7" height="7" rx="1.5" />
-                    <rect x="13" y="4" width="7" height="7" rx="1.5" />
-                    <rect x="4" y="13" width="7" height="7" rx="1.5" />
-                    <rect x="13" y="13" width="7" height="7" rx="1.5" />
-                  </svg>
-                )}
-              </button>
             </div>
             <div className="m-bar__trip">
               <button
@@ -916,26 +895,6 @@ export function HotelStayList({
               <p className="sl-eyebrow">{rangeLabel(state.checkin, state.checkout)} · {nights} night{nights > 1 ? "s" : ""} · {guestText(state.adults, state.children, state.rooms)}</p>
               <div className="sl-head__row">
                 <h1>{placeName}</h1>
-                <button
-                  className="sl-view-toggle"
-                  type="button"
-                  aria-label={view === "grid" ? "Show as list" : "Show as grid"}
-                  aria-pressed={view === "grid"}
-                  onClick={() => setView((current) => (current === "grid" ? "list" : "grid"))}
-                >
-                  {view === "grid" ? (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-                      <path d="M5 7h14M5 12h14M5 17h14" />
-                    </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-                      <rect x="4" y="4" width="7" height="7" rx="1.5" />
-                      <rect x="13" y="4" width="7" height="7" rx="1.5" />
-                      <rect x="4" y="13" width="7" height="7" rx="1.5" />
-                      <rect x="13" y="13" width="7" height="7" rx="1.5" />
-                    </svg>
-                  )}
-                </button>
               </div>
               <p className="sl-promise">
                 {gst ? "Totals include GST. " : ""}Nothing here is paid to rank higher.
@@ -997,7 +956,7 @@ export function HotelStayList({
                 )}
               </div>
             ) : null}
-            <div className={`sl-list${view === "grid" ? " is-grid" : ""}`} id="list">
+            <div className="sl-list" id="list">
               {results.length === 0 ? (
                 <div className="sl-empty">
                   <h2>No stays match</h2>

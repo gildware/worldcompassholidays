@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { theme } from "@/config/theme";
 import { formatMoney } from "@/lib/format";
+import { homeTravelDeskServices } from "@/lib/homeServices";
 import type { TourListLocation } from "@/components/tour-list/types";
 import "@/styles/home-experience.css";
 
@@ -99,32 +100,7 @@ export function HomeExperience({
   showCars: boolean;
   showBikes: boolean;
 }) {
-  const serviceLinks = [
-    {
-      href: "/visa-services",
-      title: "Visa help",
-      text: "Document list and a clear service fee before you pay.",
-    },
-    {
-      href: "/meet-and-assist",
-      title: "Meet & assist",
-      text: "A greeter at arrival, departure, or a connection.",
-    },
-    showCars
-      ? {
-          href: "/rentals/cars",
-          title: "Car rental",
-          text: "Self-drive or chauffeur, quoted by the day.",
-        }
-      : null,
-    showBikes
-      ? {
-          href: "/rentals/bikes",
-          title: "Bike rental",
-          text: "Motorbikes and scooters for the same dates.",
-        }
-      : null,
-  ].filter(Boolean) as { href: string; title: string; text: string }[];
+  const serviceLinks = homeTravelDeskServices;
 
   return (
     <div className="home-x">
@@ -317,16 +293,32 @@ export function HomeExperience({
       {serviceLinks.length > 0 ? (
         <section className="home-x__services">
           <RailHead
-            title="More ways we help"
-            subtitle="Add-ons for the days you are there"
-            href="/contact"
-            linkLabel="Ask us"
+            title="Visa, meet & assist"
+            subtitle="Papers before you fly, a greeter when you land"
+            href="/visa-services"
+            linkLabel="Visa desk"
           />
           <div className="home-x__scroller">
             {serviceLinks.map((item) => (
-              <Link key={item.href} href={item.href} className="home-x__service">
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
+              <Link
+                key={`${item.href}-${item.title}`}
+                href={item.href}
+                className="home-x__service home-x__service--photo"
+              >
+                <div className="home-x__service-media">
+                  <Image
+                    src={item.image}
+                    alt=""
+                    fill
+                    sizes="280px"
+                    style={{ objectFit: "cover" }}
+                  />
+                </div>
+                <div className="home-x__service-body">
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                  <span className="home-x__service-cta">{item.cta}</span>
+                </div>
               </Link>
             ))}
           </div>

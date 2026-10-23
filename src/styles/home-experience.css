@@ -345,24 +345,49 @@
   line-height: 1.4;
 }
 
-/* Services */
+/* Services — visa / meet / assist photo cards */
 .home-x__services {
   padding: 18px 0 8px;
 }
 
 .home-x__services .home-x__scroller {
-  gap: 10px;
+  gap: 12px;
 }
 
 .home-x__service {
-  flex: 0 0 70%;
-  max-width: 260px;
+  flex: 0 0 78%;
+  max-width: 280px;
   padding: 16px;
   border-radius: 16px;
   background: #fff;
   border: 1px solid var(--line);
   text-decoration: none;
   color: inherit;
+}
+
+.home-x__service--photo {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.home-x__service-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #d8dde8;
+}
+
+.home-x__service-media img {
+  object-fit: cover;
+}
+
+.home-x__service-body {
+  padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .home-x__service h3 {
@@ -377,6 +402,16 @@
   font-size: 0.78rem;
   color: var(--muted);
   line-height: 1.4;
+  flex: 1;
+}
+
+.home-x__service-cta {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--blue);
 }
 
 /* CTA */

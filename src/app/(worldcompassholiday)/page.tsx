@@ -6,6 +6,7 @@ import CallToActions from "@/components/common/CallToActions";
 import PopularDestinations from "@/components/destinations/PopularDestinations";
 import Hero1 from "@/components/hero/hero-1";
 import { HomeExperience } from "@/components/home/HomeExperience";
+import { HomeServiceCards } from "@/components/home/HomeServiceCards";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { durationChoices } from "@/components/tour-list/tour-list-v2/query";
 import type { TourListLocation } from "@/components/tour-list/types";
@@ -14,6 +15,7 @@ import { modules } from "@/config/modules";
 import { theme } from "@/config/theme";
 import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
+import { homeTravelDeskServices } from "@/lib/homeServices";
 import { getPublicNav } from "@/lib/navigation";
 import { graphLd, organizationNode, pageMetadata, websiteNode } from "@/lib/seo";
 
@@ -428,57 +430,27 @@ export default async function Page() {
 
         <section className="layout-pt-md layout-pb-lg">
           <div className="container">
-            <div className="row justify-center text-center">
+            <div className="row y-gap-20 justify-between items-end">
               <div className="col-auto">
                 <div className="sectionTitle -md">
-                  <h2 className="sectionTitle__title">More ways we help</h2>
+                  <h2 className="sectionTitle__title">Visa, meet &amp; assist</h2>
                   <p className="sectionTitle__text mt-5 sm:mt-0">
-                    Visa files, an airport greeter, and a car or bike for the days you are there.
+                    Papers before you fly, and a greeter when you land or leave.
                   </p>
                 </div>
               </div>
+              <div className="col-auto md:d-none">
+                <Link
+                  href="/visa-services"
+                  className="button -md -blue-1 bg-blue-1-05 text-blue-1"
+                >
+                  Visa desk
+                  <div className="icon-arrow-top-right ml-15" />
+                </Link>
+              </div>
             </div>
-            <div className="row y-gap-30 pt-40">
-              {[
-                {
-                  href: "/visa-services",
-                  title: "Visa help",
-                  text: "Document list and a service fee quoted before you pay.",
-                },
-                {
-                  href: "/meet-and-assist",
-                  title: "Meet and assist",
-                  text: "A greeter at arrival, departure, or a connection.",
-                },
-                modules.cars
-                  ? {
-                      href: "/rentals/cars",
-                      title: "Car rental",
-                      text: "Self-drive cars with a daily rate and a pickup point.",
-                    }
-                  : null,
-                modules.bikes
-                  ? {
-                      href: "/rentals/bikes",
-                      title: "Bike rental",
-                      text: "Motorbikes and scooters for the same dates.",
-                    }
-                  : null,
-              ]
-                .filter(
-                  (item): item is { href: string; title: string; text: string } => Boolean(item),
-                )
-                .map((item) => (
-                  <div className="col-lg-3 col-sm-6" key={item.href}>
-                    <Link
-                      href={item.href}
-                      className="d-block rounded-4 border-light px-20 py-20 h-full"
-                    >
-                      <h3 className="text-18 fw-500 text-dark-1">{item.title}</h3>
-                      <p className="text-15 text-light-1 mt-10">{item.text}</p>
-                    </Link>
-                  </div>
-                ))}
+            <div className="pt-40">
+              <HomeServiceCards items={homeTravelDeskServices} />
             </div>
           </div>
         </section>

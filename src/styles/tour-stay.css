@@ -109,12 +109,13 @@ a.road-btn:hover { background: var(--blue-dark); color: #fff; }
   grid-template-rows: 1fr 1fr;
   gap: 8px;
   height: 520px;
+  overflow: hidden;
 }
 .road-shot { border: 0; padding: 0; background: #e7e1d8; border-radius: 18px; overflow: hidden; min-height: 0; }
-.road-shot img { width: 100%; height: 100%; object-fit: cover; }
+.road-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .road-g1 { grid-row: 1 / span 2; }
 .road-gallery--1 { grid-template-columns: 1fr; grid-template-rows: 420px; height: auto; }
-.road-gallery--1 .road-g1 { grid-row: auto; height: 420px; }
+.road-gallery--1 .road-g1 { grid-row: auto; height: 100%; }
 .road-gallery--2 { grid-template-columns: 1.45fr 1fr; }
 .road-gallery--2 .road-shot:nth-child(2) { grid-row: 1 / span 2; }
 .road-gallery--3,
@@ -385,7 +386,14 @@ body .road .road-dialog textarea {
     grid-template-columns: 1fr 1fr; grid-template-rows: 220px 140px; height: auto;
   }
   .road-g1 { grid-row: auto; grid-column: 1 / -1; height: 220px; }
-  .road-gallery--1 { grid-template-columns: 1fr; grid-template-rows: 240px; }
+  .road-gallery--1 {
+    grid-template-columns: 1fr;
+    grid-template-rows: 240px;
+  }
+  .road-gallery--1 .road-g1 {
+    grid-column: auto;
+    height: 100%;
+  }
   .road-beat { grid-template-columns: 1fr; gap: 2px; }
   .road-sub-total { display: none; }
   .road-book {

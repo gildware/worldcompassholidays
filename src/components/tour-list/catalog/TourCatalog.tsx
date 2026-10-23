@@ -101,7 +101,6 @@ export function TourCatalog({
         query.q,
         query.date,
         query.sort,
-        query.view,
         query.adults,
         query.children,
         query.cancel,
@@ -404,7 +403,7 @@ export function TourCatalog({
           className="btn btn--ghost btn--small"
           type="button"
           onClick={async () => {
-            const search = catalogSearch({ ...query, page });
+            const search = catalogSearch(query);
             const url = `${window.location.origin}${pathname}${search ? `?${search}` : ""}`;
             try {
               await navigator.clipboard.writeText(url);
@@ -483,31 +482,6 @@ export function TourCatalog({
                   autoComplete="off"
                 />
               </form>
-              <button
-                className="m-bar__view"
-                type="button"
-                aria-label={query.view === "grid" ? "Show as list" : "Show as grid"}
-                aria-pressed={query.view === "grid"}
-                onClick={() =>
-                  setQuery((current) => ({
-                    ...current,
-                    view: current.view === "grid" ? "list" : "grid",
-                  }))
-                }
-              >
-                {query.view === "grid" ? (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-                    <path d="M5 7h14M5 12h14M5 17h14" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-                    <rect x="4" y="4" width="7" height="7" rx="1.5" />
-                    <rect x="13" y="4" width="7" height="7" rx="1.5" />
-                    <rect x="4" y="13" width="7" height="7" rx="1.5" />
-                    <rect x="13" y="13" width="7" height="7" rx="1.5" />
-                  </svg>
-                )}
-              </button>
             </div>
             <div className="m-bar__trip">
               <button
@@ -703,31 +677,6 @@ export function TourCatalog({
               </span>
               <span className="head__title">{query.q.trim() || "All tours"}</span>
             </h1>
-            <button
-              className="view-toggle"
-              type="button"
-              aria-label={query.view === "grid" ? "Show as list" : "Show as grid"}
-              aria-pressed={query.view === "grid"}
-              onClick={() =>
-                setQuery((current) => ({
-                  ...current,
-                  view: current.view === "grid" ? "list" : "grid",
-                }))
-              }
-            >
-              {query.view === "grid" ? (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-                  <path d="M5 7h14M5 12h14M5 17h14" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-                  <rect x="4" y="4" width="7" height="7" rx="1.5" />
-                  <rect x="13" y="4" width="7" height="7" rx="1.5" />
-                  <rect x="4" y="13" width="7" height="7" rx="1.5" />
-                  <rect x="13" y="13" width="7" height="7" rx="1.5" />
-                </svg>
-              )}
-            </button>
           </div>
           <p className="promise">
             The price is the total for the travelers and date you chose. Cancellation is for that date. Anything you still pay on the spot is written on the card.

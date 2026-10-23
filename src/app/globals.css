@@ -3545,7 +3545,7 @@ a.bike-card__book:hover {
 
 .bike-card__media {
   position: relative;
-  aspect-ratio: 5 / 2;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   background: var(--fleet-wash);
 }
@@ -3557,7 +3557,7 @@ a.bike-card__book:hover {
   width: 100% !important;
   height: 100% !important;
   max-width: none;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
   background: var(--fleet-wash);
 }
@@ -3583,7 +3583,7 @@ a.bike-card__book:hover {
 }
 
 .bike-card__frame.is-photo img {
-  padding: 10px 12px 4px;
+  padding: 0;
 }
 
 .bike-card__nav {
@@ -3836,6 +3836,10 @@ a.bike-card__body {
 .car-fleet .bike-bar__line {
   flex-wrap: wrap;
   overflow: visible;
+}
+
+.car-fleet .bike-card__media {
+  aspect-ratio: 5 / 4;
 }
 
 .car-fleet .bike-card__frame.is-photo img {

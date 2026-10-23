@@ -273,8 +273,9 @@
   }
 
   .mobile-tabbar__icon svg {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
+    display: block;
   }
 
   /* Install prompt sits above tab bar */
