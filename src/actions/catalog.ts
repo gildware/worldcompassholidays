@@ -24,7 +24,8 @@ const itemSchema = z.object({
 });
 
 function revalidateCatalog() {
-  revalidatePath("/admin/configuration");
+  revalidatePath("/admin/tours/configuration");
+  revalidatePath("/admin/hotels/configuration");
   revalidatePath("/admin/tours");
   revalidatePath("/admin/tours/new");
   revalidatePath("/admin/hotels");

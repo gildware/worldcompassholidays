@@ -12,7 +12,7 @@ import { fleetKinds, fleetLabel } from "@/lib/rentals/labels";
 import { getRentalSetup } from "@/lib/rentals/setup";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { findAvailabilityConflicts, handoverModes, unavailableReason, vehicleCanBeBooked } from "@/lib/rentals/availability";
-import { parseDateTimeLocal } from "@/lib/rentals/dates";
+import { parseDateTimeLocal, resolvePickupLocal, resolveReturnLocal } from "@/lib/rentals/dates";
 import { quoteRental } from "@/lib/rentals/pricing";
 import {
   absoluteUrl,
@@ -161,6 +161,8 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
   const placeQuery = one(query.q).trim();
   const pickupAt = parseDateTimeLocal(pickup);
   const returnAt = parseDateTimeLocal(ret);
+  const bookingPickup = resolvePickupLocal(pickup);
+  const bookingReturn = resolveReturnLocal(bookingPickup, ret);
   const currency = vehicle.currency || "INR";
   let quote: ReturnType<typeof quoteRental> | null = null;
   if (pickupAt && returnAt && returnAt > pickupAt && vehicle.pricePerDay >= 1) {
@@ -384,8 +386,8 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
             requiresExpiry: item.requiresExpiry,
           })),
           savedDocuments: savedDocuments.filter((item) => documents.some((document) => document.id === item.configId)),
-          defaultPickup: pickup,
-          defaultReturn: ret,
+          defaultPickup: bookingPickup,
+          defaultReturn: bookingReturn,
           defaultLocationId: namedPlace?.id || locations[0]?.id || "",
           mapApiKey: mapApiKey(),
           savedAddress: profile?.address ?? "",

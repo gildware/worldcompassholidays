@@ -11,7 +11,13 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { handoverModes, unavailableReason } from "@/lib/rentals/availability";
 import { findAvailabilityConflicts } from "@/lib/rentals/availability";
-import { earliestPickupLocal, parseDateTimeLocal, pickupLeadMessage } from "@/lib/rentals/dates";
+import {
+  earliestPickupLocal,
+  parseDateTimeLocal,
+  pickupLeadMessage,
+  resolvePickupLocal,
+  resolveReturnLocal,
+} from "@/lib/rentals/dates";
 import { documentsRequiredToBook } from "@/lib/rentals/booking-documents";
 import { listProfileDocuments } from "@/lib/rentals/profile-documents";
 import { fleetKinds } from "@/lib/rentals/labels";
@@ -81,8 +87,10 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
       ? vehicle.locationLinks.map((link) => link.location).filter((location) => location.active)
       : setup.locations.filter((location) => location.active);
   const addons = vehicle.addonLinks.map((link) => link.config).filter((addon) => addon.active);
-  const pickup = one(query.pickup);
-  const ret = one(query.return);
+  const pickupRaw = one(query.pickup);
+  const returnRaw = one(query.return);
+  const pickup = resolvePickupLocal(pickupRaw);
+  const ret = resolveReturnLocal(pickup, returnRaw);
   const mode = one(query.mode) || (modes.counter ? "counter" : "delivery");
   const returnMode = one(query.returnMode) || mode;
   const location = one(query.location);
@@ -198,7 +206,7 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
         <form method="get" className="grid gap-4 rounded-2xl border border-line bg-white p-5">
           <label className="grid gap-1 text-sm">
             Pickup
-            <input name="pickup" type="datetime-local" defaultValue={pickup || earliestPickupLocal()} min={earliestPickupLocal()} required />
+            <input name="pickup" type="datetime-local" defaultValue={pickup} min={earliestPickupLocal()} required />
           </label>
           <label className="grid gap-1 text-sm">
             Return

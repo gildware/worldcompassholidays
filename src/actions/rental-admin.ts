@@ -42,7 +42,8 @@ function revalidateFleet(slug?: string) {
   revalidatePath("/admin/rentals/cars/configuration");
   revalidatePath("/admin/rentals/bikes/configuration");
   revalidatePath("/admin/rentals/configuration");
-  revalidatePath("/admin/configuration");
+  revalidatePath("/admin/tours/configuration");
+  revalidatePath("/admin/hotels/configuration");
   revalidatePath("/admin/rentals/locations");
   revalidatePath("/admin/rentals/policies");
   revalidatePath("/rentals");

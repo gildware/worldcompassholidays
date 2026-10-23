@@ -649,6 +649,7 @@ model Booking {
   amount       Int       @default(0)
   currency     String    @default("INR")
   notes        String    @default("")
+  // JSON may include staffNote, assigneeId, assigneeName for desk ownership.
   details      String    @default("{}")
   contactName  String
   contactEmail String
@@ -660,6 +661,7 @@ model Booking {
 
   @@index([status, module])
   @@index([userId])
+  @@index([module, status])
 }
 
 // scope is "staff" or "customer". allAccess roles pass every permission

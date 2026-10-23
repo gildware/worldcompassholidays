@@ -9,7 +9,12 @@ import { Modal } from "@/components/ui/Modal";
 import { formatPhone } from "@/lib/auth/phone";
 import { formatMoney } from "@/lib/format";
 import { parseMapPoint } from "@/lib/maps";
-import { earliestPickupLocal, pickupLeadMessage } from "@/lib/rentals/dates";
+import {
+  earliestPickupLocal,
+  pickupLeadMessage,
+  resolvePickupLocal,
+  resolveReturnLocal,
+} from "@/lib/rentals/dates";
 
 type LocationOption = { id: string; name: string; address: string };
 type AddonOption = { id: string; name: string; price: number; priceUnit: string };
@@ -213,8 +218,10 @@ function BookRentalModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const [pickup, setPickup] = useState(booking.defaultPickup);
-  const [ret, setRet] = useState(booking.defaultReturn);
+  const [pickup, setPickup] = useState(() => resolvePickupLocal(booking.defaultPickup));
+  const [ret, setRet] = useState(() =>
+    resolveReturnLocal(resolvePickupLocal(booking.defaultPickup), booking.defaultReturn),
+  );
   const [place, setPlace] = useState<PlaceValue>(() =>
     startingPlace({
       counter: booking.counter,
@@ -236,8 +243,10 @@ function BookRentalModal({
 
   useEffect(() => {
     if (!open) return;
-    setPickup((current) => current || earliestPickupLocal());
-  }, [open]);
+    const nextPickup = resolvePickupLocal(booking.defaultPickup);
+    setPickup(nextPickup);
+    setRet(resolveReturnLocal(nextPickup, booking.defaultReturn));
+  }, [booking.defaultPickup, booking.defaultReturn, open]);
 
   const returnPath = useMemo(() => {
     const params = new URLSearchParams({

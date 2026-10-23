@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { moduleLabel, statusLabel } from "@/lib/bookings";
+import { bookingStatusTone, moduleLabel, statusLabel } from "@/lib/bookings";
 import { formatDate } from "@/lib/format";
 
 export type AccountBookingRow = {
@@ -10,6 +10,14 @@ export type AccountBookingRow = {
   guests: number;
   status: string;
   createdAt: Date;
+};
+
+const toneClass: Record<string, string> = {
+  ok: "bg-emerald-50 text-emerald-800",
+  warn: "bg-amber-50 text-amber-900",
+  info: "bg-sky-50 text-sky-900",
+  danger: "bg-rose-50 text-rose-800",
+  neutral: "bg-surface text-navy",
 };
 
 export function BookingList({
@@ -36,8 +44,14 @@ export function BookingList({
               </p>
             </div>
             <div className="shrink-0 text-right">
-              <p className="text-xs font-medium">{statusLabel(booking.status)}</p>
-              <p className="text-xs text-muted">{formatDate(booking.createdAt)}</p>
+              <span
+                className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  toneClass[bookingStatusTone(booking.status)] ?? toneClass.neutral
+                }`}
+              >
+                {statusLabel(booking.status)}
+              </span>
+              <p className="mt-0.5 text-xs text-muted">{formatDate(booking.createdAt)}</p>
             </div>
           </Link>
         </li>

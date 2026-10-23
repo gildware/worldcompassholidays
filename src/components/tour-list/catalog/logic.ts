@@ -1,7 +1,6 @@
 import { quoteTour } from "@/lib/tours/quote";
 import type { CatalogQuery, CatalogSort, CatalogTour } from "@/components/tour-list/catalog/types";
 
-export const PAGE_SIZE = 8;
 export const DURS = [
   ["half", "Under 5 hours"],
   ["day", "A full day"],
@@ -180,12 +179,18 @@ export function cancelInfo(tour: CatalogTour, query: CatalogQuery, today: string
   return { kind: "yes" as const, text: `Free cancellation until ${prettyDate(deadline)}` };
 }
 
+/** Hotel-style unit × quantity line under the party total. */
 export function priceDetail(tour: CatalogTour, query: CatalogQuery) {
   const quote = partyQuote(tour, query);
   const currency = tour.currency || "INR";
-  if (query.children) return `${money(quote.adult, currency)} an adult · children ${money(quote.child, currency)}`;
-  if (quote.singles) return `${money(quote.adult, currency)} a person · single room ${money(quote.singleFee, currency)}`;
-  return `${money(quote.adult, currency)} a person`;
+  const adults = `${money(quote.adult, currency)} × ${query.adults} adult${query.adults === 1 ? "" : "s"}`;
+  if (query.children) {
+    return `${adults} · ${money(quote.child, currency)} × ${query.children} child${query.children === 1 ? "" : "ren"}`;
+  }
+  if (quote.singles) {
+    return `${adults} · ${money(quote.singleFee, currency)} × ${quote.singles} single room${quote.singles === 1 ? "" : "s"}`;
+  }
+  return adults;
 }
 
 export function extraLine(tour: CatalogTour) {
@@ -382,7 +387,7 @@ export function readCatalogQuery(
     pickup: one(params.pickup) === "1",
     rating: rating === 8 || rating === 9 ? rating : 0,
     sort: SORTS.includes(sort) ? sort : "match",
-    view: one(params.view) === "grid" ? "grid" : "list",
+    view: one(params.view) === "list" ? "list" : "grid",
     page: page >= 1 && page <= 20 ? page : 1,
     showOff: one(params.off) === "1",
     showSold: one(params.sold) === "1",
@@ -413,7 +418,7 @@ export function catalogSearch(query: CatalogQuery) {
   if (query.pickup) params.set("pickup", "1");
   if (query.rating) params.set("rating", String(query.rating));
   if (query.sort !== "match") params.set("sort", query.sort);
-  if (query.view === "grid") params.set("view", "grid");
+  if (query.view === "list") params.set("view", "list");
   if (query.page > 1) params.set("page", String(query.page));
   if (query.showOff) params.set("off", "1");
   if (query.showSold) params.set("sold", "1");

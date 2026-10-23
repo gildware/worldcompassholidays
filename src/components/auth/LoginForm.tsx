@@ -19,11 +19,23 @@ export function LoginForm({
     <form action={formAction} className="grid gap-4">
       <FormMessage state={state} />
       {next ? <input type="hidden" name="next" value={next} /> : null}
-      <Field label="Email" help="login.email">
-        <input name="email" type="email" autoComplete="email" required />
+      <Field label="Email" showHelp={false}>
+        <input
+          name="email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@company.com"
+          required
+        />
       </Field>
-      <Field label="Password" help="login.password">
-        <input name="password" type="password" autoComplete="current-password" required />
+      <Field label="Password" showHelp={false}>
+        <input
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          placeholder="••••••••"
+          required
+        />
       </Field>
       <SubmitButton pendingLabel="Signing in">Sign in</SubmitButton>
     </form>

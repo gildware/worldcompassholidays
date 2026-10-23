@@ -33,6 +33,23 @@ export function earliestPickupLocal(now = new Date()) {
   return toDateTimeLocal(earliestPickupDate(now));
 }
 
+/** Use the given pickup if it clears the lead-time rule; otherwise now + 30 minutes. */
+export function resolvePickupLocal(value = "", now = new Date()) {
+  const parsed = parseDateTimeLocal(value);
+  if (parsed && !pickupLeadMessage(parsed, now)) return toDateTimeLocal(parsed);
+  return earliestPickupLocal(now);
+}
+
+/** Keep return after pickup; default to one day after pickup when missing or invalid. */
+export function resolveReturnLocal(pickupLocal: string, value = "") {
+  const start = parseDateTimeLocal(pickupLocal) ?? earliestPickupDate();
+  const end = parseDateTimeLocal(value);
+  if (end && end > start) return toDateTimeLocal(end);
+  const next = new Date(start);
+  next.setDate(next.getDate() + 1);
+  return toDateTimeLocal(next);
+}
+
 export function parseDateOnly(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const date = new Date(`${value}T00:00`);

@@ -15,7 +15,9 @@ export default function WorldCompassHolidayLayout({
 }) {
   return (
     <WorldCompassHolidayFrame>
-      <PublicHeader overlay />
+      <div className="app-chrome-desktop">
+        <PublicHeader overlay />
+      </div>
       {children}
     </WorldCompassHolidayFrame>
   );

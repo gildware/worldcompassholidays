@@ -32,6 +32,13 @@ export function customerReturnPath(value: unknown, fallback = "/account") {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
     return fallback;
   }
-  if (value.startsWith("/account") || value.startsWith("/rentals")) return value;
+  if (
+    value.startsWith("/account") ||
+    value.startsWith("/rentals") ||
+    value.startsWith("/tours") ||
+    value.startsWith("/hotels")
+  ) {
+    return value;
+  }
   return fallback;
 }

@@ -6,10 +6,17 @@ import { HotelStayReply } from "@/components/account/HotelStayReply";
 import { requireCustomer } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { accountSectionForModule } from "@/lib/account-sections";
-import { customerEditableStatuses, moduleLabel, statusLabel } from "@/lib/bookings";
+import { activityFromDetails } from "@/lib/booking-activity";
+import {
+  bookingStatusTone,
+  customerEditableStatuses,
+  moduleLabel,
+  parseBookingDetails,
+  statusLabel,
+} from "@/lib/bookings";
 import { bookedHotelStatuses, readHotelReply } from "@/lib/hotel-reply";
 import { prisma } from "@/lib/db";
-import { formatDate, formatMoney } from "@/lib/format";
+import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { privateMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
@@ -42,8 +49,18 @@ export default async function AccountBookingPage({
     booking.module === "hotel" &&
     bookedHotelStatuses.includes(booking.status as (typeof bookedHotelStatuses)[number]);
 
+  const activity = activityFromDetails(parseBookingDetails(booking.details));
+  const tone = bookingStatusTone(booking.status);
+  const toneClass =
+    {
+      ok: "bg-emerald-50 text-emerald-800",
+      warn: "bg-amber-50 text-amber-900",
+      info: "bg-sky-50 text-sky-900",
+      danger: "bg-rose-50 text-rose-800",
+      neutral: "bg-surface text-navy",
+    }[tone] ?? "bg-surface text-navy";
+
   const rows = [
-    ["Status", statusLabel(booking.status)],
     ["Service", moduleLabel(booking.module)],
     ["Guests", String(booking.guests)],
     ["Preferred start", booking.startDate ? formatDate(booking.startDate) : "Not set"],
@@ -64,6 +81,11 @@ export default async function AccountBookingPage({
       <div>
         <p className="text-sm text-muted">{booking.reference}</p>
         <h1 className="mt-1 text-2xl font-semibold">{booking.title}</h1>
+        <p className="mt-2">
+          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${toneClass}`}>
+            {statusLabel(booking.status)}
+          </span>
+        </p>
       </div>
       <dl className="grid gap-3 rounded-xl border border-line bg-white p-5 text-sm sm:grid-cols-2">
         {rows.map(([label, value]) => (
@@ -79,6 +101,21 @@ export default async function AccountBookingPage({
           </div>
         ) : null}
       </dl>
+      {activity.length > 0 ? (
+        <section className="rounded-xl border border-line bg-white p-5">
+          <h2 className="text-sm font-semibold text-navy">Updates</h2>
+          <ol className="mt-3 space-y-3">
+            {activity.map((item) => (
+              <li key={`${item.at}-${item.status}-${item.message}`} className="text-sm">
+                <p className="font-medium text-navy">{item.message || statusLabel(item.status)}</p>
+                <p className="text-xs text-muted">
+                  {formatDateTime(new Date(item.at))} · {statusLabel(item.status)}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
       {canReply ? (
         <HotelStayReply reference={booking.reference} review={readHotelReply(booking.details)} />
       ) : null}

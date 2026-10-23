@@ -1,0 +1,392 @@
+/* Mobile / tablet app shell — desktop (≥1025px) unchanged */
+
+.app-chrome-mobile {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .app-chrome-mobile {
+    display: block;
+  }
+
+  /* Hide desktop header & heavy footers on phone/tablet */
+  .app-chrome-desktop,
+  .site-footer-scope,
+  .worldcompassholiday-page > footer.footer,
+  .worldcompassholiday-page footer.site-footer {
+    display: none !important;
+  }
+
+  /* Offset for compact mobile header instead of desktop header */
+  .public-header-offset {
+    padding-top: 0;
+  }
+
+  /* Slight side inset for list/detail pages on phone & tablet */
+  .site-shell > main.public-header-offset,
+  .worldcompassholiday-page > main {
+    padding-left: 0;
+    padding-right: 0;
+    /* Allow horizontal rails to keep their side padding visible */
+    overflow-x: clip;
+  }
+
+  .site-shell > main .container,
+  .worldcompassholiday-page .container {
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+
+  /* Room for fixed bottom tab bar on every page */
+  body {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .site-shell,
+  .worldcompassholiday-page {
+    padding-bottom: 0;
+  }
+
+  /* —— Compact top bar —— */
+  .mobile-app-header {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    background: var(--navy);
+    color: #fff;
+    padding: 10px 16px 14px;
+    padding-top: max(10px, env(safe-area-inset-top, 0px));
+  }
+
+  .mobile-app-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .mobile-app-header__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .mobile-app-header__mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--blue);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .mobile-app-header__mark svg {
+    width: 58%;
+    height: 58%;
+  }
+
+  .mobile-app-header__brand strong {
+    display: block;
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+
+  .mobile-app-header__brand small {
+    display: block;
+    font-size: 0.68rem;
+    opacity: 0.75;
+    font-weight: 500;
+  }
+
+  .mobile-app-header__title h1 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    margin: 0;
+    line-height: 1.15;
+  }
+
+  .mobile-app-header__title p {
+    margin: 2px 0 0;
+    font-size: 0.78rem;
+    opacity: 0.75;
+  }
+
+  .mobile-app-header__actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .mobile-app-header__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    text-decoration: none;
+  }
+
+  .mobile-app-header__icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .mobile-app-header__search {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.84rem;
+    text-decoration: none;
+  }
+
+  .mobile-app-header__search svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  /* Listing pages: light, quiet bar — search below does the work */
+  .mobile-app-header--listing {
+    background: #fff;
+    color: #051036;
+    padding: 8px 14px;
+    padding-top: max(8px, env(safe-area-inset-top, 0px));
+    border-bottom: 1px solid #e8ebf2;
+    box-shadow: none;
+  }
+
+  .mobile-app-header--listing .mobile-app-header__inner {
+    gap: 10px;
+  }
+
+  .mobile-app-header__back {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    color: #051036;
+    background: #f3f5fa;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .mobile-app-header__back svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .mobile-app-header__listing-title {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .mobile-app-header__listing-title p {
+    margin: 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #697488;
+  }
+
+  .mobile-app-header__listing-title strong {
+    display: block;
+    margin-top: 1px;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #051036;
+    line-height: 1.2;
+  }
+
+  .mobile-app-header--listing .mobile-app-header__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 0;
+    background: #f3f5fa;
+    color: #051036;
+  }
+
+  /* —— Bottom tabs (global, all public pages) —— */
+  .mobile-tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10050;
+    height: calc(68px + env(safe-area-inset-bottom, 0px));
+    padding: 6px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr);
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -6px 24px rgba(5, 16, 54, 0.06);
+  }
+
+  .mobile-tabbar a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.62rem;
+    font-weight: 500;
+    padding: 4px;
+  }
+
+  .mobile-tabbar a.is-active {
+    color: var(--blue);
+    font-weight: 600;
+  }
+
+  .mobile-tabbar__icon {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+  }
+
+  .mobile-tabbar__icon img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+  }
+
+  .mobile-tabbar__icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Install prompt sits above tab bar */
+  body:has(.mobile-tabbar) [role="dialog"][aria-label="Install app"] {
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Hotel / tour detail Book docks sit above the tab bar */
+  body:has(.mobile-tabbar) .stay-dock,
+  body:has(.mobile-tabbar) .road-dock {
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* —— Home quick links —— */
+  .mobile-quick-links {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 14px 16px 4px;
+    background: var(--surface);
+  }
+
+  .mobile-quick-links__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    padding: 12px 6px 10px;
+    border-radius: 14px;
+    background: #fff;
+    color: var(--navy);
+    text-decoration: none;
+    font-size: 0.68rem;
+    font-weight: 500;
+    box-shadow: 0 1px 0 rgba(5, 16, 54, 0.04);
+  }
+
+  .mobile-quick-links__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    background: var(--blue-soft);
+    color: var(--blue);
+    display: grid;
+    place-items: center;
+  }
+
+  .mobile-quick-links__icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Hero is secondary under the app header on phones */
+  .masthead.-type-1 {
+    min-height: auto !important;
+  }
+
+  .masthead.-type-1 .tabs.-underline {
+    display: none;
+  }
+
+  /* —— Listing / card density (demo-like) —— */
+  .tour-catalog .row.y-gap-30 > [class*="col-"],
+  .stay-list .row.y-gap-30 > [class*="col-"],
+  .road .row.y-gap-30 > [class*="col-"] {
+    margin-bottom: 0.35rem;
+  }
+
+  .sectionTitle__title {
+    font-size: 1.35rem !important;
+    letter-spacing: -0.02em;
+  }
+
+  .masthead .text-60,
+  .masthead h1.text-60 {
+    font-size: 1.65rem !important;
+    letter-spacing: -0.03em;
+    line-height: 1.15 !important;
+  }
+
+  .masthead .tabs.-underline {
+    margin-top: 1.25rem !important;
+  }
+
+  /* Quick chip feel for filter rows when present */
+  .sidebar.-type-1,
+  .sidebar.-type-2 {
+    border-radius: 16px;
+  }
+
+  /* Hide scroll-top FAB above tab bar collision */
+  .scrollToThetop,
+  .scroll-top,
+  button.scrollTop {
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .app-chrome-mobile {
+    display: none !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

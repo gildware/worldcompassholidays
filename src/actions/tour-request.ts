@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/session";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
+import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
@@ -82,10 +83,13 @@ function fieldErrors(error: z.ZodError) {
 export async function submitTourRequest(_previous: FormState, formData: FormData): Promise<FormState> {
   const user = await getCurrentUser();
   const customer = user?.scope === "customer" ? user : null;
+  if (!customer) {
+    return { error: "Sign in to request this trip", fields: {}, values: {} };
+  }
   const values = {
-    name: customer?.name ?? text(formData.get("name")),
-    email: customer?.email ?? text(formData.get("email")),
-    phone: text(formData.get("phone")) || customer?.phone || "",
+    name: customer.name.trim() || text(formData.get("name")),
+    email: customer.email.trim() || text(formData.get("email")),
+    phone: (customer.phone || "").trim() || text(formData.get("phone")),
     note: text(formData.get("note")),
     tourSlug: text(formData.get("tourSlug")),
     mode: text(formData.get("mode")) || "group",
@@ -171,7 +175,7 @@ export async function submitTourRequest(_previous: FormState, formData: FormData
       amount: quote.total,
       currency: tour.currency || "INR",
       notes,
-      details: JSON.stringify({
+      details: detailsWithEnquiryReceived({
         kind: "custom_tour",
         tourSlug: tour.slug,
         mode: data.mode,

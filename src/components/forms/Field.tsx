@@ -4,6 +4,7 @@ export function Field({
   label,
   hint,
   help,
+  showHelp = true,
   required = false,
   error,
   name,
@@ -14,6 +15,8 @@ export function Field({
   hint?: string;
   /** Catalog key when this label is used for more than one kind of field. */
   help?: string;
+  /** Set false for compact surfaces (e.g. login) where help icons clutter the UI. */
+  showHelp?: boolean;
   required?: boolean;
   error?: string | null;
   /** Stable key for scroll-to-error targeting (`data-field`). */
@@ -32,7 +35,7 @@ export function Field({
             </span>
           ) : null}
         </span>
-        <FieldHelp label={label} help={help} />
+        {showHelp ? <FieldHelp label={label} help={help} /> : null}
       </div>
       <div
         className={

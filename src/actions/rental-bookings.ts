@@ -16,7 +16,9 @@ import {
   bookingTransitions,
   customerCancelStatuses,
   paymentMethods,
+  rentalStatusLabel,
 } from "@/lib/rentals/labels";
+import { notifyRentalStatusChange } from "@/lib/booking-notify";
 import { parseMapPoint } from "@/lib/maps";
 import { extraReturnCharges, quoteRental, type RentalQuote } from "@/lib/rentals/pricing";
 
@@ -25,17 +27,28 @@ function fail(error: unknown): FormState {
   return { error: "Something went wrong. Try again." };
 }
 
-function revalidateBooking(reference?: string, slug?: string) {
+function revalidateBooking(
+  reference?: string,
+  slug?: string,
+  opts?: { bookingId?: string; kind?: string },
+) {
   revalidatePath("/rentals");
   revalidatePath("/account");
   revalidatePath("/account/rentals");
   revalidatePath("/account/cars");
   revalidatePath("/account/bikes");
+  revalidatePath("/admin");
+  revalidatePath("/admin/bookings");
+  revalidatePath("/admin/bookings/cars");
+  revalidatePath("/admin/bookings/bikes");
   revalidatePath("/admin/rentals");
   revalidatePath("/admin/rentals/bookings");
   revalidatePath("/admin/rentals/payments");
   revalidatePath("/admin/rentals/customers");
   revalidatePath("/admin/rentals/reports");
+  if (opts?.kind === "car") revalidatePath("/admin/bookings/cars");
+  if (opts?.kind === "bike") revalidatePath("/admin/bookings/bikes");
+  if (opts?.bookingId) revalidatePath(`/admin/rentals/bookings/${opts.bookingId}`);
   if (reference) revalidatePath(`/account/rentals/${reference}`);
   if (slug) revalidatePath(`/rentals/${slug}`);
 }
@@ -497,7 +510,10 @@ export async function saveCustomerRentalDocument(
         },
       });
     }
-    revalidateBooking(booking.reference, booking.vehicle.slug);
+    revalidateBooking(booking.reference, booking.vehicle.slug, {
+      bookingId: booking.id,
+      kind: booking.vehicle.kind,
+    });
     return { error: null, success: "Document saved." };
   } catch (error) {
     return fail(error);
@@ -576,7 +592,10 @@ export async function cancelRentalBooking(
         },
       },
     });
-    revalidateBooking(booking.reference, booking.vehicle.slug);
+    revalidateBooking(booking.reference, booking.vehicle.slug, {
+      bookingId: booking.id,
+      kind: booking.vehicle.kind,
+    });
     return { error: null, success: "Booking cancelled." };
   } catch (error) {
     return fail(error);
@@ -627,6 +646,7 @@ export async function updateRentalBookingStatus(
     if ((next === "rejected" || next === "cancelled") && note.length < 3) {
       return { error: "Enter a reason." };
     }
+    const previousStatus = booking.status;
     await prisma.rentalBooking.update({
       where: { id: booking.id },
       data: {
@@ -637,17 +657,84 @@ export async function updateRentalBookingStatus(
         events: {
           create: {
             status: next,
-            message: note || `Status changed to ${next.replaceAll("_", " ")}.`,
+            message: note || `Status changed to ${rentalStatusLabel(next)}.`,
             actorId: actor.id,
           },
         },
       },
     });
-    revalidateBooking(booking.reference, booking.vehicle.slug);
-    return { error: null, success: "Booking updated." };
+    revalidateBooking(booking.reference, booking.vehicle.slug, {
+      bookingId: booking.id,
+      kind: booking.vehicle.kind,
+    });
+
+    void notifyRentalStatusChange({
+      contactName: booking.contactName,
+      contactEmail: booking.contactEmail,
+      reference: booking.reference,
+      vehicleName: booking.vehicle.name,
+      status: next,
+      previousStatus,
+      kind: booking.vehicle.kind,
+    }).catch((error) => console.error("[notify:rental]", error));
+
+    return { error: null, success: "Booking updated. Guest notified by email when mail is configured." };
   } catch (error) {
     return fail(error);
   }
+}
+
+export async function verifyAllCustomerDocuments(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const actor = await requirePermission("vehicles.manage");
+  const bookingId = String(formData.get("bookingId") ?? "").trim();
+  if (!bookingId) return { error: "Booking not found." };
+
+  const booking = await prisma.rentalBooking.findUnique({
+    where: { id: bookingId },
+    include: { documents: true, vehicle: { select: { slug: true, kind: true } } },
+  });
+  if (!booking) return { error: "Booking not found." };
+
+  const pending = booking.documents.filter((document) => document.status !== "verified");
+  if (pending.length === 0) {
+    return { error: null, success: "All documents are already verified." };
+  }
+
+  const now = new Date();
+  await prisma.$transaction(
+    pending.map((document) =>
+      prisma.rentalBookingDocument.update({
+        where: { id: document.id },
+        data: {
+          status: "verified",
+          rejectionReason: "",
+          verifiedAt: now,
+          verifiedById: actor.id,
+        },
+      }),
+    ),
+  );
+
+  await prisma.rentalBookingEvent.create({
+    data: {
+      bookingId: booking.id,
+      status: booking.status,
+      message: `Verified ${pending.length} customer document${pending.length === 1 ? "" : "s"}.`,
+      actorId: actor.id,
+    },
+  });
+
+  revalidateBooking(booking.reference, booking.vehicle.slug, {
+    bookingId: booking.id,
+    kind: booking.vehicle.kind,
+  });
+  return {
+    error: null,
+    success: `Verified ${pending.length} document${pending.length === 1 ? "" : "s"}. You can confirm the booking.`,
+  };
 }
 
 export async function reviewCustomerDocument(
@@ -692,7 +779,10 @@ export async function reviewCustomerDocument(
       },
     });
   }
-  revalidateBooking(document.booking.reference, document.booking.vehicle.slug);
+  revalidateBooking(document.booking.reference, document.booking.vehicle.slug, {
+    bookingId: document.bookingId,
+    kind: document.booking.vehicle.kind,
+  });
   return { error: null, success: status === "verified" ? "Document verified." : "Document rejected." };
 }
 
@@ -703,7 +793,7 @@ export async function recordRentalPayment(
   const actor = await requirePermission("vehicles.manage");
   const payment = await prisma.rentalPayment.findUnique({
     where: { id: String(formData.get("paymentId") ?? "") },
-    include: { booking: { include: { vehicle: { select: { slug: true } } } } },
+    include: { booking: { include: { vehicle: { select: { slug: true, kind: true } } } } },
   });
   if (!payment) return { error: "Payment not found." };
   const status = String(formData.get("status") ?? "");
@@ -730,7 +820,10 @@ export async function recordRentalPayment(
       actorId: actor.id,
     },
   });
-  revalidateBooking(payment.booking.reference, payment.booking.vehicle.slug);
+  revalidateBooking(payment.booking.reference, payment.booking.vehicle.slug, {
+    bookingId: payment.bookingId,
+    kind: payment.booking.vehicle.kind,
+  });
   return { error: null, success: "Payment updated." };
 }
 
@@ -741,7 +834,7 @@ export async function addRentalCharge(
   const actor = await requirePermission("vehicles.manage");
   const booking = await prisma.rentalBooking.findUnique({
     where: { id: String(formData.get("bookingId") ?? "") },
-    include: { vehicle: { select: { slug: true } } },
+    include: { vehicle: { select: { slug: true, kind: true } } },
   });
   if (!booking) return { error: "Booking not found." };
   if (!["active", "return_pending", "completed"].includes(booking.status)) {
@@ -790,6 +883,9 @@ export async function addRentalCharge(
       },
     },
   });
-  revalidateBooking(booking.reference, booking.vehicle.slug);
+  revalidateBooking(booking.reference, booking.vehicle.slug, {
+    bookingId: booking.id,
+    kind: booking.vehicle.kind,
+  });
   return { error: null, success: "Extra charges added." };
 }

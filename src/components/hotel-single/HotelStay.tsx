@@ -219,6 +219,20 @@ export function HotelStay({
       <a className="stay-skip" href="#overview">
         Skip to stay details
       </a>
+      <header className="stay-topbar">
+        <Link href={listHref} className="stay-topbar__back" aria-label="Back to hotels">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+        </Link>
+        <div className="stay-topbar__title">
+          <p>Hotel</p>
+          <strong>{hotel.name}</strong>
+        </div>
+        <button className="stay-btn stay-btn--small stay-topbar__book" type="button" onClick={openBook}>
+          Book
+        </button>
+      </header>
       <div className="stay-wrap">
         <nav className="stay-crumb" aria-label="Breadcrumb">
           <Link href={listHref}>Hotels</Link>
@@ -640,7 +654,7 @@ export function HotelStay({
           </span>
         </div>
         <button className="stay-btn" type="button" onClick={openBook}>
-          View deal
+          Book
         </button>
       </div>
       <p className="stay-sr" aria-live="polite">{money(stayTotal, currency)}</p>

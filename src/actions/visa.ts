@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requirePermission } from "@/lib/auth/guards";
 import { getCurrentUser } from "@/lib/auth/session";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
+import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import type { FormState } from "@/lib/forms";
@@ -152,7 +153,7 @@ export async function submitVisaRequest(
       endDate: day(data.returnDate),
       guests: data.travellers,
       notes,
-      details: JSON.stringify({
+      details: detailsWithEnquiryReceived({
         country: data.country,
         nationality: data.nationality,
         visaType: data.visaType,

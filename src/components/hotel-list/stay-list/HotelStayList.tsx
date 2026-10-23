@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useLazySlice } from "@/hooks/useLazySlice";
 import {
   activeFilters,
   bestFlags,
@@ -40,6 +42,7 @@ import {
   type StayPlace,
 } from "@/lib/hotels/stay-list";
 import "@/styles/hotel-list-stay.css";
+import "@/styles/listing-app.css";
 
 function toggleValue(list: string[], value: string) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
@@ -75,7 +78,8 @@ export function HotelStayList({
   const [state, setState] = useState(initial);
   const [saved, setSaved] = useState<string[]>([]);
   const [photos, setPhotos] = useState<Record<string, number>>({});
-  const [menu, setMenu] = useState<null | "place" | "in" | "out" | "who" | "sort">(null);
+  const [menu, setMenu] = useState<null | "place" | "in" | "out" | "who" | "sort" | "dock-sort" | "m-place" | "trip">(null);
+  const [view, setView] = useState<"list" | "grid">("grid");
   const [searching, setSearching] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
@@ -107,6 +111,32 @@ export function HotelStayList({
       .filter((hotel) => matches(hotel, state, savedSet, today))
       .sort((a, b) => compareHotels(a, b, state, distance, taxEnabled));
   }, [distance, pool, savedSet, state, taxEnabled, today]);
+  const windowKey = useMemo(
+    () =>
+      [
+        state.place,
+        state.q,
+        state.sort,
+        state.checkin,
+        state.checkout,
+        state.adults,
+        state.children,
+        state.rooms,
+        state.minPrice,
+        state.maxPrice,
+        state.breakfast,
+        state.cancel,
+        state.pay,
+        state.savedOnly,
+        state.stars.join("\0"),
+        state.types.join("\0"),
+        state.areas.join("\0"),
+        state.amenities.join("\0"),
+        [...savedSet].join("\0"),
+      ].join("|"),
+    [savedSet, state],
+  );
+  const { visible, sentinelRef, hasMore } = useLazySlice(results, windowKey);
   const filters = activeFilters(state, bounds, currency);
   const placeName = state.place === "all" ? "All stays" : places.find((place) => place.id === state.place)?.name || "Stays";
   const types = [...new Set(pool.map((hotel) => hotel.type))].sort((a, b) => a.localeCompare(b));
@@ -224,15 +254,23 @@ export function HotelStayList({
     if (!menu) return;
     const onDown = (event: PointerEvent) => {
       const target = event.target;
-      if (target instanceof Element && target.closest("[data-picker]")) return;
+      if (
+        target instanceof Element &&
+        target.closest("[data-picker], .sl-cal, .cal, .m-cal-backdrop, .m-cal-sheet")
+      ) {
+        return;
+      }
       setMenu(null);
     };
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setMenu(null);
     };
-    document.addEventListener("pointerdown", onDown);
+    const timer = window.setTimeout(() => {
+      document.addEventListener("pointerdown", onDown);
+    }, 0);
     window.addEventListener("keydown", onKey);
     return () => {
+      window.clearTimeout(timer);
       document.removeEventListener("pointerdown", onDown);
       window.removeEventListener("keydown", onKey);
     };
@@ -461,6 +499,163 @@ export function HotelStayList({
             <strong>{placeName}</strong>
             <span>{rangeLabel(state.checkin, state.checkout)} · {guestText(state.adults, state.children, state.rooms)}</span>
           </button>
+
+          <div className="m-bar app-chrome-mobile" data-picker>
+            <div className="m-bar__row">
+              <button
+                className="m-bar__loc"
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={menu === "m-place"}
+                aria-label="Location"
+                onClick={() => setMenu((current) => (current === "m-place" ? null : "m-place"))}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                  <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
+                <span>{state.place === "all" ? "Anywhere" : placeName}</span>
+              </button>
+              <form
+                className="m-bar__form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  document.getElementById("list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <circle cx="11" cy="11" r="6.5" />
+                  <path d="M16 16l4 4" />
+                </svg>
+                <input
+                  value={state.q}
+                  onChange={(event) => patch({ q: event.target.value })}
+                  placeholder="Search hotels"
+                  aria-label="Search hotels"
+                  enterKeyHint="search"
+                  autoComplete="off"
+                />
+              </form>
+              <button
+                className="m-bar__view"
+                type="button"
+                aria-label={view === "grid" ? "Show as list" : "Show as grid"}
+                aria-pressed={view === "grid"}
+                onClick={() => setView((current) => (current === "grid" ? "list" : "grid"))}
+              >
+                {view === "grid" ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                    <path d="M5 7h14M5 12h14M5 17h14" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                    <rect x="4" y="4" width="7" height="7" rx="1.5" />
+                    <rect x="13" y="4" width="7" height="7" rx="1.5" />
+                    <rect x="4" y="13" width="7" height="7" rx="1.5" />
+                    <rect x="13" y="13" width="7" height="7" rx="1.5" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            <div className="m-bar__trip">
+              <button
+                className="m-bar__meta"
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={menu === "trip"}
+                onClick={() => setMenu((current) => (current === "trip" ? null : "trip"))}
+              >
+                {rangeLabel(state.checkin, state.checkout)} · {guestText(state.adults, state.children, state.rooms)}
+              </button>
+              <div className="m-bar__tools" aria-label="Listing actions">
+                <button className="m-bar__filter" type="button" onClick={openFilters}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                    <path d="M4 6h16M7 12h10M10 18h4" />
+                  </svg>
+                  {filters.length ? `Filters · ${filters.length}` : "Filters"}
+                </button>
+                <div className="m-bar__sort" data-picker>
+                  <button
+                    className="m-bar__sort-btn"
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded={menu === "dock-sort"}
+                    aria-label={`Sort: ${sortLabel}`}
+                    onClick={() => setMenu((current) => (current === "dock-sort" ? null : "dock-sort"))}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                      <path d="M7 6v12M7 18l-2.5-2.5M7 18l2.5-2.5M17 18V6M17 6l-2.5 2.5M17 6l2.5 2.5" />
+                    </svg>
+                    Sort
+                  </button>
+                  {menu === "dock-sort" ? (
+                    <div className="sl-menu" role="listbox" aria-label="Sort stays">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          role="option"
+                          aria-selected={state.sort === option.value}
+                          className={state.sort === option.value ? "is-on" : ""}
+                          onClick={() => {
+                            patch({ sort: option.value });
+                            setMenu(null);
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+            {menu === "m-place" ? (
+              <div className="m-bar__menu" role="listbox" aria-label="Location">
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={state.place === "all"}
+                  className={state.place === "all" ? "is-on" : undefined}
+                  onClick={() => {
+                    patch({ place: "all", areas: [], types: [] });
+                    setMenu(null);
+                  }}
+                >
+                  All stays
+                </button>
+                {places.map((place) => (
+                  <button
+                    key={place.id}
+                    type="button"
+                    role="option"
+                    aria-selected={state.place === place.id}
+                    className={state.place === place.id ? "is-on" : undefined}
+                    onClick={() => {
+                      patch({ place: place.id, areas: [], types: [] });
+                      setMenu(null);
+                    }}
+                  >
+                    {place.name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {!searching && menu === "trip" ? (
+              <StayTripSheet
+                checkin={state.checkin}
+                checkout={state.checkout}
+                adults={state.adults}
+                children={state.children}
+                rooms={state.rooms}
+                today={today}
+                whoNote={whoNote}
+                onClose={() => setMenu(null)}
+                onChange={(next) => patch(next)}
+              />
+            ) : null}
+          </div>
+
           <form
             className="sl-search-wrap"
             onSubmit={(event) => {
@@ -490,8 +685,17 @@ export function HotelStayList({
                   <span className="sl-k">Check-in</span>
                   <strong>{prettyStayDate(state.checkin)}</strong>
                 </button>
-                {menu === "in" ? (
-                  <DateMenu value={state.checkin} min={toISO(today)} onPick={(checkin) => { patch({ checkin }); setMenu(null); }} />
+                {searching && menu === "in" ? (
+                  <DateMenu
+                    label="Check-in"
+                    value={state.checkin}
+                    min={toISO(today)}
+                    onClose={() => setMenu(null)}
+                    onPick={(checkin) => {
+                      patch({ checkin });
+                      setMenu("out");
+                    }}
+                  />
                 ) : null}
               </div>
               <div className="sl-field sl-field--end" data-picker>
@@ -499,8 +703,17 @@ export function HotelStayList({
                   <span className="sl-k">Check-out</span>
                   <strong>{prettyStayDate(state.checkout)}</strong>
                 </button>
-                {menu === "out" ? (
-                  <DateMenu value={state.checkout} min={toISO(addDays(parseISO(state.checkin), 1))} onPick={(checkout) => { patch({ checkout }); setMenu(null); }} />
+                {searching && menu === "out" ? (
+                  <DateMenu
+                    label="Check-out"
+                    value={state.checkout}
+                    min={toISO(addDays(parseISO(state.checkin), 1))}
+                    onClose={() => setMenu(null)}
+                    onPick={(checkout) => {
+                      patch({ checkout });
+                      setMenu(null);
+                    }}
+                  />
                 ) : null}
               </div>
               <div className="sl-field sl-who-wrap" data-picker>
@@ -701,11 +914,31 @@ export function HotelStayList({
           <div className="sl-results" id="results" inert={filtersOpen}>
             <header className="sl-head">
               <p className="sl-eyebrow">{rangeLabel(state.checkin, state.checkout)} · {nights} night{nights > 1 ? "s" : ""} · {guestText(state.adults, state.children, state.rooms)}</p>
-              <h1>{placeName}</h1>
+              <div className="sl-head__row">
+                <h1>{placeName}</h1>
+                <button
+                  className="sl-view-toggle"
+                  type="button"
+                  aria-label={view === "grid" ? "Show as list" : "Show as grid"}
+                  aria-pressed={view === "grid"}
+                  onClick={() => setView((current) => (current === "grid" ? "list" : "grid"))}
+                >
+                  {view === "grid" ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                      <path d="M5 7h14M5 12h14M5 17h14" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                      <rect x="4" y="4" width="7" height="7" rx="1.5" />
+                      <rect x="13" y="4" width="7" height="7" rx="1.5" />
+                      <rect x="4" y="13" width="7" height="7" rx="1.5" />
+                      <rect x="13" y="13" width="7" height="7" rx="1.5" />
+                    </svg>
+                  )}
+                </button>
+              </div>
               <p className="sl-promise">
-                <span className="sl-count">{results.length === pool.length ? `${results.length}` : `${results.length} of ${pool.length}`}</span>
-                {" "}
-                {results.length === 1 ? "stay" : "stays"}. {gst ? "Totals include GST. " : ""}Nothing here is paid to rank higher.
+                {gst ? "Totals include GST. " : ""}Nothing here is paid to rank higher.
               </p>
             </header>
             <div className="sl-toolbar">
@@ -764,7 +997,7 @@ export function HotelStayList({
                 )}
               </div>
             ) : null}
-            <div className="sl-list" id="list">
+            <div className={`sl-list${view === "grid" ? " is-grid" : ""}`} id="list">
               {results.length === 0 ? (
                 <div className="sl-empty">
                   <h2>No stays match</h2>
@@ -784,31 +1017,30 @@ export function HotelStayList({
                   </div>
                 </div>
               ) : (
-                results.map((hotel, index) => (
-                  <StayCard
-                    key={hotel.id}
-                    hotel={hotel}
-                    index={index}
-                    state={state}
-                    nights={nights}
-                    saved={savedSet.has(hotel.id)}
-                    photo={photos[hotel.id] || 0}
-                    hot={hotId === hotel.id}
-                    km={distance.get(hotel.id) ?? null}
-                    centreName={centreName}
-                    compared={state.compare.includes(hotel.id)}
-                    compareFull={!state.compare.includes(hotel.id) && state.compare.length >= 3}
-                    today={today}
-                    taxEnabled={taxEnabled}
-                    onPhoto={(dir) => setPhotos((current) => {
-                      const count = hotel.photos.length || 1;
-                      const next = ((current[hotel.id] || 0) + dir + count) % count;
-                      return { ...current, [hotel.id]: next };
-                    })}
-                    onSave={() => toggleSave(hotel.id)}
-                    onCompare={() => toggleCompare(hotel.id)}
-                  />
-                ))
+                <>
+                  {visible.map((hotel, index) => (
+                    <StayCard
+                      key={hotel.id}
+                      hotel={hotel}
+                      index={index}
+                      state={state}
+                      nights={nights}
+                      saved={savedSet.has(hotel.id)}
+                      photo={photos[hotel.id] || 0}
+                      hot={hotId === hotel.id}
+                      km={distance.get(hotel.id) ?? null}
+                      centreName={centreName}
+                      compared={state.compare.includes(hotel.id)}
+                      compareFull={!state.compare.includes(hotel.id) && state.compare.length >= 3}
+                      today={today}
+                      taxEnabled={taxEnabled}
+                      onPhoto={(index) => setPhotos((current) => ({ ...current, [hotel.id]: index }))}
+                      onSave={() => toggleSave(hotel.id)}
+                      onCompare={() => toggleCompare(hotel.id)}
+                    />
+                  ))}
+                  {hasMore ? <div ref={sentinelRef} className="stay-list__more" aria-hidden="true" /> : null}
+                </>
               )}
             </div>
           </div>
@@ -983,7 +1215,7 @@ function StayCard({
   compareFull: boolean;
   today: Date;
   taxEnabled: boolean;
-  onPhoto: (dir: number) => void;
+  onPhoto: (index: number) => void;
   onSave: () => void;
   onCompare: () => void;
 }) {
@@ -1011,15 +1243,23 @@ function StayCard({
             <img src={shot.src} alt={shot.alt} width={900} height={600} fetchPriority={index === 0 ? "high" : undefined} loading={index === 0 ? undefined : "lazy"} decoding="async" />
           ) : null}
         </Link>
-        {hotel.photos.length > 1 ? (
-          <>
-            <button className="sl-nav sl-prev" type="button" aria-label={`Previous photo of ${hotel.name}`} onClick={() => onPhoto(-1)}>‹</button>
-            <button className="sl-nav sl-next" type="button" aria-label={`Next photo of ${hotel.name}`} onClick={() => onPhoto(1)}>›</button>
-          </>
-        ) : null}
         <button className="sl-save" type="button" aria-pressed={saved} aria-label={`${saved ? "Remove" : "Save"} ${hotel.name}`} onClick={onSave}>{saved ? "♥" : "♡"}</button>
         {favourite ? <span className="sl-badge">Guest favourite</span> : null}
-        {hotel.photos.length ? <span className="sl-counter">{photo + 1} / {hotel.photos.length}</span> : null}
+        {hotel.photos.length > 1 ? (
+          <div className="sl-dots" role="tablist" aria-label={`Photos of ${hotel.name}`}>
+            {hotel.photos.map((item, photoIndex) => (
+              <button
+                key={`${hotel.id}-${item.src}-${photoIndex}`}
+                type="button"
+                role="tab"
+                aria-selected={photoIndex === photo}
+                aria-label={`Photo ${photoIndex + 1} of ${hotel.photos.length}`}
+                className={photoIndex === photo ? "is-on" : undefined}
+                onClick={() => onPhoto(photoIndex)}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
       <div className="sl-body">
         <div>
@@ -1042,6 +1282,11 @@ function StayCard({
             <li className={cancel.ok ? "sl-ok" : "sl-muted"}>{cancel.text}</li>
             <li className={hotel.breakfast ? "sl-ok" : "sl-muted"}>{hotel.breakfast ? "Breakfast included" : "Breakfast not included"}</li>
             {hotel.pay ? <li>Pay at the property</li> : null}
+          </ul>
+          <ul className="m-facts" aria-label="Stay details">
+            {whereLine(hotel, km, centreName) ? <li><span>{whereLine(hotel, km, centreName)}</span></li> : null}
+            {hotel.stars > 0 ? <li><span>{`${hotel.stars}-star`}</span></li> : null}
+            {hotel.breakfast ? <li className="is-ok"><span>Breakfast included</span></li> : null}
           </ul>
           {bits.length ? <p className="sl-match">Matches {bits.join(", ")}</p> : null}
           {hotel.amenities.length ? (
@@ -1086,10 +1331,166 @@ function GoldStar() {
   );
 }
 
-function DateMenu({ value, min, onPick }: { value: string; min: string; onPick: (iso: string) => void }) {
+function StayTripSheet({
+  checkin,
+  checkout,
+  adults,
+  children,
+  rooms,
+  today,
+  whoNote,
+  onClose,
+  onChange,
+}: {
+  checkin: string;
+  checkout: string;
+  adults: number;
+  children: number;
+  rooms: number;
+  today: Date;
+  whoNote: string;
+  onClose: () => void;
+  onChange: (next: Partial<StayListState>) => void;
+}) {
+  const [focus, setFocus] = useState<"in" | "out">("in");
+  const value = focus === "in" ? checkin : checkout;
+  const min = focus === "in" ? toISO(today) : toISO(addDays(parseISO(checkin), 1));
   const selected = parseISO(value);
   const earliest = parseISO(min);
   const [cursor, setCursor] = useState(() => new Date(selected.getFullYear(), selected.getMonth(), 1));
+  const year = cursor.getFullYear();
+  const month = cursor.getMonth();
+  const lead = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const days = Array.from({ length: lead + daysInMonth }, (_, index) => (index < lead ? null : index - lead + 1));
+  const title = cursor.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const previous = new Date(year, month - 1, 1);
+  const previousBlocked = new Date(year, month, 0) < earliest;
+
+  useEffect(() => {
+    const date = parseISO(focus === "in" ? checkin : checkout);
+    setCursor(new Date(date.getFullYear(), date.getMonth(), 1));
+  }, [focus, checkin, checkout]);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  const panel = (
+    <>
+      <button type="button" className="m-cal-backdrop" aria-label="Close trip details" onClick={onClose} data-picker />
+      <div className="m-cal-sheet is-sheet is-trip" role="dialog" aria-modal="true" aria-label="Dates and guests" data-picker>
+        <div className="m-cal-sheet__grab" aria-hidden />
+        <p className="m-cal-sheet__title">Dates &amp; guests</p>
+        <div className="m-trip__body">
+          <div className="m-trip__tabs" role="tablist" aria-label="Stay dates">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={focus === "in"}
+              className={focus === "in" ? "is-on" : undefined}
+              onClick={() => setFocus("in")}
+            >
+              <span>Check-in</span>
+              <strong>{prettyStayDate(checkin)}</strong>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={focus === "out"}
+              className={focus === "out" ? "is-on" : undefined}
+              onClick={() => setFocus("out")}
+            >
+              <span>Check-out</span>
+              <strong>{prettyStayDate(checkout)}</strong>
+            </button>
+          </div>
+          <div className="sl-cal__head">
+            <button type="button" aria-label="Previous month" disabled={previousBlocked} onClick={() => setCursor(previous)}>‹</button>
+            <strong>{title}</strong>
+            <button type="button" aria-label="Next month" onClick={() => setCursor(new Date(year, month + 1, 1))}>›</button>
+          </div>
+          <div className="sl-cal__grid" role="grid">
+            {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day) => (
+              <span className="sl-cal__dow" key={day}>{day}</span>
+            ))}
+            {days.map((day, index) => {
+              if (day == null) return <span key={`empty-${index}`} />;
+              const date = new Date(year, month, day);
+              const iso = toISO(date);
+              const disabled = date < earliest;
+              const inRange =
+                parseISO(checkin) <= date && date <= parseISO(checkout) && nightsBetween(checkin, checkout) > 0;
+              const isEdge = iso === checkin || iso === checkout;
+              return (
+                <button
+                  key={iso}
+                  type="button"
+                  disabled={disabled}
+                  className={`${isEdge ? "is-on" : ""}${inRange && !isEdge ? " is-range" : ""}`.trim()}
+                  aria-label={prettyStayDate(iso)}
+                  aria-pressed={iso === value}
+                  onClick={() => {
+                    if (focus === "in") {
+                      const nextOut =
+                        parseISO(checkout) <= parseISO(iso)
+                          ? toISO(addDays(parseISO(iso), 1))
+                          : checkout;
+                      onChange({ checkin: iso, checkout: nextOut });
+                      setFocus("out");
+                      return;
+                    }
+                    onChange({ checkout: iso });
+                    document.getElementById("m-trip-guests")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                  }}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+          <div className="m-trip__guests" id="m-trip-guests">
+            <p className="m-trip__label">Guests</p>
+            <Step label="Adults" value={adults} min={1} max={8} less="Fewer adults" more="More adults" onChange={(next) => onChange({ adults: next })} />
+            <Step label="Children" value={children} min={0} max={6} less="Fewer children" more="More children" onChange={(next) => onChange({ children: next })} />
+            <Step label="Rooms" value={rooms} min={1} max={4} less="Fewer rooms" more="More rooms" onChange={(next) => onChange({ rooms: next })} />
+            <p className="m-trip__note">{whoNote}</p>
+          </div>
+        </div>
+        <div className="m-trip__foot">
+          <button type="button" className="m-cal-sheet__done" onClick={onClose}>
+            Done
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
+  if (typeof document === "undefined") return null;
+  return createPortal(panel, document.body);
+}
+
+function DateMenu({
+  value,
+  min,
+  onPick,
+  onClose,
+  label,
+}: {
+  value: string;
+  min: string;
+  onPick: (iso: string) => void;
+  onClose?: () => void;
+  label?: string;
+}) {
+  const selected = parseISO(value);
+  const earliest = parseISO(min);
+  const [cursor, setCursor] = useState(() => new Date(selected.getFullYear(), selected.getMonth(), 1));
+  const [mobile, setMobile] = useState<boolean | null>(null);
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
   const lead = (new Date(year, month, 1).getDay() + 6) % 7;
@@ -1098,30 +1499,74 @@ function DateMenu({ value, min, onPick }: { value: string; min: string; onPick: 
   const title = cursor.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
   const previous = new Date(year, month - 1, 1);
   const previousBlocked = new Date(year, month, 0) < earliest;
+  const sheet = Boolean(onClose) && mobile === true;
 
-  return (
-    <div className="sl-menu sl-cal" role="dialog" aria-label={title}>
-      <div className="sl-cal__head">
-        <button type="button" aria-label="Previous month" disabled={previousBlocked} onClick={() => setCursor(previous)}>‹</button>
-        <strong>{title}</strong>
-        <button type="button" aria-label="Next month" onClick={() => setCursor(new Date(year, month + 1, 1))}>›</button>
+  useLayoutEffect(() => {
+    const query = window.matchMedia("(max-width: 1024px)");
+    const sync = () => setMobile(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    if (!sheet) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sheet]);
+
+  if (onClose && mobile === null) return null;
+
+  const panel = (
+    <>
+      {sheet ? (
+        <button type="button" className="m-cal-backdrop" aria-label="Close calendar" onClick={onClose} data-picker />
+      ) : null}
+      <div
+        className={`sl-menu sl-cal m-cal-sheet${sheet ? " is-sheet" : ""}`}
+        role="dialog"
+        aria-modal={sheet || undefined}
+        aria-label={label || title}
+        data-picker
+      >
+        {sheet ? <div className="m-cal-sheet__grab" aria-hidden /> : null}
+        {label && sheet ? <p className="m-cal-sheet__title">{label}</p> : null}
+        <div className="sl-cal__head">
+          <button type="button" aria-label="Previous month" disabled={previousBlocked} onClick={() => setCursor(previous)}>‹</button>
+          <strong>{title}</strong>
+          <button type="button" aria-label="Next month" onClick={() => setCursor(new Date(year, month + 1, 1))}>›</button>
+        </div>
+        <div className="sl-cal__grid" role="grid">
+          {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day) => (
+            <span className="sl-cal__dow" key={day}>{day}</span>
+          ))}
+          {days.map((day, index) => {
+            if (day == null) return <span key={`empty-${index}`} />;
+            const date = new Date(year, month, day);
+            const iso = toISO(date);
+            const disabled = date < earliest;
+            return (
+              <button key={iso} type="button" disabled={disabled} className={iso === value ? "is-on" : ""} aria-label={prettyStayDate(iso)} aria-pressed={iso === value} onClick={() => onPick(iso)}>
+                {day}
+              </button>
+            );
+          })}
+        </div>
+        {sheet && onClose ? (
+          <button type="button" className="m-cal-sheet__done" onClick={onClose}>
+            Done
+          </button>
+        ) : null}
       </div>
-      <div className="sl-cal__grid" role="grid">
-        {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day) => (
-          <span className="sl-cal__dow" key={day}>{day}</span>
-        ))}
-        {days.map((day, index) => {
-          if (day == null) return <span key={`empty-${index}`} />;
-          const date = new Date(year, month, day);
-          const iso = toISO(date);
-          const disabled = date < earliest;
-          return (
-            <button key={iso} type="button" disabled={disabled} className={iso === value ? "is-on" : ""} aria-label={prettyStayDate(iso)} aria-pressed={iso === value} onClick={() => onPick(iso)}>
-              {day}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    </>
   );
+
+  if (sheet && typeof document !== "undefined") {
+    return createPortal(panel, document.body);
+  }
+
+  return panel;
 }

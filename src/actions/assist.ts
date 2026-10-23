@@ -14,6 +14,7 @@ import {
   whatsAppHref,
 } from "@/lib/assist";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
+import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
 import { theme } from "@/config/theme";
 import { airportLabel, findAirport } from "@/lib/data/airports";
@@ -188,7 +189,7 @@ export async function submitAssistRequest(
       endDate: day(data.service === "round" ? data.returnDate : data.flightDate),
       guests: data.travellers,
       notes,
-      details: JSON.stringify({
+      details: detailsWithEnquiryReceived({
         service: data.service,
         airportCode: airport?.code ?? "",
         airportName,

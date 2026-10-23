@@ -1,87 +1,126 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { Figtree } from "next/font/google";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { BrandLogo } from "@/components/worldcompassholiday/BrandLogo";
 import { theme } from "@/config/theme";
 import type { NavItem } from "@/lib/navigation";
+import "./ops/ops-shell.css";
+
+const figtree = Figtree({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-figtree",
+  display: "swap",
+});
 
 function isActive(pathname: string, href: string) {
   return href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
 }
 
-function childIsActive(pathname: string, href: string, parentHref: string) {
-  if (href === parentHref) return pathname === parentHref;
-  return pathname === href || pathname.startsWith(`${href}/`);
+const bookingDeskSegments = new Set([
+  "tours",
+  "hotels",
+  "cars",
+  "bikes",
+  "visa",
+  "assist",
+]);
+
+function childIsActive(
+  pathname: string,
+  href: string,
+  parentHref: string,
+  bookingDesk?: string | null,
+) {
+  if (href === parentHref) {
+    // Bookings overview is only current on the exact overview URL — detail pages
+    // highlight the type desk via BookingDeskHint instead.
+    if (parentHref === "/admin/bookings") {
+      return pathname === href;
+    }
+    if (pathname === href) return true;
+    if (!pathname.startsWith(`${href}/`)) return false;
+    const segment = pathname.slice(href.length + 1).split("/")[0] ?? "";
+    // Sibling section routes under the same parent (e.g. /tours/configuration)
+    const sectionRoots = new Set([
+      "configuration",
+      "overview",
+      "availability",
+      "bookings",
+      "locations",
+      "rules",
+      ...bookingDeskSegments,
+    ]);
+    return !sectionRoots.has(segment);
+  }
+  if (pathname === href || pathname.startsWith(`${href}/`)) return true;
+  // Detail pages mark the type desk via BookingDeskHint (enquiry or fleet)
+  if (
+    parentHref === "/admin/bookings" &&
+    bookingDesk &&
+    href === `/admin/bookings/${bookingDesk}`
+  ) {
+    const match = pathname.match(/^\/admin\/bookings\/([^/]+)$/);
+    if (match && !bookingDeskSegments.has(match[1])) return true;
+    if (pathname.startsWith("/admin/rentals/bookings/")) return true;
+  }
+  return false;
 }
 
-function pillClass(active: boolean) {
-  return [
-    "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors",
-    active
-      ? "border-brand bg-brand font-medium text-white"
-      : "border-line bg-white text-navy/80 hover:border-navy/30 hover:text-navy",
-  ].join(" ");
-}
-
-function NavMenu({
-  item,
-  pathname,
-  open,
-  onToggle,
-}: {
-  item: NavItem;
-  pathname: string;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  const active = isActive(pathname, item.href);
-
+function NavBadge({ count }: { count?: number }) {
+  if (!count || count < 1) return null;
   return (
-    <button
-      type="button"
-      aria-haspopup="true"
-      aria-expanded={open}
-      aria-controls={open ? "admin-submenu" : undefined}
-      aria-current={active ? "page" : undefined}
-      className={pillClass(active)}
-      onClick={onToggle}
-    >
-      <NavIcon href={item.href} label={item.label} />
-      {item.label}
-      <svg
-        viewBox="0 0 20 20"
-        className={["h-3.5 w-3.5 shrink-0 transition-transform", open ? "rotate-180" : ""].join(" ")}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        aria-hidden
-      >
-        <path d="M5 7.5 10 12.5 15 7.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </button>
+    <span className="nav-badge" aria-label={`${count} need action`}>
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
+function initials(name: string) {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+      .join("") || "?"
   );
 }
 
 function NavIcon({ href, label }: { href: string; label?: string }) {
   const common = {
     viewBox: "0 0 24 24",
-    className: "h-4 w-4 shrink-0",
+    width: 18,
+    height: 18,
     fill: "none",
     stroke: "currentColor",
-    strokeWidth: 1.75,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-    "aria-hidden": true,
+    strokeWidth: 1.8,
+    "aria-hidden": true as const,
   };
 
   if (href === "/admin" || label === "Overview") {
     return (
       <svg {...common}>
-        <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
-        <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
-        <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
-        <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+        <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" />
+      </svg>
+    );
+  }
+  if (href === "/admin/bookings" || label === "Bookings") {
+    return (
+      <svg {...common}>
+        <rect x="4" y="5" width="16" height="15" rx="2" />
+        <path d="M8 3v4M16 3v4M4 10h16" />
+      </svg>
+    );
+  }
+  if (href === "/admin/tours") {
+    return (
+      <svg {...common}>
+        <path d="M3 17 9 7l4 6 3-4 5 8H3Z" />
+        <path d="M3 20h18" />
       </svg>
     );
   }
@@ -93,171 +132,212 @@ function NavIcon({ href, label }: { href: string; label?: string }) {
       </svg>
     );
   }
-  if (href === "/admin/tours") {
-    return (
-      <svg {...common}>
-        <path d="M3 19.5h18" />
-        <path d="M4 19.5 9.2 8.5 13 14l2.4-3.6L20 19.5" />
-      </svg>
-    );
-  }
-  if (href === "/admin/configuration") {
-    return (
-      <svg {...common}>
-        <path d="M4 7h16M4 12h16M4 17h16" />
-        <circle cx="8" cy="7" r="2" />
-        <circle cx="15" cy="12" r="2" />
-        <circle cx="10" cy="17" r="2" />
-      </svg>
-    );
-  }
   if (href === "/admin/hotels") {
     return (
       <svg {...common}>
         <path d="M4 20.5V9.5L12 5l8 4.5v11" />
         <path d="M9 20.5v-6h6v6" />
-        <path d="M9 10.5h.01M12 10.5h.01M15 10.5h.01" />
       </svg>
     );
   }
-  if (href === "/admin/rentals/bikes" || label === "Bikes") {
-    return (
-      <svg {...common}>
-        <circle cx="7" cy="16" r="3" />
-        <circle cx="17" cy="16" r="3" />
-        <path d="M7 16h4l2-6h4" />
-        <path d="M11 10 9 6h3" />
-      </svg>
-    );
-  }
-  if (
-    href === "/admin/rentals/cars" ||
-    href === "/admin/rentals/fleet" ||
-    href === "/admin/rentals" ||
-    label === "Cars"
-  ) {
+  if (href.startsWith("/admin/rentals/cars") || label === "Car rental") {
     return (
       <svg {...common}>
         <path d="M4 16h16" />
         <path d="M6 16 7.6 10.5h8.8L18 16" />
-        <path d="M5 16v2.5h2.2M16.8 18.5H19V16" />
         <circle cx="8" cy="18.5" r="1.6" />
         <circle cx="16" cy="18.5" r="1.6" />
       </svg>
     );
   }
-  if (href === "/admin/rentals/payments") {
+  if (href.startsWith("/admin/rentals/bikes") || label === "Bike rental") {
     return (
       <svg {...common}>
-        <rect x="3" y="6" width="18" height="12" rx="2" />
-        <path d="M3 10h18M7 15h4" />
+        <circle cx="7" cy="16" r="3" />
+        <circle cx="17" cy="16" r="3" />
+        <path d="M7 16h4l2-6h4" />
       </svg>
     );
   }
-  if (href === "/admin/rentals/reports") {
-    return (
-      <svg {...common}>
-        <path d="M4 19.5h16" />
-        <path d="M7 16.5V11M12 16.5V7.5M17 16.5V9.5" />
-      </svg>
-    );
-  }
-  if (href.endsWith("/availability") || label === "Availability") {
-    return (
-      <svg {...common}>
-        <rect x="4" y="5" width="16" height="15" rx="2" />
-        <path d="M4 10h16M8 3.5v3M16 3.5v3M8 14h.01M12 14h.01M16 14h.01" />
-      </svg>
-    );
-  }
-  if (href.endsWith("/locations") || label === "Locations") {
-    return (
-      <svg {...common}>
-        <path d="M12 21s6.5-5.6 6.5-10.2a6.5 6.5 0 1 0-13 0C5.5 15.4 12 21 12 21z" />
-        <circle cx="12" cy="10.5" r="2.2" />
-      </svg>
-    );
-  }
-  if (href === "/admin/rentals/configuration") {
-    return (
-      <svg {...common}>
-        <path d="M4 7h16M4 12h16M4 17h16" />
-        <circle cx="8" cy="7" r="2" />
-        <circle cx="15" cy="12" r="2" />
-        <circle cx="10" cy="17" r="2" />
-      </svg>
-    );
-  }
-  if (href === "/admin/rentals/policies") {
-    return (
-      <svg {...common}>
-        <path d="M8 3.5h6l4 4V20a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" />
-        <path d="M14 3.5V8h4.2" />
-        <path d="M9 13h6M9 17h4" />
-      </svg>
-    );
-  }
-  if (href === "/admin/buses") {
-    return (
-      <svg {...common}>
-        <rect x="4" y="4" width="16" height="13" rx="2" />
-        <path d="M4 10h16M8 4v6M16 4v6" />
-        <circle cx="8" cy="19.2" r="1.6" />
-        <circle cx="16" cy="19.2" r="1.6" />
-        <path d="M6.4 17.6h3.2M14.4 17.6h3.2" />
-      </svg>
-    );
-  }
-  if (href === "/admin/bookings" || href.endsWith("/bookings") || label === "Bookings") {
-    return (
-      <svg {...common}>
-        <rect x="4" y="5" width="16" height="15" rx="2" />
-        <path d="M4 10h16M8 3.5v3M16 3.5v3" />
-      </svg>
-    );
-  }
-  if (href === "/admin/customers" || href === "/admin/rentals/customers") {
+  if (href === "/admin/customers") {
     return (
       <svg {...common}>
         <circle cx="9" cy="8" r="2.6" />
         <path d="M3.8 18.5c.8-2.6 2.8-4 5.2-4s4.4 1.4 5.2 4" />
-        <circle cx="16.5" cy="8.5" r="2" />
-        <path d="M16 14.6c1.6.3 2.9 1.3 3.7 3.4" />
       </svg>
     );
   }
-  if (href === "/admin/staff") {
+  if (href === "/admin/staff" || href === "/admin/roles") {
     return (
       <svg {...common}>
-        <rect x="3.5" y="7" width="17" height="12" rx="2" />
-        <path d="M8 7V5.8A2.8 2.8 0 0 1 10.8 3h2.4A2.8 2.8 0 0 1 16 5.8V7M3.5 12.5h17" />
+        <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+        <circle cx="9.5" cy="8" r="3.5" />
       </svg>
     );
   }
-  if (href === "/admin/meet-and-assist") {
+  if (href.endsWith("/configuration") || label === "Configuration") {
     return (
       <svg {...common}>
-        <rect x="3" y="8" width="12" height="8" rx="1.5" />
-        <path d="M9 16v3.5" />
-        <circle cx="18" cy="7.5" r="2.2" />
-        <path d="M15.2 16.5c.4-1.8 1.4-2.8 2.8-2.8s2.4 1 2.8 2.8" />
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.6.9 1 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
       </svg>
     );
   }
   return (
     <svg {...common}>
-      <path d="M12 3.5 19 6.5v5.2c0 4-2.8 6.8-7 8.3-4.2-1.5-7-4.3-7-8.3V6.5L12 3.5z" />
+      <rect x="4" y="5" width="16" height="14" rx="2" />
     </svg>
   );
 }
 
-function initials(name: string) {
-  const letters = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "");
-  return letters.join("") || "?";
+const OPERATE_HREFS = new Set([
+  "/admin",
+  "/admin/destinations",
+  "/admin/tours",
+  "/admin/hotels",
+  "/admin/rentals/cars",
+  "/admin/rentals/bikes",
+  "/admin/buses",
+  "/admin/bookings",
+  "/admin/visa",
+  "/admin/meet-and-assist",
+]);
+
+function pageTitle(pathname: string, items: NavItem[], bookingDesk?: string | null) {
+  if (pathname === "/admin") return "Operations overview";
+  const bookingDetail = pathname.match(/^\/admin\/bookings\/([^/]+)$/);
+  if (bookingDetail && !bookingDeskSegments.has(bookingDetail[1])) {
+    if (bookingDesk) {
+      const desk = items
+        .find((i) => i.href === "/admin/bookings")
+        ?.children?.find((c) => c.href === `/admin/bookings/${bookingDesk}`);
+      if (desk) return desk.label;
+    }
+    return "Booking desk";
+  }
+  for (const item of items) {
+    if (item.children?.length) {
+      const child = item.children.find((c) =>
+        childIsActive(pathname, c.href, item.href, bookingDesk),
+      );
+      if (child) {
+        if (child.href === "/admin/bookings" && pathname === "/admin/bookings") {
+          return "Bookings overview";
+        }
+        return child.label;
+      }
+    }
+    if (isActive(pathname, item.href)) return item.label;
+  }
+  return "Admin";
+}
+
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      className={`nav-chevron${open ? " open" : ""}`}
+      viewBox="0 0 24 24"
+      width={16}
+      height={16}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+function NavAccordion({
+  item,
+  pathname,
+  bookingDesk,
+}: {
+  item: NavItem;
+  pathname: string;
+  bookingDesk?: string | null;
+}) {
+  const childActive = Boolean(
+    item.children?.some((c) => childIsActive(pathname, c.href, item.href, bookingDesk)),
+  );
+  const [open, setOpen] = useState(childActive);
+
+  useEffect(() => {
+    if (childActive) setOpen(true);
+  }, [childActive, pathname]);
+
+  return (
+    <div className={`nav-section${open ? " open" : ""}${childActive ? " active" : ""}`}>
+      <button
+        type="button"
+        className="nav-section-toggle"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <NavIcon href={item.href} label={item.label} />
+        <span className="nav-section-label">{item.label}</span>
+        <NavBadge count={item.badge} />
+        <ChevronIcon open={open} />
+      </button>
+      <div className="subnav-panel" aria-hidden={!open}>
+        <div className="subnav">
+          {item.children?.map((child) => {
+            const current = childIsActive(pathname, child.href, item.href, bookingDesk);
+            return (
+              <Link
+                key={child.href}
+                href={child.href}
+                className={current ? "active" : undefined}
+                aria-current={current ? "page" : undefined}
+                tabIndex={open ? undefined : -1}
+              >
+                <span>{child.label}</span>
+                <NavBadge count={child.badge} />
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function pageSub(pathname: string) {
+  if (pathname === "/admin") {
+    return "Decide today from pipeline, load, and cash — not vanity counts.";
+  }
+  if (pathname.startsWith("/admin/tours/configuration")) {
+    return "Categories, styles, facilities, FAQs, includes, and excludes.";
+  }
+  if (pathname.startsWith("/admin/hotels/configuration")) {
+    return "Amenities, room features, room amenities, FAQs, and tax.";
+  }
+  if (pathname.startsWith("/admin/rentals/cars/configuration")) {
+    return "Tags, types, fuel, transmission, includes, excludes, and features.";
+  }
+  if (pathname.startsWith("/admin/rentals/bikes/configuration")) {
+    return "Tags, types, fuel, features, and required documents.";
+  }
+  if (pathname.startsWith("/admin/tours")) return "Packages, treks, and departures.";
+  if (pathname === "/admin/bookings") {
+    return "All desks — tours, stays, fleet, visa, assist.";
+  }
+  if (pathname.startsWith("/admin/bookings/tours")) return "Tour and trek enquiries.";
+  if (pathname.startsWith("/admin/bookings/hotels")) return "Hotel stay requests.";
+  if (pathname.startsWith("/admin/bookings/cars")) return "Car rental bookings.";
+  if (pathname.startsWith("/admin/bookings/bikes")) return "Bike rental bookings.";
+  if (pathname.startsWith("/admin/bookings/visa")) return "Visa applications.";
+  if (pathname.startsWith("/admin/bookings/assist")) return "Airport meet and assist.";
+  const bookingDetail = pathname.match(/^\/admin\/bookings\/([^/]+)$/);
+  if (bookingDetail && !bookingDeskSegments.has(bookingDetail[1])) {
+    return "Guest, trip, quote, owner, and status desk.";
+  }
+  if (pathname.startsWith("/admin/hotels")) return "Stay inventory and property details.";
+  if (pathname.startsWith("/admin/destinations")) return "Places shown on the site.";
+  return theme.brandName;
 }
 
 export function AdminShell({
@@ -272,189 +352,189 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [submenuHref, setSubmenuHref] = useState<string | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const lockMainScroll =
-    pathname === "/admin/tours/new" ||
-    /^\/admin\/tours\/[^/]+$/.test(pathname) ||
-    pathname === "/admin/rentals/fleet/new" ||
-    /^\/admin\/rentals\/fleet\/[^/]+$/.test(pathname);
+  const searchParams = useSearchParams();
+  const [navOpen, setNavOpen] = useState(false);
+  const [hintDesk, setHintDesk] = useState<string | null>(null);
+  const deskFromQuery = searchParams.get("desk");
+  const bookingDesk =
+    (deskFromQuery && bookingDeskSegments.has(deskFromQuery) ? deskFromQuery : null) ??
+    hintDesk;
+  const title = useMemo(
+    () => pageTitle(pathname, items, bookingDesk),
+    [pathname, items, bookingDesk],
+  );
+
+  const operate = items.filter((item) => OPERATE_HREFS.has(item.href));
+  const system = items.filter((item) => !OPERATE_HREFS.has(item.href));
+
+  useEffect(() => {
+    setNavOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const sync = () => {
+      const value = document.documentElement.dataset.bookingDesk ?? null;
+      setHintDesk(value && bookingDeskSegments.has(value) ? value : null);
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-booking-desk"],
+    });
+    return () => observer.disconnect();
+  }, [pathname]);
 
   useEffect(() => {
     const html = document.documentElement;
     const body = document.body;
     const prev = {
       htmlOverflow: html.style.overflow,
-      htmlHeight: html.style.height,
       bodyOverflow: body.style.overflow,
       bodyHeight: body.style.height,
-      bodyPosition: body.style.position,
-      bodyWidth: body.style.width,
-      bodyTop: body.style.top,
     };
     html.style.overflow = "hidden";
-    html.style.height = "100%";
     body.style.overflow = "hidden";
     body.style.height = "100%";
-    body.style.position = "fixed";
-    body.style.width = "100%";
-    body.style.top = "0";
     return () => {
       html.style.overflow = prev.htmlOverflow;
-      html.style.height = prev.htmlHeight;
       body.style.overflow = prev.bodyOverflow;
       body.style.height = prev.bodyHeight;
-      body.style.position = prev.bodyPosition;
-      body.style.width = prev.bodyWidth;
-      body.style.top = prev.bodyTop;
     };
   }, []);
 
-  const openItem = items.find((item) => item.href === submenuHref && item.children?.length);
+  function renderNavItem(item: NavItem) {
+    const active = isActive(pathname, item.href);
 
-  const itemsRef = useRef(items);
-  itemsRef.current = items;
+    if (item.children?.length) {
+      return (
+        <NavAccordion
+          key={item.href}
+          item={item}
+          pathname={pathname}
+          bookingDesk={bookingDesk}
+        />
+      );
+    }
 
-  useEffect(() => {
-    setMenuOpen(false);
-    const parent = itemsRef.current.find(
-      (item) => item.children?.length && isActive(pathname, item.href),
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={active ? "active" : undefined}
+        aria-current={active ? "page" : undefined}
+      >
+        <NavIcon href={item.href} label={item.label} />
+        <span className="nav-section-label">{item.label}</span>
+        <NavBadge count={item.badge} />
+      </Link>
     );
-    setSubmenuHref(parent?.href ?? null);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    function onPointerDown(event: MouseEvent) {
-      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
-    }
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setMenuOpen(false);
-    }
-    document.addEventListener("mousedown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [menuOpen]);
+  }
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-surface">
-      <header className="z-30 shrink-0 border-b border-line bg-white">
-        <div className="flex h-14 items-stretch">
-        <Link
-          href="/admin"
-          className="flex shrink-0 items-center px-4 text-lg font-semibold tracking-tight text-navy sm:px-5"
-        >
-          {theme.brandName}
-        </Link>
-
-        <nav
-          aria-label="Admin"
-          className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto"
-        >
-          {items.map((item) =>
-            item.children?.length ? (
-              <NavMenu
-                key={item.href}
-                item={item}
-                pathname={pathname}
-                open={submenuHref === item.href}
-                onToggle={() => {
-                  setMenuOpen(false);
-                  setSubmenuHref((current) => (current === item.href ? null : item.href));
-                }}
-              />
-            ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive(pathname, item.href) ? "page" : undefined}
-                className={pillClass(isActive(pathname, item.href))}
-                onClick={() => setSubmenuHref(null)}
-              >
-                <NavIcon href={item.href} label={item.label} />
-                {item.label}
-              </Link>
-            ),
-          )}
-        </nav>
-
-        <div ref={menuRef} className="relative flex shrink-0 items-center px-3 sm:px-4">
-          <button
-            type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-navy text-xs font-semibold text-white"
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            aria-label={`${user.name}, account menu`}
-            onClick={() => {
-              setSubmenuHref(null);
-              setMenuOpen((open) => !open);
-            }}
-          >
-            {initials(user.name)}
-          </button>
-          {menuOpen ? (
-            <div
-              role="menu"
-              className="absolute top-full right-3 z-40 mt-1 w-52 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-lg sm:right-4"
-            >
-              <div className="border-b border-line px-3 py-2">
-                <p className="truncate text-sm font-medium text-navy">{user.name}</p>
-                <p className="truncate text-xs text-muted">{user.roleName}</p>
-              </div>
-              <Link
-                href="/admin/configuration"
-                role="menuitem"
-                className="block px-3 py-2 text-sm text-navy hover:bg-surface"
-                onClick={() => setMenuOpen(false)}
-              >
-                Settings
-              </Link>
-              <div role="menuitem" className="border-t border-line">
-                {signOut}
-              </div>
-            </div>
-          ) : null}
-        </div>
-        </div>
-        {openItem?.children?.length ? (
-          <div className="overflow-x-auto px-4 pt-2 pb-2.5 sm:px-5">
-            <div
-              id="admin-submenu"
-              role="navigation"
-              aria-label={`${openItem.label} sections`}
-              className="flex w-max items-center gap-1.5"
-            >
-                  {openItem.children.map((child) => {
-                    const current = childIsActive(pathname, child.href, openItem.href);
-                    return (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        aria-current={current ? "page" : undefined}
-                        className={pillClass(current)}
-                      >
-                        <NavIcon href={child.href} label={child.label} />
-                        {child.label}
-                      </Link>
-                    );
-                  })}
-            </div>
+    <div className={`ops-cc ${figtree.variable} ${figtree.className}`} style={{ height: "100dvh" }}>
+      <div
+        className={`scrim${navOpen ? " show" : ""}`}
+        hidden={!navOpen}
+        onClick={() => setNavOpen(false)}
+      />
+      <div className="app">
+        <aside className={`sidebar${navOpen ? " open" : ""}`} aria-label="Primary">
+          <div className="brand worldcompassholiday-page worldcompassholiday-header-scope">
+            <BrandLogo />
+            <span className="brand-ops">Operations</span>
           </div>
-        ) : null}
-      </header>
 
-      <div className="flex min-h-0 min-w-0 flex-1 justify-center p-3 sm:p-5">
-        <div
-          className={[
-            "flex h-full w-full min-h-0 min-w-0 max-w-7xl flex-col rounded-2xl border border-line bg-white px-5 py-5 shadow-sm sm:px-8 sm:py-6",
-            lockMainScroll ? "overflow-hidden" : "overflow-y-auto",
-          ].join(" ")}
-        >
-          {children}
+          <nav className="nav" aria-label="Main">
+            {operate.length ? (
+              <>
+                <div className="nav-label">Operate</div>
+                {operate.map(renderNavItem)}
+              </>
+            ) : null}
+            {system.length ? (
+              <>
+                <div className="nav-label">System</div>
+                {system.map(renderNavItem)}
+              </>
+            ) : null}
+          </nav>
+
+          <div className="sidebar-foot">
+            <div className="role-card">
+              <div className="avatar" aria-hidden>
+                {initials(user.name)}
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <strong style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{user.name}</strong>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
+                  {user.roleName}
+                </span>
+              </div>
+            </div>
+            <div style={{ marginTop: 8 }}>{signOut}</div>
+          </div>
+        </aside>
+
+        <div className="main">
+          <header className="topbar">
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button
+                className="menu-btn"
+                type="button"
+                aria-label="Open navigation"
+                aria-expanded={navOpen}
+                onClick={() => setNavOpen((o) => !o)}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+              </button>
+              <div>
+                <h1>{title}</h1>
+                <div className="sub">{pageSub(pathname)}</div>
+              </div>
+            </div>
+            <div className="top-actions">
+              <span className="live" title="Live admin">
+                <i /> Live
+              </span>
+              <Link
+                className="btn"
+                href="/"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open public website"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden
+                  style={{ marginRight: 6, verticalAlign: "-2px" }}
+                >
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <path d="M15 3h6v6" />
+                  <path d="M10 14 21 3" />
+                </svg>
+                View website
+              </Link>
+              {pathname === "/admin" ? (
+                <Link className="btn btn-primary" href="/admin/bookings">
+                  + New booking
+                </Link>
+              ) : (
+                <Link className="btn" href="/admin">
+                  Overview
+                </Link>
+              )}
+            </div>
+          </header>
+
+          <div className="content">{children}</div>
         </div>
       </div>
     </div>

@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { BookingsScreen } from "@/components/admin/rentals/BookingsScreen";
-import { modules } from "@/config/modules";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Car bookings" };
-
-export default function CarBookingsPage() {
-  if (!modules.cars) notFound();
-  return <BookingsScreen kind="car" />;
+export default function CarBookingsRedirectPage() {
+  redirect("/admin/bookings/cars");
 }

@@ -105,6 +105,30 @@ export const bookingTransitions: Record<string, readonly string[]> = {
   rejected: [],
 };
 
+/** Happy-path next step for the rental desk primary CTA. */
+export function primaryRentalAction(
+  status: string,
+): { status: string; label: string } | null {
+  switch (status) {
+    case "pending":
+      return { status: "documents_required", label: "Request documents" };
+    case "documents_required":
+      return { status: "documents_under_review", label: "Mark under review" };
+    case "documents_under_review":
+      return { status: "confirmed", label: "Confirm booking" };
+    case "confirmed":
+      return { status: "ready_for_pickup", label: "Mark ready for pickup" };
+    case "ready_for_pickup":
+      return { status: "active", label: "Start rental (handover)" };
+    case "active":
+      return { status: "return_pending", label: "Mark return pending" };
+    case "return_pending":
+      return { status: "completed", label: "Complete booking" };
+    default:
+      return null;
+  }
+}
+
 export const documentStatuses = ["pending", "verified", "rejected"] as const;
 
 export const documentStatusLabels: Record<string, string> = {

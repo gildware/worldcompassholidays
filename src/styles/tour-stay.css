@@ -13,6 +13,8 @@
   --shadow: 0 22px 50px rgba(48, 36, 18, 0.08);
   --serif: "Fraunces", "Iowan Old Style", Palatino, Georgia, serif;
   --sans: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
+  --road-topbar-h: 0px;
+  --tabbar-h: 0px;
   min-height: 100dvh;
   background: var(--paper);
   color: var(--ink);
@@ -20,6 +22,10 @@
   font-size: 16.5px;
   line-height: 1.55;
   accent-color: var(--blue);
+}
+
+.road-topbar {
+  display: none;
 }
 
 .road,
@@ -48,7 +54,7 @@
 .road h3,
 .road p { margin: 0; }
 .road img { max-width: 100%; display: block; }
-.road button, .road input, .road textarea, .road select { color: inherit; }
+.road input, .road textarea, .road select { color: inherit; }
 .road button { cursor: pointer; }
 .road a { color: inherit; }
 .road ul { margin: 0; padding: 0; }
@@ -71,17 +77,20 @@
 .road-logo em { font-style: normal; font-family: var(--sans); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); }
 .road-actions { display: flex; gap: 8px; align-items: center; }
 
-.road-btn {
+.road .road-btn,
+a.road-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   border-radius: 999px; border: 1px solid transparent; background: var(--blue); color: #fff;
   padding: 12px 18px; font-weight: 600; text-decoration: none; line-height: 1;
 }
-.road-btn:hover { background: var(--blue-dark); color: #fff; }
-.road-btn--ghost { background: transparent; color: var(--ink); border-color: var(--line); }
-.road-btn--ghost:hover { background: #fff; color: var(--ink); }
-.road-btn--small { padding: 9px 14px; font-size: 14px; }
-.road-btn--block { width: 100%; padding: 15px 18px; }
-.road-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.road .road-btn:hover,
+a.road-btn:hover { background: var(--blue-dark); color: #fff; }
+.road .road-btn--ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.road .road-btn--ghost:hover { background: #fff; color: var(--ink); }
+.road .road-btn--small { padding: 9px 14px; font-size: 14px; }
+.road .road-btn--block { width: 100%; padding: 15px 18px; }
+.road .road-btn:disabled,
+.road .road-btn.is-disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
 
 .road-crumb { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--muted); font-size: 14px; padding: 8px 0 4px; }
 .road-crumb a { text-decoration: none; }
@@ -122,7 +131,7 @@
 .road-stop strong { display: block; margin-top: 6px; font-family: var(--sans); font-weight: 650; letter-spacing: 0; font-size: 15.5px; }
 
 .road-sub {
-  position: sticky; top: 90px; z-index: 30;
+  position: sticky; top: calc(var(--road-topbar-h) + 90px); z-index: 30;
   display: flex; gap: 18px; align-items: center;
   margin-top: 18px;
   background: rgba(246, 243, 237, 0.92);
@@ -270,10 +279,22 @@ body .road .road-dialog textarea {
 .road-light-next { right: 16px; }
 .road dialog::backdrop { background: rgba(20, 16, 12, 0.62); }
 
-.road-dialog { border: 0; padding: 0; background: #fff; border-radius: 22px; width: min(520px, calc(100% - 28px)); max-height: calc(100vh - 32px); overflow: auto; color: var(--ink); }
+.road-dialog {
+  position: fixed; top: 50%; left: 50%; right: auto; bottom: auto;
+  transform: translate(-50%, -50%); margin: 0;
+  border: 0; padding: 0; background: #fff; border-radius: 22px;
+  width: min(520px, calc(100% - 28px)); max-height: calc(100vh - 32px);
+  overflow: auto; color: var(--ink);
+}
 .road-dialog form, .road-success { padding: 26px; }
 .road-dialog h2 { font-size: 32px; margin-bottom: 8px; }
 .road-dialog label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 650; color: var(--muted); margin-top: 12px; }
+.road-guest {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin: 14px 0 4px; padding: 0 2px; color: var(--ink);
+}
+.road-guest strong { display: block; font-size: 15px; }
+.road-guest span { display: block; color: var(--muted); font-size: 13px; text-align: right; }
 .road-form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .road-success p { color: var(--muted); margin-top: 8px; }
 
@@ -283,6 +304,80 @@ body .road .road-dialog textarea {
   opacity: 0; pointer-events: none; transition: 0.25s ease; z-index: 80;
 }
 .road-toast.is-on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 1024px) {
+  .road {
+    --road-topbar-h: 56px;
+    --tabbar-h: calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .road-topbar {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 45;
+    align-items: center;
+    gap: 10px;
+    min-height: var(--road-topbar-h);
+    padding: 8px 14px;
+    padding-top: max(8px, env(safe-area-inset-top, 0px));
+    background: rgba(255, 252, 248, 0.96);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .road-topbar__back {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: #f3f0ea;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .road-topbar__back svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .road-topbar__title {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .road-topbar__title p {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--soft);
+  }
+
+  .road-topbar__title strong {
+    display: block;
+    margin-top: 1px;
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 560;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .road-topbar__book {
+    flex: 0 0 auto;
+  }
+
+  .road-crumb { display: none; }
+  .road-sub { top: var(--road-topbar-h); margin-top: 0; }
+  .road-section { scroll-margin-top: calc(var(--road-topbar-h) + 64px); }
+}
 
 @media (max-width: 980px) {
   .road-hero, .road-layout, .road-stats, .road-hi, .road-split, .road-amen, .road-facts, .road-cards, .road-route { grid-template-columns: 1fr; }
@@ -306,20 +401,22 @@ body .road .road-dialog textarea {
   .road-backdrop { position: fixed; inset: 0; background: rgba(20, 16, 12, 0.45); z-index: 50; border: 0; }
   body.road-sheet .road-backdrop { display: block; }
   .road-dock {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    position: fixed; left: 0; right: 0; z-index: 40;
+    bottom: var(--tabbar-h, 0px);
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    background: #fff; border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: #fff; border-top: 1px solid var(--line); padding: 12px 16px;
   }
   body.road-sheet .road-dock { display: none; }
   .road-dock strong { font-size: 26px; display: block; line-height: 1; }
   .road-dock span { color: var(--muted); font-size: 13px; }
-  .road { padding-bottom: 84px; }
+  .road { padding-bottom: calc(84px + var(--tabbar-h, 0px)); }
   .road-footer { padding-bottom: 28px; }
+  .road-toast { bottom: calc(92px + var(--tabbar-h, 0px)); }
 }
 
 @media (max-width: 767px) {
-  .road-sub { top: 80px; }
-  .road-section { scroll-margin-top: 150px; }
+  .road-sub { top: var(--road-topbar-h); }
+  .road-section { scroll-margin-top: calc(var(--road-topbar-h) + 58px); }
 }
 
 @media (max-width: 640px) {

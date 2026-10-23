@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { submitTourRequest } from "@/actions/tour-request";
+import { formatPhone } from "@/lib/auth/phone";
 import { initialFormState } from "@/lib/forms";
 import { formatMoney } from "@/lib/format";
 import { plainText } from "@/lib/seo";
@@ -120,6 +121,8 @@ export function TourStay({ tour, customer }: { tour: TourStayData; customer: Gue
   const currency = tour.currency || "INR";
   const photos = tour.images.length > 0 ? tour.images : [];
   const visible = photos.slice(0, 5);
+  const signedIn = Boolean(customer);
+  const loginHref = `/login?next=${encodeURIComponent(`/tours/${tour.slug}`)}`;
   const [mode, setMode] = useState<"group" | "private">("group");
   const [departureId, setDepartureId] = useState(tour.departures[0]?.id ?? "");
   const [groupDate, setGroupDate] = useState(addDays(todayIso(), 21));
@@ -131,6 +134,7 @@ export function TourStay({ tour, customer }: { tour: TourStayData; customer: Gue
   const [photoIndex, setPhotoIndex] = useState(0);
   const [note, setNote] = useState("");
   const [toast, setToast] = useState("");
+  const [listHref, setListHref] = useState("/tours");
   const [packed, setPacked] = useState<boolean[]>(() => PACK.map(() => false));
   const [state, action, pending] = useActionState(submitTourRequest, initialFormState);
 
@@ -199,6 +203,15 @@ export function TourStay({ tour, customer }: { tour: TourStayData; customer: Gue
 
   useEffect(() => {
     try {
+      const query = sessionStorage.getItem("wch-tour-list-query");
+      if (query) setListHref(`/tours?${query}`);
+    } catch {
+      /* private mode */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
       const stored = localStorage.getItem(`wch-tour-${tour.slug}-pack`);
       if (stored) {
         const parsed = JSON.parse(stored) as unknown;
@@ -243,7 +256,7 @@ export function TourStay({ tour, customer }: { tour: TourStayData; customer: Gue
   }
 
   function openRequest() {
-    if (block) return;
+    if (block || !signedIn) return;
     document.querySelector<HTMLDialogElement>("#road-reserve")?.showModal();
   }
 
@@ -294,9 +307,29 @@ export function TourStay({ tour, customer }: { tour: TourStayData; customer: Gue
       <a className="road-skip" href="#overview">
         Skip to the tour
       </a>
+      <header className="road-topbar">
+        <Link href={listHref} className="road-topbar__back" aria-label="Back to tours">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+        </Link>
+        <div className="road-topbar__title">
+          <p>Tour</p>
+          <strong>{tour.title}</strong>
+        </div>
+        {signedIn ? (
+          <button className="road-btn road-btn--small road-topbar__book" type="button" onClick={openBook}>
+            Book
+          </button>
+        ) : (
+          <Link className="road-btn road-btn--small road-topbar__book" href={loginHref}>
+            Book
+          </Link>
+        )}
+      </header>
       <div className="road-wrap">
         <nav className="road-crumb" aria-label="Breadcrumb">
-          <Link href="/tours">Tours</Link>
+          <Link href={listHref}>Tours</Link>
           <span aria-hidden="true">/</span>
           {tour.location ? (
             <>
@@ -680,9 +713,23 @@ export function TourStay({ tour, customer }: { tour: TourStayData; customer: Gue
                 : "This date is inside the cancellation window. The desk confirms the refund."}{" "}
               A child is 5–11 and pays 65% of the adult rate. Nothing is charged now.
             </p>
-            <button className="road-btn road-btn--block" type="button" disabled={Boolean(block)} onClick={openRequest} style={{ marginTop: 12 }}>
-              Request this trip
-            </button>
+            {signedIn ? (
+              <button className="road-btn road-btn--block" type="button" disabled={Boolean(block)} onClick={openRequest} style={{ marginTop: 12 }}>
+                Request this trip
+              </button>
+            ) : (
+              <Link
+                className={`road-btn road-btn--block${block ? " is-disabled" : ""}`}
+                href={block ? "#" : loginHref}
+                aria-disabled={Boolean(block)}
+                onClick={(event) => {
+                  if (block) event.preventDefault();
+                }}
+                style={{ marginTop: 12 }}
+              >
+                Login to request
+              </Link>
+            )}
           </aside>
         </div>
 
@@ -716,9 +763,15 @@ export function TourStay({ tour, customer }: { tour: TourStayData; customer: Gue
           <strong>{money(quote.total, currency)}</strong>
           <span>{sentence}</span>
         </div>
-        <button className="road-btn" type="button" onClick={openBook}>
-          Request
-        </button>
+        {signedIn ? (
+          <button className="road-btn" type="button" onClick={openBook}>
+            Book
+          </button>
+        ) : (
+          <Link className="road-btn" href={loginHref}>
+            Book
+          </Link>
+        )}
       </div>
 
       <dialog
@@ -773,24 +826,57 @@ export function TourStay({ tour, customer }: { tour: TourStayData; customer: Gue
             <input type="hidden" name="adults" value={String(adults)} />
             <input type="hidden" name="children" value={String(children)} />
             <input type="hidden" name="ownRoom" value={ownRoom ? "1" : "0"} />
-            <label>
-              Full name
-              <input name="name" required minLength={2} autoComplete="name" defaultValue={customer?.name || state.values?.name || ""} />
-            </label>
-            <label>
-              Email
-              <input name="email" type="email" required autoComplete="email" defaultValue={customer?.email || state.values?.email || ""} />
-            </label>
-            <label>
-              Phone
-              <input name="phone" type="tel" required autoComplete="tel" inputMode="tel" defaultValue={customer?.phone || state.values?.phone || ""} />
-            </label>
+            {customer ? (
+              <>
+                <div className="road-guest">
+                  <strong>{customer.name}</strong>
+                  <span>
+                    {customer.phone
+                      ? formatPhone(customer.phone) || customer.phone
+                      : customer.email}
+                  </span>
+                </div>
+                <input type="hidden" name="name" value={customer.name} />
+                <input type="hidden" name="email" value={customer.email} />
+                {customer.phone ? <input type="hidden" name="phone" value={customer.phone} /> : null}
+                {!customer.phone ? (
+                  <label>
+                    Phone
+                    <input
+                      name="phone"
+                      type="tel"
+                      required
+                      autoComplete="tel"
+                      inputMode="tel"
+                      defaultValue={state.values?.phone || ""}
+                      placeholder="+91"
+                    />
+                  </label>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <label>
+                  Full name
+                  <input name="name" required minLength={2} autoComplete="name" defaultValue={state.values?.name || ""} />
+                </label>
+                <label>
+                  Email
+                  <input name="email" type="email" required autoComplete="email" defaultValue={state.values?.email || ""} />
+                </label>
+                <label>
+                  Phone
+                  <input name="phone" type="tel" required autoComplete="tel" inputMode="tel" defaultValue={state.values?.phone || ""} />
+                </label>
+              </>
+            )}
             <label>
               Anything the desk should know
               <textarea name="note" rows={3} maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Arrival flight, a dietary need, a room request" />
             </label>
             {state.error ? <p className="road-error">{state.error}</p> : null}
             {state.fields?.name ? <p className="road-error">{state.fields.name}</p> : null}
+            {state.fields?.phone ? <p className="road-error">{state.fields.phone}</p> : null}
             <div className="road-form-actions">
               <button className="road-btn road-btn--ghost" type="button" onClick={() => document.querySelector<HTMLDialogElement>("#road-reserve")?.close()}>
                 Cancel

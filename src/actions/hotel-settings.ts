@@ -14,7 +14,7 @@ export async function saveHotelSettings(_previous: FormState, formData: FormData
     create: { id: "default", taxEnabled },
   });
   revalidatePath("/hotels");
-  revalidatePath("/admin/configuration");
+  revalidatePath("/admin/hotels/configuration");
   return {
     error: null,
     success: taxEnabled

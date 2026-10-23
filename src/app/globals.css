@@ -5836,36 +5836,13 @@ a.rental-related__book:hover {
   }
 }
 
-.worldcompassholiday-page.worldcompassholiday-header-scope .header .header-menu .menu__nav > li > a,
-.worldcompassholiday-page.worldcompassholiday-header-scope .nav-drawer-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.45em;
-  white-space: nowrap;
-}
-
-.worldcompassholiday-page.worldcompassholiday-header-scope .nav-icon {
-  flex: none;
-  width: 1em;
-  height: 1em;
-}
-
-.worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-icon {
-  color: #e7c98a;
-}
-
 .worldcompassholiday-page.worldcompassholiday-header-scope .nav-drawer-link {
   color: #051036;
-}
-
-.worldcompassholiday-page.worldcompassholiday-header-scope .nav-drawer-link .nav-icon {
-  color: #8a6230;
+  white-space: nowrap;
 }
 
 @media (min-width: 1200px) {
   .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-menu .menu__nav > li > a {
-    gap: 0.4em;
     padding-right: 11px;
     padding-left: 11px;
     font-size: 15px;
@@ -5879,7 +5856,6 @@ a.rental-related__book:hover {
   }
 
   .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-menu .menu__nav > li > a {
-    gap: 0.35em;
     padding-right: 7px;
     padding-left: 7px;
     font-size: 14px;

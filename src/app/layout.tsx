@@ -1,9 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { theme } from "@/config/theme";
 import { RotatingFavicon } from "@/components/worldcompassholiday/RotatingFavicon";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { MobileAppHeader } from "@/components/pwa/MobileAppHeader";
+import { MobileTabBar } from "@/components/pwa/MobileTabBar";
+import { SerwistProvider } from "@/components/pwa/SerwistProvider";
 import { siteName, siteOrigin } from "@/lib/seo";
 import "./globals.css";
+import "@/styles/mobile-app-shell.css";
 
 // Pages read the live database. A production image must not freeze that data at build time.
 export const dynamic = "force-dynamic";
@@ -81,8 +86,31 @@ export const metadata: Metadata = {
     images: [shareImage.url],
   },
   icons: {
-    icon: [{ url: "/favicon.gif", type: "image/gif" }],
+    icon: [
+      { url: "/favicon.gif", type: "image/gif" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: siteName,
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: theme.colors.navy },
+    { media: "(prefers-color-scheme: dark)", color: theme.colors.navy },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -104,8 +132,20 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${jost.variable} min-h-dvh`} style={style}>
       <body className="flex min-h-dvh flex-col antialiased">
-        <RotatingFavicon />
-        {children}
+        <SerwistProvider
+          swUrl="/sw.js"
+          disable={process.env.NODE_ENV === "development"}
+          register
+          cacheOnNavigation={false}
+          reloadOnOnline
+        >
+          <RotatingFavicon />
+          {/* Phone/tablet chrome on every public page; CSS hides on desktop */}
+          <MobileAppHeader />
+          {children}
+          <MobileTabBar />
+          <InstallPrompt />
+        </SerwistProvider>
       </body>
     </html>
   );

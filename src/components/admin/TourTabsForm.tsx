@@ -369,7 +369,7 @@ function CatalogMultiSelect({
     return (
       <p className="text-xs font-normal text-muted">
         {emptyLabel}{" "}
-        <Link href="/admin/configuration" className="font-medium text-brand hover:underline">
+        <Link href="/admin/tours/configuration" className="font-medium text-brand hover:underline">
           Add them in Configuration
         </Link>
       </p>
@@ -983,7 +983,7 @@ export function TourTabsForm({
                 {catalog.categories.length === 0 ? (
                   <p className="text-xs text-muted">
                     No tour categories yet.{" "}
-                    <Link href="/admin/configuration" className="font-medium text-brand hover:underline">
+                    <Link href="/admin/tours/configuration" className="font-medium text-brand hover:underline">
                       Add them in Configuration
                     </Link>
                   </p>

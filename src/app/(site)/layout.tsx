@@ -12,9 +12,11 @@ export default function SiteLayout({
 
   return (
     <div className="site-shell">
-      <PublicHeader />
+      <div className="app-chrome-desktop">
+        <PublicHeader />
+      </div>
       <main className="public-header-offset">{children}</main>
-      <div className="worldcompassholiday-page site-footer-scope">
+      <div className="worldcompassholiday-page site-footer-scope app-chrome-desktop">
         <HomeFooter items={items} />
       </div>
     </div>

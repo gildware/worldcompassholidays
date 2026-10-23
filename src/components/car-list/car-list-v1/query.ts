@@ -74,8 +74,12 @@ function clampPrice(value: number, priceMax: number) {
 export function formatRentalDate(date: Date, previous = "") {
   const pad = (part: number) => String(part).padStart(2, "0");
   const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-  const time = /T(\d{2}:\d{2})$/.exec(previous)?.[1] ?? "10:00";
-  return `${day}T${time}`;
+  const fromPrevious = /T(\d{2}:\d{2})$/.exec(previous)?.[1];
+  if (fromPrevious) return `${day}T${fromPrevious}`;
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  if (hours !== "00" || minutes !== "00") return `${day}T${hours}:${minutes}`;
+  return `${day}T10:00`;
 }
 
 export function readRentalQuery(

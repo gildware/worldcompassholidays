@@ -163,6 +163,11 @@ body:has(.stay-list .sl-dialog[open]) {
 .stay-list .sl-step b { min-width: 1.4ch; text-align: center; }
 .stay-list .sl-who-note { color: var(--muted); font-size: 13.5px; padding: 4px 8px 0; }
 
+.stay-list__more {
+  grid-column: 1 / -1;
+  height: 1px;
+}
+
 .stay-list .sl-page {
   display: grid;
   grid-template-columns: 272px minmax(0, 1fr);
@@ -173,6 +178,14 @@ body:has(.stay-list .sl-dialog[open]) {
 .stay-list.has-compare .sl-page { padding-bottom: 150px; }
 .stay-list .sl-page > * { min-width: 0; }
 .stay-list .sl-head { margin-bottom: 6px; }
+.stay-list .sl-head__row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.stay-list .sl-view-toggle {
+  display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0;
+  border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); padding: 0; cursor: pointer;
+}
+.stay-list .sl-view-toggle svg { width: 18px; height: 18px; }
 .stay-list .sl-eyebrow { color: var(--gold); font-size: 12.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
 .stay-list h1 { font-family: var(--serif); font-weight: 560; font-size: clamp(32px, 4vw, 46px); letter-spacing: -0.035em; line-height: 0.98; }
 .stay-list .sl-promise { color: var(--muted); margin-top: 8px; max-width: 62ch; font-size: 15.5px; }
@@ -273,6 +286,12 @@ body:has(.stay-list .sl-dialog[open]) {
 
 .stay-list .sl-list { display: flex; flex-direction: column; gap: 14px; }
 .stay-list .sl-list { scroll-margin-top: calc(var(--site-header) + var(--top-h) + 16px); }
+.stay-list .sl-list.is-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;
+}
+@media (min-width: 1081px) {
+  .stay-list .sl-list.is-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .stay-list .sl-card {
   display: grid; grid-template-columns: 280px minmax(0, 1fr);
   background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
@@ -283,25 +302,33 @@ body:has(.stay-list .sl-dialog[open]) {
 .stay-list .sl-shot img { position: absolute; inset: 0; width: 100%; height: 100%; }
 .stay-list .sl-shot { border: 0; padding: 0; background: transparent; }
 .stay-list .sl-shot img { object-fit: cover; }
-.stay-list .sl-nav,
 .stay-list .sl-save {
-  position: absolute; z-index: 2; width: 36px; height: 36px; border: 0; border-radius: 50%;
-  background: #fff; box-shadow: 0 6px 16px rgba(28, 25, 21, 0.16);
+  position: absolute; z-index: 2; top: 8px; right: 8px; width: 36px; height: 36px; border: 0; border-radius: 50%;
+  background: #fff; box-shadow: 0 6px 16px rgba(28, 25, 21, 0.16); font-size: 16px;
 }
-.stay-list .sl-nav { top: 50%; transform: translateY(-50%); }
-.stay-list .sl-prev { left: 8px; }
-.stay-list .sl-next { right: 8px; }
-.stay-list .sl-save { top: 8px; right: 8px; font-size: 16px; }
 .stay-list .sl-save[aria-pressed="true"] { color: #9f1239; }
 .stay-list .sl-badge {
   position: absolute; z-index: 2; left: 8px; top: 8px;
   background: #fff; border-radius: 999px; padding: 5px 9px; font-size: 12.5px; font-weight: 750;
   box-shadow: 0 6px 16px rgba(28, 25, 21, 0.12);
 }
-.stay-list .sl-counter {
-  position: absolute; left: 8px; bottom: 8px; z-index: 2; background: rgba(28, 25, 21, 0.72); color: #fff;
-  border-radius: 999px; font-size: 12px; padding: 3px 8px;
+.stay-list .sl-dots {
+  position: absolute; z-index: 2; left: 0; right: 0; bottom: 8px;
+  display: flex; justify-content: center; align-items: center; gap: 5px;
+  pointer-events: none;
 }
+.stay-list .sl-dots button {
+  pointer-events: auto;
+  width: 6px; height: 6px; padding: 0; border: 0; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55); box-shadow: 0 1px 3px rgba(5, 16, 54, 0.25);
+  cursor: pointer;
+}
+.stay-list .sl-dots button.is-on {
+  width: 7px; height: 7px;
+  background: #fff;
+}
+.stay-list .sl-nav,
+.stay-list .sl-counter { display: none; }
 .stay-list .sl-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 18px; padding: 14px 16px 16px; }
 .stay-list .sl-kicker { color: var(--soft); font-size: 12.5px; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; }
 .stay-list .sl-fav { color: var(--gold); letter-spacing: 0; text-transform: none; font-weight: 750; }

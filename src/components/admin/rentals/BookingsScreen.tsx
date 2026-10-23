@@ -1,9 +1,14 @@
 import { BookingsWorkspace } from "@/components/admin/rentals/BookingsWorkspace";
-import { requirePermission } from "@/lib/auth/guards";
+import { requireStaff } from "@/lib/auth/guards";
+import { can } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { redirect } from "next/navigation";
 
 export async function BookingsScreen({ kind }: { kind: "car" | "bike" }) {
-  await requirePermission("vehicles.view");
+  const user = await requireStaff();
+  if (!can(user, "vehicles.view") && !can(user, "bookings.view")) {
+    redirect("/admin/no-access");
+  }
   const [vehicles, types] = await Promise.all([
     prisma.vehicle.findMany({
       where: { kind },

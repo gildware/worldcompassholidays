@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "dev:pwa": "concurrently -p none \"serwist build serwist.config.mjs --watch\" \"next dev\"",
+    "build": "next build && serwist build serwist.config.mjs",
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
@@ -12,6 +13,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:seed-admin": "node prisma/seed-admin.mjs",
+    "db:seed-fresh-bookings": "node scripts/seed-fresh-bookings.mjs",
     "db:studio": "prisma studio"
   },
   "prisma": {
@@ -21,6 +23,7 @@
     "@ckeditor/ckeditor5-react": "^11.2.0",
     "@prisma/client": "^6.19.3",
     "@reduxjs/toolkit": "^2.13.0",
+    "@serwist/next": "^9.5.13",
     "aos": "^2.3.4",
     "bootstrap": "^5.3.8",
     "ckeditor5": "^48.5.2",
@@ -43,15 +46,19 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@serwist/cli": "^9.5.13",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.5",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.9",
     "prisma": "^6.19.3",
+    "serwist": "^9.5.13",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"

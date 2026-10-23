@@ -653,7 +653,7 @@ export function HotelTabsForm({
             <div className="grid gap-4">
               <Field
                 label="Hotel amenities"
-                hint="Shared by the whole property. Add new ones under Configuration → Hotels."
+                hint="Shared by the whole property. Add new ones under Hotels → Configuration."
                 name="amenities"
               >
                 <MultiSearchableSelect
@@ -681,7 +681,7 @@ export function HotelTabsForm({
                   onChange={(event) => patch("houseRules", event.target.value)}
                 />
               </Field>
-              <Field label="FAQs" hint="Reusable questions from Configuration.">
+              <Field label="FAQs" hint="Reusable questions from Hotels → Configuration.">
                 <MultiSearchableSelect
                   ariaLabel="Hotel FAQs"
                   values={draft.faqs}

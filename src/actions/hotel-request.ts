@@ -6,6 +6,7 @@ import { z } from "zod";
 import { theme } from "@/config/theme";
 import { getCurrentUser } from "@/lib/auth/session";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
+import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
@@ -171,7 +172,7 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
       endDate: new Date(`${data.checkOut}T00:00:00`),
       guests: data.adults + data.children,
       notes: requestNotes(data),
-      details: JSON.stringify({
+      details: detailsWithEnquiryReceived({
         kind: "custom_hotel",
         destination: data.destination,
         hotelName: data.hotelName,

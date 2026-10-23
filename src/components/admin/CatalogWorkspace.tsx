@@ -82,12 +82,14 @@ export function CatalogWorkspace({
   initialSection = "tours",
   sections,
   hotelTaxEnabled = false,
+  hideSectionTabs = false,
 }: {
   items: CatalogRow[];
   rentalItems?: ConfigRow[];
   initialSection?: string;
   sections?: string[];
   hotelTaxEnabled?: boolean;
+  hideSectionTabs?: boolean;
 }) {
   const router = useRouter();
   const groups = [
@@ -118,86 +120,62 @@ export function CatalogWorkspace({
     "tours";
   const [groupId, setGroupId] = useState(starting);
   const [kind, setKind] = useState<CatalogKind>("category");
+  const [hotelTab, setHotelTab] = useState<"catalog" | "tax">("catalog");
   const [editing, setEditing] = useState<CatalogRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [removing, setRemoving] = useState<CatalogRow | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const group = visibleGroups.find((item) => item.id === groupId) ?? visibleGroups[0];
   const kinds = group.kinds;
-  const activeKind = kinds.includes(kind) ? kind : kinds[0];
+  const showTaxTab = group.id === "hotels";
+  const taxSelected = showTaxTab && hotelTab === "tax";
+  const activeKind = taxSelected ? null : kinds.includes(kind) ? kind : kinds[0];
   const tab = activeKind ? KIND_HINTS[activeKind] : null;
   const rows = activeKind ? items.filter((item) => item.kind === activeKind) : [];
 
   return (
-    <div className="grid gap-4">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight text-navy">
-          Configuration
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          Shared lists for tours, hotels, and rentals.
-        </p>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {visibleGroups.map((item) => {
-          const selected = item.id === group.id;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => {
-                setGroupId(item.id);
-                setNotice(null);
-                const next = item.kinds[0];
-                if (next) setKind(next);
-              }}
-              className={`inline-flex h-9 items-center rounded-lg border px-3 text-sm font-medium ${
-                selected
-                  ? "border-navy bg-navy text-white"
-                  : "border-line bg-white text-navy hover:bg-surface"
-              }`}
-            >
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <p className="text-sm text-muted">{group.description}</p>
-
-      {group.id === "hotels" ? (
-        <ActionForm
-          key={hotelTaxEnabled ? "tax-on" : "tax-off"}
-          action={saveHotelSettings}
-          className="grid max-w-xl gap-3 rounded-lg border border-line bg-white p-4"
-        >
-          <div>
-            <p className="text-sm font-medium text-navy">Tax</p>
-            <p className="mt-1 text-sm text-muted">
-              Off by default. Turn it on to add GST at 18% to stay totals. While it is off, hotel prices show the room total only, with no tax line.
-            </p>
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="taxEnabled" defaultChecked={hotelTaxEnabled} />
-            Charge tax
-          </label>
-          <SubmitButton pendingLabel="Saving">Save tax setting</SubmitButton>
-        </ActionForm>
+    <div className="grid gap-3">
+      {!hideSectionTabs && visibleGroups.length > 1 ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {visibleGroups.map((item) => {
+            const selected = item.id === group.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  setGroupId(item.id);
+                  setNotice(null);
+                  setHotelTab("catalog");
+                  const next = item.kinds[0];
+                  if (next) setKind(next);
+                }}
+                className={`inline-flex h-9 items-center rounded-lg border px-3 text-sm font-medium ${
+                  selected
+                    ? "border-navy bg-navy text-white"
+                    : "border-line bg-white text-navy hover:bg-surface"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
       ) : null}
 
       {group.id === "rentals" && rentalItems ? (
         <ConfigWorkspace items={rentalItems} />
-      ) : kinds.length > 0 ? (
+      ) : kinds.length > 0 || showTaxTab ? (
       <div className="flex flex-wrap gap-2">
         {kinds.map((item) => {
-          const selected = item === activeKind;
+          const selected = !taxSelected && item === activeKind;
           const count = items.filter((row) => row.kind === item).length;
           return (
             <button
               key={item}
               type="button"
               onClick={() => {
+                setHotelTab("catalog");
                 setKind(item);
                 setNotice(null);
               }}
@@ -218,12 +196,50 @@ export function CatalogWorkspace({
             </button>
           );
         })}
+        {showTaxTab ? (
+          <button
+            type="button"
+            onClick={() => {
+              setHotelTab("tax");
+              setNotice(null);
+              setCreating(false);
+              setEditing(null);
+            }}
+            className={`inline-flex h-9 items-center rounded-full border px-3 text-sm ${
+              taxSelected
+                ? "border-brand bg-brand-soft text-brand"
+                : "border-line bg-white text-navy hover:bg-surface"
+            }`}
+          >
+            Tax
+          </button>
+        ) : null}
       </div>
       ) : (
         <section className="rounded-lg border border-dashed border-line bg-white px-4 py-8 text-sm text-muted">
           Nothing to configure in this section yet.
         </section>
       )}
+
+      {taxSelected ? (
+        <ActionForm
+          key={hotelTaxEnabled ? "tax-on" : "tax-off"}
+          action={saveHotelSettings}
+          className="grid max-w-xl gap-3 rounded-lg border border-line bg-white p-4"
+        >
+          <div>
+            <p className="text-sm font-medium text-navy">Tax</p>
+            <p className="mt-1 text-sm text-muted">
+              Off by default. Turn it on to add GST at 18% to stay totals. While it is off, hotel prices show the room total only, with no tax line.
+            </p>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="taxEnabled" defaultChecked={hotelTaxEnabled} />
+            Charge tax
+          </label>
+          <SubmitButton pendingLabel="Saving">Save tax setting</SubmitButton>
+        </ActionForm>
+      ) : null}
 
       {activeKind && tab ? (
       <section className="rounded-lg border border-line bg-white">

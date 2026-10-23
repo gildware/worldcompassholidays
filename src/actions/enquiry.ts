@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
 import { getCurrentUser } from "@/lib/auth/session";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
+import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
 import { enquiryInterests } from "@/lib/navigation";
 import { emailField } from "@/lib/validation";
@@ -99,7 +100,10 @@ export async function submitEnquiry(
       status: "enquiry",
       title: "Website enquiry",
       notes: `${interest.label}\n${parsed.data.message}`,
-      details: JSON.stringify({ interest: parsed.data.interest, channel }),
+      details: detailsWithEnquiryReceived({
+        interest: parsed.data.interest,
+        channel,
+      }),
       contactName: parsed.data.name,
       contactEmail: parsed.data.email,
       contactPhone: parsed.data.phone,

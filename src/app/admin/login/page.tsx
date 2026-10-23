@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { staffLogin } from "@/actions/auth";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { theme } from "@/config/theme";
+import { BrandLogo } from "@/components/worldcompassholiday/BrandLogo";
 import { getCurrentUser } from "@/lib/auth/session";
 import { safeRedirectPath } from "@/lib/forms";
 import { privateMetadata } from "@/lib/seo";
+import "./admin-login.css";
 
 export const metadata: Metadata = privateMetadata("Staff sign in", "Staff sign in for World Compass Holidays.");
 
@@ -20,23 +21,37 @@ export default async function AdminLoginPage({
   const { next } = await searchParams;
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-surface px-5 py-16">
-      <div className="w-full max-w-sm rounded-2xl border border-line bg-white p-6 shadow-sm">
-        <p className="text-xs font-medium tracking-wide text-brand uppercase">
-          {theme.brandName} admin
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold">Staff sign in</h1>
-        <p className="mt-2 text-sm text-muted">
-          Use the account your administrator created for you.
-        </p>
-        {user?.scope === "customer" ? (
-          <p className="mt-4 rounded-md bg-surface px-3 py-2 text-sm text-muted">
-            You are signed in as a customer. Signing in here will switch accounts.
-          </p>
-        ) : null}
-        <div className="mt-6">
+    <div className="admin-login">
+      <div className="admin-login__glow admin-login__glow--a" aria-hidden="true" />
+      <div className="admin-login__glow admin-login__glow--b" aria-hidden="true" />
+      <div className="admin-login__grid" aria-hidden="true" />
+
+      <div className="admin-login__inner">
+        <header className="admin-login__brand worldcompassholiday-page worldcompassholiday-header-scope">
+          <BrandLogo />
+          <p className="admin-login__brand-meta">Operations</p>
+        </header>
+
+        <main className="admin-login__card">
+          <div className="admin-login__card-head">
+            <h1 className="admin-login__title">Staff sign in</h1>
+            <p className="admin-login__subtitle">
+              Use the account your administrator created for you.
+            </p>
+          </div>
+
+          {user?.scope === "customer" ? (
+            <p className="admin-login__notice">
+              You are signed in as a customer. Signing in here will switch accounts.
+            </p>
+          ) : null}
+
           <LoginForm action={staffLogin} next={safeRedirectPath(next, "/admin", "/admin")} />
-        </div>
+        </main>
+
+        <p className="admin-login__foot">
+          Authorized staff only. Access is logged and monitored.
+        </p>
       </div>
     </div>
   );

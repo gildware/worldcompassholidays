@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
-import { submitTourRequest } from "@/actions/tour-request";
-import { initialFormState } from "@/lib/forms";
+import { useLazySlice } from "@/hooks/useLazySlice";
 import { partyBlock } from "@/lib/tours/quote";
 import {
   DURS,
   LEVELS,
-  PAGE_SIZE,
   SORTS,
   STYLES,
   WHENS,
@@ -29,11 +28,11 @@ import {
   money,
   nextOpen,
   pass,
+  partyQuote,
   partyTotal,
   prettyDate,
   priceDetail,
   rangeNow,
-  readMoney,
   relaxQuery,
   reviewCount,
   runsLabel,
@@ -49,6 +48,7 @@ import {
 } from "@/components/tour-list/catalog/logic";
 import type { CatalogGuest, CatalogQuery, CatalogSort, CatalogTour } from "@/components/tour-list/catalog/types";
 import "@/components/tour-list/catalog/tour-catalog.css";
+import "@/styles/listing-app.css";
 
 const SORT_LABEL: Record<CatalogSort, string> = {
   match: "Best match",
@@ -67,23 +67,20 @@ export function TourCatalog({
   tours,
   initial,
   today,
-  customer,
   featured,
 }: {
   tours: CatalogTour[];
   initial: CatalogQuery;
   today: string;
-  customer: CatalogGuest | null;
+  customer?: CatalogGuest | null;
   featured: { href: string; title: string } | null;
 }) {
   const pathname = usePathname();
   const [query, setQuery] = useState(initial);
   const [qInput, setQInput] = useState(initial.q);
-  const [minText, setMinText] = useState(initial.min == null ? "" : String(initial.min));
-  const [maxText, setMaxText] = useState(initial.max == null ? "" : String(initial.max));
   const [saved, setSaved] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
-  const [menu, setMenu] = useState<null | "where" | "date" | "who" | "sort" | "dock">(null);
+  const [menu, setMenu] = useState<null | "where" | "date" | "who" | "sort" | "dock" | "loc" | "trip">(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
@@ -95,20 +92,46 @@ export function TourCatalog({
   const previewRef = useRef<HTMLDialogElement>(null);
   const compareRef = useRef<HTMLDialogElement>(null);
   const filterReturn = useRef<HTMLElement | null>(null);
-  const minRef = useRef<HTMLInputElement>(null);
-  const maxRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const rows = useMemo(() => visibleTours(tours, query, today, saved), [tours, query, today, saved]);
-  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const page = Math.min(query.page, pages);
-  const slice = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const windowKey = useMemo(
+    () =>
+      [
+        query.q,
+        query.date,
+        query.sort,
+        query.view,
+        query.adults,
+        query.children,
+        query.cancel,
+        query.pickup,
+        query.rating,
+        query.min,
+        query.max,
+        query.showOff,
+        query.showSold,
+        query.savedOnly,
+        query.dur.join("\0"),
+        query.region.join("\0"),
+        query.cat.join("\0"),
+        query.when.join("\0"),
+        query.style.join("\0"),
+        query.lang.join("\0"),
+        query.level.join("\0"),
+        saved.join("\0"),
+      ].join("|"),
+    [query, saved],
+  );
+  const { visible: slice, sentinelRef, hasMore } = useLazySlice(rows, windowKey);
   const topId = rows.find((tour) => statusOf(tour, query.date) === "ok")?.id ?? "";
   const noun = rows.length === 1 ? "tour" : "tours";
   const hidden = hiddenCounts(tours, rows, query, today, saved);
   const filtersOn = activeCount(query);
   const [lo, hi] = bounds(tours, query);
   const [min, max] = rangeNow(tours, query);
+  const span = hi === lo ? 1 : hi - lo;
+  const priced = query.min != null || query.max != null;
   const whereOptions = useMemo(() => {
     const names = new Set<string>();
     tours.forEach((tour) => {
@@ -159,27 +182,10 @@ export function TourCatalog({
   }, [qInput]);
 
   useEffect(() => {
-    const handle = window.setTimeout(() => {
-      const current = query;
-      const nextMin = readMoney(minText, "min", current, lo, hi);
-      const nextMax = readMoney(maxText, "max", current, lo, hi);
-      setQuery((value) =>
-        value.min === nextMin && value.max === nextMax ? value : { ...value, min: nextMin, max: nextMax, page: 1 },
-      );
-    }, 220);
-    return () => window.clearTimeout(handle);
-  }, [hi, lo, maxText, minText, query]);
-
-  useEffect(() => {
-    if (document.activeElement !== minRef.current) setMinText(query.min == null ? "" : String(query.min));
-    if (document.activeElement !== maxRef.current) setMaxText(query.max == null ? "" : String(query.max));
-  }, [query.max, query.min]);
-
-  useEffect(() => {
-    const search = catalogSearch({ ...query, page });
+    const search = catalogSearch({ ...query, page: 1 });
     const url = search ? `${pathname}?${search}` : pathname;
     if (url !== `${pathname}${window.location.search}`) history.replaceState(null, "", url);
-  }, [page, pathname, query]);
+  }, [pathname, query]);
 
   useEffect(() => {
     const title = `${rows.length} ${noun} · World Compass Holidays`;
@@ -247,15 +253,23 @@ export function TourCatalog({
     if (!menu) return;
     const onPointer = (event: PointerEvent) => {
       const target = event.target;
-      if (target instanceof Element && target.closest("[data-picker]")) return;
+      if (
+        target instanceof Element &&
+        target.closest("[data-picker], .sl-cal, .cal, .m-cal-backdrop, .m-cal-sheet")
+      ) {
+        return;
+      }
       setMenu(null);
     };
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setMenu(null);
     };
-    document.addEventListener("pointerdown", onPointer);
+    const timer = window.setTimeout(() => {
+      document.addEventListener("pointerdown", onPointer);
+    }, 0);
     window.addEventListener("keydown", onKey);
     return () => {
+      window.clearTimeout(timer);
       document.removeEventListener("pointerdown", onPointer);
       window.removeEventListener("keydown", onKey);
     };
@@ -347,6 +361,21 @@ export function TourCatalog({
     setQuery((current) => ({ ...current, date: iso, showOff: false, showSold: false, page: 1 }));
   }
 
+  function onPrice(which: "min" | "max", value: number) {
+    let low = which === "min" ? value : min;
+    let high = which === "max" ? value : max;
+    if (low > high) {
+      if (which === "min") low = high;
+      else high = low;
+    }
+    setQuery((current) => ({
+      ...current,
+      min: low <= lo ? null : low,
+      max: high >= hi ? null : high,
+      page: 1,
+    }));
+  }
+
   const where = query.q ? ` matching “${query.q.trim()}”` : "";
   const insight = [
     hidden.off ? `${hidden.off} ${hidden.off === 1 ? "tour does not run" : "tours do not run"}` : "",
@@ -355,7 +384,7 @@ export function TourCatalog({
     .filter(Boolean)
     .join(", and ");
 
-  const bins = priceBins(tours, query, today, saved, lo, hi, min, max);
+  const bins = priceBins(tours, query, today, saved, lo, hi);
 
   return (
     <div className={`tour-catalog${filtersOpen || compareOpen || previewId ? " is-locked" : ""}`}>
@@ -405,6 +434,168 @@ export function TourCatalog({
               {prettyDate(query.date)} · {whoLabel(query)}
             </span>
           </button>
+
+          <div className="m-bar app-chrome-mobile" data-picker>
+            <div className="m-bar__row">
+              <button
+                className="m-bar__loc"
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={menu === "loc"}
+                aria-label="Location"
+                onClick={() => setMenu((current) => (current === "loc" ? null : "loc"))}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                  <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
+                <span>
+                  {(whereOptions.includes(query.q.trim()) ? query.q.trim() : "") || "Anywhere"}
+                </span>
+              </button>
+              <form
+                className="m-bar__form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const next = qInput.trim().slice(0, 80);
+                  setQuery((current) => ({ ...current, q: next, page: 1 }));
+                  setMenu(null);
+                  scrollResults();
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <circle cx="11" cy="11" r="6.5" />
+                  <path d="M16 16l4 4" />
+                </svg>
+                <input
+                  value={qInput}
+                  onChange={(event) => {
+                    setQInput(event.target.value);
+                    setMenu(null);
+                  }}
+                  onBlur={() => {
+                    const next = qInput.trim().slice(0, 80);
+                    if (next !== query.q) setQuery((current) => ({ ...current, q: next, page: 1 }));
+                  }}
+                  placeholder="Search tours"
+                  aria-label="Search tours"
+                  enterKeyHint="search"
+                  autoComplete="off"
+                />
+              </form>
+              <button
+                className="m-bar__view"
+                type="button"
+                aria-label={query.view === "grid" ? "Show as list" : "Show as grid"}
+                aria-pressed={query.view === "grid"}
+                onClick={() =>
+                  setQuery((current) => ({
+                    ...current,
+                    view: current.view === "grid" ? "list" : "grid",
+                  }))
+                }
+              >
+                {query.view === "grid" ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                    <path d="M5 7h14M5 12h14M5 17h14" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                    <rect x="4" y="4" width="7" height="7" rx="1.5" />
+                    <rect x="13" y="4" width="7" height="7" rx="1.5" />
+                    <rect x="4" y="13" width="7" height="7" rx="1.5" />
+                    <rect x="13" y="13" width="7" height="7" rx="1.5" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            <div className="m-bar__trip">
+              <button
+                className="m-bar__meta"
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={menu === "trip"}
+                onClick={() => setMenu((current) => (current === "trip" ? null : "trip"))}
+              >
+                {prettyDate(query.date)} · {whoLabel(query)}
+              </button>
+              <div className="m-bar__tools" aria-label="Listing actions">
+                <button className="m-bar__filter" type="button" onClick={openFilters}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                    <path d="M4 6h16M7 12h10M10 18h4" />
+                  </svg>
+                  Filters{filtersOn ? ` · ${filtersOn}` : ""}
+                </button>
+                <div className="m-bar__sort" data-picker>
+                  <button
+                    className="m-bar__sort-btn"
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded={menu === "dock"}
+                    aria-label={`Sort: ${SORT_LABEL[query.sort]}`}
+                    onClick={() => setMenu((current) => (current === "dock" ? null : "dock"))}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                      <path d="M7 6v12M7 18l-2.5-2.5M7 18l2.5-2.5M17 18V6M17 6l-2.5 2.5M17 6l2.5 2.5" />
+                    </svg>
+                    Sort
+                  </button>
+                  {menu === "dock" ? (
+                    <SortMenu
+                      value={query.sort}
+                      onPick={(sort) => {
+                        setQuery((current) => ({ ...current, sort, page: 1 }));
+                        setMenu(null);
+                      }}
+                    />
+                  ) : null}
+                </div>
+              </div>
+            </div>
+            {menu === "loc" ? (
+              <div className="m-bar__menu" role="listbox" aria-label="Location">
+                <button
+                  type="button"
+                  role="option"
+                  onClick={() => {
+                    setQInput("");
+                    setQuery((current) => ({ ...current, q: "", page: 1 }));
+                    setMenu(null);
+                  }}
+                >
+                  Anywhere
+                </button>
+                {whereOptions.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    role="option"
+                    aria-selected={query.q.trim() === name}
+                    className={query.q.trim() === name ? "is-on" : undefined}
+                    onClick={() => {
+                      setQInput(name);
+                      setQuery((current) => ({ ...current, q: name, page: 1 }));
+                      setMenu(null);
+                      scrollResults();
+                    }}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {!searchOpen && menu === "trip" ? (
+              <TourTripSheet
+                date={query.date}
+                adults={query.adults}
+                children={query.children}
+                today={today}
+                onClose={() => setMenu(null)}
+                onChange={(next) => setQuery((current) => ({ ...current, ...next, page: 1 }))}
+              />
+            ) : null}
+          </div>
+
           <form
             className={`search${searchOpen ? " is-open" : ""}`}
             onSubmit={(event) => {
@@ -442,10 +633,12 @@ export function TourCatalog({
                 <span className="k">Date</span>
                 <strong>{prettyDate(query.date)}</strong>
               </button>
-              {menu === "date" ? (
+              {searchOpen && menu === "date" ? (
                 <DateMenu
+                  label="Travel date"
                   value={query.date}
                   min={today}
+                  onClose={() => setMenu(null)}
                   onPick={(date) => {
                     setQuery((current) => ({ ...current, date, page: 1 }));
                     setMenu(null);
@@ -502,16 +695,46 @@ export function TourCatalog({
       <main className="wrap">
         <div className="head">
           <p className="eyebrow">Departures you can compare</p>
-          <h1 id="count">
-            {rows.length} {noun}
-            {where}
-          </h1>
+          <div className="head__row">
+            <h1 id="count">
+              <span className="head__count">
+                {rows.length} {noun}
+                {where}
+              </span>
+              <span className="head__title">{query.q.trim() || "All tours"}</span>
+            </h1>
+            <button
+              className="view-toggle"
+              type="button"
+              aria-label={query.view === "grid" ? "Show as list" : "Show as grid"}
+              aria-pressed={query.view === "grid"}
+              onClick={() =>
+                setQuery((current) => ({
+                  ...current,
+                  view: current.view === "grid" ? "list" : "grid",
+                }))
+              }
+            >
+              {query.view === "grid" ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                  <path d="M5 7h14M5 12h14M5 17h14" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                  <rect x="4" y="4" width="7" height="7" rx="1.5" />
+                  <rect x="13" y="4" width="7" height="7" rx="1.5" />
+                  <rect x="4" y="13" width="7" height="7" rx="1.5" />
+                  <rect x="13" y="13" width="7" height="7" rx="1.5" />
+                </svg>
+              )}
+            </button>
+          </div>
           <p className="promise">
             The price is the total for the travelers and date you chose. Cancellation is for that date. Anything you still pay on the spot is written on the card.
           </p>
         </div>
 
-        <div className="chips" role="toolbar" aria-label="Recommended filters">
+        <div className="chips" role="toolbar" aria-label="Filters">
           <QuickChip
             label="Free cancellation"
             count={facetCount(tours, query, today, saved, "cancel", "1")}
@@ -548,31 +771,41 @@ export function TourCatalog({
             pressed={query.style.includes("small")}
             onClick={() => toggleValue("style", "small")}
           />
-        </div>
-
-        <div className="applied" aria-label="Filters in use">
           {query.q ? (
-            <button type="button" onClick={() => { setQInput(""); setQuery((current) => dropFilter(current, "q", "")); }}>
+            <button className="chip is-on" type="button" onClick={() => { setQInput(""); setQuery((current) => dropFilter(current, "q", "")); }}>
               “{query.q}” ×
             </button>
           ) : null}
-          {query.min != null || query.max != null ? (
-            <button type="button" onClick={() => { setMinText(""); setMaxText(""); setQuery((current) => dropFilter(current, "price", "")); }}>
+          {priced ? (
+            <button className="chip is-on" type="button" onClick={() => setQuery((current) => dropFilter(current, "price", ""))}>
               {money(min)}–{money(max)} ×
             </button>
           ) : null}
-          {namedChips(query).map((chip) => (
-            <button key={`${chip.key}-${chip.value}`} type="button" onClick={() => setQuery((current) => dropFilter(current, chip.key, chip.value))}>
-              {chip.label} ×
+          {namedChips(query)
+            .filter((chip) => {
+              if (chip.key === "cancel" || chip.key === "pickup") return false;
+              if (chip.key === "rating" && query.rating >= 9) return false;
+              if (chip.key === "style" && (chip.value === "private" || chip.value === "small")) return false;
+              if (chip.key === "when" && chip.value === "morning") return false;
+              return true;
+            })
+            .map((chip) => (
+              <button key={`${chip.key}-${chip.value}`} className="chip is-on" type="button" onClick={() => setQuery((current) => dropFilter(current, chip.key, chip.value))}>
+                {chip.label} ×
+              </button>
+            ))}
+          {filtersOn ? (
+            <button className="chip chip--clear" type="button" onClick={() => { setQInput(""); setQuery((current) => clearQuery(current)); }}>
+              Clear filters
             </button>
-          ))}
+          ) : null}
         </div>
 
         <div className="page">
           <aside className={`filters${filtersOpen ? " is-open" : ""}`} ref={filtersRef} aria-label="Filters">
             <div className="filters__top">
               <h2>Filters</h2>
-              <button className="textlink" type="button" onClick={() => { setQInput(""); setMinText(""); setMaxText(""); setQuery((current) => clearQuery(current)); }}>
+              <button className="textlink" type="button" onClick={() => { setQInput(""); setQuery((current) => clearQuery(current)); }}>
                 Clear
               </button>
               <button className="btn btn--ghost btn--small filters__close" type="button" onClick={closeFilters}>
@@ -580,93 +813,165 @@ export function TourCatalog({
               </button>
             </div>
             <fieldset>
-              <legend>Total for your party</legend>
-              <span className="hint">
-                {money(min)} – {money(max)} for {whoLabel(query)}
-              </span>
-              <div className="hist">
-                {bins.map((bin) => (
-                  <button
-                    key={bin.start}
-                    type="button"
-                    className={bin.inside ? "is-in" : ""}
-                    style={{ height: bin.height }}
-                    disabled={!bin.count}
-                    aria-label={`${bin.count} ${bin.count === 1 ? "tour" : "tours"} from ${money(bin.start)} to ${money(bin.end)}`}
-                    onClick={() => {
-                      const nextMin = bin.start <= lo ? null : bin.start;
-                      const nextMax = bin.end >= hi ? null : bin.end;
-                      setMinText(nextMin == null ? "" : String(nextMin));
-                      setMaxText(nextMax == null ? "" : String(nextMax));
-                      setQuery((current) => ({ ...current, min: nextMin, max: nextMax, page: 1 }));
+              <legend>
+                Total for your party{" "}
+                <span>{priced ? `${money(min)} – ${money(max)} for ${whoLabel(query)}` : "Any price"}</span>
+              </legend>
+              <div className="hist" role="group" aria-label="Price distribution">
+                {bins.map((bin) => {
+                  const on = bin.end >= min - span / 28 && bin.start <= max + span / 28;
+                  return (
+                    <button
+                      key={bin.start}
+                      type="button"
+                      className={on ? "is-in" : ""}
+                      style={{ height: `${bin.height}%` }}
+                      aria-label={`${bin.count} ${bin.count === 1 ? "tour" : "tours"} up to ${money(bin.end)} for ${whoLabel(query)}`}
+                      onClick={() =>
+                        setQuery((current) => ({
+                          ...current,
+                          min: null,
+                          max: bin.end >= hi ? null : bin.end,
+                          page: 1,
+                        }))
+                      }
+                    />
+                  );
+                })}
+              </div>
+              <div className="range">
+                <div className="range__track">
+                  <div
+                    className="range__fill"
+                    style={{
+                      left: `${((min - lo) / span) * 100}%`,
+                      width: `${Math.max(0, ((max - min) / span) * 100)}%`,
                     }}
                   />
-                ))}
+                </div>
+                <input
+                  type="range"
+                  min={lo}
+                  max={hi}
+                  step={span > 500 ? 100 : 1}
+                  aria-label="Minimum total for your party"
+                  value={min}
+                  onChange={(event) => onPrice("min", Number(event.target.value))}
+                />
+                <input
+                  type="range"
+                  min={lo}
+                  max={hi}
+                  step={span > 500 ? 100 : 1}
+                  aria-label="Maximum total for your party"
+                  value={max}
+                  onChange={(event) => onPrice("max", Number(event.target.value))}
+                />
               </div>
-              <div className="price-row">
-                <label>
-                  Minimum
-                  <input ref={minRef} inputMode="numeric" type="number" min={0} step={100} placeholder="Any" value={minText} onChange={(event) => setMinText(event.target.value)} />
-                </label>
-                <label>
-                  Maximum
-                  <input ref={maxRef} inputMode="numeric" type="number" min={0} step={100} placeholder="Any" value={maxText} onChange={(event) => setMaxText(event.target.value)} />
-                </label>
-              </div>
+              <p className="hint">
+                {priced
+                  ? `Tours in this band cost ${money(min)} – ${money(max)} for ${whoLabel(query)}.`
+                  : "Drag either end. The total on each tour is for your travelers."}
+              </p>
             </fieldset>
-            <fieldset>
-              <legend>Duration</legend>
-              <div className="pills">
-                {DURS.map(([value, label]) => (
-                  <Pill key={value} label={label} count={facetCount(tours, query, today, saved, "dur", value)} checked={query.dur.includes(value)} onChange={() => toggleValue("dur", value)} />
-                ))}
-              </div>
-            </fieldset>
-            <fieldset>
-              <legend>Region</legend>
-              {regions.map((value) => (
-                <Check key={value} label={value} count={facetCount(tours, query, today, saved, "region", value)} checked={query.region.includes(value)} onChange={() => toggleValue("region", value)} />
-              ))}
-            </fieldset>
-            <fieldset>
-              <legend>Type</legend>
-              {categories.map((value) => (
-                <Check key={value} label={value} count={facetCount(tours, query, today, saved, "cat", value)} checked={query.cat.includes(value)} onChange={() => toggleValue("cat", value)} />
-              ))}
-            </fieldset>
-            <fieldset>
-              <legend>Starts</legend>
-              <div className="pills">
-                {WHENS.map(([value, label]) => (
-                  <Pill key={value} label={label} count={facetCount(tours, query, today, saved, "when", value)} checked={query.when.includes(value)} onChange={() => toggleValue("when", value)} />
-                ))}
-              </div>
-            </fieldset>
-            <fieldset>
-              <legend>Group</legend>
-              <span className="hint">Private is a car, jeep, or boat for your party.</span>
-              <div className="pills">
-                {STYLES.map(([value, label]) => (
-                  <Pill key={value} label={label} count={facetCount(tours, query, today, saved, "style", value)} checked={query.style.includes(value)} onChange={() => toggleValue("style", value)} />
-                ))}
-              </div>
-            </fieldset>
-            <fieldset>
-              <legend>Pace</legend>
-              <span className="hint">Easy is a short walk or a seat. Demanding means altitude or a pass.</span>
-              <div className="pills">
-                {LEVELS.map(([value, label]) => (
-                  <Pill key={value} label={label} count={facetCount(tours, query, today, saved, "level", value)} checked={query.level.includes(value)} onChange={() => toggleValue("level", value)} />
-                ))}
-              </div>
-            </fieldset>
-            <fieldset>
-              <legend>Language</legend>
-              <span className="hint">A tour stays in the list if it runs in any language you tick.</span>
-              {languages.map((value) => (
-                <Check key={value} label={value} count={facetCount(tours, query, today, saved, "lang", value)} checked={query.lang.includes(value)} onChange={() => toggleValue("lang", value)} />
-              ))}
-            </fieldset>
+            <FilterGroup
+              legend="Duration"
+              layout="pills"
+              items={DURS.map(([value, label]) => {
+                const count = facetCount(tours, query, today, saved, "dur", value);
+                const checked = query.dur.includes(value);
+                return {
+                  key: value,
+                  count,
+                  checked,
+                  node: <Pill key={value} label={label} count={count} checked={checked} onChange={() => toggleValue("dur", value)} />,
+                };
+              })}
+            />
+            <FilterGroup
+              legend="Region"
+              items={regions.map((value) => {
+                const count = facetCount(tours, query, today, saved, "region", value);
+                const checked = query.region.includes(value);
+                return {
+                  key: value,
+                  count,
+                  checked,
+                  node: <Check key={value} label={value} count={count} checked={checked} onChange={() => toggleValue("region", value)} />,
+                };
+              })}
+            />
+            <FilterGroup
+              legend="Type"
+              items={categories.map((value) => {
+                const count = facetCount(tours, query, today, saved, "cat", value);
+                const checked = query.cat.includes(value);
+                return {
+                  key: value,
+                  count,
+                  checked,
+                  node: <Check key={value} label={value} count={count} checked={checked} onChange={() => toggleValue("cat", value)} />,
+                };
+              })}
+            />
+            <FilterGroup
+              legend="Starts"
+              layout="pills"
+              items={WHENS.map(([value, label]) => {
+                const count = facetCount(tours, query, today, saved, "when", value);
+                const checked = query.when.includes(value);
+                return {
+                  key: value,
+                  count,
+                  checked,
+                  node: <Pill key={value} label={label} count={count} checked={checked} onChange={() => toggleValue("when", value)} />,
+                };
+              })}
+            />
+            <FilterGroup
+              legend="Group"
+              hint="Private is a car, jeep, or boat for your party."
+              layout="pills"
+              items={STYLES.map(([value, label]) => {
+                const count = facetCount(tours, query, today, saved, "style", value);
+                const checked = query.style.includes(value);
+                return {
+                  key: value,
+                  count,
+                  checked,
+                  node: <Pill key={value} label={label} count={count} checked={checked} onChange={() => toggleValue("style", value)} />,
+                };
+              })}
+            />
+            <FilterGroup
+              legend="Pace"
+              hint="Easy is a short walk or a seat. Demanding means altitude or a pass."
+              layout="pills"
+              items={LEVELS.map(([value, label]) => {
+                const count = facetCount(tours, query, today, saved, "level", value);
+                const checked = query.level.includes(value);
+                return {
+                  key: value,
+                  count,
+                  checked,
+                  node: <Pill key={value} label={label} count={count} checked={checked} onChange={() => toggleValue("level", value)} />,
+                };
+              })}
+            />
+            <FilterGroup
+              legend="Language"
+              hint="A tour stays in the list if it runs in any language you tick."
+              items={languages.map((value) => {
+                const count = facetCount(tours, query, today, saved, "lang", value);
+                const checked = query.lang.includes(value);
+                return {
+                  key: value,
+                  count,
+                  checked,
+                  node: <Check key={value} label={value} count={count} checked={checked} onChange={() => toggleValue("lang", value)} />,
+                };
+              })}
+            />
             <fieldset>
               <legend>Guest score</legend>
               <div className="pills">
@@ -712,10 +1017,19 @@ export function TourCatalog({
                   {menu === "sort" ? <SortMenu value={query.sort} onPick={(sort) => { setQuery((current) => ({ ...current, sort, page: 1 })); setMenu(null); }} /> : null}
                 </div>
                 <div className="layout-switch" role="group" aria-label="Layout">
-                  <button type="button" aria-pressed={query.view === "list"} onClick={() => setQuery((current) => ({ ...current, view: "list" }))}>
+                  <button type="button" aria-pressed={query.view === "list"} aria-label="List view" onClick={() => setQuery((current) => ({ ...current, view: "list" }))}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                      <path d="M5 7h14M5 12h14M5 17h14" />
+                    </svg>
                     List
                   </button>
-                  <button type="button" aria-pressed={query.view === "grid"} onClick={() => setQuery((current) => ({ ...current, view: "grid" }))}>
+                  <button type="button" aria-pressed={query.view === "grid"} aria-label="Grid view" onClick={() => setQuery((current) => ({ ...current, view: "grid" }))}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                      <rect x="4" y="4" width="7" height="7" rx="1.5" />
+                      <rect x="13" y="4" width="7" height="7" rx="1.5" />
+                      <rect x="4" y="13" width="7" height="7" rx="1.5" />
+                      <rect x="13" y="13" width="7" height="7" rx="1.5" />
+                    </svg>
                     Grid
                   </button>
                 </div>
@@ -741,7 +1055,7 @@ export function TourCatalog({
                     today={today}
                     saved={saved.includes(tour.id)}
                     compared={query.compare.includes(tour.id)}
-                    eager={page === 1 && index < 2}
+                    eager={index < 2}
                     badge={badgeFor(tour, topId, query)}
                     onSave={() => setSaved((current) => (current.includes(tour.id) ? current.filter((id) => id !== tour.id) : [...current, tour.id]))}
                     onOpen={() => setPreviewId(tour.id)}
@@ -749,6 +1063,7 @@ export function TourCatalog({
                     onCompare={(on) => toggleCompare(tour.id, on)}
                   />
                 ))}
+                {hasMore ? <div ref={sentinelRef} className="tour-catalog__more" aria-hidden="true" /> : null}
               </div>
             ) : (
               <div className="empty">
@@ -762,33 +1077,17 @@ export function TourCatalog({
                   {ideas.map((idea) => (
                     <button key={idea.key} className="btn btn--ghost btn--small" type="button" onClick={() => {
                       if (idea.key === "q") setQInput("");
-                      if (idea.key === "price") { setMinText(""); setMaxText(""); }
                       setQuery((current) => relaxQuery(current, idea.key));
                     }}>
                       {idea.label}
                     </button>
                   ))}
-                  <button className="btn btn--small" type="button" onClick={() => { setQInput(""); setMinText(""); setMaxText(""); setQuery((current) => clearQuery(current)); }}>
+                  <button className="btn btn--small" type="button" onClick={() => { setQInput(""); setQuery((current) => clearQuery(current)); }}>
                     Clear filters
                   </button>
                 </div>
               </div>
             )}
-            {pages > 1 ? (
-              <nav className="pager" aria-label="Pages">
-                <button type="button" disabled={page === 1} onClick={() => { setQuery((current) => ({ ...current, page: page - 1 })); scrollResults(); }}>
-                  Previous
-                </button>
-                {Array.from({ length: pages }, (_, index) => index + 1).map((number) => (
-                  <button key={number} type="button" aria-current={number === page ? "page" : undefined} onClick={() => { setQuery((current) => ({ ...current, page: number })); scrollResults(); }}>
-                    {number}
-                  </button>
-                ))}
-                <button type="button" disabled={page === pages} onClick={() => { setQuery((current) => ({ ...current, page: page + 1 })); scrollResults(); }}>
-                  Next
-                </button>
-              </nav>
-            ) : null}
           </section>
         </div>
       </main>
@@ -806,18 +1105,6 @@ export function TourCatalog({
         </div>
       </footer>
 
-      <div className="dock">
-        <button className="btn btn--ghost" type="button" onClick={openFilters}>
-          Filters {filtersOn ? <span className="count-pip">{filtersOn}</span> : null}
-        </button>
-        <div className="sort" data-picker>
-          <span>Sort</span>
-          <button className="sort-btn" type="button" aria-haspopup="listbox" aria-expanded={menu === "dock"} aria-label="Sort tours" onClick={() => setMenu((current) => (current === "dock" ? null : "dock"))}>
-            {SORT_LABEL[query.sort]}
-          </button>
-          {menu === "dock" ? <SortMenu value={query.sort} onPick={(sort) => { setQuery((current) => ({ ...current, sort, page: 1 })); setMenu(null); }} /> : null}
-        </div>
-      </div>
       {filtersOpen ? <button className="shade" type="button" aria-label="Close filters" onClick={closeFilters} /> : null}
 
       {compared.length ? (
@@ -849,7 +1136,6 @@ export function TourCatalog({
             tour={preview}
             query={query}
             today={today}
-            customer={customer}
             onClose={() => setPreviewId(null)}
             onDate={jumpDate}
           />
@@ -942,10 +1228,134 @@ function dayIso(date: Date) {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
-function DateMenu({ value, min, onPick }: { value: string; min: string; onPick: (iso: string) => void }) {
+function TourTripSheet({
+  date,
+  adults,
+  children,
+  today,
+  onClose,
+  onChange,
+}: {
+  date: string;
+  adults: number;
+  children: number;
+  today: string;
+  onClose: () => void;
+  onChange: (next: Partial<CatalogQuery>) => void;
+}) {
+  const selected = parseDay(date);
+  const earliest = parseDay(today);
+  const [cursor, setCursor] = useState(() => new Date(selected.getFullYear(), selected.getMonth(), 1));
+  const year = cursor.getFullYear();
+  const month = cursor.getMonth();
+  const lead = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const days = Array.from({ length: lead + daysInMonth }, (_, index) => (index < lead ? null : index - lead + 1));
+  const title = cursor.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const previousBlocked = new Date(year, month, 0) < earliest;
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  const panel = (
+    <>
+      <button type="button" className="m-cal-backdrop" aria-label="Close trip details" onClick={onClose} data-picker />
+      <div className="m-cal-sheet is-sheet is-trip" role="dialog" aria-modal="true" aria-label="Date and travelers" data-picker>
+        <div className="m-cal-sheet__grab" aria-hidden />
+        <p className="m-cal-sheet__title">Date &amp; travelers</p>
+        <div className="m-trip__body">
+          <div className="cal__head">
+            <button type="button" aria-label="Previous month" disabled={previousBlocked} onClick={() => setCursor(new Date(year, month - 1, 1))}>‹</button>
+            <strong>{title}</strong>
+            <button type="button" aria-label="Next month" onClick={() => setCursor(new Date(year, month + 1, 1))}>›</button>
+          </div>
+          <div className="cal__grid" role="grid">
+            {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day) => (
+              <span className="cal__dow" key={day}>{day}</span>
+            ))}
+            {days.map((day, index) => {
+              if (day == null) return <span key={`empty-${index}`} />;
+              const next = new Date(year, month, day);
+              const iso = dayIso(next);
+              const disabled = next < earliest;
+              return (
+                <button
+                  key={iso}
+                  type="button"
+                  disabled={disabled}
+                  className={iso === date ? "is-on" : ""}
+                  aria-label={prettyDate(iso)}
+                  aria-pressed={iso === date}
+                  onClick={() => {
+                    onChange({ date: iso });
+                    document.getElementById("m-trip-travelers")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                  }}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+          <div className="m-trip__guests" id="m-trip-travelers">
+            <p className="m-trip__label">Travelers</p>
+            <div className="m-trip__row">
+              <span>
+                Adults <small>Ages 12+</small>
+              </span>
+              <span className="m-trip__step">
+                <button type="button" aria-label="Fewer adults" disabled={adults <= 1} onClick={() => onChange({ adults: Math.max(1, adults - 1) })}>−</button>
+                <b>{adults}</b>
+                <button type="button" aria-label="More adults" disabled={adults >= 8} onClick={() => onChange({ adults: Math.min(8, adults + 1) })}>+</button>
+              </span>
+            </div>
+            <div className="m-trip__row">
+              <span>
+                Children <small>Ages 5–11</small>
+              </span>
+              <span className="m-trip__step">
+                <button type="button" aria-label="Fewer children" disabled={children <= 0} onClick={() => onChange({ children: Math.max(0, children - 1) })}>−</button>
+                <b>{children}</b>
+                <button type="button" aria-label="More children" disabled={children >= 6} onClick={() => onChange({ children: Math.min(6, children + 1) })}>+</button>
+              </span>
+            </div>
+            <p className="m-trip__note">A child pays 65% of the adult rate. Card totals use this party.</p>
+          </div>
+        </div>
+        <div className="m-trip__foot">
+          <button type="button" className="m-cal-sheet__done" onClick={onClose}>
+            Done
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
+  if (typeof document === "undefined") return null;
+  return createPortal(panel, document.body);
+}
+
+function DateMenu({
+  value,
+  min,
+  onPick,
+  onClose,
+  label,
+}: {
+  value: string;
+  min: string;
+  onPick: (iso: string) => void;
+  onClose?: () => void;
+  label?: string;
+}) {
   const selected = parseDay(value);
   const earliest = parseDay(min);
   const [cursor, setCursor] = useState(() => new Date(selected.getFullYear(), selected.getMonth(), 1));
+  const [mobile, setMobile] = useState<boolean | null>(null);
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
   const lead = (new Date(year, month, 1).getDay() + 6) % 7;
@@ -953,56 +1363,124 @@ function DateMenu({ value, min, onPick }: { value: string; min: string; onPick: 
   const days = Array.from({ length: lead + count }, (_, index) => (index < lead ? null : index - lead + 1));
   const title = cursor.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
   const previousBlocked = new Date(year, month, 0) < earliest;
+  const sheet = Boolean(onClose) && mobile === true;
 
+  useLayoutEffect(() => {
+    const query = window.matchMedia("(max-width: 1024px)");
+    const sync = () => setMobile(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    if (!sheet) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sheet]);
+
+  if (onClose && mobile === null) return null;
+
+  const panel = (
+    <>
+      {sheet ? (
+        <button type="button" className="m-cal-backdrop" aria-label="Close calendar" onClick={onClose} data-picker />
+      ) : null}
+      <div
+        className={`menu cal m-cal-sheet${sheet ? " is-sheet" : ""}`}
+        role="dialog"
+        aria-modal={sheet || undefined}
+        aria-label={label || title}
+        data-picker
+      >
+        {sheet ? <div className="m-cal-sheet__grab" aria-hidden /> : null}
+        {label && sheet ? <p className="m-cal-sheet__title">{label}</p> : null}
+        <div className="cal__head">
+          <button type="button" aria-label="Previous month" disabled={previousBlocked} onClick={() => setCursor(new Date(year, month - 1, 1))}>‹</button>
+          <strong>{title}</strong>
+          <button type="button" aria-label="Next month" onClick={() => setCursor(new Date(year, month + 1, 1))}>›</button>
+        </div>
+        <div className="cal__grid" role="grid">
+          {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day) => (
+            <span className="cal__dow" key={day}>{day}</span>
+          ))}
+          {days.map((day, index) => {
+            if (day == null) return <span key={`empty-${index}`} />;
+            const date = new Date(year, month, day);
+            const iso = dayIso(date);
+            const disabled = date < earliest;
+            return (
+              <button key={iso} type="button" disabled={disabled} className={iso === value ? "is-on" : ""} aria-label={prettyDate(iso)} aria-pressed={iso === value} onClick={() => onPick(iso)}>
+                {day}
+              </button>
+            );
+          })}
+        </div>
+        {sheet && onClose ? (
+          <button type="button" className="m-cal-sheet__done" onClick={onClose}>
+            Done
+          </button>
+        ) : null}
+      </div>
+    </>
+  );
+
+  if (sheet && typeof document !== "undefined") {
+    return createPortal(panel, document.body);
+  }
+
+  return panel;
+}
+
+function FilterGroup({
+  legend,
+  hint,
+  items,
+  layout,
+}: {
+  legend: string;
+  hint?: string;
+  items: { key: string; count: number; checked: boolean; node: ReactNode }[];
+  layout?: "pills";
+}) {
+  const visible = items.filter((item) => item.count > 0 || item.checked);
+  if (!visible.length) return null;
   return (
-    <div className="menu cal" role="dialog" aria-label={title}>
-      <div className="cal__head">
-        <button type="button" aria-label="Previous month" disabled={previousBlocked} onClick={() => setCursor(new Date(year, month - 1, 1))}>‹</button>
-        <strong>{title}</strong>
-        <button type="button" aria-label="Next month" onClick={() => setCursor(new Date(year, month + 1, 1))}>›</button>
-      </div>
-      <div className="cal__grid" role="grid">
-        {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day) => (
-          <span className="cal__dow" key={day}>{day}</span>
-        ))}
-        {days.map((day, index) => {
-          if (day == null) return <span key={`empty-${index}`} />;
-          const date = new Date(year, month, day);
-          const iso = dayIso(date);
-          const disabled = date < earliest;
-          return (
-            <button key={iso} type="button" disabled={disabled} className={iso === value ? "is-on" : ""} aria-label={prettyDate(iso)} aria-pressed={iso === value} onClick={() => onPick(iso)}>
-              {day}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <fieldset>
+      <legend>{legend}</legend>
+      {hint ? <span className="hint">{hint}</span> : null}
+      {layout === "pills" ? <div className="pills">{visible.map((item) => item.node)}</div> : visible.map((item) => item.node)}
+    </fieldset>
   );
 }
 
 function QuickChip({ label, count, pressed, onClick }: { label: string; count: number; pressed: boolean; onClick: () => void }) {
+  if (count === 0 && !pressed) return null;
   return (
-    <button className="chip" type="button" aria-pressed={pressed} disabled={count === 0 && !pressed} onClick={onClick}>
+    <button className="chip" type="button" aria-pressed={pressed} onClick={onClick}>
       {label} <span className="n">{count}</span>
     </button>
   );
 }
 
 function Pill({ label, count, checked, onChange }: { label: string; count: number; checked: boolean; onChange: () => void }) {
+  if (count === 0 && !checked) return null;
   return (
     <label className="pill">
       {label} <span className="n">{count}</span>
-      <input type="checkbox" checked={checked} disabled={count === 0 && !checked} onChange={onChange} />
+      <input type="checkbox" checked={checked} onChange={onChange} />
     </label>
   );
 }
 
 function Check({ label, count, checked, onChange }: { label: string; count: number; checked: boolean; onChange: () => void }) {
-  const zero = count === 0 && !checked;
+  if (count === 0 && !checked) return null;
   return (
-    <label className={`check${zero ? " is-zero" : ""}`}>
-      <input type="checkbox" checked={checked} disabled={zero} onChange={onChange} />
+    <label className="check">
+      <input type="checkbox" checked={checked} onChange={onChange} />
       <span>{label}</span>
       <span className="n">{count}</span>
     </label>
@@ -1048,6 +1526,7 @@ function TourCard({
   const status = statusOf(tour, query.date);
   const cancel = cancelInfo(tour, query, today);
   const place = tour.place === tour.region ? tour.place : `${tour.place}, ${tour.region}`;
+  const placeShort = tour.place || tour.region;
   const bits = [durationLabel(tour), tour.when === "multi" ? runsLabel(tour) || "Starts any day" : "", groupLabel(tour)].filter(Boolean);
   const runs = runsLabel(tour);
   const next = status === "ok" ? null : nextOpen(tour, query.date);
@@ -1060,6 +1539,8 @@ function TourCard({
     seats: seatsLeft(tour, query.date),
   });
   const miss = extraLine(tour);
+  const quote = partyQuote(tour, query);
+  const currency = tour.currency || "INR";
   return (
     <article className={`card${compared ? " is-compared" : ""}${status === "ok" ? "" : " is-dim"}`}>
       <div className="photo">
@@ -1071,7 +1552,8 @@ function TourCard({
       </div>
       <div className="main">
         <p className="kicker">
-          {tour.category} · {place}
+          <span className="kicker__full">{tour.category} · {place}</span>
+          <span className="kicker__short">{tour.category} · {placeShort}</span>
         </p>
         <h2>
           <Link href={tour.href}>{tour.title}</Link>
@@ -1092,6 +1574,10 @@ function TourCard({
         <p className="meta">
           {tour.meetShort} · {tour.langs.join(", ")}
         </p>
+        <ul className="m-facts" aria-label="Tour details">
+          {durationLabel(tour) ? <li><span>{durationLabel(tour)}</span></li> : null}
+          {groupLabel(tour) ? <li><span>{groupLabel(tour)}</span></li> : null}
+        </ul>
         {tour.mention ? <p className="mention">{tour.mention}</p> : null}
         {tour.levelNote ? <p className="expect">{tour.levelNote}</p> : null}
         {tour.includes.length ? (
@@ -1106,9 +1592,38 @@ function TourCard({
         {miss ? <p className="miss">{miss}</p> : null}
       </div>
       <div className="buy">
-        <p className="total">{money(partyTotal(tour, query), tour.currency)}</p>
-        <p className="sub">for {whoLabel(query)}</p>
+        <p className="total">{money(quote.total, currency)}</p>
         <p className="sub">{priceDetail(tour, query)}</p>
+        <p className="sub">Total for these travelers</p>
+        <details className="breakdown">
+          <summary>Price breakdown</summary>
+          <p>
+            <span>
+              {query.adults} × {money(quote.adult, currency)}
+            </span>
+            <span>{money(quote.adult * query.adults, currency)}</span>
+          </p>
+          {query.children > 0 ? (
+            <p>
+              <span>
+                {query.children} × {money(quote.child, currency)} child
+              </span>
+              <span>{money(quote.child * query.children, currency)}</span>
+            </p>
+          ) : null}
+          {quote.singles > 0 ? (
+            <p>
+              <span>
+                {quote.singles} single {quote.singles === 1 ? "room" : "rooms"}
+              </span>
+              <span>{money(quote.singleFee * quote.singles, currency)}</span>
+            </p>
+          ) : null}
+          <p>
+            <span>Total</span>
+            <span>{money(quote.total, currency)}</span>
+          </p>
+        </details>
         <p className={cancel.kind === "yes" ? "ok" : cancel.kind === "no" ? "warn" : "muted"}>{cancel.text}</p>
         {block ? <p className="warn">{block}</p> : null}
         {status === "ok" ? (
@@ -1142,136 +1657,83 @@ function Preview({
   tour,
   query,
   today,
-  customer,
   onClose,
   onDate,
 }: {
   tour: CatalogTour;
   query: CatalogQuery;
   today: string;
-  customer: CatalogGuest | null;
   onClose: () => void;
   onDate: (iso: string) => void;
 }) {
   const status = statusOf(tour, query.date);
   const cancel = cancelInfo(tour, query, today);
   const next = status === "ok" ? null : nextOpen(tour, query.date);
-  const departure = tour.departures.find((item) => item.iso === query.date && item.status !== "closed");
-  const [error, setError] = useState("");
-  const [done, setDone] = useState("");
-  const [pending, setPending] = useState(false);
+  const quote = partyQuote(tour, query);
+  const currency = tour.currency || "INR";
+  const place = tour.place === tour.region ? tour.place : `${tour.place}, ${tour.region}`;
+  const includes = tour.includes.slice(0, 5);
 
   return (
-    <div className="dialog-pad">
-      <div className="dialog-head">
-        <div>
-          <p className="kicker">
-            {tour.category} · {tour.place}, {tour.region}
-          </p>
-          <h2 id="tour-title">{tour.title}</h2>
-        </div>
-        <button className="btn btn--ghost btn--small" type="button" onClick={onClose}>
-          Close
+    <div className="preview-body">
+      <div className="preview-media">
+        {tour.img ? <img alt={tour.alt} src={tour.img} /> : <div className="preview-media__empty" />}
+        <button className="preview-close" type="button" aria-label="Close" onClick={onClose}>
+          ×
         </button>
       </div>
-      {tour.img ? <img className="preview-photo" alt={tour.alt} src={tour.img} /> : null}
-      {tour.story ? <p className="lede">{tour.story}</p> : null}
-      <p className="meta" style={{ marginTop: 8 }}>
-        {durationLabel(tour)} · {groupLabel(tour)} · {tour.langs.join(", ")}
-      </p>
-      <p className="mention">{tour.meet}</p>
-      {tour.levelNote ? <p className="expect">{tour.levelNote}</p> : null}
-      <div className="split">
-        <div>
-          <h3>Included</h3>
-          <ul>{(tour.includes.length ? tour.includes : ["Ask the desk to confirm what is included."]).map((item) => <li key={item}>{item}</li>)}</ul>
-        </div>
-        <div>
-          <h3>Not included</h3>
-          <ul>{(tour.excludes.length ? tour.excludes : ["Anything not listed as included."]).map((item) => <li key={item}>{item}</li>)}</ul>
-        </div>
-      </div>
-      {tour.timeline.length ? (
-        <>
-          <h3 style={{ marginTop: 14 }}>The day</h3>
-          <ol className="timeline">
-            {tour.timeline.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ol>
-        </>
-      ) : null}
-      <div className="bill">
-        <div>
-          <p className="bill__total">{money(partyTotal(tour, query), tour.currency)}</p>
-          <p className="sub">
-            for {whoLabel(query)} · {priceDetail(tour, query)}
-          </p>
-          <p className={cancel.kind === "yes" ? "ok" : cancel.kind === "no" ? "warn" : "muted"}>{cancel.text}</p>
-        </div>
-        <Link className="btn btn--small" href={tour.href}>
-          Full page
-        </Link>
-      </div>
-      {next ? (
-        <p style={{ marginTop: 10 }}>
-          <button className="btn btn--ghost btn--small" type="button" onClick={() => onDate(next)}>
-            Move the search to {prettyDate(next)}
-          </button>
+      <div className="preview-copy">
+        <p className="kicker">
+          {tour.category} · {place}
         </p>
-      ) : null}
-      {done ? (
-        <div className="success">{done}</div>
-      ) : (
-        <form
-          className="form"
-          onSubmit={async (event) => {
-            event.preventDefault();
-            const data = new FormData(event.currentTarget);
-            const name = String(data.get("name") || "").trim();
-            const email = String(data.get("email") || "").trim();
-            const phone = String(data.get("phone") || "").trim();
-            if (name.length < 2) { setError("Add your name."); return; }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("Add a real email."); return; }
-            if (phone.replace(/\D/g, "").length < 8) { setError("Add a phone number with the country code."); return; }
-            setError("");
-            setPending(true);
-            const result = await submitTourRequest(initialFormState, data);
-            setPending(false);
-            if (result.error) { setError(result.error); return; }
-            setDone(`Request noted for ${tour.title} on ${prettyDate(query.date)}. Nothing was charged.${result.reference ? ` Reference ${result.reference}.` : ""}`);
-          }}
-        >
-          <input type="hidden" name="tourSlug" value={tour.slug} />
-          <input type="hidden" name="mode" value="group" />
-          <input type="hidden" name="startDate" value={query.date} />
-          <input type="hidden" name="departureId" value={departure?.id ?? ""} />
-          <input type="hidden" name="adults" value={String(query.adults)} />
-          <input type="hidden" name="children" value={String(query.children)} />
-          <input type="hidden" name="ownRoom" value="0" />
-          <label>
-            Name
-            <input name="name" required minLength={2} autoComplete="name" defaultValue={customer?.name ?? ""} readOnly={Boolean(customer?.name)} />
-          </label>
-          <label>
-            Email
-            <input name="email" type="email" required autoComplete="email" defaultValue={customer?.email ?? ""} readOnly={Boolean(customer?.email)} />
-          </label>
-          <label>
-            Phone
-            <input name="phone" required autoComplete="tel" defaultValue={customer?.phone ?? ""} placeholder="+91" />
-          </label>
-          <label>
-            Note
-            <textarea name="note" rows={3} maxLength={400} placeholder="Hotel name, or a question" />
-          </label>
-          <p className="err">{error}</p>
-          <button className="btn" type="submit" disabled={pending}>
-            {pending ? "Sending" : "Send a request"}
-          </button>
-          <p className="fine">Nothing is charged. The desk replies with the next step.</p>
-        </form>
-      )}
+        <h2 id="tour-title">{tour.title}</h2>
+        {tour.reviews > 0 ? (
+          <div className="score">
+            <b className={scoreClass(tour.rating)}>{tour.rating.toFixed(1)}</b>
+            <span>
+              <strong>{scoreWords(tour.rating)}</strong>
+              <span>{reviewCount(tour.reviews)} reviews</span>
+            </span>
+          </div>
+        ) : null}
+        <p className="meta">
+          {durationLabel(tour)} · {groupLabel(tour)} · {tour.langs.join(", ")}
+        </p>
+        <p className="mention">{tour.meetShort}</p>
+        {tour.story ? <p className="lede">{tour.story}</p> : null}
+        {tour.levelNote ? <p className="expect">{tour.levelNote}</p> : null}
+        {includes.length ? (
+          <div className="tags">
+            {includes.map((item) => (
+              <span className="tag" key={item}>
+                {item}
+              </span>
+            ))}
+            {tour.includes.length > includes.length ? <span className="tag">+{tour.includes.length - includes.length} more</span> : null}
+          </div>
+        ) : null}
+        <div className="preview-price">
+          <div>
+            <p className="total">{money(quote.total, currency)}</p>
+            <p className="sub">{priceDetail(tour, query)}</p>
+            <p className="sub">Total for these travelers</p>
+            <p className={cancel.kind === "yes" ? "ok" : cancel.kind === "no" ? "warn" : "muted"}>{cancel.text}</p>
+            {status !== "ok" ? (
+              <p className="warn">{status === "sold" ? `Sold out on ${prettyDate(query.date)}` : `Does not run on ${DAY[weekday(query.date)]}`}</p>
+            ) : null}
+          </div>
+          <div className="preview-actions">
+            <Link className="btn" href={tour.href}>
+              See the tour
+            </Link>
+            {next ? (
+              <button className="btn btn--ghost" type="button" onClick={() => onDate(next)}>
+                Next date · {prettyDate(next)}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1387,10 +1849,8 @@ function priceBins(
   saved: string[],
   lo: number,
   hi: number,
-  min: number,
-  max: number,
 ) {
-  const count = 14;
+  const count = 12;
   const step = (hi - lo) / count || 1;
   const counts = Array.from({ length: count }, () => 0);
   tours.forEach((tour) => {
@@ -1402,7 +1862,6 @@ function priceBins(
     counts[index] += 1;
   });
   const peak = Math.max(1, ...counts);
-  const priced = query.min != null || query.max != null;
   return counts.map((value, index) => {
     const start = Math.round(lo + index * step);
     const end = Math.round(lo + (index + 1) * step);
@@ -1410,8 +1869,7 @@ function priceBins(
       start,
       end,
       count: value,
-      inside: priced && end >= min && start <= max,
-      height: Math.max(4, Math.round((value / peak) * 52)),
+      height: Math.max(8, Math.round((value / peak) * 100)),
     };
   });
 }

@@ -30,6 +30,7 @@ import {
   type RentalListQuery,
   type RentalQueryInput,
 } from "@/components/car-list/car-list-v1/query";
+import { earliestPickupDate, toDateTimeLocal } from "@/lib/rentals/dates";
 
 const PAGE_SIZE = 5;
 const INITIAL_COUNT = 20;
@@ -89,9 +90,7 @@ function matchesQuery(car: CarListCard, query: string) {
 
 function dateParam(date: DateObject | null) {
   if (!date) return "";
-  const value = date.toDate();
-  const pad = (part: number) => String(part).padStart(2, "0");
-  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T10:00`;
+  return toDateTimeLocal(date.toDate());
 }
 
 function initialDate(value: string) {
@@ -112,11 +111,23 @@ function withResolvedPlace(params: RentalQueryInput, locations: CarListLocation[
 }
 
 function defaultPickupDate() {
-  return new DateObject().setDay(15);
+  return new DateObject(earliestPickupDate());
 }
 
-function defaultReturnDate() {
-  return new DateObject().setDay(14).add(1, "month");
+function defaultReturnDate(from = earliestPickupDate()) {
+  const next = new Date(from);
+  next.setDate(next.getDate() + 1);
+  return new DateObject(next);
+}
+
+function defaultPickupAt() {
+  return toDateTimeLocal(earliestPickupDate());
+}
+
+function defaultReturnAt() {
+  const next = earliestPickupDate();
+  next.setDate(next.getDate() + 1);
+  return toDateTimeLocal(next);
 }
 
 export function CarListV1({
@@ -145,8 +156,8 @@ export function CarListV1({
   const initialQuery = initialQueryRef.current;
   const [pickup, setPickup] = useState(initialQuery.pickup);
   const [dropoff, setDropoff] = useState(initialQuery.dropoff);
-  const [pickupAt, setPickupAt] = useState(initialQuery.pickupAt);
-  const [returnAt, setReturnAt] = useState(initialQuery.returnAt);
+  const [pickupAt, setPickupAt] = useState(() => initialQuery.pickupAt || defaultPickupAt());
+  const [returnAt, setReturnAt] = useState(() => initialQuery.returnAt || defaultReturnAt());
   const [pickupDate, setPickupDate] = useState<DateObject | null>(
     () => initialDate(initialQuery.pickupAt) ?? defaultPickupDate(),
   );
@@ -221,8 +232,8 @@ export function CarListV1({
     const next = readRentalQuery(resolvedParams, { priceMax }, { fleet, locationNames });
     setPickup(next.pickup);
     setDropoff(next.dropoff);
-    setPickupAt(next.pickupAt);
-    setReturnAt(next.returnAt);
+    setPickupAt(next.pickupAt || defaultPickupAt());
+    setReturnAt(next.returnAt || defaultReturnAt());
     setPickupDate(initialDate(next.pickupAt) ?? defaultPickupDate());
     setDropoffDate(initialDate(next.returnAt) ?? defaultReturnDate());
     setGuests({ Adults: next.adults, Children: next.children, Rooms: next.rooms });

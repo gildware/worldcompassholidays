@@ -1,58 +1,84 @@
 import type { Metadata } from "next";
-import { BookingStatusForm } from "@/components/admin/BookingStatusForm";
+import { BookingsOverview } from "@/components/admin/BookingsOverview";
 import { requirePermission } from "@/lib/auth/guards";
-import { can } from "@/lib/auth/session";
-import { moduleLabel, statusLabel } from "@/lib/bookings";
+import { loadBookingDeskStats, loadFleetActionCounts } from "@/lib/booking-admin";
+import { deskSegmentForModule } from "@/lib/booking-desks";
 import { prisma } from "@/lib/db";
-import { formatDate } from "@/lib/format";
 
-export const metadata: Metadata = { title: "Bookings" };
+export const metadata: Metadata = { title: "Bookings overview" };
 
-export default async function AdminBookingsPage() {
-  const user = await requirePermission("bookings.view");
-  const canManage = can(user, "bookings.manage");
+export default async function AdminBookingsOverviewPage() {
+  await requirePermission("bookings.view");
 
-  const bookings = await prisma.booking.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { user: { select: { id: true } } },
-  });
+  const [stats, rentalAction, enquiryRecent, rentalRecent] = await Promise.all([
+    loadBookingDeskStats(),
+    loadFleetActionCounts(),
+    prisma.booking.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: {
+        id: true,
+        reference: true,
+        module: true,
+        status: true,
+        title: true,
+        contactName: true,
+        amount: true,
+        currency: true,
+        createdAt: true,
+      },
+    }),
+    prisma.rentalBooking.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: {
+        id: true,
+        reference: true,
+        status: true,
+        contactName: true,
+        amountDue: true,
+        currency: true,
+        createdAt: true,
+        vehicle: { select: { kind: true, name: true } },
+      },
+    }),
+  ]);
+
+  const recent = [
+    ...enquiryRecent.map((row) => ({
+      id: row.id,
+      reference: row.reference,
+      module: row.module,
+      status: row.status,
+      title: row.title,
+      contactName: row.contactName,
+      amount: row.amount,
+      currency: row.currency,
+      createdAt: row.createdAt.toISOString(),
+      href: (() => {
+        const desk = deskSegmentForModule(row.module);
+        return desk
+          ? `/admin/bookings/${row.id}?desk=${desk}`
+          : `/admin/bookings/${row.id}`;
+      })(),
+    })),
+    ...rentalRecent.map((row) => ({
+      id: row.id,
+      reference: row.reference,
+      module: row.vehicle.kind,
+      status: row.status,
+      title: row.vehicle.name,
+      contactName: row.contactName,
+      amount: row.amountDue,
+      currency: row.currency,
+      createdAt: row.createdAt.toISOString(),
+      href: `/admin/rentals/bookings/${row.id}?desk=${row.vehicle.kind === "bike" ? "bikes" : "cars"}`,
+    })),
+  ]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 8);
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Bookings</h1>
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-        Tours, hotels, cars, and bikes share this list. Website messages
-        arrive as enquiries.
-        {canManage ? "" : " Your role can view bookings but not change them."}
-      </p>
-      {bookings.length === 0 ? (
-        <p className="mt-8 text-sm text-muted">No bookings yet.</p>
-      ) : (
-        <ul className="mt-8 divide-y divide-line rounded-xl border border-line bg-white">
-          {bookings.map((booking) => (
-            <li key={booking.id} className="px-4 py-4 text-sm">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-medium">{booking.title}</p>
-                <p className="text-muted">{booking.reference}</p>
-              </div>
-              <p className="mt-1 text-muted">
-                {booking.contactName} · {booking.contactEmail} · {moduleLabel(booking.module)} ·{" "}
-                {statusLabel(booking.status)} · {booking.guests}{" "}
-                {booking.guests === 1 ? "guest" : "guests"}
-                {booking.user ? " · has account" : " · guest enquiry"}
-              </p>
-              {booking.notes ? <p className="mt-2">{booking.notes}</p> : null}
-              <p className="mt-2 text-muted">
-                Received {formatDate(booking.createdAt)}
-                {booking.startDate ? ` · starts ${formatDate(booking.startDate)}` : ""}
-              </p>
-              {canManage ? (
-                <BookingStatusForm bookingId={booking.id} status={booking.status} />
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <BookingsOverview stats={stats} rentalAction={rentalAction} recent={recent} />
   );
 }
