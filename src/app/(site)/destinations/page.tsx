@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { mapApiKey } from "@/lib/map-key";
 import { parseMapPoint } from "@/lib/maps";
 import { pageMetadata } from "@/lib/seo";
+import { cached } from "@/lib/ttl-cache";
 
 export const metadata: Metadata = pageMetadata({
   title: "Travel destinations",
@@ -23,7 +24,8 @@ export default async function DestinationsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const rows = await prisma.destination.findMany({
+  const rows = await cached("destinations", 20_000, () =>
+    prisma.destination.findMany({
     where: { published: true },
     orderBy: [{ popular: "desc" }, { name: "asc" }],
     include: {
@@ -41,7 +43,8 @@ export default async function DestinationsPage({
         },
       },
     },
-  });
+    }),
+  );
 
   const destinations: DestinationListCard[] = rows.map((destination) => {
     const point = parseMapPoint(destination.mapLat, destination.mapLng, destination.mapZoom);

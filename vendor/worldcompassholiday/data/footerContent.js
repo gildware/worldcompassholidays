@@ -18,7 +18,6 @@ module.exports = [
       { name: "Legal Notice", routerPath: "/" },
       { name: "Privacy Policy", routerPath: "/" },
       { name: "Terms and Conditions", routerPath: "/" },
-      { name: "Sitemap", routerPath: "/" },
     ],
   },
   {

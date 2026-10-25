@@ -218,8 +218,8 @@
 .worldcompassholiday-page .assist-type-icon,
 .worldcompassholiday-page .assist-type-icon svg {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 28px;
+  height: 28px;
   flex: none;
 }
 
@@ -454,7 +454,8 @@
   list-style: none;
 }
 
-.worldcompassholiday-page .assist-ways button {
+.worldcompassholiday-page .assist-ways button,
+.worldcompassholiday-page .assist-ways a {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -599,7 +600,8 @@
   overflow: hidden;
 }
 
-.worldcompassholiday-page .assist-board button {
+.worldcompassholiday-page .assist-board button,
+.worldcompassholiday-page .assist-board a {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -614,14 +616,20 @@
 }
 
 .worldcompassholiday-page .assist-board button:hover,
+.worldcompassholiday-page .assist-board a:hover,
 .worldcompassholiday-page .assist-ways button:hover,
+.worldcompassholiday-page .assist-ways a:hover,
 .worldcompassholiday-page .assist-board button:focus-visible,
-.worldcompassholiday-page .assist-ways button:focus-visible {
+.worldcompassholiday-page .assist-board a:focus-visible,
+.worldcompassholiday-page .assist-ways button:focus-visible,
+.worldcompassholiday-page .assist-ways a:focus-visible {
   border-color: #3554d1;
 }
 
 .worldcompassholiday-page .assist-board button:hover,
-.worldcompassholiday-page .assist-board button:focus-visible {
+.worldcompassholiday-page .assist-board a:hover,
+.worldcompassholiday-page .assist-board button:focus-visible,
+.worldcompassholiday-page .assist-board a:focus-visible {
   background: #f4f7ff;
 }
 
@@ -737,5 +745,431 @@
   .worldcompassholiday-page .assist-board-head {
     align-items: stretch;
     flex-direction: column;
+  }
+}
+
+/* PWA: tighter form only. Every field and section stays. */
+@media (max-width: 1024px) {
+  .worldcompassholiday-page .assist-page {
+    padding-bottom: 16px;
+  }
+
+  .worldcompassholiday-page .assist-pass {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .worldcompassholiday-page .assist-pass-head h2 {
+    font-size: 1.15rem;
+  }
+
+  .worldcompassholiday-page .assist-pass-head p {
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+
+  .worldcompassholiday-page .assist-form {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 12px;
+  }
+
+  .worldcompassholiday-page .assist-form > .assist-cell:not(.assist-cell ~ .assist-cell):has(+ .assist-span) {
+    grid-column: 1 / -1;
+  }
+
+  .worldcompassholiday-page .assist-label,
+  .worldcompassholiday-page .assist-cell > label,
+  .worldcompassholiday-page .assist-span > label,
+  .worldcompassholiday-page .assist-span > p.text-14 {
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .worldcompassholiday-page .assist-summary {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .worldcompassholiday-page .assist-choices {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .worldcompassholiday-page .assist-choices button {
+    justify-content: flex-start;
+    min-height: 40px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    line-height: 1.15;
+    text-align: left;
+  }
+
+  .worldcompassholiday-page .assist-choices button span {
+    min-width: 0;
+  }
+
+  .worldcompassholiday-page .assist-control input,
+  .worldcompassholiday-page .assist-control textarea,
+  .worldcompassholiday-page .assist-picker > button,
+  .worldcompassholiday-page .assist-date-btn {
+    min-height: 42px;
+    padding: 0 12px;
+    border-radius: 10px;
+    font-size: 14px;
+  }
+
+  .worldcompassholiday-page .assist-picker > button > span,
+  .worldcompassholiday-page .assist-date-btn {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .worldcompassholiday-page .assist-control textarea {
+    min-height: 64px;
+    padding: 8px 12px;
+  }
+
+  .worldcompassholiday-page .assist-chips {
+    gap: 6px;
+  }
+
+  .worldcompassholiday-page .assist-chips button,
+  .worldcompassholiday-page button.assist-chip {
+    height: 32px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .worldcompassholiday-page .assist-span > p.text-13 {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .worldcompassholiday-page .assist-form-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .worldcompassholiday-page .assist-submit,
+  .worldcompassholiday-page button.assist-whatsapp,
+  .worldcompassholiday-page a.assist-whatsapp {
+    width: 100%;
+    height: 44px;
+    padding: 0 8px;
+    font-size: 13px;
+  }
+}
+
+.worldcompassholiday-page a.assist-request-back {
+  color: #3554d1;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.worldcompassholiday-page a.assist-request-back:hover {
+  color: #051036;
+}
+
+.worldcompassholiday-page .assist-request-title {
+  margin: 10px 0 0;
+  color: #051036;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.worldcompassholiday-page .assist-request-lede {
+  max-width: 38rem;
+  margin: 10px 0 0;
+  color: #697488;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.worldcompassholiday-page .assist-request-layout {
+  margin-top: 16px;
+}
+
+.worldcompassholiday-page .assist-request-art {
+  display: block;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #f6f1e8;
+}
+
+.worldcompassholiday-page .assist-request-art img {
+  display: block;
+  width: 100%;
+  height: 128px;
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+.worldcompassholiday-page .assist-request-card {
+  margin-top: 18px;
+  padding: 14px 16px 10px;
+  border: 1px solid #e6e1d8;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.worldcompassholiday-page .assist-request-page .assist-form {
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+}
+
+.worldcompassholiday-page .assist-request-page .assist-choices button {
+  min-height: 36px;
+  border-radius: 10px;
+}
+
+.worldcompassholiday-page .assist-request-page .assist-control input,
+.worldcompassholiday-page .assist-request-page .assist-picker > button,
+.worldcompassholiday-page .assist-request-page .assist-date-btn {
+  min-height: 36px;
+}
+
+.worldcompassholiday-page .assist-request-page .assist-control textarea {
+  height: 48px;
+  min-height: 48px;
+  padding: 8px 12px;
+}
+
+.worldcompassholiday-page .assist-request-page .assist-form-actions {
+  margin-top: 4px;
+}
+
+.worldcompassholiday-page .assist-request-page .assist-submit,
+.worldcompassholiday-page .assist-request-page button.assist-whatsapp,
+.worldcompassholiday-page .assist-request-page a.assist-whatsapp {
+  height: 42px;
+}
+
+body:has(.assist-request-page) .whatsapp-float {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .worldcompassholiday-page .assist-request-page {
+    padding-top: 8px !important;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .worldcompassholiday-page .assist-request-page > .container {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 96px;
+    column-gap: 12px;
+    row-gap: 2px;
+    align-items: stretch;
+  }
+
+  .worldcompassholiday-page .assist-request-page > .container > .text-14,
+  .worldcompassholiday-page .assist-request-title,
+  .worldcompassholiday-page .assist-request-lede {
+    grid-column: 1;
+  }
+
+  .worldcompassholiday-page .assist-request-title {
+    margin-top: 2px;
+    font-size: 22px;
+  }
+
+  .worldcompassholiday-page .assist-request-lede {
+    margin-top: 2px;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .worldcompassholiday-page .assist-request-layout {
+    display: contents;
+  }
+
+  .worldcompassholiday-page .assist-request-art {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    height: auto;
+    margin: 0;
+  }
+
+  .worldcompassholiday-page .assist-request-art img {
+    width: 100%;
+    height: 100%;
+    min-height: 84px;
+    object-fit: cover;
+  }
+
+  .worldcompassholiday-page .assist-request-card {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    padding: 10px 10px 8px;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-form {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-label,
+  .worldcompassholiday-page .assist-request-page .assist-cell > label,
+  .worldcompassholiday-page .assist-request-page .assist-span > label,
+  .worldcompassholiday-page .assist-request-page .assist-span > p.text-14 {
+    margin-bottom: 6px;
+    font-size: 14px !important;
+    line-height: 1.3;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-control input,
+  .worldcompassholiday-page .assist-request-page .assist-picker > button,
+  .worldcompassholiday-page .assist-request-page .assist-date-btn {
+    height: 48px;
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: 12px;
+    font-size: 16px;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-control textarea {
+    height: 72px;
+    min-height: 72px;
+    padding: 12px 14px;
+    font-size: 16px;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-choices {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-choices button {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 56px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.2;
+    text-align: left;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-choices button span {
+    min-width: 0;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-chips {
+    gap: 8px;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-chips button,
+  .worldcompassholiday-page .assist-request-page button.assist-chip {
+    height: 40px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-span > p.text-13 {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-form-actions {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-submit,
+  .worldcompassholiday-page .assist-request-page button.assist-whatsapp,
+  .worldcompassholiday-page .assist-request-page a.assist-whatsapp {
+    height: 48px;
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .site-shell:has(.assist-request-page) > main.public-header-offset {
+    flex: 0 1 auto;
+  }
+
+  .worldcompassholiday-page .assist-request-page.pt-40 {
+    padding-top: 16px !important;
+  }
+
+  .worldcompassholiday-page .assist-request-page.pb-40 {
+    padding-bottom: 40px !important;
+  }
+
+  .worldcompassholiday-page .assist-request-page > .container {
+    width: 100%;
+    max-width: none;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+
+  .worldcompassholiday-page .assist-request-title {
+    font-size: 26px;
+  }
+
+  .worldcompassholiday-page .assist-request-lede {
+    margin-top: 4px;
+  }
+
+  .worldcompassholiday-page .assist-request-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 16px;
+    align-items: stretch;
+    margin-top: 12px;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-form {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px 10px;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-label,
+  .worldcompassholiday-page .assist-request-page .assist-cell > label,
+  .worldcompassholiday-page .assist-request-page .assist-span > label,
+  .worldcompassholiday-page .assist-request-page .assist-span > p.text-14 {
+    margin-bottom: 2px;
+  }
+
+  .worldcompassholiday-page .assist-request-page .mt-5 {
+    margin-top: 2px !important;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-summary {
+    padding: 6px 10px;
+  }
+
+  .worldcompassholiday-page .assist-request-page .assist-control textarea {
+    height: 36px;
+    min-height: 36px;
+  }
+
+  .worldcompassholiday-page .assist-request-art {
+    position: relative;
+    min-height: 100%;
+    border-radius: 18px;
+  }
+
+  .worldcompassholiday-page .assist-request-art img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-position: center 40%;
+  }
+
+  .worldcompassholiday-page .assist-request-card {
+    margin-top: 0;
+    padding: 12px 18px 8px;
+    box-shadow: 0 18px 40px rgba(5, 16, 54, 0.08);
   }
 }

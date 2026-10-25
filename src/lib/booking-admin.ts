@@ -9,6 +9,7 @@ import {
   staffNoteFromDetails,
 } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
+import { notCustomEnquiryWhere } from "@/lib/enquiries";
 import type { NavItem } from "@/lib/navigation";
 
 export type BookingListRow = {
@@ -76,7 +77,7 @@ export function toBookingListRow(booking: {
 
 export async function loadDeskBookings(module?: BookingDeskKey) {
   return prisma.booking.findMany({
-    where: module ? { module } : undefined,
+    where: module ? { module, ...notCustomEnquiryWhere() } : notCustomEnquiryWhere(),
     orderBy: { createdAt: "desc" },
     include: {
       user: { select: { id: true } },
@@ -102,7 +103,7 @@ export type DeskBadgeStats = {
 export async function loadBookingDeskStats(): Promise<DeskBadgeStats[]> {
   const enabled = bookingDesks.filter((d) => d.enabled).map((d) => d.key);
   const bookings = await prisma.booking.findMany({
-    where: { module: { in: [...enabled] } },
+    where: { module: { in: [...enabled] }, ...notCustomEnquiryWhere() },
     select: { module: true, status: true, details: true },
   });
 

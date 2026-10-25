@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { clearTtlCache } from "@/lib/ttl-cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
@@ -214,6 +215,7 @@ function readOptionalImage(
 }
 
 function revalidateTourPaths(destinationSlug?: string | null) {
+  clearTtlCache();
   revalidatePath("/tours");
   revalidatePath("/admin/tours");
   revalidatePath("/destinations");

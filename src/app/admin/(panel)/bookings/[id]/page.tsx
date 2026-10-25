@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BookingDeskHint } from "@/components/admin/BookingDeskHint";
 import { BookingDetailDesk } from "@/components/admin/BookingDetailDesk";
 import "@/components/admin/bookings-desk.css";
@@ -22,6 +22,7 @@ import {
   statusLabel,
 } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
+import { isCustomEnquiry } from "@/lib/enquiries";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 
 type Props = { params: Promise<{ id: string }> };
@@ -49,6 +50,7 @@ export default async function AdminBookingDetailPage({ params }: Props) {
     loadStaffAssignees(),
   ]);
   if (!booking) notFound();
+  if (isCustomEnquiry(parseBookingDetails(booking.details))) redirect(`/admin/enquiries/${booking.id}`);
 
   const canManage = can(user, "bookings.manage");
   const details = parseBookingDetails(booking.details);

@@ -329,11 +329,14 @@ body:has(.tour-catalog dialog[open]) {
 }
 .tour-catalog .badge.is-hot { background: var(--ink); color: #fff; }
 .tour-catalog .badge.is-low { background: #fff4e5; color: #8a4b08; }
-.tour-catalog .save {
-  position: absolute; right: 10px; top: 10px; z-index: 1; width: 36px; height: 36px; border: 0; border-radius: 50%;
-  background: #fff; box-shadow: 0 6px 16px rgba(28, 25, 21, 0.16); font-size: 16px;
+.tour-catalog button.save.fav-btn,
+.tour-catalog button.save.fav-btn.is-on,
+.tour-catalog button.save.fav-btn:hover {
+  position: absolute; right: 10px; top: 10px; z-index: 1; width: 36px; height: 36px;
+  border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: 0; color: #fff;
 }
-.tour-catalog .save[aria-pressed="true"] { color: var(--danger); }
+.tour-catalog button.save.fav-btn.is-on,
+.tour-catalog button.save.fav-btn[aria-pressed="true"] { color: #e11d48; }
 .tour-catalog .main { padding: 14px 16px 16px; min-width: 0; }
 .tour-catalog .kicker {
   color: var(--soft); font-size: 12.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;

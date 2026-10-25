@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { clearTtlCache } from "@/lib/ttl-cache";
 import { requirePermission } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import type { FormState } from "@/lib/forms";
@@ -62,6 +63,7 @@ export async function saveBrand(
 
   await deleteStoredImages(previous.filter((image) => !nextKeys.has(image.key)));
 
+  clearTtlCache();
   revalidatePath("/");
   revalidatePath("/admin", "layout");
   revalidatePath("/admin/brand");

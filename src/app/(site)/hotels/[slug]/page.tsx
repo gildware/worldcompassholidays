@@ -5,6 +5,7 @@ import type { HotelListLocation } from "@/components/hotel-list/types";
 import type { HotelRoomCard, HotelSingleData, SimilarHotelCard } from "@/components/hotel-single/types";
 import { modules } from "@/config/modules";
 import { prisma } from "@/lib/db";
+import { cached } from "@/lib/ttl-cache";
 import { formatMoney } from "@/lib/format";
 import { getCurrentUser } from "@/lib/auth/session";
 import { isFavorited } from "@/lib/favorites";
@@ -50,23 +51,32 @@ function amenityNames(stored: string, catalog: CatalogOption[]) {
   });
 }
 
+function loadHotel(slug: string) {
+  return cached(`hotel:${slug}`, 30_000, () =>
+    prisma.hotel.findUnique({
+      where: { slug },
+      include: {
+        destination: true,
+        rooms: { where: { active: true }, orderBy: { sortOrder: "asc" } },
+      },
+    }),
+  );
+}
+
+function loadSimilarHotels() {
+  return cached("hotel-similar", 30_000, () =>
+    prisma.hotel.findMany({
+      where: { published: true },
+      include: { destination: { select: { name: true } } },
+      orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
+      take: 12,
+    }),
+  );
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const hotel = await prisma.hotel.findUnique({
-    where: { slug },
-    select: {
-      name: true,
-      summary: true,
-      seoTitle: true,
-      seoDescription: true,
-      seoIndex: true,
-      seoImageUrl: true,
-      imageUrl: true,
-      featuredImageUrl: true,
-      published: true,
-      destination: { select: { name: true } },
-    },
-  });
+  const hotel = await loadHotel(slug);
   if (!hotel?.published) return privateMetadata("Hotel");
   const place = hotel.destination?.name;
   return pageMetadata({
@@ -96,32 +106,24 @@ export default async function HotelPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
 
-  const [hotel, catalog, destinations, user, settings] = await Promise.all([
-    prisma.hotel.findUnique({
-      where: { slug },
-      include: {
-        destination: true,
-        rooms: { where: { active: true }, orderBy: { sortOrder: "asc" } },
-      },
-    }),
+  const [hotel, catalog, destinations, user, settings, similarPool] = await Promise.all([
+    loadHotel(slug),
     loadHotelCatalog(),
-    prisma.destination.findMany({
-      where: { published: true, hotels: { some: { published: true } } },
-      select: { id: true, name: true, region: true, country: true },
-      orderBy: { name: "asc" },
-    }),
+    cached("hotel-detail-places", 30_000, () =>
+      prisma.destination.findMany({
+        where: { published: true, hotels: { some: { published: true } } },
+        select: { id: true, name: true, region: true, country: true },
+        orderBy: { name: "asc" },
+      }),
+    ),
     getCurrentUser(),
     getHotelSettings(),
+    loadSimilarHotels(),
   ]);
   if (!hotel || !hotel.published) notFound();
   const saved = user?.scope === "customer" ? await isFavorited(user.id, "hotel", hotel.id) : false;
 
-  const similarRows = await prisma.hotel.findMany({
-    where: { published: true, id: { not: hotel.id } },
-    include: { destination: { select: { name: true } } },
-    orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
-    take: 8,
-  });
+  const similarRows = similarPool.filter((row) => row.id !== hotel.id).slice(0, 8);
 
   const gallery = parseJsonArray<GalleryItem>(hotel.galleryJson).flatMap((item) =>
     item?.url ? [item.url] : [],

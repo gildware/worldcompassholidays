@@ -143,7 +143,7 @@ export function CarProperties({
                     {formatMoney(item.price, item.currency)}
                   </div>
                   <div className="text-14 text-light-1 mt-5">Total</div>
-                  <Link
+                  <Link prefetch={false}
                     href={href}
                     className="button h-50 px-24 bg-dark-1 -yellow-1 text-white mt-24"
                   >

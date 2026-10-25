@@ -1,7 +1,7 @@
 import { theme } from "@/config/theme";
-import MainFilterSearchBox from "./MainFilterSearchBox";
+import { HeroCatalogSearch } from "@/components/home/HeroCatalogSearch";
 
-const index = ({ tourCatalog, coverUrl }) => {
+const index = ({ coverUrl }) => {
   return (
     <section className="masthead -type-1 z-5">
       <div className="masthead__bg">
@@ -31,12 +31,8 @@ const index = ({ tourCatalog, coverUrl }) => {
             </div>
             {/* End hero title */}
 
-            <div
-              className="tabs -underline mt-60 js-tabs"
-              data-aos="fade-up"
-              data-aos-delay="200"
-            >
-              <MainFilterSearchBox tourCatalog={tourCatalog} />
+            <div data-aos="fade-up" data-aos-delay="200">
+              <HeroCatalogSearch />
             </div>
             {/* End tab-filter */}
           </div>

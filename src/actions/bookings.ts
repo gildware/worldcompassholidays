@@ -9,10 +9,11 @@ import { firstIssue, type FormState } from "@/lib/forms";
 import { requirePermission } from "@/lib/auth/guards";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { bookingStatuses, parseBookingDetails, statusLabel } from "@/lib/bookings";
+import { enquiryStatusLabel, enquiryStatuses, isCustomEnquiry } from "@/lib/enquiries";
 
 const statusSchema = z.object({
   bookingId: z.string().min(1),
-  status: z.enum(bookingStatuses),
+  status: z.string().trim().min(1),
 });
 
 const noteSchema = z.object({
@@ -43,6 +44,8 @@ function deskPathForModule(module: string) {
 
 function revalidateBookingPaths(module: string, reference: string, bookingId: string) {
   revalidatePath("/admin/bookings");
+  revalidatePath("/admin/enquiries");
+  revalidatePath(`/admin/enquiries/${bookingId}`);
   revalidatePath(deskPathForModule(module));
   revalidatePath(`/admin/bookings/${bookingId}`);
   revalidatePath("/admin");
@@ -121,13 +124,19 @@ export async function updateBookingStatus(
     where: { id: parsed.data.bookingId },
   });
   if (!existing) return { error: "Booking not found." };
-  if (existing.status === parsed.data.status) {
+  const custom = isCustomEnquiry(parseBookingDetails(existing.details));
+  const allowed = custom ? enquiryStatuses : bookingStatuses;
+  if (!(allowed as readonly string[]).includes(parsed.data.status)) {
+    return { error: "Choose a status." };
+  }
+  const current = custom && existing.status === "enquiry" ? "pending" : existing.status;
+  if (current === parsed.data.status) {
     return { error: null, success: "Already on that status." };
   }
 
   const details = appendBookingActivity(existing.details, {
     status: parsed.data.status,
-    message: `Status changed to ${statusLabel(parsed.data.status)}`,
+    message: `Status changed to ${custom ? enquiryStatusLabel(parsed.data.status) : statusLabel(parsed.data.status)}`,
     actorName: actor.name,
   });
 

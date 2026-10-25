@@ -13,6 +13,7 @@ import { getHotelSettings } from "@/lib/hotels/settings";
 import { readStayState, type StayListHotel, type StayPlace } from "@/lib/hotels/stay-list";
 import { parseJsonArray, type GalleryItem } from "@/lib/tours/json";
 import { pageMetadata } from "@/lib/seo";
+import { cached } from "@/lib/ttl-cache";
 
 export const metadata: Metadata = pageMetadata({
   title: "Hotels and stays",
@@ -61,7 +62,8 @@ export default async function HotelsPage({
   if (!modules.hotels) notFound();
   const params = await searchParams;
   const [rows, catalog, destinations, user] = await Promise.all([
-    prisma.hotel.findMany({
+    cached("published-hotels", 20_000, () =>
+      prisma.hotel.findMany({
       where: { published: true },
       include: {
         destination: { select: { name: true, slug: true } },
@@ -71,13 +73,16 @@ export default async function HotelsPage({
         },
       },
       orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
-    }),
+      }),
+    ),
     loadHotelCatalog(),
-    prisma.destination.findMany({
+    cached("hotel-places", 20_000, () =>
+      prisma.destination.findMany({
       where: { published: true, hotels: { some: { published: true } } },
       select: { id: true, name: true, slug: true },
       orderBy: { name: "asc" },
-    }),
+      }),
+    ),
     getCurrentUser(),
   ]);
   const savedIds = user?.scope === "customer" ? await favoriteIds(user.id, "hotel") : [];

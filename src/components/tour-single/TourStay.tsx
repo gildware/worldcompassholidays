@@ -366,6 +366,8 @@ export function TourStay({
             initialSaved={saved}
             signedIn={signedIn}
             title={tour.title}
+            variant="icon"
+            className="fav-btn--plain"
           />
         </div>
 

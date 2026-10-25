@@ -1,8 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { theme } from "@/config/theme";
+import type { FavoriteKind } from "@/lib/favorite-kinds";
 import { formatMoney } from "@/lib/format";
 import { HomeAssistSection } from "@/components/home/HomeAssistSection";
+import { HomeHeroSearch } from "@/components/home/HomeHeroSearch";
 import {
   bikeHomeFallback,
   carHomeFallback,
@@ -21,6 +24,7 @@ export type HomeDestination = {
 };
 
 export type HomeTour = {
+  id: string;
   slug: string;
   title: string;
   place: string;
@@ -32,6 +36,7 @@ export type HomeTour = {
 };
 
 export type HomeHotel = {
+  id: string;
   slug: string;
   name: string;
   place: string;
@@ -70,8 +75,34 @@ function RailHead({
         <h2 id={headingId}>{title}</h2>
         <p>{subtitle}</p>
       </div>
-      <Link href={href}>{linkLabel}</Link>
+      <Link prefetch={false} href={href}>{linkLabel}</Link>
     </div>
+  );
+}
+
+function CardFavorite({
+  kind,
+  id,
+  title,
+  savedIds,
+  signedIn,
+}: {
+  kind: FavoriteKind;
+  id: string;
+  title: string;
+  savedIds: string[];
+  signedIn: boolean;
+}) {
+  return (
+    <FavoriteButton
+      kind={kind}
+      itemId={id}
+      initialSaved={savedIds.includes(id)}
+      signedIn={signedIn}
+      title={title}
+      variant="icon"
+      className="fav-btn--float"
+    />
   );
 }
 
@@ -81,18 +112,24 @@ function RideRail({
   subtitle,
   href,
   linkLabel,
+  kind,
   kindLabel,
   items,
   empty,
+  savedIds,
+  signedIn,
 }: {
   id: string;
   title: string;
   subtitle: string;
   href: string;
   linkLabel: string;
+  kind: FavoriteKind;
   kindLabel: string;
   items: HomeRide[];
   empty: typeof carHomeFallback;
+  savedIds: string[];
+  signedIn: boolean;
 }) {
   return (
     <section className="home-x__rail" aria-labelledby={id}>
@@ -106,18 +143,27 @@ function RideRail({
       {items.length > 0 ? (
         <div className="home-x__scroller">
           {items.map((ride) => (
-            <Link key={ride.slug} href={`/rentals/${ride.slug}`} className="home-x__card">
+            <article key={ride.slug} className="home-x__card">
               <div className="home-x__card-media">
-                <Image
-                  src={ride.image}
-                  alt=""
-                  fill
-                  sizes="280px"
-                  style={{ objectFit: "cover" }}
-                />
+                <Link prefetch={false} href={`/rentals/${ride.slug}`} className="home-x__card-shot" aria-label={ride.name}>
+                  <Image
+                    src={ride.image}
+                    alt=""
+                    fill
+                    sizes="280px"
+                    style={{ objectFit: "cover" }}
+                  />
+                </Link>
                 <span className="home-x__badge">{kindLabel}</span>
+                <CardFavorite
+                  kind={kind}
+                  id={ride.id}
+                  title={ride.name}
+                  savedIds={savedIds}
+                  signedIn={signedIn}
+                />
               </div>
-              <div className="home-x__card-body">
+              <Link prefetch={false} href={`/rentals/${ride.slug}`} className="home-x__card-body">
                 <h3>{ride.name}</h3>
                 <p className="home-x__meta">
                   {[ride.place, ride.detail, ride.seats ? `${ride.seats} seats` : ""]
@@ -129,8 +175,8 @@ function RideRail({
                     {formatMoney(ride.pricePerDay, ride.currency)} <small>/ day</small>
                   </p>
                 ) : null}
-              </div>
-            </Link>
+              </Link>
+            </article>
           ))}
         </div>
       ) : (
@@ -149,6 +195,8 @@ export function HomeExperience({
   showCars,
   showBikes,
   coverUrl,
+  savedIds = [],
+  signedIn = false,
 }: {
   destinations: HomeDestination[];
   tours: HomeTour[];
@@ -159,6 +207,8 @@ export function HomeExperience({
   showCars: boolean;
   showBikes: boolean;
   coverUrl?: string;
+  savedIds?: string[];
+  signedIn?: boolean;
 }) {
   return (
     <div className="home-x">
@@ -176,6 +226,7 @@ export function HomeExperience({
         <div className="home-x__hero-inner">
           <h1>{theme.headline}</h1>
           <p>{theme.tagline}</p>
+          <HomeHeroSearch />
         </div>
       </section>
 
@@ -189,7 +240,7 @@ export function HomeExperience({
           />
           <div className="home-x__scroller" id="home-destinations">
             {destinations.map((d) => (
-              <Link key={d.slug} href={`/destinations/${d.slug}`} className="home-x__dest">
+              <Link prefetch={false} key={d.slug} href={`/destinations/${d.slug}`} className="home-x__dest">
                 <Image
                   src={d.imageUrl || "/img/destinations/1/1.png"}
                   alt=""
@@ -215,18 +266,27 @@ export function HomeExperience({
           />
           <div className="home-x__scroller" id="home-tours">
             {tours.map((tour) => (
-              <Link key={tour.slug} href={`/tours/${tour.slug}`} className="home-x__card">
+              <article key={tour.slug} className="home-x__card">
                 <div className="home-x__card-media">
-                  <Image
-                    src={tour.image}
-                    alt=""
-                    fill
-                    sizes="280px"
-                    style={{ objectFit: "cover" }}
-                  />
+                  <Link prefetch={false} href={`/tours/${tour.slug}`} className="home-x__card-shot" aria-label={tour.title}>
+                    <Image
+                      src={tour.image}
+                      alt=""
+                      fill
+                      sizes="280px"
+                      style={{ objectFit: "cover" }}
+                    />
+                  </Link>
                   {tour.badge ? <span className="home-x__badge">{tour.badge}</span> : null}
+                  <CardFavorite
+                    kind="tour"
+                    id={tour.id}
+                    title={tour.title}
+                    savedIds={savedIds}
+                    signedIn={signedIn}
+                  />
                 </div>
-                <div className="home-x__card-body">
+                <Link prefetch={false} href={`/tours/${tour.slug}`} className="home-x__card-body">
                   <h3>{tour.title}</h3>
                   <p className="home-x__meta">
                     {[tour.place, tour.duration].filter(Boolean).join(" · ")}
@@ -237,8 +297,8 @@ export function HomeExperience({
                       <small>/ start</small>
                     </p>
                   ) : null}
-                </div>
-              </Link>
+                </Link>
+              </article>
             ))}
           </div>
         </section>
@@ -254,17 +314,26 @@ export function HomeExperience({
           />
           <div className="home-x__scroller" id="home-hotels">
             {hotels.map((hotel) => (
-              <Link key={hotel.slug} href={`/hotels/${hotel.slug}`} className="home-x__card">
+              <article key={hotel.slug} className="home-x__card">
                 <div className="home-x__card-media">
-                  <Image
-                    src={hotel.image}
-                    alt=""
-                    fill
-                    sizes="280px"
-                    style={{ objectFit: "cover" }}
+                  <Link prefetch={false} href={`/hotels/${hotel.slug}`} className="home-x__card-shot" aria-label={hotel.name}>
+                    <Image
+                      src={hotel.image}
+                      alt=""
+                      fill
+                      sizes="280px"
+                      style={{ objectFit: "cover" }}
+                    />
+                  </Link>
+                  <CardFavorite
+                    kind="hotel"
+                    id={hotel.id}
+                    title={hotel.name}
+                    savedIds={savedIds}
+                    signedIn={signedIn}
                   />
                 </div>
-                <div className="home-x__card-body">
+                <Link prefetch={false} href={`/hotels/${hotel.slug}`} className="home-x__card-body">
                   <h3>{hotel.name}</h3>
                   <p className="home-x__meta">{hotel.place}</p>
                   {hotel.priceFrom > 0 ? (
@@ -273,8 +342,8 @@ export function HomeExperience({
                       <small>/ night from</small>
                     </p>
                   ) : null}
-                </div>
-              </Link>
+                </Link>
+              </article>
             ))}
           </div>
         </section>
@@ -287,9 +356,12 @@ export function HomeExperience({
           subtitle="Self-drive and chauffeur, by the day"
           href="/rentals/cars"
           linkLabel="All cars"
+          kind="car"
           kindLabel="Car"
           items={cars}
           empty={carHomeFallback}
+          savedIds={savedIds}
+          signedIn={signedIn}
         />
       ) : null}
 
@@ -300,9 +372,12 @@ export function HomeExperience({
           subtitle="Scooters and motorcycles, with a helmet"
           href="/rentals/bikes"
           linkLabel="All bikes"
+          kind="bike"
           kindLabel="Bike"
           items={bikes}
           empty={bikeHomeFallback}
+          savedIds={savedIds}
+          signedIn={signedIn}
         />
       ) : null}
 
@@ -329,7 +404,7 @@ export function HomeExperience({
           <h2>Tell us the trip. We quote it before you pay.</h2>
           <p>Tours, hotels, visas, airport meet, and car or bike rental.</p>
         </div>
-        <Link href="/contact">Contact us</Link>
+        <Link prefetch={false} href="/contact">Contact us</Link>
       </div>
     </div>
   );

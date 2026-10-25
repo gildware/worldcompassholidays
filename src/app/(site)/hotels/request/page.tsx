@@ -6,6 +6,7 @@ import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/World
 import { modules } from "@/config/modules";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { hotelBudgetBands, hotelMeals, hotelRoomTypes, isBudgetValue } from "@/lib/custom-request";
 import { hotelRequestFaqs } from "@/lib/hotels/request-content";
 import { pageMetadata } from "@/lib/seo";
 import "@/styles/hotel-request.css";
@@ -44,6 +45,10 @@ export default async function HotelRequestPage({
     message?: string;
     stars?: string;
     budget?: string;
+    area?: string;
+    roomType?: string;
+    meals?: string;
+    childAges?: string;
   }>;
 }) {
   if (!modules.hotels) notFound();
@@ -68,7 +73,11 @@ export default async function HotelRequestPage({
     hotelName: (params.hotelName ?? "").slice(0, 120),
     message: (params.message ?? "").slice(0, 500),
     stars: params.stars === "3" || params.stars === "4" || params.stars === "5" ? params.stars : "any",
-    budget: (params.budget ?? "").slice(0, 40),
+    budget: isBudgetValue(hotelBudgetBands, (params.budget ?? "").slice(0, 12)) ? (params.budget ?? "").slice(0, 12) : "",
+    area: (params.area ?? "").slice(0, 120),
+    roomType: hotelRoomTypes.some((option) => option.value === params.roomType) ? params.roomType || "any" : "any",
+    meals: hotelMeals.some((option) => option.value === params.meals) ? params.meals || "any" : "any",
+    childAges: (params.childAges ?? "").slice(0, 80),
   };
   const nextQuery = new URLSearchParams();
   for (const [key, value] of Object.entries({
@@ -82,6 +91,10 @@ export default async function HotelRequestPage({
     message: defaults.message,
     stars: defaults.stars === "any" ? "" : defaults.stars,
     budget: defaults.budget,
+    area: defaults.area,
+    roomType: defaults.roomType === "any" ? "" : defaults.roomType,
+    meals: defaults.meals === "any" ? "" : defaults.meals,
+    childAges: defaults.childAges,
   })) {
     if (value) nextQuery.set(key, value);
   }

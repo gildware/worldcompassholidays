@@ -10,7 +10,7 @@ export function HomeVisaSection({ headingId = "home-visa" }: { headingId?: strin
         <div>
           <div className="hx-desk__title">
             <h2 id={headingId}>Visa help</h2>
-            <Link href="/visa-services" className="hx-desk__more">
+            <Link prefetch={false} href="/visa-services" className="hx-desk__more">
               View more details
             </Link>
           </div>
@@ -20,13 +20,13 @@ export function HomeVisaSection({ headingId = "home-visa" }: { headingId?: strin
           </p>
           <p className="hx-visa__meta">14 destinations · Reply within 24 hours · Embassy fee kept separate</p>
         </div>
-        <Link href="/visa-services#visa-apply" className="hx-desk__go">
+        <Link prefetch={false} href="/visa-services/apply" className="hx-desk__go">
           Get a visa quote
         </Link>
       </div>
       <div className="hx-visa__grid">
         {homeVisaServices.map((item) => (
-          <Link key={item.title} href={item.href} className="hx-visa__card">
+          <Link prefetch={false} key={item.title} href={item.href} className="hx-visa__card">
             <div className="hx-visa__photo">
               <Image
                 src={item.image}

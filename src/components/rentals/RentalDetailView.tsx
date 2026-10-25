@@ -135,6 +135,8 @@ export function RentalDetailView(props: RentalDetailViewProps) {
                   initialSaved={favorite.saved}
                   signedIn={favorite.signedIn}
                   title={name}
+                  variant="icon"
+                  className="fav-btn--plain"
                 />
               </div>
               {summary ? <p className="rental-detail__lead">{summary}</p> : null}

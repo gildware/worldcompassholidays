@@ -271,6 +271,8 @@ export function HotelStay({
               initialSaved={saved}
               signedIn={Boolean(customer)}
               title={hotel.name}
+              variant="icon"
+              className="fav-btn--plain"
             />
             {hotel.stars > 0 ? (
               <button className="stay-score" type="button" onClick={() => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" })}>

@@ -47,7 +47,7 @@ const PopularDestinations = ({ destinations = /** @type {any[]} */ ([]) }) => {
       >
         {destinations.map((item) => (
           <SwiperSlide key={item.id}>
-            <Link
+            <Link prefetch={false}
               href={`/destinations/${item.slug}`}
               className="citiesCard -type-1 d-block rounded-4"
             >

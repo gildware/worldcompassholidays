@@ -10,7 +10,7 @@ import { visibleAccountSections, type AccountSectionKey } from "@/lib/account-se
 type Item = {
   href: string;
   label: string;
-  icon: "dashboard" | "booking" | "favorites" | "settings" | AccountSectionKey;
+  icon: "dashboard" | "booking" | "enquiries" | "favorites" | "settings" | AccountSectionKey;
   active?: (pathname: string) => boolean;
 };
 
@@ -69,6 +69,14 @@ function Icon({
       <svg {...common}>
         <path d="M7 3.5h10A1.5 1.5 0 0 1 18.5 5v15.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z" />
         <path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4.5" />
+      </svg>
+    );
+  }
+  if (name === "enquiries") {
+    return (
+      <svg {...common}>
+        <path d="M4.5 7.5h15v10h-15z" />
+        <path d="m4.5 8.5 7.5 4.5 7.5-4.5" />
       </svg>
     );
   }
@@ -348,6 +356,7 @@ export function AccountSidebar({
   const items: Item[] = [
     { href: "/account", label: "Dashboard", icon: "dashboard" },
     { href: bookingHref, label: "Booking", icon: "booking", active: isBookingPath },
+    { href: "/account/enquiries", label: "Enquiries", icon: "enquiries" },
     { href: "/account/favorites", label: "Favorites", icon: "favorites" },
     ...(showSettings ? [{ href: "/account/settings", label: "Settings", icon: "settings" as const }] : []),
   ];

@@ -6,8 +6,8 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { favoriteIds } from "@/lib/favorites";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
-import { ensureRentalDefaults } from "@/lib/rentals/defaults";
 import { fleetKinds } from "@/lib/rentals/labels";
+import { cached } from "@/lib/ttl-cache";
 
 type Search = Record<string, string | string[] | undefined>;
 
@@ -35,7 +35,6 @@ export async function RentalListing({
   if (lockedKind === "bike" && !modules.bikes) notFound();
   if (!lockedKind && !modules.cars && !modules.bikes) notFound();
 
-  await ensureRentalDefaults();
   const params = await searchParams;
   const kinds = fleetKinds();
   const requestedKind = one(params.kind);
@@ -43,40 +42,62 @@ export async function RentalListing({
     lockedKind ??
     (kinds.includes(requestedKind as "car" | "bike") ? (requestedKind as "car" | "bike") : "");
   const [vehicles, rentalLocations, freeCancellation, user] = await Promise.all([
-    prisma.vehicle.findMany({
-      where: {
-        published: true,
-        kind: kind ? kind : { in: kinds },
-        status: { not: "inactive" },
-      },
-      include: {
-        images: { orderBy: { sortOrder: "asc" } },
-        vehicleType: true,
-        fuelType: true,
-        transmission: true,
-        features: { include: { config: true } },
-        destination: { select: { id: true, name: true } },
-        locationLinks: { include: { location: true } },
-      },
-      orderBy: [{ pricePerDay: "asc" }, { name: "asc" }],
-    }),
-    prisma.rentalLocation.findMany({
-      where: {
-        active: true,
-        ...(kind ? { fleet: kind } : {}),
-        vehicleLinks: {
-          some: {
-            vehicle: { published: true, status: { not: "inactive" }, ...(kind ? { kind } : {}) },
+    cached(`rentals:${kind || "all"}`, 20_000, () =>
+      prisma.vehicle.findMany({
+        where: {
+          published: true,
+          kind: kind ? kind : { in: kinds },
+          status: { not: "inactive" },
+        },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          kind: true,
+          brand: true,
+          seats: true,
+          luggage: true,
+          doors: true,
+          includedKmPerDay: true,
+          pricePerDay: true,
+          currency: true,
+          securityDeposit: true,
+          vehicleType: { select: { name: true } },
+          fuelType: { select: { name: true } },
+          transmission: { select: { name: true } },
+          destination: { select: { name: true } },
+          images: { orderBy: { sortOrder: "asc" }, select: { url: true } },
+          features: {
+            select: { config: { select: { name: true, kind: true, active: true, sortOrder: true } } },
+          },
+          locationLinks: {
+            select: { location: { select: { name: true, active: true, fleet: true } } },
           },
         },
-      },
-      select: { id: true, name: true, address: true, mapLat: true, mapLng: true },
-      orderBy: { name: "asc" },
-    }),
-    prisma.rentalPolicy.findFirst({
-      where: { kind: "cancellation", active: true, refundPercent: 100, ...(kind ? { fleet: kind } : {}) },
-      select: { id: true },
-    }),
+        orderBy: [{ pricePerDay: "asc" }, { name: "asc" }],
+      }),
+    ),
+    cached(`rental-locations:${kind || "all"}`, 20_000, () =>
+      prisma.rentalLocation.findMany({
+        where: {
+          active: true,
+          ...(kind ? { fleet: kind } : {}),
+          vehicleLinks: {
+            some: {
+              vehicle: { published: true, status: { not: "inactive" }, ...(kind ? { kind } : {}) },
+            },
+          },
+        },
+        select: { id: true, name: true, address: true, mapLat: true, mapLng: true },
+        orderBy: { name: "asc" },
+      }),
+    ),
+    cached(`rental-free-cancel:${kind || "all"}`, 20_000, () =>
+      prisma.rentalPolicy.findFirst({
+        where: { kind: "cancellation", active: true, refundPercent: 100, ...(kind ? { fleet: kind } : {}) },
+        select: { id: true },
+      }),
+    ),
     getCurrentUser(),
   ]);
   const favoriteKind: FavoriteKind | FavoriteKind[] = kind === "bike" ? "bike" : kind === "car" ? "car" : ["car", "bike"];

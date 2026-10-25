@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { clearTtlCache } from "@/lib/ttl-cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -78,6 +79,7 @@ async function rememberDestinationToast(kind: "added" | "updated") {
 }
 
 function revalidateDestinationPaths(slug?: string) {
+  clearTtlCache();
   revalidatePath("/");
   revalidatePath("/destinations");
   revalidatePath("/admin/destinations");

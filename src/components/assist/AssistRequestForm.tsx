@@ -162,27 +162,15 @@ export function AssistRequestForm({
       {customer ? (
         <div className="assist-span">
           <p className="text-14 text-light-1">
-            Sending as {customer.name} ({customer.email}).
+            Sending as {customer.name}
           </p>
         </div>
       ) : (
         <>
           <Field label="Name" name="name" autoComplete="name" placeholder="Name on the booking" error={view.fields?.name} defaultValue={saved.name} />
           <Field label="Email" name="email" type="email" autoComplete="email" placeholder="name@email.com" error={view.fields?.email} defaultValue={saved.email} />
-          <Field label="Phone" name="phone" type="tel" autoComplete="tel" placeholder="+91- 70064 22204" error={view.fields?.phone} defaultValue={saved.phone} />
         </>
       )}
-      {customer ? (
-        <Field
-          label="Phone"
-          name="phone"
-          type="tel"
-          autoComplete="tel"
-          placeholder="+91- 70064 22204"
-          error={view.fields?.phone}
-          defaultValue={saved.phone || customer.phone}
-        />
-      ) : null}
       <div className="assist-span">
         <p className="assist-label" id="service-label">
           Meet
@@ -211,7 +199,7 @@ export function AssistRequestForm({
           value={airport}
           onChange={setAirport}
           options={airportOptions}
-          placeholder="City or airport code"
+          placeholder="City or code"
           searchPlaceholder="Search airports"
           invalid={Boolean(view.fields?.airport)}
           describedBy={view.fields?.airport ? "airport-error" : undefined}
@@ -248,7 +236,7 @@ export function AssistRequestForm({
           value={flightTime}
           onChange={setFlightTime}
           options={times}
-          placeholder="Landing or take-off"
+          placeholder="Select a time"
           searchPlaceholder="Search a time"
           invalid={Boolean(view.fields?.flightTime)}
           describedBy={view.fields?.flightTime ? "flightTime-error" : undefined}
@@ -262,6 +250,15 @@ export function AssistRequestForm({
         placeholder="EK 512"
         error={view.fields?.flightNumber}
         defaultValue={saved.flightNumber}
+      />
+      <Field
+        label="Phone"
+        name="phone"
+        type="tel"
+        autoComplete="tel"
+        placeholder="+91- 70064 22204"
+        error={view.fields?.phone}
+        defaultValue={saved.phone || customer?.phone || ""}
       />
       {service === "round" ? (
         <>
@@ -280,7 +277,7 @@ export function AssistRequestForm({
               value={returnTime}
               onChange={setReturnTime}
               options={times}
-              placeholder="Landing or take-off"
+              placeholder="Select a time"
               searchPlaceholder="Search a time"
               invalid={Boolean(view.fields?.returnTime)}
               describedBy={view.fields?.returnTime ? "returnTime-error" : undefined}
@@ -305,7 +302,7 @@ export function AssistRequestForm({
         min={1}
         max={20}
         error={view.fields?.travellers}
-        defaultValue={saved.travellers}
+        defaultValue={saved.travellers || "1"}
       />
       <div className="assist-span">
         <p className="text-14 fw-500">Help at the airport</p>

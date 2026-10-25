@@ -46,6 +46,12 @@ export function MobileAppHeader() {
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    const openSearch = () => setOpen(true);
+    window.addEventListener("wch-open-search", openSearch);
+    return () => window.removeEventListener("wch-open-search", openSearch);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
     inputRef.current?.focus();
     const previous = document.body.style.overflow;
@@ -90,7 +96,7 @@ export function MobileAppHeader() {
   return (
     <header ref={headerRef} className={`mobile-app-header app-chrome-mobile${searching}`}>
       <div className="mobile-app-header__inner">
-        <Link href="/" className="mobile-app-header__brand" aria-label="World Compass Holidays">
+        <Link prefetch={false} href="/" className="mobile-app-header__brand" aria-label="World Compass Holidays">
           <BrandMark className="mobile-app-header__mark" />
           <span className="mobile-app-header__word">
             <strong>World Compass</strong>
@@ -108,7 +114,7 @@ export function MobileAppHeader() {
           >
             {open ? <CloseIcon /> : <SearchIcon />}
           </button>
-          <Link
+          <Link prefetch={false}
             href="/account"
             className={`mobile-app-header__icon${pathname.startsWith("/account") ? " is-active" : ""}`}
             aria-label="Account"

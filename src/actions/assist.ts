@@ -240,7 +240,7 @@ export async function submitAssistRequest(
     };
   }
 
-  redirect(`/meet-and-assist?sent=1&ref=${booking.reference}`);
+  redirect(`/meet-and-assist/request?sent=1&ref=${booking.reference}`);
 }
 
 export async function updateAssistStaffNote(

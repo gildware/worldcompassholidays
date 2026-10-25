@@ -33,7 +33,11 @@ export function formatPhone(value: string) {
   if (!canonical) return "";
   const dial = matchDial(canonical);
   if (!dial) return `+${canonical}`;
-  return `+${dial} ${canonical.slice(dial.length)}`;
+  const national = canonical.slice(dial.length);
+  if (dial === "91" && national.length === 10) {
+    return `+91 ${national.slice(0, 5)} ${national.slice(5)}`;
+  }
+  return `+${dial} ${national}`;
 }
 
 export function toE164(local: string) {

@@ -7,6 +7,7 @@ import { useFormStatus } from "react-dom";
 import { submitHotelRequest } from "@/actions/hotel-request";
 import { WhatsAppIcon } from "@/components/visa/VisaIcons";
 import { formatPhone } from "@/lib/auth/phone";
+import { budgetChoices, hotelBudgetBands, hotelMeals, hotelRoomTypes, type RequestOption } from "@/lib/custom-request";
 import { initialFormState, type FormState } from "@/lib/forms";
 
 const starOptions = [
@@ -16,18 +17,10 @@ const starOptions = [
   { value: "5", label: "5 stars", title: "5 stars", count: 5 },
 ];
 
-const budgetOptions = [
-  { value: "", label: "Any" },
-  { value: "upto-1000", label: "Up to 1,000" },
-  { value: "1000-5000", label: "1,000 – 5,000" },
-  { value: "5000-10000", label: "5,000 – 10,000" },
-  { value: "10000-20000", label: "10,000 – 20,000" },
-  { value: "above-20000", label: "Above 20,000" },
-  { value: "other", label: "Other" },
-];
+const budgetOptions = budgetChoices(hotelBudgetBands);
 
 const budgetValues = new Set(budgetOptions.map((option) => option.value));
-const fieldOrder = ["phone", "destination", "hotelName", "checkIn", "checkOut", "adults", "children", "rooms", "budget", "stars", "message"];
+const fieldOrder = ["phone", "destination", "area", "hotelName", "checkIn", "checkOut", "adults", "children", "childAges", "rooms", "budget", "stars", "roomType", "meals", "message"];
 
 function focusErrorField(fields?: Record<string, string>) {
   const key = fieldOrder.find((name) => fields?.[name]);
@@ -37,6 +30,16 @@ function focusErrorField(fields?: Record<string, string>) {
   if (!(target instanceof HTMLElement)) return;
   target.scrollIntoView({ behavior: "smooth", block: "center" });
   if (visibleInput instanceof HTMLElement) visibleInput.focus({ preventScroll: true });
+}
+
+function splitAges(value: string | undefined, count: number) {
+  const parts = (value ?? "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => /^\d{1,2}$/.test(part) && Number(part) <= 17)
+    .slice(0, count);
+  while (parts.length < count) parts.push("");
+  return parts;
 }
 
 function clampCount(value: string | undefined, fallback: string, min: number, max: number) {
@@ -56,6 +59,10 @@ export type HotelRequestDefaults = {
   message: string;
   stars: string;
   budget: string;
+  area: string;
+  roomType: string;
+  meals: string;
+  childAges: string;
 };
 
 export function HotelRequestForm({
@@ -95,8 +102,12 @@ export function HotelRequestForm({
   const savedIsOther = Boolean(savedBudget) && !budgetValues.has(savedBudget);
   const [budgetChoice, setBudgetChoice] = useState(savedIsOther ? "other" : savedBudget);
   const [otherBudget, setOtherBudget] = useState(savedIsOther ? savedBudget : "");
+  const [area, setArea] = useState(saved.area || defaults.area || "");
+  const [roomType, setRoomType] = useState(saved.roomType || defaults.roomType || "any");
+  const [meals, setMeals] = useState(saved.meals || defaults.meals || "any");
   const [adults, setAdults] = useState(clampCount(saved.adults, defaults.adults, 1, 20));
   const [children, setChildren] = useState(clampCount(saved.children, defaults.children, 0, 12));
+  const [childAges, setChildAges] = useState(splitAges(saved.childAges || defaults.childAges, clampCount(saved.children, defaults.children, 0, 12)));
   const [rooms, setRooms] = useState(clampCount(saved.rooms, defaults.rooms, 1, 10));
   const [mounted, setMounted] = useState(false);
   const budgetValue = budgetChoice === "other" ? otherBudget.replace(/\D/g, "") : budgetChoice;
@@ -130,7 +141,7 @@ export function HotelRequestForm({
     const params = new URLSearchParams();
     if (form) {
       const data = new FormData(form);
-      for (const key of ["destination", "hotelName", "checkIn", "checkOut", "adults", "children", "rooms", "stars", "budget", "message"]) {
+      for (const key of ["destination", "area", "hotelName", "checkIn", "checkOut", "adults", "children", "childAges", "rooms", "stars", "roomType", "meals", "budget", "message"]) {
         const value = String(data.get(key) || "").trim();
         if (value) params.set(key, value);
       }
@@ -227,7 +238,7 @@ export function HotelRequestForm({
           />
         ) : null}
         <Field
-          label="City or area"
+          label="City"
           name="destination"
           placeholder="Goa, Manali, Dubai"
           error={view.fields?.destination}
@@ -240,6 +251,15 @@ export function HotelRequestForm({
           placeholder="Optional"
           error={view.fields?.hotelName}
           defaultValue={saved.hotelName || defaults.hotelName}
+        />
+        <Field
+          label="Area or landmark"
+          name="area"
+          placeholder="Dal Lake, Calangute, near the airport"
+          error={view.fields?.area}
+          value={area}
+          onChange={setArea}
+          wide
         />
         <Field
           label="Check-in"
@@ -257,8 +277,50 @@ export function HotelRequestForm({
         />
         <div className="hotel-request-span hotel-request-guests">
           <Stepper label="Adults" name="adults" value={adults} min={1} max={20} error={view.fields?.adults} onChange={setAdults} />
-          <Stepper label="Children" name="children" value={children} min={0} max={12} error={view.fields?.children} onChange={setChildren} />
+          <Stepper
+            label="Children"
+            name="children"
+            value={children}
+            min={0}
+            max={12}
+            error={view.fields?.children}
+            onChange={(next) => {
+              setChildren(next);
+              setChildAges((current) => {
+                const copy = current.slice(0, next);
+                while (copy.length < next) copy.push("");
+                return copy;
+              });
+            }}
+          />
           <Stepper label="Rooms" name="rooms" value={rooms} min={1} max={10} error={view.fields?.rooms} onChange={setRooms} />
+        </div>
+        <div className="hotel-request-span" id="childAges-field" hidden={children === 0}>
+          <p className="hotel-request-label" id="child-ages-label">
+            Ages of the children
+          </p>
+          <div className="hotel-request-ages" role="group" aria-labelledby="child-ages-label">
+            {childAges.map((age, index) => (
+              <label key={index}>
+                Child {index + 1}
+                <input
+                  id={index === 0 ? "childAges" : `child-age-${index + 1}`}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="Age"
+                  value={age}
+                  aria-invalid={view.fields?.childAges ? true : undefined}
+                  onChange={(event) => {
+                    const digits = event.target.value.replace(/\D/g, "").slice(0, 2);
+                    const next = digits === "" ? "" : String(Math.min(17, Number(digits)));
+                    setChildAges((current) => current.map((item, itemIndex) => (itemIndex === index ? next : item)));
+                  }}
+                />
+              </label>
+            ))}
+          </div>
+          <input type="hidden" name="childAges" value={children > 0 ? childAges.join(",") : ""} />
+          <FieldMessage id="childAges-error" message={view.fields?.childAges} />
         </div>
         <div className="hotel-request-span" id="budget-field">
           <p className="hotel-request-label" id="hotel-budget-label">
@@ -318,11 +380,13 @@ export function HotelRequestForm({
           <input type="hidden" name="stars" value={stars} />
           <FieldMessage id="stars-error" message={view.fields?.stars} />
         </div>
+        <ChoiceRow label="Room type" name="roomType" value={roomType} options={hotelRoomTypes} error={view.fields?.roomType} onChange={setRoomType} />
+        <ChoiceRow label="Meals" name="meals" value={meals} options={hotelMeals} error={view.fields?.meals} onChange={setMeals} />
         <Field
           label="What should we look for?"
           name="message"
           multiline
-          placeholder="Neighbourhood, breakfast, a sea view, travelling with family"
+          placeholder="A quiet room, a late arrival, travelling with family"
           error={view.fields?.message}
           value={note}
           onChange={setNote}
@@ -344,6 +408,39 @@ export function HotelRequestForm({
         </div>
       </form>
       {mounted && successModal ? createPortal(successModal, document.body) : null}
+    </div>
+  );
+}
+
+function ChoiceRow({
+  label,
+  name,
+  value,
+  options,
+  error,
+  onChange,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  options: readonly RequestOption[];
+  error?: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="hotel-request-span" id={`${name}-field`}>
+      <p className="hotel-request-label" id={`${name}-label`}>
+        {label}
+      </p>
+      <div className="hotel-request-budget" role="group" aria-labelledby={`${name}-label`}>
+        {options.map((option) => (
+          <button key={option.value} type="button" className={value === option.value ? "is-on" : ""} aria-pressed={value === option.value} onClick={() => onChange(option.value)}>
+            {option.label}
+          </button>
+        ))}
+      </div>
+      <input type="hidden" name={name} value={value} />
+      <FieldMessage id={`${name}-error`} message={error} />
     </div>
   );
 }
@@ -517,7 +614,7 @@ export function SuccessModal({
           <a className="hotel-request-modal-secondary" href={exploreHref}>
             Explore more
           </a>
-          <a className="hotel-request-submit" href={`/account/bookings/${reference}`}>
+          <a className="hotel-request-submit" href={`/account/enquiries/${reference}`}>
             View request
           </a>
         </div>

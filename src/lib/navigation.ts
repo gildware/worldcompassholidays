@@ -1,4 +1,4 @@
-import { moduleLabels, modules, type ModuleKey } from "@/config/modules";
+import { modules, type ModuleKey } from "@/config/modules";
 import type { StaffPermission } from "@/lib/auth/permissions";
 
 export type NavChild = {
@@ -23,6 +23,14 @@ const moduleHrefs: Record<ModuleKey, string> = {
   buses: "/buses",
 };
 
+const publicModuleLabels: Record<ModuleKey, string> = {
+  tours: "Plan a tour",
+  hotels: "Find a stay",
+  cars: "Rent a car",
+  bikes: "Rent a bike",
+  buses: "Bus booking",
+};
+
 export function getPublicNav(): NavItem[] {
   const items: NavItem[] = [
     { href: "/", label: "Home" },
@@ -33,12 +41,12 @@ export function getPublicNav(): NavItem[] {
     if (!modules[key]) return;
     const href = moduleHrefs[key];
     if (items.some((item) => item.href === href)) return;
-    items.push({ href, label: moduleLabels[key] });
+    items.push({ href, label: publicModuleLabels[key] });
   });
 
-  items.push({ href: "/visa-services", label: "Visa Services" });
-  items.push({ href: "/meet-and-assist", label: "Meet & assist" });
-  items.push({ href: "/contact", label: "Contact" });
+  items.push({ href: "/visa-services", label: "Apply for a visa" });
+  items.push({ href: "/meet-and-assist", label: "Request a greeter" });
+  items.push({ href: "/contact", label: "Send an enquiry" });
   return items;
 }
 
@@ -108,6 +116,12 @@ const adminNav: (NavItem & {
       label: "Buses",
       permission: "buses.view",
       enabled: modules.buses,
+    },
+    {
+      href: "/admin/enquiries",
+      label: "Enquiries",
+      permission: "bookings.view",
+      enabled: true,
     },
     {
       href: "/admin/bookings",

@@ -9,6 +9,7 @@ import { loadTourCatalog } from "@/lib/catalog-query";
 import { favoriteIds } from "@/lib/favorites";
 import { prisma } from "@/lib/db";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
+import { cached } from "@/lib/ttl-cache";
 import { toCatalogTour } from "@/lib/tours/catalog-card";
 
 export const metadata: Metadata = pageMetadata({
@@ -26,7 +27,8 @@ export default async function ToursPage({
   if (!modules.tours) notFound();
   const params = await searchParams;
   const [rows, catalog, user] = await Promise.all([
-    prisma.tour.findMany({
+    cached("published-tours", 20_000, () =>
+      prisma.tour.findMany({
       where: { published: true },
       include: {
         destination: { select: { name: true, region: true, country: true } },
@@ -38,7 +40,8 @@ export default async function ToursPage({
         departures: { select: { id: true, startDate: true, seatsTotal: true, price: true, status: true } },
       },
       orderBy: [{ isFeatured: "desc" }, { title: "asc" }],
-    }),
+      }),
+    ),
     loadTourCatalog(),
     getCurrentUser(),
   ]);

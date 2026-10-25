@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { clearTtlCache } from "@/lib/ttl-cache";
 import { requirePermission } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import type { FormState } from "@/lib/forms";
@@ -13,6 +14,7 @@ export async function saveHotelSettings(_previous: FormState, formData: FormData
     update: { taxEnabled },
     create: { id: "default", taxEnabled },
   });
+  clearTtlCache();
   revalidatePath("/hotels");
   revalidatePath("/admin/hotels/configuration");
   return {

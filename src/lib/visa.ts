@@ -29,6 +29,16 @@ export function readVisaDetails(raw: string): VisaDetails {
   }
 }
 
+export function visaApplyPath(input?: { country?: string; visaType?: string }) {
+  const params = new URLSearchParams();
+  const country = input?.country?.trim();
+  const visaType = input?.visaType?.trim();
+  if (country) params.set("country", country.slice(0, 80));
+  if (visaType && visaType in visaTypeLabels) params.set("type", visaType);
+  const query = params.toString();
+  return query ? `/visa-services/apply?${query}` : "/visa-services/apply";
+}
+
 export function whatsAppHref(phone: string) {
   const digits = phone.replace(/\D/g, "");
   if (digits.length < 8) return null;

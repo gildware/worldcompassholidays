@@ -6,6 +6,8 @@ import { requireCustomer } from "@/lib/auth/guards";
 import { visibleAccountSections } from "@/lib/account-sections";
 import { prisma } from "@/lib/db";
 import { listFavoriteCards } from "@/lib/favorites";
+import { isCustomEnquiry } from "@/lib/enquiries";
+import { parseBookingDetails } from "@/lib/bookings";
 import { privateMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = privateMetadata("My account", "Your World Compass Holidays bookings and profile.");
@@ -27,16 +29,18 @@ export default async function AccountPage() {
     listFavoriteCards(user.id),
   ]);
 
+  const confirmed = bookings.filter((booking) => !isCustomEnquiry(parseBookingDetails(booking.details)));
+  const enquiries = bookings.filter((booking) => isCustomEnquiry(parseBookingDetails(booking.details)));
   const knownModules = new Set(sections.map((section) => section.module));
-  const otherBookings = bookings.filter((booking) => !knownModules.has(booking.module));
+  const otherBookings = confirmed.filter((booking) => !knownModules.has(booking.module));
   const stats = sections.map((section) => {
-    const enquiries = bookings.filter((booking) => booking.module === section.module).length;
+    const count = confirmed.filter((booking) => booking.module === section.module).length;
     const fleet = section.fleet
       ? rentals.filter((booking) => booking.vehicle.kind === section.fleet).length
       : 0;
-    return { ...section, value: enquiries + fleet };
+    return { ...section, value: count + fleet };
   });
-  const hasAnything = stats.some((stat) => stat.value > 0) || otherBookings.length > 0;
+  const hasAnything = stats.some((stat) => stat.value > 0) || otherBookings.length > 0 || enquiries.length > 0;
 
   return (
     <div className="grid gap-5">
@@ -50,6 +54,11 @@ export default async function AccountPage() {
           <p className="text-xs text-muted">Favorites</p>
           <p className="mt-1 text-2xl font-semibold leading-none">{favorites.length}</p>
           <p className="mt-1.5 text-xs text-muted">Tours, hotels, cars, and bikes you saved</p>
+        </Link>
+        <Link href="/account/enquiries" className="rounded-lg border border-line bg-white px-4 py-3 hover:border-brand/40">
+          <p className="text-xs text-muted">Enquiries</p>
+          <p className="mt-1 text-2xl font-semibold leading-none">{enquiries.length}</p>
+          <p className="mt-1.5 text-xs text-muted">Tour, hotel, car, and bike requests</p>
         </Link>
         {stats.map((stat) => (
           <Link
@@ -67,7 +76,7 @@ export default async function AccountPage() {
       {hasAnything ? (
         <div className="grid gap-5">
           {stats.map((stat) => {
-            const sectionBookings = bookings.filter((booking) => booking.module === stat.module).slice(0, 3);
+            const sectionBookings = confirmed.filter((booking) => booking.module === stat.module).slice(0, 3);
             const sectionRentals = stat.fleet
               ? rentals.filter((booking) => booking.vehicle.kind === stat.fleet).slice(0, 3)
               : [];
@@ -83,12 +92,6 @@ export default async function AccountPage() {
                 {sectionRentals.length > 0 ? <RentalAccountList bookings={sectionRentals} /> : null}
                 {sectionBookings.length > 0 && !stat.fleet ? (
                   <BookingList bookings={sectionBookings} showModule={false} />
-                ) : null}
-                {sectionBookings.length > 0 && stat.fleet ? (
-                  <div className="grid gap-2">
-                    <h3 className="text-xs font-medium text-muted">Enquiries</h3>
-                    <BookingList bookings={sectionBookings} showModule={false} />
-                  </div>
                 ) : null}
               </section>
             );

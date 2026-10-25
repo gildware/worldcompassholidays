@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { clearTtlCache } from "@/lib/ttl-cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
@@ -26,6 +27,7 @@ function fail(error: unknown): FormState {
 }
 
 function revalidateFleet(slug?: string) {
+  clearTtlCache();
   revalidatePath("/admin/rentals");
   revalidatePath("/admin/rentals/fleet");
   revalidatePath("/admin/rentals/cars");

@@ -137,7 +137,7 @@ function CardPhotos({
     <div className="bike-card__media" onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
       {save}
       {count > 0 ? (
-        <Link
+        <Link prefetch={false}
           href={href}
           className="bike-card__shot"
           aria-label={name}
@@ -270,7 +270,7 @@ export function BikeCards({
                 />
               }
             />
-            <Link href={href} className="bike-card__body">
+            <Link prefetch={false} href={href} className="bike-card__body">
               <div className="bike-card__topline">
                 {item.category ? (
                   <p className="bike-card__kicker">
@@ -313,7 +313,7 @@ export function BikeCards({
                 <span>/ day</span>
               </p>
             </Link>
-            <Link href={href} className="bike-card__book">
+            <Link prefetch={false} href={href} className="bike-card__book">
               View more
             </Link>
           </article>

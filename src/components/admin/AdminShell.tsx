@@ -108,6 +108,14 @@ function NavIcon({ href, label }: { href: string; label?: string }) {
       </svg>
     );
   }
+  if (href === "/admin/enquiries" || label === "Enquiries") {
+    return (
+      <svg {...common}>
+        <path d="M5 6.5h14v11H5z" />
+        <path d="m5 8 7 4.5L19 8" />
+      </svg>
+    );
+  }
   if (href === "/admin/bookings" || label === "Bookings") {
     return (
       <svg {...common}>
@@ -331,6 +339,7 @@ function pageSub(pathname: string) {
     return "Tags, types, fuel, features, and required documents.";
   }
   if (pathname.startsWith("/admin/tours")) return "Packages, treks, and departures.";
+  if (pathname.startsWith("/admin/enquiries")) return "Tour, hotel, car, and bike requests. Not bookings.";
   if (pathname === "/admin/bookings") {
     return "All desks — tours, stays, fleet, visa, assist.";
   }

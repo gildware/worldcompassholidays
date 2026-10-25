@@ -1,0 +1,179 @@
+.worldcompassholiday-page .visa-demo {
+  padding: 28px 24px 48px;
+  color: #051036;
+}
+
+.worldcompassholiday-page .visa-demo-kicker {
+  margin: 0;
+  color: #697488;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.worldcompassholiday-page .visa-demo h1 {
+  margin: 8px 0 0;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.worldcompassholiday-page .visa-demo-lead {
+  max-width: 42rem;
+  margin: 8px 0 0;
+  color: #3d4663;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.worldcompassholiday-page .visa-demo-live {
+  margin: 14px 0 0;
+  font-size: 14px;
+}
+
+.worldcompassholiday-page .visa-demo-live a {
+  color: #3554d1;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.worldcompassholiday-page .visa-demo h2 {
+  margin: 36px 0 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.worldcompassholiday-page .visa-demo-compare {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.worldcompassholiday-page .visa-demo-ref {
+  padding: 16px;
+  border: 1px solid #e6e1d8;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.worldcompassholiday-page .visa-demo-ref header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.worldcompassholiday-page .visa-demo-ref strong {
+  font-size: 15px;
+}
+
+.worldcompassholiday-page .visa-demo-ref header span {
+  color: #697488;
+  font-size: 12px;
+}
+
+.worldcompassholiday-page .visa-demo-bar,
+.worldcompassholiday-page .visa-demo-proposal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.worldcompassholiday-page .visa-demo label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  color: #051036;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.worldcompassholiday-page .visa-demo-bar label {
+  flex: 1 1 120px;
+}
+
+.worldcompassholiday-page .visa-demo input,
+.worldcompassholiday-page .visa-demo select {
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid #d5d8e2 !important;
+  border-radius: 8px;
+  background: #fff !important;
+  color: #051036;
+  font-size: 14px;
+}
+
+.worldcompassholiday-page .visa-demo-go {
+  height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #051036;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.worldcompassholiday-page .visa-demo-ref p {
+  margin: 12px 0 0;
+  color: #3d4663;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.worldcompassholiday-page .visa-demo-proposal-wrap {
+  padding: 20px;
+  border: 1px solid #e6e1d8;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(5, 16, 54, 0.06);
+}
+
+.worldcompassholiday-page .visa-demo-proposal label {
+  flex: 1 1 140px;
+}
+
+.worldcompassholiday-page .visa-demo-proposal label.visa-demo-note {
+  flex: 1 1 100%;
+}
+
+.worldcompassholiday-page .visa-demo-primary {
+  height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #3554d1;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.worldcompassholiday-page .visa-demo-alt {
+  height: 44px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: #128c7e;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.worldcompassholiday-page .visa-demo-promise {
+  margin: 14px 0 0;
+  color: #3d4663;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .worldcompassholiday-page .visa-demo-compare {
+    grid-template-columns: 1fr;
+  }
+}

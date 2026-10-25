@@ -123,6 +123,20 @@ export function useFavoriteToggle({
   return { saved, pending, toggle };
 }
 
+export function FavoriteHeart({ filled }: { filled: boolean }) {
+  return (
+    <svg className="fav-btn__heart" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        d="M12 20.6 10.6 19.3C5.5 14.7 2.2 11.7 2.2 8.1 2.2 5.2 4.4 3 7.3 3c1.6 0 3.2.8 4.2 2 1-1.2 2.6-2 4.2-2 2.9 0 5.1 2.2 5.1 5.1 0 3.6-3.3 6.6-8.4 11.2L12 20.6Z"
+        fill={filled ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth={filled ? 1.2 : 1.8}
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function FavoriteButton({
   kind,
   itemId,
@@ -156,7 +170,7 @@ export function FavoriteButton({
       }}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      <span aria-hidden="true">{saved ? "♥" : "♡"}</span>
+      <FavoriteHeart filled={saved} />
       {variant === "pill" ? <span>{saved ? "Favorited" : "Favorite"}</span> : null}
     </button>
   );

@@ -60,7 +60,7 @@ export function HomeHeader({
           <div className="row justify-between items-center">
             <div className="col-auto">
               <div className="d-flex items-center">
-                <Link href="/" className="header-logo mr-20" aria-label="World Compass Holidays">
+                <Link prefetch={false} href="/" className="header-logo mr-20" aria-label="World Compass Holidays">
                   <BrandLogo logoUrl={logoUrl} />
                 </Link>
                 <div className="header-menu">
@@ -71,7 +71,7 @@ export function HomeHeader({
                           const current = isCurrent(pathname, item.href);
                           return (
                             <li key={item.href} className={current ? "current" : ""}>
-                              <Link href={item.href} aria-current={current ? "page" : undefined}>
+                              <Link prefetch={false} href={item.href} aria-current={current ? "page" : undefined}>
                                 {item.label}
                               </Link>
                             </li>
@@ -89,7 +89,7 @@ export function HomeHeader({
                 {actions}
                 <div className="d-none xl:d-flex x-gap-20 items-center pl-30 text-white">
                   <div>
-                    <Link
+                    <Link prefetch={false}
                       href="/login"
                       className="d-flex items-center icon-user text-inherit text-22"
                       aria-label="Sign in"
@@ -127,7 +127,7 @@ export function HomeHeader({
         aria-hidden={!menuOpen}
       >
         <div className="pro-header d-flex align-items-center justify-between border-bottom-light">
-          <Link href="/" aria-label="World Compass Holidays" onClick={() => setMenuOpen(false)}>
+          <Link prefetch={false} href="/" aria-label="World Compass Holidays" onClick={() => setMenuOpen(false)}>
             <BrandLogo tone="dark" logoUrl={logoUrl} />
           </Link>
           <button
@@ -143,7 +143,7 @@ export function HomeHeader({
           <ul className="y-gap-5">
             {items.map((item) => (
               <li key={item.href}>
-                <Link
+                <Link prefetch={false}
                   href={item.href}
                   className="nav-drawer-link text-16 fw-500 py-10"
                   onClick={() => setMenuOpen(false)}

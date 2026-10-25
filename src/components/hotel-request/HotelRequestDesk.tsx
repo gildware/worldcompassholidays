@@ -16,7 +16,7 @@ export type HotelRequestPlace = {
 
 const checks = [
   { title: "A name", text: "Even a hotel that is not on this website." },
-  { title: "The setting", text: "A neighbourhood, a view, or breakfast." },
+  { title: "The setting", text: "An area, a room type, or meals." },
   { title: "The party", text: "Adults, children, and how the rooms should split." },
   { title: "A budget", text: "A nightly figure, if you already have one." },
 ];

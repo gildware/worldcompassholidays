@@ -1,12 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AssistRequestForm } from "@/components/assist/AssistRequestForm";
+import Link from "next/link";
 import { AssistStatIcon, AssistStepIcon, AssistTypeIcon } from "@/components/assist/AssistIcons";
 import { flagEmoji } from "@/components/visa/CountryFlag";
+import { assistRequestPath } from "@/lib/assist";
 import { airports, type Airport } from "@/lib/data/airports";
-
-type Customer = { name: string; email: string; phone: string } | null;
 
 const ways = [
   {
@@ -65,19 +64,8 @@ const questions = [
   },
 ];
 
-export function AssistDesk({
-  sent,
-  reference,
-  customer,
-}: {
-  sent: boolean;
-  reference: string;
-  customer: Customer;
-}) {
+export function AssistDesk() {
   const [query, setQuery] = useState("");
-  const [presetKey, setPresetKey] = useState(0);
-  const [servicePreset, setServicePreset] = useState("");
-  const [airportPreset, setAirportPreset] = useState("");
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const source = needle.length < 2 ? airports.slice(0, 8) : airports;
@@ -89,13 +77,6 @@ export function AssistDesk({
       )
       .slice(0, 8);
   }, [query]);
-
-  function applyPreset(next: { service?: string; airport?: string }) {
-    if (next.service) setServicePreset(next.service);
-    if (next.airport) setAirportPreset(next.airport);
-    setPresetKey((value) => value + 1);
-    document.getElementById("assist-pass")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
 
   return (
     <div className="assist-page">
@@ -139,16 +120,11 @@ export function AssistDesk({
           <div className="assist-pass" id="assist-pass">
             <div className="assist-pass-head">
               <h2>Request a greeter</h2>
-              <p>The summary updates as you fill the flight in.</p>
+              <p>The form is on the next page. You pay nothing until you accept the quote.</p>
             </div>
-            <AssistRequestForm
-              sent={sent}
-              reference={reference}
-              customer={customer}
-              presetKey={presetKey}
-              servicePreset={servicePreset}
-              airportPreset={airportPreset}
-            />
+            <Link className="assist-submit" href="/meet-and-assist/request">
+              Request a greeter
+            </Link>
           </div>
         </div>
       </section>
@@ -157,12 +133,12 @@ export function AssistDesk({
         <div className="assist-wrap">
           <div className="assist-section-head">
             <h2>Choose the kind of meet</h2>
-            <p>Pick one and the form above is filled in for you.</p>
+            <p>Pick one and the request form opens with that meet filled in.</p>
           </div>
           <ul>
             {ways.map((way) => (
               <li key={way.service}>
-                <button type="button" onClick={() => applyPreset({ service: way.service })}>
+                <Link href={assistRequestPath({ service: way.service })}>
                   <img src={way.image} alt={way.alt} />
                   <span className="assist-way-body">
                     <span className="assist-way-icon">
@@ -173,7 +149,7 @@ export function AssistDesk({
                       <em>{way.text}</em>
                     </span>
                   </span>
-                </button>
+                </Link>
               </li>
             ))}
           </ul>
@@ -206,7 +182,7 @@ export function AssistDesk({
           <div className="assist-section-head assist-board-head">
             <div>
               <h2>Airports on this desk</h2>
-              <p>Search a city or a code, then add it to the request.</p>
+              <p>Search a city or a code, then open the request with that airport.</p>
             </div>
             <input
               value={query}
@@ -216,12 +192,12 @@ export function AssistDesk({
             />
           </div>
           <ul>
-            {results.length === 0 ? <li className="assist-empty">No listed airport. Choose “Another airport” in the form.</li> : null}
+            {results.length === 0 ? <li className="assist-empty">No listed airport. You can still type one on the request form.</li> : null}
             {results.map((airport) => (
               <li key={airport.code}>
-                <button type="button" onClick={() => applyPreset({ airport: airport.code })}>
+                <Link href={assistRequestPath({ airport: airport.code })}>
                   <AirportRow airport={airport} />
-                </button>
+                </Link>
               </li>
             ))}
           </ul>

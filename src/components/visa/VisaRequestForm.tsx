@@ -4,12 +4,15 @@ import { useActionState, useMemo, useState, type MouseEvent, type ReactNode } fr
 import { useFormStatus } from "react-dom";
 import DatePicker, { DateObject } from "react-multi-date-picker";
 import { submitVisaRequest } from "@/actions/visa";
+import { formatPhone } from "@/lib/auth/phone";
 import { CountryMark } from "@/components/visa/CountryFlag";
 import { VisaTypeIcon, WhatsAppIcon } from "@/components/visa/VisaIcons";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { initialFormState, type FormState } from "@/lib/forms";
 import { schengenDestination, worldCountries, type WorldCountry } from "@/lib/data/world-countries";
 import type { SelectOption } from "@/components/ui/SearchableSelect";
+
+const phonePlaceholder = "+91 98765 43210";
 
 const visaTypes = [
   { value: "tourist", label: "Tourist", icon: <VisaTypeIcon name="tourist" /> },
@@ -145,18 +148,19 @@ export function VisaRequestForm({
   }
 
   return (
-    <form action={action} noValidate className="row y-gap-10" onSubmit={() => setWhatsappState(null)}>
+    <form action={action} noValidate className="visa-request-form" onSubmit={() => setWhatsappState(null)}>
+      <div className="row y-gap-10">
       {view.error ? (
-        <div className="col-12">
+        <div className="col-12 visa-span-all">
           <p className="visa-banner" role="alert">
             {view.error}
           </p>
         </div>
       ) : null}
       {customer ? (
-        <div className="col-12">
-          <p className="text-14 text-light-1">
-            Sending as {customer.name} ({customer.email}).
+        <div className="col-12 visa-span-all">
+          <p className="visa-account">
+            <strong>{customer.name}</strong>
           </p>
         </div>
       ) : (
@@ -183,9 +187,10 @@ export function VisaRequestForm({
             name="phone"
             type="tel"
             autoComplete="tel"
-            placeholder="+91- 70064 22204"
+            placeholder={phonePlaceholder}
             error={view.fields?.phone}
-            defaultValue={saved.phone}
+            defaultValue={formatPhone(saved.phone ?? "") || saved.phone}
+            span="full"
           />
         </>
       )}
@@ -195,9 +200,10 @@ export function VisaRequestForm({
           name="phone"
           type="tel"
           autoComplete="tel"
-          placeholder="+91- 70064 22204"
+          placeholder={phonePlaceholder}
           error={view.fields?.phone}
-          defaultValue={saved.phone || customer.phone}
+          defaultValue={formatPhone(saved.phone || customer.phone) || saved.phone || customer.phone}
+          span="full"
         />
       ) : null}
       <PickerField id="country" label="Destination country" error={view.fields?.country}>
@@ -211,7 +217,7 @@ export function VisaRequestForm({
           searchPlaceholder="Search countries"
           invalid={Boolean(view.fields?.country)}
           describedBy={view.fields?.country ? "country-error" : undefined}
-          menuZIndex={2200}
+          menuZIndex={10240}
           wrapperClassName={`visa-picker mt-5${view.fields?.country ? " is-invalid" : ""}`}
         />
       </PickerField>
@@ -226,7 +232,7 @@ export function VisaRequestForm({
           searchPlaceholder="Search countries"
           invalid={Boolean(view.fields?.nationality)}
           describedBy={view.fields?.nationality ? "nationality-error" : undefined}
-          menuZIndex={2200}
+          menuZIndex={10240}
           wrapperClassName={`visa-picker mt-5${view.fields?.nationality ? " is-invalid" : ""}`}
         />
       </PickerField>
@@ -241,7 +247,7 @@ export function VisaRequestForm({
           searchPlaceholder="Search visa types"
           invalid={Boolean(view.fields?.visaType)}
           describedBy={view.fields?.visaType ? "visaType-error" : undefined}
-          menuZIndex={2200}
+          menuZIndex={10240}
           wrapperClassName={`visa-picker mt-5${view.fields?.visaType ? " is-invalid" : ""}`}
         />
       </PickerField>
@@ -272,11 +278,11 @@ export function VisaRequestForm({
         min={1}
         max={20}
         error={view.fields?.travellers}
-        defaultValue={saved.travellers}
+        defaultValue={saved.travellers || "1"}
       />
-      <div className="col-12">
+      <div className="col-12 visa-span-all">
         <label className="text-14 fw-500" htmlFor="message">
-          Note
+          Note <span className="visa-optional">Optional</span>
         </label>
         <div className={`visa-control mt-5${view.fields?.message ? " is-invalid" : ""}`}>
           <textarea
@@ -291,22 +297,18 @@ export function VisaRequestForm({
         </div>
         <FieldMessage id="message-error" message={view.fields?.message} />
       </div>
-      <div className="col-12">
-        <p className="text-13 text-light-1">
-          We use your name, email, and phone only to reply about this visa. Embassy fees are quoted separately, and nothing is filed until you accept the quote.
-        </p>
-        <div className="visa-form-actions">
-          <button
-            type="button"
-            className="visa-whatsapp visa-whatsapp-form"
-            disabled={busy}
-            onClick={applyOnWhatsApp}
-          >
-            <WhatsAppIcon />
-            {whatsappPending ? "Saving…" : "Apply on WhatsApp"}
-          </button>
-          <Submit busy={busy} />
-        </div>
+      </div>
+      <div className="visa-form-actions">
+        <button
+          type="button"
+          className="visa-whatsapp visa-whatsapp-form"
+          disabled={busy}
+          onClick={applyOnWhatsApp}
+        >
+          <WhatsAppIcon />
+          {whatsappPending ? "Saving…" : "Send this request on WhatsApp"}
+        </button>
+        <Submit busy={busy} />
       </div>
     </form>
   );
@@ -341,7 +343,7 @@ function PickerField({
   children: ReactNode;
 }) {
   return (
-    <div className="col-lg-4 col-md-6">
+    <div className="col-md-6">
       <label className="text-14 fw-500" htmlFor={id}>
         {label}
       </label>
@@ -368,7 +370,7 @@ function VisaDateField({
 }) {
   const errorId = `${name}-error`;
   return (
-    <div className="col-lg-4 col-md-6">
+    <div className="col-md-6">
       <label className="text-14 fw-500" htmlFor={name}>
         {label}
       </label>
@@ -376,7 +378,7 @@ function VisaDateField({
         <DatePicker
           id={name}
           portal
-          zIndex={2200}
+          zIndex={10240}
           arrow={false}
           editable={false}
           inputMode="none"
@@ -416,6 +418,7 @@ function Field({
   min,
   max,
   error,
+  span = "half",
 }: {
   label: string;
   name: string;
@@ -426,10 +429,11 @@ function Field({
   min?: number;
   max?: number;
   error?: string;
+  span?: "half" | "full";
 }) {
   const errorId = `${name}-error`;
   return (
-    <div className="col-lg-4 col-md-6">
+    <div className={span === "full" ? "col-12" : "col-md-6"}>
       <label className="text-14 fw-500" htmlFor={name}>
         {label}
       </label>

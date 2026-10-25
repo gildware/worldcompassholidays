@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { EnquiryForm } from "@/components/site/EnquiryForm";
 import { PageIntro } from "@/components/site/PageIntro";
@@ -120,6 +121,13 @@ function ContactDetails() {
   return (
     <div>
       <h2 className="text-2xl font-semibold tracking-tight">Contact Us</h2>
+      <p className="mt-2 text-sm leading-6 text-muted">
+        World Compass Holidays, DMC by Negotrip Private Limited.{" "}
+        <Link href="/about" className="font-medium text-brand">
+          Read about the desks
+        </Link>
+        .
+      </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         {contactDetails.map((item) => (
           <a

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toggleFavorite } from "@/actions/favorites";
-import { showFavoriteToast } from "@/components/favorites/FavoriteButton";
+import { FavoriteHeart, showFavoriteToast } from "@/components/favorites/FavoriteButton";
 import { favoriteKindLabel, favoriteKinds, type FavoriteCard, type FavoriteKind } from "@/lib/favorite-kinds";
 
 const browse: Record<FavoriteKind, { href: string; label: string }> = {
@@ -85,8 +85,8 @@ export function FavoriteList({ items }: { items: FavoriteCard[] }) {
                 {item.image ? (
                   <img src={item.image} alt="" className="h-20 w-24 shrink-0 rounded object-cover" />
                 ) : (
-                  <span className="flex h-20 w-24 shrink-0 items-center justify-center rounded bg-surface text-lg text-brand">
-                    ♥
+                  <span className="flex h-20 w-24 shrink-0 items-center justify-center rounded bg-surface text-[#e11d48]">
+                    <FavoriteHeart filled />
                   </span>
                 )}
                 <span className="min-w-0">

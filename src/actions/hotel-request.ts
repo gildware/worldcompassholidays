@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
+import { budgetNote, hotelBudgetBands, hotelMeals, hotelRoomTypes, isBudgetValue, optionLabel } from "@/lib/custom-request";
 import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
 import { emailField } from "@/lib/validation";
@@ -14,15 +15,8 @@ import { whatsAppHref } from "@/lib/visa";
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const stars = ["any", "3", "4", "5"] as const;
-const budgetBands = ["upto-1000", "1000-5000", "5000-10000", "10000-20000", "above-20000"] as const;
-
-const budgetBandNotes: Record<(typeof budgetBands)[number], string> = {
-  "upto-1000": "Up to INR 1,000 per night",
-  "1000-5000": "INR 1,000 to 5,000 per night",
-  "5000-10000": "INR 5,000 to 10,000 per night",
-  "10000-20000": "INR 10,000 to 20,000 per night",
-  "above-20000": "Above INR 20,000 per night",
-};
+const roomValues = hotelRoomTypes.map((option) => option.value);
+const mealValues = hotelMeals.map((option) => option.value);
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value : "";
@@ -58,7 +52,7 @@ const requestSchema = z
       .max(30, "That phone number is too long")
       .refine((value) => value === "" || /^[0-9+\-\s()]+$/.test(value), "Use digits, spaces, and + for the country code")
       .refine((value) => value === "" || value.replace(/\D/g, "").length >= 8, "Enter a phone number with the country code"),
-    destination: z.string().trim().min(2, "Enter the city or area").max(120, "That place name is too long"),
+    destination: z.string().trim().min(2, "Enter the city").max(120, "That place name is too long"),
     hotelName: z.string().trim().max(120, "That hotel name is too long").default(""),
     checkIn: z.string().regex(datePattern, "Choose a check-in date"),
     checkOut: z.string().regex(datePattern, "Choose a check-out date"),
@@ -66,17 +60,16 @@ const requestSchema = z
     children: countField(0, 12, "how many children, from 0 to 12"),
     rooms: countField(1, 10, "how many rooms, from 1 to 10"),
     stars: z.enum(stars, { error: "Choose a star preference" }),
+    area: z.string().trim().max(120, "That area name is too long").default(""),
+    roomType: z.string().trim().default(""),
+    meals: z.string().trim().default(""),
+    childAges: z.string().trim().max(80).default(""),
+    surface: z.string().default(""),
     budget: z
       .string()
       .trim()
       .default("")
-      .refine(
-        (value) =>
-          value === "" ||
-          (budgetBands as readonly string[]).includes(value) ||
-          (/^\d+$/.test(value) && Number(value) >= 100 && Number(value) <= 500000),
-        "Choose a nightly budget, or enter an amount from 100 to 500000",
-      ),
+      .refine((value) => isBudgetValue(hotelBudgetBands, value), "Choose a nightly budget, or enter an amount from 100 to 500000"),
     message: z.string().trim().max(2000, "Keep the note under 2000 characters").default(""),
   })
   .superRefine((data, ctx) => {
@@ -94,6 +87,17 @@ const requestSchema = z
       if (nights > 60) {
         ctx.addIssue({ code: "custom", path: ["checkOut"], message: "One request can cover up to 60 nights" });
       }
+    }
+    const roomType = data.roomType || "any";
+    const meals = data.meals || "any";
+    if (!roomValues.includes(roomType as (typeof roomValues)[number])) {
+      ctx.addIssue({ code: "custom", path: ["roomType"], message: "Choose a room type" });
+    }
+    if (!mealValues.includes(meals as (typeof mealValues)[number])) {
+      ctx.addIssue({ code: "custom", path: ["meals"], message: "Choose a meal plan" });
+    }
+    if (data.surface !== "stay" && data.children > 0 && !parseChildAges(data.childAges, data.children)) {
+      ctx.addIssue({ code: "custom", path: ["childAges"], message: "Enter an age from 0 to 17 for each child" });
     }
   });
 
@@ -119,10 +123,19 @@ function starLabel(value: (typeof stars)[number]) {
   return `${value} stars or more`;
 }
 
-function budgetNote(value: string) {
-  if ((budgetBands as readonly string[]).includes(value)) return budgetBandNotes[value as (typeof budgetBands)[number]];
-  if (/^\d+$/.test(value)) return `INR ${Number(value).toLocaleString("en-IN")} per night`;
-  return "not set";
+function parseChildAges(value: string, count: number) {
+  if (count === 0) return [] as number[];
+  const parts = value.split(",");
+  if (parts.length !== count) return null;
+  const ages: number[] = [];
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!/^\d{1,2}$/.test(trimmed)) return null;
+    const age = Number(trimmed);
+    if (age > 17) return null;
+    ages.push(age);
+  }
+  return ages;
 }
 
 function requestNotes(input: z.infer<typeof requestSchema>) {
@@ -131,14 +144,21 @@ function requestNotes(input: z.infer<typeof requestSchema>) {
     `${input.children} ${input.children === 1 ? "child" : "children"}`,
     `${input.rooms} ${input.rooms === 1 ? "room" : "rooms"}`,
   ];
+  const roomType = input.roomType || "any";
+  const meals = input.meals || "any";
+  const ages = parseChildAges(input.childAges, input.children);
   const lines = [
     "Custom hotel request",
     `Place: ${input.destination}`,
+    input.area ? `Area: ${input.area}` : "",
     input.hotelName ? `Hotel they asked for: ${input.hotelName}` : "",
     `Stay: ${prettyDate(input.checkIn)} to ${prettyDate(input.checkOut)}`,
     `Party: ${guests.join(", ")}`,
+    ages && ages.length ? `Child ages: ${ages.join(", ")}` : "",
     `Stars: ${starLabel(input.stars)}`,
-    `Budget: ${budgetNote(input.budget)}`,
+    roomType !== "any" ? `Room: ${optionLabel(hotelRoomTypes, roomType)}` : "",
+    meals !== "any" ? `Meals: ${optionLabel(hotelMeals, meals)}` : "",
+    `Budget: ${budgetNote(hotelBudgetBands, input.budget, "per night")}`,
     input.message ? `Note: ${input.message}` : "",
   ];
   return lines.filter(Boolean).join("\n");
@@ -167,6 +187,11 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
     children: text(formData.get("children")),
     rooms: text(formData.get("rooms")),
     stars: text(formData.get("stars")) || "any",
+    area: text(formData.get("area")),
+    roomType: text(formData.get("roomType")),
+    meals: text(formData.get("meals")),
+    childAges: text(formData.get("childAges")),
+    surface: text(formData.get("surface")),
     budget: text(formData.get("budget")),
     message: text(formData.get("message")),
   };
@@ -193,7 +218,7 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
     data: {
       reference: bookingReference(),
       module: "hotel",
-      status: "enquiry",
+      status: "pending",
       title: data.hotelName ? `Hotel request: ${data.hotelName}` : `Hotel request in ${data.destination}`,
       startDate: new Date(`${data.checkIn}T00:00:00`),
       endDate: new Date(`${data.checkOut}T00:00:00`),
@@ -212,10 +237,14 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
         checkOut: data.checkOut,
         adults: data.adults,
         children: data.children,
+        childAges: parseChildAges(data.childAges, data.children) ?? [],
         rooms: data.rooms,
         stars: data.stars,
+        area: data.area,
+        roomType: data.roomType || "any",
+        meals: data.meals || "any",
         budget: /^\d+$/.test(data.budget) ? Number(data.budget) : null,
-        budgetBand: (budgetBands as readonly string[]).includes(data.budget) ? data.budget : null,
+        budgetBand: hotelBudgetBands.some((band) => band.value === data.budget) ? data.budget : null,
         message: data.message,
         channel,
       }),
@@ -227,6 +256,7 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
   });
 
   revalidatePath("/admin/bookings");
+  revalidatePath("/admin/enquiries");
   if (customer) revalidateCustomerBooking("hotel", booking.reference);
 
   if (channel === "whatsapp") {

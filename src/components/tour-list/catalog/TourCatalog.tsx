@@ -47,7 +47,7 @@ import {
   whoLabel,
 } from "@/components/tour-list/catalog/logic";
 import type { CatalogGuest, CatalogQuery, CatalogSort, CatalogTour } from "@/components/tour-list/catalog/types";
-import { useFavoriteList } from "@/components/favorites/FavoriteButton";
+import { FavoriteHeart, useFavoriteList } from "@/components/favorites/FavoriteButton";
 import "@/components/tour-list/catalog/tour-catalog.css";
 import "@/styles/ask-request.css";
 import "@/styles/listing-app.css";
@@ -986,7 +986,7 @@ export function TourCatalog({
                 </button>
               </div>
             ) : null}
-            <Link className="ask-request" href={tourRequestHref(query)}>
+            <Link prefetch={false} className="ask-request" href={tourRequestHref(query)}>
               <span>Not on this list? Ask us to find a tour.</span>
               <strong>Request tour</strong>
             </Link>
@@ -1043,10 +1043,10 @@ export function TourCatalog({
           {featured ? (
             <>
               {" "}
-              <Link href={featured.href}>{featured.title}</Link>
+              <Link prefetch={false} href={featured.href}>{featured.title}</Link>
             </>
           ) : null}{" "}
-          · <Link href="/hotels">Hotels</Link>
+          · <Link prefetch={false} href="/hotels">Hotels</Link>
         </div>
       </footer>
 
@@ -1491,8 +1491,8 @@ function TourCard({
       <div className="photo">
         {tour.img ? <img src={tour.img} alt={tour.alt} fetchPriority={eager ? "high" : undefined} loading={eager ? undefined : "lazy"} decoding="async" /> : null}
         {badge ? <span className={`badge${badge.hot ? " is-hot" : " is-low"}`}>{badge.text}</span> : null}
-        <button className="save" type="button" aria-pressed={saved} aria-label={`${saved ? "Remove" : "Add"} ${tour.title} ${saved ? "from" : "to"} favorites`} onClick={onSave}>
-          {saved ? "♥" : "♡"}
+        <button className={`save fav-btn fav-btn--icon${saved ? " is-on" : ""}`} type="button" aria-pressed={saved} aria-label={`${saved ? "Remove" : "Add"} ${tour.title} ${saved ? "from" : "to"} favorites`} onClick={onSave}>
+          <FavoriteHeart filled={saved} />
         </button>
       </div>
       <div className="main">
@@ -1501,7 +1501,7 @@ function TourCard({
           <span className="kicker__short">{tour.category} · {placeShort}</span>
         </p>
         <h2>
-          <Link href={tour.href}>{tour.title}</Link>
+          <Link prefetch={false} href={tour.href}>{tour.title}</Link>
         </h2>
         {tour.reviews > 0 ? (
           <div className="score">
@@ -1572,7 +1572,7 @@ function TourCard({
         <p className={cancel.kind === "yes" ? "ok" : cancel.kind === "no" ? "warn" : "muted"}>{cancel.text}</p>
         {block ? <p className="warn">{block}</p> : null}
         {status === "ok" ? (
-          <Link className="btn btn--small" href={tour.href}>
+          <Link prefetch={false} className="btn btn--small" href={tour.href}>
             See the tour
           </Link>
         ) : (
@@ -1668,7 +1668,7 @@ function Preview({
             ) : null}
           </div>
           <div className="preview-actions">
-            <Link className="btn" href={tour.href}>
+            <Link prefetch={false} className="btn" href={tour.href}>
               See the tour
             </Link>
             {next ? (

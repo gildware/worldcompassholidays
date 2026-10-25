@@ -45,8 +45,15 @@ export const bookingModules = [
 
 export type BookingModule = (typeof bookingModules)[number];
 
+const requestStatusLabels: Record<string, string> = {
+  pending: "Pending",
+  under_review: "Under review",
+  review: "Review",
+  closed: "Closed",
+};
+
 export function statusLabel(status: string) {
-  return bookingStatusLabels[status as BookingStatus] ?? status;
+  return bookingStatusLabels[status as BookingStatus] ?? requestStatusLabels[status] ?? status;
 }
 
 const extraModuleLabels: Record<string, string> = {

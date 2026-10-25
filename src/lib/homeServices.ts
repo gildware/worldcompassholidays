@@ -1,3 +1,5 @@
+import { assistRequestPath } from "@/lib/assist";
+
 export type HomeVisaCard = {
   href: string;
   kicker: string;
@@ -67,7 +69,7 @@ export const homeVisaServices: HomeVisaCard[] = [
 /** Arrival, departure, a connection, and both ways — airport service, separate from visa. */
 export const homeAssistServices: HomeAssistCard[] = [
   {
-    href: "/meet-and-assist",
+    href: assistRequestPath({ service: "arrival" }),
     code: "ARR",
     title: "Arrival meet",
     text: "A greeter waits in arrivals with your name and walks you out with the bags.",
@@ -77,7 +79,7 @@ export const homeAssistServices: HomeAssistCard[] = [
     alt: "A greeter holding a name board in the arrivals hall",
   },
   {
-    href: "/meet-and-assist",
+    href: assistRequestPath({ service: "departure" }),
     code: "DEP",
     title: "Departure assist",
     text: "Someone meets you at the terminal and stays through check-in and bag drop.",
@@ -87,7 +89,7 @@ export const homeAssistServices: HomeAssistCard[] = [
     alt: "Staff helping a traveller with a suitcase at check-in",
   },
   {
-    href: "/meet-and-assist",
+    href: assistRequestPath({ service: "transit" }),
     code: "CXN",
     title: "Connection",
     text: "On a tight link they meet the inbound flight and walk you to the next gate.",
@@ -97,7 +99,7 @@ export const homeAssistServices: HomeAssistCard[] = [
     alt: "A greeter walking a traveller toward a departure gate",
   },
   {
-    href: "/meet-and-assist",
+    href: assistRequestPath({ service: "round" }),
     code: "RND",
     title: "Both ways",
     text: "Landing and the flight home. Two flight numbers, one quote, one name on both boards.",

@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { loadTourCatalog } from "@/lib/catalog-query";
 import { isFavorited } from "@/lib/favorites";
 import { prisma } from "@/lib/db";
+import { cached } from "@/lib/ttl-cache";
 import { formatMoney } from "@/lib/format";
 import { resolveFaqs, resolveTitles } from "@/lib/hotels/labels";
 import { parseMapPoint } from "@/lib/maps";
@@ -55,28 +56,43 @@ function departureLabel(iso: string) {
   return `${weekday} ${date.getDate()} ${month}`;
 }
 
+function loadTour(slug: string) {
+  return cached(`tour:${slug}`, 30_000, () =>
+    prisma.tour.findUnique({
+      where: { slug },
+      include: {
+        destination: { select: { name: true, slug: true } },
+        destinationLinks: {
+          include: { destination: { select: { name: true, slug: true } } },
+          take: 1,
+        },
+        days: { orderBy: { dayNumber: "asc" } },
+        departures: { orderBy: { startDate: "asc" }, take: 12 },
+      },
+    }),
+  );
+}
+
+function loadSimilarTours() {
+  return cached("tour-similar", 30_000, () =>
+    prisma.tour.findMany({
+      where: { published: true },
+      include: {
+        destination: { select: { name: true } },
+        destinationLinks: {
+          include: { destination: { select: { name: true } } },
+          take: 1,
+        },
+      },
+      orderBy: [{ isFeatured: "desc" }, { title: "asc" }],
+      take: 12,
+    }),
+  );
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const tour = await prisma.tour.findUnique({
-    where: { slug },
-    select: {
-      title: true,
-      summary: true,
-      description: true,
-      seoTitle: true,
-      seoDescription: true,
-      seoIndex: true,
-      seoImageUrl: true,
-      imageUrl: true,
-      featuredImageUrl: true,
-      facebookTitle: true,
-      facebookDescription: true,
-      twitterTitle: true,
-      twitterDescription: true,
-      published: true,
-      destination: { select: { name: true } },
-    },
-  });
+  const tour = await loadTour(slug);
   if (!tour?.published) return privateMetadata("Tour");
   const place = tour.destination?.name;
   const written = tour.seoDescription.trim() || tour.summary.trim() || plainText(tour.description);
@@ -100,38 +116,17 @@ export default async function TourPage({ params }: Props) {
   if (!modules.tours) notFound();
   const { slug } = await params;
 
-  const [tour, catalog, user] = await Promise.all([
-    prisma.tour.findUnique({
-      where: { slug },
-      include: {
-        destination: { select: { name: true, slug: true } },
-        destinationLinks: {
-          include: { destination: { select: { name: true, slug: true } } },
-          take: 1,
-        },
-        days: { orderBy: { dayNumber: "asc" } },
-        departures: { orderBy: { startDate: "asc" }, take: 12 },
-      },
-    }),
+  const [tour, catalog, user, similarPool] = await Promise.all([
+    loadTour(slug),
     loadTourCatalog(),
     getCurrentUser(),
+    loadSimilarTours(),
   ]);
   if (!tour || !tour.published) notFound();
   const saved = user?.scope === "customer" ? await isFavorited(user.id, "tour", tour.id) : false;
 
   const place = tour.destination ?? tour.destinationLinks[0]?.destination ?? null;
-  const similarRows = await prisma.tour.findMany({
-    where: { published: true, id: { not: tour.id } },
-    include: {
-      destination: { select: { name: true } },
-      destinationLinks: {
-        include: { destination: { select: { name: true } } },
-        take: 1,
-      },
-    },
-    orderBy: [{ isFeatured: "desc" }, { title: "asc" }],
-    take: 8,
-  });
+  const similarRows = similarPool.filter((row) => row.id !== tour.id).slice(0, 8);
 
   const images = galleryUrls(tour.imageUrl, tour.featuredImageUrl, tour.galleryJson);
   const includes = resolveTitles(tour.includesJson, catalog.includes);

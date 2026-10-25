@@ -4,6 +4,7 @@ import { requirePermission } from "@/lib/auth/guards";
 import { loadBookingDeskStats, loadFleetActionCounts } from "@/lib/booking-admin";
 import { deskSegmentForModule } from "@/lib/booking-desks";
 import { prisma } from "@/lib/db";
+import { notCustomEnquiryWhere } from "@/lib/enquiries";
 
 export const metadata: Metadata = { title: "Bookings overview" };
 
@@ -14,6 +15,7 @@ export default async function AdminBookingsOverviewPage() {
     loadBookingDeskStats(),
     loadFleetActionCounts(),
     prisma.booking.findMany({
+      where: notCustomEnquiryWhere(),
       orderBy: { createdAt: "desc" },
       take: 6,
       select: {

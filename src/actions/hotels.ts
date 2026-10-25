@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { clearTtlCache } from "@/lib/ttl-cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { keepCatalogIds, keepFaqEntries } from "@/lib/catalog-query";
@@ -102,6 +103,7 @@ type HotelParsed = Omit<z.infer<typeof draftSchema>, "published" | "destinationI
 };
 
 function revalidateHotelPaths(destinationSlug?: string | null) {
+  clearTtlCache();
   revalidatePath("/hotels");
   revalidatePath("/admin/hotels");
   revalidatePath("/destinations");

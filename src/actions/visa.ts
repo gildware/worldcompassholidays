@@ -194,7 +194,7 @@ export async function submitVisaRequest(
     };
   }
 
-  redirect(`/visa-services?sent=1&ref=${booking.reference}`);
+  redirect(`/visa-services/apply?sent=1&ref=${booking.reference}`);
 }
 
 export async function updateVisaStaffNote(

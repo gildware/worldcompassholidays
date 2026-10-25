@@ -10,7 +10,7 @@ export function HomeAssistSection({ headingId = "home-assist" }: { headingId?: s
         <div>
           <div className="hx-desk__title">
             <h2 id={headingId}>Meet and assist</h2>
-            <Link href="/meet-and-assist" className="hx-desk__more">
+            <Link prefetch={false} href="/meet-and-assist" className="hx-desk__more">
               View more details
             </Link>
           </div>
@@ -19,12 +19,12 @@ export function HomeAssistSection({ headingId = "home-assist" }: { headingId?: s
             who meets you, and the fee, before anyone is booked.
           </p>
         </div>
-        <Link href="/meet-and-assist#assist-pass" className="hx-desk__go">
+        <Link prefetch={false} href="/meet-and-assist/request" className="hx-desk__go">
           Book a greeter
         </Link>
       </div>
       <div className="hx-meet__split">
-        <Link href="/meet-and-assist" className="hx-meet__hero" aria-label="Meet and assist at the airport">
+        <Link prefetch={false} href="/meet-and-assist" className="hx-meet__hero" aria-label="Meet and assist at the airport">
           <Image
             src="/img/assist/assist-arrival.jpg"
             alt="A greeter holding a name board in the arrivals hall"
@@ -34,7 +34,7 @@ export function HomeAssistSection({ headingId = "home-assist" }: { headingId?: s
         </Link>
         <div className="hx-meet__list">
           {homeAssistServices.map((item, index) => (
-            <Link key={item.title} href={item.href} className="hx-meet__row">
+            <Link prefetch={false} key={item.title} href={item.href} className="hx-meet__row">
               <span className="hx-meet__n">{index + 1}</span>
               <span className="hx-meet__thumb">
                 <Image src={item.image} alt="" fill sizes="72px" />

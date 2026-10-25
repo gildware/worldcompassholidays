@@ -1,7 +1,5 @@
-"use client";
-
-import { useState } from "react";
-import { VisaApplyDialog } from "@/components/visa/VisaApply";
+import Link from "next/link";
+import { visaApplyPath } from "@/lib/visa";
 
 type Service = {
   title: string;
@@ -13,17 +11,7 @@ type Service = {
   heading: string;
 };
 
-type Customer = { name: string; email: string; phone: string } | null;
-
-export function VisaServiceSection({
-  services,
-  customer,
-}: {
-  services: Service[];
-  customer: Customer;
-}) {
-  const [service, setService] = useState<Service | null>(null);
-
+export function VisaServiceSection({ services }: { services: Service[] }) {
   return (
     <section className="visa-band pt-40 pb-40">
       <div className="container">
@@ -31,7 +19,7 @@ export function VisaServiceSection({
         <div className="row y-gap-20 pt-20">
           {services.map((item) => (
             <div className="col-lg-3 col-sm-6" key={item.title}>
-              <button type="button" className="visa-service" onClick={() => setService(item)}>
+              <Link href={visaApplyPath({ visaType: item.visaType })} className="visa-service">
                 <div className="visa-shot">
                   <img src={item.image} alt={item.alt} />
                 </div>
@@ -45,18 +33,11 @@ export function VisaServiceSection({
                     </span>
                   </span>
                 </div>
-              </button>
+              </Link>
             </div>
           ))}
         </div>
       </div>
-      <VisaApplyDialog
-        open={service !== null}
-        onClose={() => setService(null)}
-        customer={customer}
-        visaType={service?.visaType ?? ""}
-        heading={service?.heading ?? ""}
-      />
     </section>
   );
 }

@@ -12,9 +12,11 @@ import { initialFormState } from "@/lib/forms";
 export function BookingStatusForm({
   bookingId,
   status,
+  options,
 }: {
   bookingId: string;
   status: string;
+  options?: { value: string; label: string }[];
 }) {
   const [state, action] = useActionState(updateBookingStatus, initialFormState);
 
@@ -24,17 +26,20 @@ export function BookingStatusForm({
       <label className="sr-only" htmlFor={`status-${bookingId}`}>
         Status
       </label>
-      <FieldHelp label="Booking status" help="booking.status" />
+      <FieldHelp label="Status" help="booking.status" />
       <SearchableSelect
         id={`status-${bookingId}`}
         name="status"
         defaultValue={status}
         searchPlaceholder="Search statuses"
         className="max-w-48"
-        options={bookingStatuses.map((value) => ({
-          value,
-          label: bookingStatusLabels[value],
-        }))}
+        options={
+          options ??
+          bookingStatuses.map((value) => ({
+            value,
+            label: bookingStatusLabels[value],
+          }))
+        }
       />
       <SubmitButton pendingLabel="Saving" variant="secondary">
         Update status

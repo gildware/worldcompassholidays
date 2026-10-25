@@ -175,7 +175,7 @@ export default async function VisaPage({
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <section className="pt-40 pb-40">
+      <section className="visa-services-page pt-40 pb-40">
         <div className="container">
           <div className="row y-gap-30 items-center">
             <div className="col-lg-6">
@@ -226,7 +226,7 @@ export default async function VisaPage({
         </div>
       </section>
 
-      <VisaServiceSection services={services} customer={customer} />
+      <VisaServiceSection services={services} />
 
       <section className="visa-track pt-40 pb-40">
         <div className="container">

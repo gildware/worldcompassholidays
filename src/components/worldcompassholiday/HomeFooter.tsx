@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/worldcompassholiday/BrandLogo";
 import { theme } from "@/config/theme";
+import { company, companyLinks, policyLinks } from "@/lib/company";
 import { getSiteBrand } from "@/lib/brand";
 import type { NavItem } from "@/lib/navigation";
 import { whatsAppHref } from "@/lib/visa";
@@ -19,7 +20,7 @@ export async function HomeFooter({ items }: { items: NavItem[] }) {
     <footer className="footer site-footer">
       <div className="site-footer__main">
         <div className="site-footer__brand">
-          <Link href="/" aria-label={theme.brandName}>
+          <Link prefetch={false} href="/" aria-label={theme.brandName}>
             <BrandLogo logoUrl={brand.logoUrl || null} />
           </Link>
           <p>{theme.tagline}</p>
@@ -52,7 +53,7 @@ export async function HomeFooter({ items }: { items: NavItem[] }) {
           <ul>
             {explore.map((item) => (
               <li key={item.href}>
-                <Link href={item.href}>{item.label}</Link>
+                <Link prefetch={false} href={item.href}>{item.label}</Link>
               </li>
             ))}
           </ul>
@@ -63,7 +64,7 @@ export async function HomeFooter({ items }: { items: NavItem[] }) {
           <ul>
             {services.map((item) => (
               <li key={item.href}>
-                <Link href={item.href}>{item.label}</Link>
+                <Link prefetch={false} href={item.href}>{item.label}</Link>
               </li>
             ))}
           </ul>
@@ -73,27 +74,44 @@ export async function HomeFooter({ items }: { items: NavItem[] }) {
           <h2>Your trip</h2>
           <ul>
             <li>
-              <Link href="/login">Sign in</Link>
+              <Link prefetch={false} href="/login">Sign in</Link>
             </li>
             <li>
-              <Link href="/account">Your bookings</Link>
+              <Link prefetch={false} href="/account">See your bookings</Link>
             </li>
             {showHotelRequest ? (
               <li>
-                <Link href="/hotels/request">Find a hotel</Link>
+                <Link prefetch={false} href="/hotels/request">Find a hotel</Link>
               </li>
             ) : null}
             <li>
-              <Link href="/contact">Contact</Link>
+              <Link prefetch={false} href="/contact">Send an enquiry</Link>
             </li>
+          </ul>
+        </nav>
+
+        <nav aria-label="Company">
+          <h2>Company</h2>
+          <ul>
+            {companyLinks.map((item) => (
+              <li key={item.href}>
+                <Link prefetch={false} href={item.href}>{item.label}</Link>
+              </li>
+            ))}
           </ul>
         </nav>
       </div>
       <div className="site-footer__bar">
         <span>
-          © {new Date().getFullYear()} {theme.brandName}. All rights reserved.
+          © {new Date().getFullYear()} {theme.brandName}. {company.dmcLine}.
         </span>
-        <span>Tours, stays, visas, airport meet, and car or bike rental.</span>
+        <nav className="site-footer__legal" aria-label="Policies">
+          {policyLinks.map((item) => (
+            <Link prefetch={false} key={item.href} href={item.href}>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </footer>
   );

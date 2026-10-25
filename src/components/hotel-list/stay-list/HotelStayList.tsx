@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useFavoriteList } from "@/components/favorites/FavoriteButton";
+import { FavoriteHeart, useFavoriteList } from "@/components/favorites/FavoriteButton";
 import { createPortal } from "react-dom";
 import { useLazySlice } from "@/hooks/useLazySlice";
 import {
@@ -710,7 +710,7 @@ export function HotelStayList({
             </div>
           </form>
           <div className="sl-actions">
-            <Link className="sl-btn sl-btn--small" href={requestHref}>Request hotel</Link>
+            <Link prefetch={false} className="sl-btn sl-btn--small" href={requestHref}>Request hotel</Link>
             <button
               className="sl-btn sl-btn--ghost sl-btn--small"
               type="button"
@@ -958,7 +958,7 @@ export function HotelStayList({
                 )}
               </div>
             ) : null}
-            <Link className="sl-request" href={requestHref}>
+            <Link prefetch={false} className="sl-request" href={requestHref}>
               <span>Not on this list? Ask us to find a stay.</span>
               <strong>Request hotel</strong>
             </Link>
@@ -1059,7 +1059,7 @@ export function HotelStayList({
                       <div className="sl-compare-hotel">
                         {hotel.photos[0] ? <img src={hotel.photos[0].src} alt="" /> : null}
                         <span>{hotel.name}</span>
-                        <Link href={stayHref(hotel, state)}>See availability</Link>
+                        <Link prefetch={false} href={stayHref(hotel, state)}>See availability</Link>
                       </div>
                     </th>
                   ))}
@@ -1203,12 +1203,14 @@ function StayCard({
   return (
     <article className={`sl-card${hot ? " is-hot" : ""}`} data-stay={hotel.id}>
       <div className="sl-photos">
-        <Link className="sl-shot" href={href} aria-label={`Photos of ${hotel.name}`}>
+        <Link prefetch={false} className="sl-shot" href={href} aria-label={`Photos of ${hotel.name}`}>
           {shot ? (
             <img src={shot.src} alt={shot.alt} width={900} height={600} fetchPriority={index === 0 ? "high" : undefined} loading={index === 0 ? undefined : "lazy"} decoding="async" />
           ) : null}
         </Link>
-        <button className="sl-save" type="button" aria-pressed={saved} aria-label={`${saved ? "Remove" : "Add"} ${hotel.name} ${saved ? "from" : "to"} favorites`} onClick={onSave}>{saved ? "♥" : "♡"}</button>
+        <button className={`sl-save fav-btn fav-btn--icon${saved ? " is-on" : ""}`} type="button" aria-pressed={saved} aria-label={`${saved ? "Remove" : "Add"} ${hotel.name} ${saved ? "from" : "to"} favorites`} onClick={onSave}>
+          <FavoriteHeart filled={saved} />
+        </button>
         {favourite ? <span className="sl-badge">Guest favourite</span> : null}
         {hotel.photos.length > 1 ? (
           <div className="sl-dots" role="tablist" aria-label={`Photos of ${hotel.name}`}>
@@ -1229,7 +1231,7 @@ function StayCard({
       <div className="sl-body">
         <div>
           <p className="sl-kicker">{hotel.type}{favourite ? <span className="sl-fav"> · Guest favourite</span> : null}</p>
-          <h2><Link href={href}>{hotel.name}</Link></h2>
+          <h2><Link prefetch={false} href={href}>{hotel.name}</Link></h2>
           {stars ? <p className="sl-stars" aria-label={`${hotel.stars} of 5 stars`}>{stars}</p> : null}
           <p className="sl-where">{whereLine(hotel, km, centreName)}</p>
           {hotel.score != null ? (
@@ -1274,7 +1276,7 @@ function StayCard({
             {total.tax ? <p><span>GST 18%</span><span>{money(total.tax, hotel.currency)}</span></p> : null}
             <p><span>Total</span><span>{money(total.total, hotel.currency)}</span></p>
           </details>
-          <Link className="sl-btn" href={href}>See availability</Link>
+          <Link prefetch={false} className="sl-btn" href={href}>See availability</Link>
           <label className="sl-cmp">
             <input type="checkbox" checked={compared} disabled={compareFull} onChange={onCompare} /> Compare
           </label>

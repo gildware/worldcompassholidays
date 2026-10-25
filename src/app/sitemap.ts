@@ -22,8 +22,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry("/", 1, "daily"),
     entry("/destinations", 0.9, "weekly"),
     entry("/visa-services", 0.7, "monthly"),
+    entry("/visa-services/apply", 0.6, "monthly"),
     entry("/meet-and-assist", 0.7, "monthly"),
+    entry("/meet-and-assist/request", 0.6, "monthly"),
     entry("/contact", 0.6, "monthly"),
+    entry("/about", 0.7, "monthly"),
+    entry("/help", 0.5, "monthly"),
+    entry("/terms", 0.4, "yearly"),
+    entry("/privacy", 0.4, "yearly"),
+    entry("/cancellation", 0.4, "yearly"),
+    entry("/cookies", 0.3, "yearly"),
+    entry("/sitemap", 0.3, "monthly"),
   ];
 
   if (modules.tours) staticEntries.push(entry("/tours", 0.9, "daily"));

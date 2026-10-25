@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { theme } from "@/config/theme";
-import { whatsAppHref } from "@/lib/visa";
+import { visaApplyPath, whatsAppHref } from "@/lib/visa";
 import { CountryFlag } from "@/components/visa/CountryFlag";
 import { WhatsAppIcon } from "@/components/visa/VisaIcons";
 import { VisaRequestForm } from "@/components/visa/VisaRequestForm";
@@ -11,7 +12,6 @@ import { VisaRequestForm } from "@/components/visa/VisaRequestForm";
 export function VisaApply({
   sent,
   reference,
-  customer,
   compact = false,
   tile = false,
 }: {
@@ -21,8 +21,6 @@ export function VisaApply({
   compact?: boolean;
   tile?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-
   const label = compact || tile
     ? "Check if you can take my country"
     : sent
@@ -51,12 +49,12 @@ export function VisaApply({
             <strong>Not on the list?</strong>
           </div>
           <p>Tell us the country. We will say if we can take the file.</p>
-          <button type="button" className="visa-country-cta" onClick={() => setOpen(true)}>
+          <Link href={visaApplyPath()} className="visa-country-cta">
             Check my country
             <span className="visa-action-arrow" aria-hidden="true">
               →
             </span>
-          </button>
+          </Link>
         </article>
       ) : (
       <div id={compact || tile ? undefined : "visa-apply"} className={compact || sent ? "mt-20" : "visa-cta"}>
@@ -74,13 +72,9 @@ export function VisaApply({
           </p>
         ) : null}
         <div className="visa-actions">
-          <button
-            type="button"
-            className="button -dark-1 h-60 px-40 rounded-4 bg-blue-1 text-white"
-            onClick={() => setOpen(true)}
-          >
+          <Link href={visaApplyPath()} className="button -dark-1 h-60 px-40 rounded-4 bg-blue-1 text-white">
             {label}
-          </button>
+          </Link>
           {whatsappHref && !compact ? (
             <a className="visa-whatsapp" href={whatsappHref} target="_blank" rel="noreferrer">
               <WhatsAppIcon />
@@ -90,7 +84,6 @@ export function VisaApply({
         </div>
       </div>
       )}
-      <VisaApplyDialog open={open} onClose={() => setOpen(false)} customer={customer} />
     </>
   );
 }
@@ -139,17 +132,19 @@ export function VisaApplyDialog({
           aria-labelledby="visa-apply-title"
           onClick={(event) => event.stopPropagation()}
         >
-          <div className="d-flex items-center justify-between">
-            <h2 id="visa-apply-title" className="text-20 fw-500">
-              {heading || (country ? `Visa help for ${country}` : "Apply for visa help")}
-            </h2>
-            <button type="button" className="visa-close" onClick={onClose} aria-label="Close">
-              ×
-            </button>
+          <div className="visa-dialog-head">
+            <div className="d-flex items-center justify-between">
+              <h2 id="visa-apply-title" className="text-20 fw-500">
+                {heading || (country ? `Visa help for ${country}` : "Apply for visa help")}
+              </h2>
+              <button type="button" className="visa-close" onClick={onClose} aria-label="Close">
+                ×
+              </button>
+            </div>
+            <p className="text-14 text-light-1 mt-5 mb-15">
+              Tell us the trip. We reply with the document list and a quote. Nothing is filed until you accept it.
+            </p>
           </div>
-          <p className="text-14 text-light-1 mt-5 mb-15">
-            Tell us the trip. We reply with the document list and a quote. Nothing is filed until you accept it.
-          </p>
           <VisaRequestForm
             key={`${country}|${visaType}|${heading}`}
             sent={false}

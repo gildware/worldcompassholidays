@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BookingEditForm } from "@/components/account/BookingEditForm";
 import { HotelStayReply } from "@/components/account/HotelStayReply";
 import { requireCustomer } from "@/lib/auth/guards";
@@ -14,6 +14,7 @@ import {
   parseBookingDetails,
   statusLabel,
 } from "@/lib/bookings";
+import { isCustomEnquiry } from "@/lib/enquiries";
 import { bookedHotelStatuses, readHotelReply } from "@/lib/hotel-reply";
 import { prisma } from "@/lib/db";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
@@ -40,6 +41,7 @@ export default async function AccountBookingPage({
 
   const booking = await prisma.booking.findUnique({ where: { reference } });
   if (!booking || booking.userId !== user.id) notFound();
+  if (isCustomEnquiry(parseBookingDetails(booking.details))) redirect(`/account/enquiries/${reference}`);
 
   const section = accountSectionForModule(booking.module);
   const editable =

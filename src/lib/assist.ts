@@ -42,6 +42,16 @@ export function assistServiceLabel(value: string) {
   return assistServiceLabels[value as AssistService] ?? (value || "Not set");
 }
 
+export function assistRequestPath(input?: { service?: string; airport?: string }) {
+  const params = new URLSearchParams();
+  const service = input?.service?.trim();
+  const airport = input?.airport?.trim().toUpperCase();
+  if (service && (assistServices as readonly string[]).includes(service)) params.set("service", service);
+  if (airport && (/^[A-Z]{3}$/.test(airport) || airport === "OTHER")) params.set("airport", airport === "OTHER" ? "other" : airport);
+  const query = params.toString();
+  return query ? `/meet-and-assist/request?${query}` : "/meet-and-assist/request";
+}
+
 export function assistExtraLabel(value: string) {
   return assistExtraLabels[value as AssistExtra] ?? value;
 }

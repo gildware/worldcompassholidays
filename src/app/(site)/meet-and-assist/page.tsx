@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { AssistDesk } from "@/components/assist/AssistDesk";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
-import { getCurrentUser } from "@/lib/auth/session";
 import { pageMetadata } from "@/lib/seo";
 import "@/styles/assist-desk.css";
 
@@ -41,9 +41,12 @@ export default async function MeetAndAssistPage({
 }: {
   searchParams: Promise<{ sent?: string; ref?: string }>;
 }) {
-  const [{ sent, ref }, user] = await Promise.all([searchParams, getCurrentUser()]);
-  const customer = user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null;
-  const reference = ref && /^BK-[A-Z0-9]+$/.test(ref) ? ref : "";
+  const { sent, ref } = await searchParams;
+  if (sent === "1") {
+    const reference = ref && /^BK-[A-Z0-9]+$/.test(ref) ? ref : "";
+    redirect(reference ? `/meet-and-assist/request?sent=1&ref=${reference}` : "/meet-and-assist/request?sent=1");
+  }
+
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -57,7 +60,7 @@ export default async function MeetAndAssistPage({
   return (
     <WorldCompassHolidayFrame>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      <AssistDesk sent={sent === "1"} reference={reference} customer={customer} />
+      <AssistDesk />
     </WorldCompassHolidayFrame>
   );
 }

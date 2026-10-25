@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BookingList } from "@/components/account/BookingList";
 import { StatusPill } from "@/components/rentals/VehicleCard";
 import { requireCustomer } from "@/lib/auth/guards";
 import { accountSectionForFleet } from "@/lib/account-sections";
@@ -59,17 +58,11 @@ export async function FleetAccountPage({ fleet, view }: { fleet: "car" | "bike";
 
   const user = await requireCustomer("account.bookings.view");
   const selected = groups.some((group) => group.id === view) ? view! : "upcoming";
-  const [rentals, enquiries] = await Promise.all([
-    prisma.rentalBooking.findMany({
-      where: { userId: user.id, vehicle: { kind: fleet } },
-      include: { vehicle: { select: { name: true, registrationNumber: true, kind: true } } },
-      orderBy: { pickupAt: "desc" },
-    }),
-    prisma.booking.findMany({
-      where: { userId: user.id, module: fleet },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+  const rentals = await prisma.rentalBooking.findMany({
+    where: { userId: user.id, vehicle: { kind: fleet } },
+    include: { vehicle: { select: { name: true, registrationNumber: true, kind: true } } },
+    orderBy: { pickupAt: "desc" },
+  });
   const visible = rentals.filter((booking) => rentalListGroup(booking.status) === selected);
 
   return (
@@ -84,14 +77,7 @@ export async function FleetAccountPage({ fleet, view }: { fleet: "car" | "bike";
         </Link>
       </div>
 
-      {enquiries.length > 0 ? (
-        <section className="grid gap-2">
-          <h2 className="text-sm font-semibold">Enquiries</h2>
-          <BookingList bookings={enquiries} showModule={false} />
-        </section>
-      ) : null}
-
-      {rentals.length === 0 && enquiries.length === 0 ? (
+      {rentals.length === 0 ? (
         <p className="rounded-lg border border-dashed border-line bg-white px-4 py-6 text-sm text-muted">
           {section.empty}{" "}
           <Link href={section.actionHref} className="text-brand">

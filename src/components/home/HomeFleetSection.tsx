@@ -1,9 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
+import type { FavoriteKind } from "@/lib/favorite-kinds";
 import { formatMoney } from "@/lib/format";
 import "@/styles/home-desks.css";
 
 export type HomeRide = {
+  id: string;
   slug: string;
   name: string;
   place: string;
@@ -43,7 +46,7 @@ export const bikeHomeFallback: HomeRidePromo = {
 
 export function HomeRidePromoCard({ promo }: { promo: HomeRidePromo }) {
   return (
-    <Link href={promo.href} className="ride-promo">
+    <Link prefetch={false} href={promo.href} className="ride-promo">
       <Image src={promo.image} alt="" fill sizes="(max-width: 1024px) 100vw, 1100px" />
       <div className="ride-promo__body">
         <h3>{promo.title}</h3>
@@ -65,8 +68,11 @@ export function HomeFleetSection({
   href,
   linkLabel,
   kindLabel,
+  kind,
   items,
   empty,
+  savedIds = [],
+  signedIn = false,
   nested = false,
 }: {
   title: string;
@@ -74,8 +80,11 @@ export function HomeFleetSection({
   href: string;
   linkLabel: string;
   kindLabel: string;
+  kind: FavoriteKind;
   items: HomeRide[];
   empty: HomeRidePromo;
+  savedIds?: string[];
+  signedIn?: boolean;
   nested?: boolean;
 }) {
   return (
@@ -89,7 +98,7 @@ export function HomeFleetSection({
             </div>
           </div>
           <div className="col-auto">
-            <Link href={href} className="button -md -blue-1 bg-blue-1-05 text-blue-1">
+            <Link prefetch={false} href={href} className="button -md -blue-1 bg-blue-1-05 text-blue-1">
               {linkLabel}
               <div className="icon-arrow-top-right ml-15" />
             </Link>
@@ -99,18 +108,31 @@ export function HomeFleetSection({
           <div className="row y-gap-30 pt-20">
             {items.map((ride, index) => (
               <div className="col-lg-3 col-sm-6" key={ride.slug}>
-                <Link href={`/rentals/${ride.slug}`} className="d-block">
-                  <div className="ratio ratio-16:9 rounded-4 overflow-hidden">
-                    <Image
-                      src={ride.image}
-                      alt={ride.name}
-                      width={400}
-                      height={400}
-                      className="img-ratio object-cover"
-                      loading={index < 4 ? "eager" : "lazy"}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  </div>
+                <div className="home-fav-photo">
+                  <Link prefetch={false} href={`/rentals/${ride.slug}`} className="d-block">
+                    <div className="ratio ratio-16:9 rounded-4 overflow-hidden">
+                      <Image
+                        src={ride.image}
+                        alt={ride.name}
+                        width={400}
+                        height={400}
+                        className="img-ratio object-cover"
+                        loading={index < 4 ? "eager" : "lazy"}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    </div>
+                  </Link>
+                  <FavoriteButton
+                    kind={kind}
+                    itemId={ride.id}
+                    initialSaved={savedIds.includes(ride.id)}
+                    signedIn={signedIn}
+                    title={ride.name}
+                    variant="icon"
+                    className="fav-btn--float"
+                  />
+                </div>
+                <Link prefetch={false} href={`/rentals/${ride.slug}`} className="d-block">
                   <p className="text-14 fw-500 text-blue-1 mt-15">
                     {[kindLabel, ride.detail].filter(Boolean).join(" · ")}
                   </p>

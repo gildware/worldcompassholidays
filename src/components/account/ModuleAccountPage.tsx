@@ -4,6 +4,7 @@ import { BookingList } from "@/components/account/BookingList";
 import { requireCustomer } from "@/lib/auth/guards";
 import { accountSectionForModule } from "@/lib/account-sections";
 import { prisma } from "@/lib/db";
+import { notCustomEnquiryWhere } from "@/lib/enquiries";
 
 export async function ModuleAccountPage({ module }: { module: string }) {
   const section = accountSectionForModule(module);
@@ -11,7 +12,7 @@ export async function ModuleAccountPage({ module }: { module: string }) {
 
   const user = await requireCustomer("account.bookings.view");
   const bookings = await prisma.booking.findMany({
-    where: { userId: user.id, module },
+    where: { userId: user.id, module, ...notCustomEnquiryWhere() },
     orderBy: { createdAt: "desc" },
   });
 

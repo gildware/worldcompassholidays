@@ -14,6 +14,7 @@ import {
   type HomeRide,
 } from "@/components/home/HomeFleetSection";
 import { HomeVisaSection } from "@/components/home/HomeVisaSection";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { durationChoices } from "@/components/tour-list/tour-list-v2/query";
 import type { TourListLocation } from "@/components/tour-list/types";
@@ -22,9 +23,12 @@ import { modules } from "@/config/modules";
 import { theme } from "@/config/theme";
 import { getSiteBrand } from "@/lib/brand";
 import { prisma } from "@/lib/db";
+import { favoriteIds } from "@/lib/favorites";
 import { formatMoney } from "@/lib/format";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getPublicNav } from "@/lib/navigation";
 import { graphLd, organizationNode, pageMetadata, websiteNode } from "@/lib/seo";
+import { cached } from "@/lib/ttl-cache";
 
 function popularHoverText(
   counts: { hotels: number; rentals: number; tours: number },
@@ -71,6 +75,7 @@ function tourDurationLabel(tour: {
 
 function toRide(
   vehicle: {
+    id: string;
     slug: string;
     name: string;
     seats: number;
@@ -84,6 +89,7 @@ function toRide(
   fallback: string,
 ): HomeRide {
   return {
+    id: vehicle.id,
     slug: vehicle.slug,
     name: vehicle.name,
     place: vehicle.destination?.name || "",
@@ -108,15 +114,17 @@ export const metadata: Metadata = pageMetadata({
 
 export default async function Page() {
   const items = getPublicNav();
+  const user = await getCurrentUser();
   const [
     tourPlaces,
-    publishedTours,
+    tourSpan,
     popularDestinations,
     featuredTours,
     featuredHotels,
     featuredCars,
     featuredBikes,
-  ] = await Promise.all([
+  ] = await cached("home-lists", 20_000, () =>
+    Promise.all([
     prisma.destination.findMany({
       where: {
         published: true,
@@ -128,10 +136,28 @@ export default async function Page() {
       select: { id: true, name: true, region: true, country: true },
       orderBy: { name: "asc" },
     }),
-    prisma.tour.findMany({
-      where: { published: true },
-      select: { category: true, priceFrom: true, currency: true },
-    }),
+    prisma.tour
+      .findMany({
+        where: { published: true },
+        distinct: ["category"],
+        select: { category: true, currency: true },
+        orderBy: { category: "asc" },
+      })
+      .then(async (categories) => {
+        const span = await prisma.tour.aggregate({
+          where: { published: true },
+          _min: { priceFrom: true },
+          _max: { priceFrom: true },
+        });
+        return {
+          priceMin: span._min.priceFrom ?? 0,
+          priceMax: span._max.priceFrom ?? span._min.priceFrom ?? 0,
+          currency: categories.find((tour) => tour.currency)?.currency || "INR",
+          categories: [
+            ...new Set(categories.map((tour) => tour.category.trim() || "Tours")),
+          ].sort((a, b) => a.localeCompare(b)),
+        };
+      }),
     prisma.destination.findMany({
       where: { published: true, popular: true },
       orderBy: { name: "asc" },
@@ -147,8 +173,12 @@ export default async function Page() {
           where: { tour: { published: true } },
           select: { tourId: true },
         },
-        hotels: { where: { published: true }, select: { id: true } },
-        vehicles: { where: { published: true }, select: { id: true } },
+        _count: {
+          select: {
+            hotels: { where: { published: true } },
+            vehicles: { where: { published: true } },
+          },
+        },
       },
     }),
     modules.tours
@@ -157,6 +187,7 @@ export default async function Page() {
           orderBy: [{ isFeatured: "desc" }, { title: "asc" }],
           take: 10,
           select: {
+            id: true,
             slug: true,
             title: true,
             category: true,
@@ -178,6 +209,7 @@ export default async function Page() {
           orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
           take: 10,
           select: {
+            id: true,
             slug: true,
             name: true,
             priceFrom: true,
@@ -194,6 +226,7 @@ export default async function Page() {
           orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
           take: 10,
           select: {
+            id: true,
             slug: true,
             name: true,
             seats: true,
@@ -216,6 +249,7 @@ export default async function Page() {
           orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
           take: 10,
           select: {
+            id: true,
             slug: true,
             name: true,
             seats: true,
@@ -232,30 +266,29 @@ export default async function Page() {
           },
         })
       : Promise.resolve([]),
-  ]);
+  ]),
+  );
 
   const tourLocations: TourListLocation[] = tourPlaces.map((destination) => ({
     id: destination.id,
     name: destination.name,
     address: [destination.region, destination.country].filter(Boolean).join(", "),
   }));
-  const tourPrices = publishedTours.map((tour) => tour.priceFrom);
-  const tourPriceMin = tourPrices.length ? Math.min(...tourPrices) : 0;
-  const tourPriceMax = tourPrices.length ? Math.max(...tourPrices) : tourPriceMin;
-  const tourCategories = [
-    ...new Set(publishedTours.map((tour) => tour.category.trim() || "Tours")),
-  ].sort((a, b) => a.localeCompare(b));
 
   const tourCatalog = {
     locations: tourLocations,
-    categories: tourCategories.map((label) => ({ value: label, label })),
+    categories: tourSpan.categories.map((label) => ({ value: label, label })),
     durations: durationChoices.map(({ value, label }) => ({ value, label })),
-    priceMin: tourPriceMin,
-    priceMax: tourPriceMax,
-    currency: publishedTours[0]?.currency || "INR",
+    priceMin: tourSpan.priceMin,
+    priceMax: tourSpan.priceMax,
+    currency: tourSpan.currency,
   };
 
   const brand = await getSiteBrand();
+  const signedInCustomer = user?.scope === "customer" ? user : null;
+  const savedIds = signedInCustomer
+    ? await favoriteIds(signedInCustomer.id, ["tour", "hotel", "car", "bike"])
+    : [];
   const desktopTours = featuredTours.slice(0, 4);
   const desktopHotels = featuredHotels.slice(0, 4);
 
@@ -272,8 +305,8 @@ export default async function Page() {
             name: destination.name,
             imageUrl: destination.imageUrl,
             meta: destinationMeta({
-              hotels: destination.hotels.length,
-              rentals: destination.vehicles.length,
+              hotels: destination._count.hotels,
+              rentals: destination._count.vehicles,
               tours: new Set([
                 ...destination.tours.map((tour) => tour.id),
                 ...destination.tourLinks.map((link) => link.tourId),
@@ -281,6 +314,7 @@ export default async function Page() {
             }),
           }))}
           tours={featuredTours.map((tour) => ({
+            id: tour.id,
             slug: tour.slug,
             title: tour.title,
             place: tour.destination?.name || "",
@@ -296,6 +330,7 @@ export default async function Page() {
                 : undefined,
           }))}
           hotels={featuredHotels.map((hotel) => ({
+            id: hotel.id,
             slug: hotel.slug,
             name: hotel.name,
             place: hotel.destination?.name || "",
@@ -309,6 +344,8 @@ export default async function Page() {
           showCars={modules.cars}
           showBikes={modules.bikes}
           coverUrl={brand.covers[0]?.url || ""}
+          savedIds={savedIds}
+          signedIn={Boolean(signedInCustomer)}
         />
       </div>
 
@@ -347,8 +384,8 @@ export default async function Page() {
                   imageUrl: destination.imageUrl,
                   hoverText: popularHoverText(
                     {
-                      hotels: destination.hotels.length,
-                      rentals: destination.vehicles.length,
+                      hotels: destination._count.hotels,
+                      rentals: destination._count.vehicles,
                       tours: new Set([
                         ...destination.tours.map((tour) => tour.id),
                         ...destination.tourLinks.map((link) => link.tourId),
@@ -376,7 +413,7 @@ export default async function Page() {
                   </div>
                 </div>
                 <div className="col-auto">
-                  <Link href="/tours" className="button -md -blue-1 bg-blue-1-05 text-blue-1">
+                  <Link prefetch={false} href="/tours" className="button -md -blue-1 bg-blue-1-05 text-blue-1">
                     All tours
                     <div className="icon-arrow-top-right ml-15" />
                   </Link>
@@ -387,19 +424,32 @@ export default async function Page() {
                   const image =
                     tour.featuredImageUrl || tour.imageUrl || "/img/tours/header-bg.jpg";
                   return (
-                    <div className="col-lg-3 col-sm-6" key={tour.slug}>
-                      <Link href={`/tours/${tour.slug}`} className="d-block">
-                        <div className="ratio ratio-1:1 rounded-4 overflow-hidden">
-                          <Image
-                            src={image}
-                            alt={tour.title}
-                            width={400}
-                            height={400}
-                            className="img-ratio object-cover"
-                            loading={index < 4 ? "eager" : "lazy"}
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          />
-                        </div>
+                    <div className="col-lg-3 col-sm-6" key={tour.id}>
+                      <div className="home-fav-photo">
+                        <Link prefetch={false} href={`/tours/${tour.slug}`} className="d-block">
+                          <div className="ratio ratio-1:1 rounded-4 overflow-hidden">
+                            <Image
+                              src={image}
+                              alt={tour.title}
+                              width={400}
+                              height={400}
+                              className="img-ratio object-cover"
+                              loading={index < 4 ? "eager" : "lazy"}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            />
+                          </div>
+                        </Link>
+                        <FavoriteButton
+                          kind="tour"
+                          itemId={tour.id}
+                          initialSaved={savedIds.includes(tour.id)}
+                          signedIn={Boolean(signedInCustomer)}
+                          title={tour.title}
+                          variant="icon"
+                          className="fav-btn--float"
+                        />
+                      </div>
+                      <Link prefetch={false} href={`/tours/${tour.slug}`} className="d-block">
                         <h3 className="text-18 fw-500 text-dark-1 mt-15">{tour.title}</h3>
                         {tour.destination?.name ? (
                           <p className="text-15 text-light-1 mt-5">{tour.destination.name}</p>
@@ -431,7 +481,7 @@ export default async function Page() {
                   </div>
                 </div>
                 <div className="col-auto">
-                  <Link href="/hotels" className="button -md -blue-1 bg-blue-1-05 text-blue-1">
+                  <Link prefetch={false} href="/hotels" className="button -md -blue-1 bg-blue-1-05 text-blue-1">
                     All hotels
                     <div className="icon-arrow-top-right ml-15" />
                   </Link>
@@ -442,19 +492,32 @@ export default async function Page() {
                   const image =
                     hotel.featuredImageUrl || hotel.imageUrl || "/img/stays/1/1.png";
                   return (
-                    <div className="col-lg-3 col-sm-6" key={hotel.slug}>
-                      <Link href={`/hotels/${hotel.slug}`} className="d-block">
-                        <div className="ratio ratio-4:3 rounded-4 overflow-hidden">
-                          <Image
-                            src={image}
-                            alt={hotel.name}
-                            width={400}
-                            height={400}
-                            className="img-ratio object-cover"
-                            loading={index < 4 ? "eager" : "lazy"}
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          />
-                        </div>
+                    <div className="col-lg-3 col-sm-6" key={hotel.id}>
+                      <div className="home-fav-photo">
+                        <Link prefetch={false} href={`/hotels/${hotel.slug}`} className="d-block">
+                          <div className="ratio ratio-4:3 rounded-4 overflow-hidden">
+                            <Image
+                              src={image}
+                              alt={hotel.name}
+                              width={400}
+                              height={400}
+                              className="img-ratio object-cover"
+                              loading={index < 4 ? "eager" : "lazy"}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            />
+                          </div>
+                        </Link>
+                        <FavoriteButton
+                          kind="hotel"
+                          itemId={hotel.id}
+                          initialSaved={savedIds.includes(hotel.id)}
+                          signedIn={Boolean(signedInCustomer)}
+                          title={hotel.name}
+                          variant="icon"
+                          className="fav-btn--float"
+                        />
+                      </div>
+                      <Link prefetch={false} href={`/hotels/${hotel.slug}`} className="d-block">
                         <h3 className="text-18 fw-500 text-dark-1 mt-15">{hotel.name}</h3>
                         {hotel.destination?.name ? (
                           <p className="text-15 text-light-1 mt-5">{hotel.destination.name}</p>
@@ -483,8 +546,11 @@ export default async function Page() {
                 href="/rentals/cars"
                 linkLabel="All cars"
                 kindLabel="Car"
+                kind="car"
                 items={featuredCars.slice(0, 4).map((car) => toRide(car, "/img/cars/1.png"))}
                 empty={carHomeFallback}
+                savedIds={savedIds}
+                signedIn={Boolean(signedInCustomer)}
               />
             ) : null}
             {modules.bikes ? (
@@ -495,8 +561,11 @@ export default async function Page() {
                 href="/rentals/bikes"
                 linkLabel="All bikes"
                 kindLabel="Bike"
+                kind="bike"
                 items={featuredBikes.slice(0, 4).map((bike) => toRide(bike, "/img/bikes/bike-rental-banner.jpg"))}
                 empty={bikeHomeFallback}
+                savedIds={savedIds}
+                signedIn={Boolean(signedInCustomer)}
               />
             ) : null}
           </section>

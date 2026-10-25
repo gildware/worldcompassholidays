@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-type TabIcon = "home" | "hotels" | "tours" | "bikes" | "cars" | "more" | "account" | "visa" | "meet";
+type TabIcon = "home" | "hotels" | "tours" | "bikes" | "cars" | "more" | "account" | "visa" | "meet" | "about" | "help" | "contact" | "pages";
 
 const tabs: {
   href: string;
@@ -21,25 +21,25 @@ const tabs: {
   },
   {
     href: "/hotels",
-    label: "Hotel",
+    label: "Find a stay",
     match: (p) => p === "/hotels" || p.startsWith("/hotels/"),
     icon: "hotels",
   },
   {
     href: "/tours",
-    label: "Tours",
+    label: "Plan a tour",
     match: (p) => p === "/tours" || p.startsWith("/tours/"),
     icon: "tours",
   },
   {
     href: "/rentals/bikes",
-    label: "Bike",
+    label: "Rent a bike",
     match: (p) => p.startsWith("/rentals/bikes"),
     icon: "bikes",
   },
   {
     href: "/rentals/cars",
-    label: "Cars",
+    label: "Rent a car",
     match: (p) => p.startsWith("/rentals/cars"),
     icon: "cars",
   },
@@ -53,21 +53,50 @@ const moreLinks: {
 }[] = [
   {
     href: "/account",
-    label: "Account",
+    label: "See your bookings",
     icon: "account",
     match: (p) => p === "/account" || p.startsWith("/account/"),
   },
   {
     href: "/visa-services",
-    label: "Visa",
+    label: "Apply for a visa",
     icon: "visa",
     match: (p) => p === "/visa-services" || p.startsWith("/visa-services/"),
   },
   {
     href: "/meet-and-assist",
-    label: "Meet & assist",
+    label: "Request a greeter",
     icon: "meet",
     match: (p) => p === "/meet-and-assist" || p.startsWith("/meet-and-assist/"),
+  },
+  {
+    href: "/about",
+    label: "Read about us",
+    icon: "about",
+    match: (p) => p === "/about",
+  },
+  {
+    href: "/help",
+    label: "Get help",
+    icon: "help",
+    match: (p) => p === "/help",
+  },
+  {
+    href: "/contact",
+    label: "Send an enquiry",
+    icon: "contact",
+    match: (p) => p === "/contact",
+  },
+  {
+    href: "/sitemap",
+    label: "See all pages",
+    icon: "pages",
+    match: (p) =>
+      p === "/sitemap" ||
+      p === "/terms" ||
+      p === "/privacy" ||
+      p === "/cancellation" ||
+      p === "/cookies",
   },
 ];
 
@@ -147,6 +176,34 @@ function TabGlyph({ name }: { name: TabIcon }) {
         />
       </svg>
     ),
+    about: (
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+        <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M12 4.2v3.1M12 16.7v3.1M4.2 12h3.1M16.7 12h3.1M12 12l3.2-2.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    ),
+    help: (
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+        <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M9.4 9.3a2.6 2.6 0 1 1 3.5 2.4c-.7.3-1.1.8-1.1 1.5V14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        <circle cx="11.8" cy="16.6" r="0.8" fill="currentColor" />
+      </svg>
+    ),
+    contact: (
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path
+          d="M7.2 4.2h2.2l1.2 2.8-1.6 1.1a10 10 0 0 0 4.9 4.9l1.1-1.6 2.8 1.2v2.2c0 .8-.6 1.4-1.4 1.5A12.2 12.2 0 0 1 5.7 5.6c.1-.8.7-1.4 1.5-1.4Z"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+    pages: (
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M7 5.5h10M7 12h10M7 18.5h7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    ),
   };
 
   return icons[name];
@@ -186,7 +243,7 @@ export function MobileTabBar() {
       {tabs.map((tab) => {
         const active = tab.match(pathname);
         return (
-          <Link
+          <Link prefetch={false}
             key={tab.href}
             href={tab.href}
             className={active ? "is-active" : undefined}
@@ -216,7 +273,7 @@ export function MobileTabBar() {
             {moreLinks.map((item) => {
               const active = item.match(pathname);
               return (
-                <Link
+                <Link prefetch={false}
                   key={item.href}
                   href={item.href}
                   role="menuitem"

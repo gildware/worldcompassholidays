@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { clearTtlCache } from "@/lib/ttl-cache";
 import { z } from "zod";
 import {
   catalogKindHasAnswer,
@@ -24,6 +25,7 @@ const itemSchema = z.object({
 });
 
 function revalidateCatalog() {
+  clearTtlCache();
   revalidatePath("/admin/tours/configuration");
   revalidatePath("/admin/hotels/configuration");
   revalidatePath("/admin/tours");

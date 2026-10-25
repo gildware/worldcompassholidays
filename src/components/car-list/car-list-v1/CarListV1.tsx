@@ -582,7 +582,7 @@ export function CarListV1({
                   />
                 )}
                 {isBoard ? null : <div className="mt-30" />}
-                <Link className="ask-request" href={fleetRequestHref(fleet, pickup, pickupAt, returnAt)}>
+                <Link prefetch={false} className="ask-request" href={fleetRequestHref(fleet, pickup, pickupAt, returnAt)}>
                   <span>{isCar ? "Not on this list? Ask us to find a car." : "Not on this list? Ask us to find a bike."}</span>
                   <strong>{isCar ? "Request car" : "Request bike"}</strong>
                 </Link>

@@ -445,6 +445,41 @@
   line-height: 1.45;
 }
 
+.worldcompassholiday-page .hotel-request-form [hidden] {
+  display: none !important;
+}
+
+.worldcompassholiday-page .hotel-request-ages {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.worldcompassholiday-page .hotel-request-ages label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  color: #697488;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.worldcompassholiday-page .hotel-request-ages input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid #d5d9e6;
+  border-radius: 12px;
+  background: #fff;
+  color: #051036;
+  font-size: 15px;
+}
+
+.worldcompassholiday-page .hotel-request-ages input[aria-invalid="true"] {
+  border-color: #e11d48;
+}
+
 .worldcompassholiday-page .hotel-request-guests.is-pair {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
