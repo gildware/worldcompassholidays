@@ -42,6 +42,8 @@ export default async function HotelRequestPage({
     rooms?: string;
     hotelName?: string;
     message?: string;
+    stars?: string;
+    budget?: string;
   }>;
 }) {
   if (!modules.hotels) notFound();
@@ -65,7 +67,26 @@ export default async function HotelRequestPage({
     rooms: countParam(params.rooms, "1"),
     hotelName: (params.hotelName ?? "").slice(0, 120),
     message: (params.message ?? "").slice(0, 500),
+    stars: params.stars === "3" || params.stars === "4" || params.stars === "5" ? params.stars : "any",
+    budget: (params.budget ?? "").slice(0, 40),
   };
+  const nextQuery = new URLSearchParams();
+  for (const [key, value] of Object.entries({
+    destination: defaults.destination,
+    checkIn: defaults.checkIn,
+    checkOut: defaults.checkOut,
+    adults: params.adults ? defaults.adults : "",
+    children: params.children ? defaults.children : "",
+    rooms: params.rooms ? defaults.rooms : "",
+    hotelName: defaults.hotelName,
+    message: defaults.message,
+    stars: defaults.stars === "any" ? "" : defaults.stars,
+    budget: defaults.budget,
+  })) {
+    if (value) nextQuery.set(key, value);
+  }
+  const returnPath = nextQuery.size ? `/hotels/request?${nextQuery}` : "/hotels/request";
+  const loginHref = `/login?next=${encodeURIComponent(returnPath)}`;
   const places: HotelRequestPlace[] = destinations.map((place) => ({
     name: place.name,
     region: place.region,
@@ -92,6 +113,7 @@ export default async function HotelRequestPage({
         customer={customer}
         defaults={defaults}
         places={places}
+        loginHref={loginHref}
       />
     </WorldCompassHolidayFrame>
   );

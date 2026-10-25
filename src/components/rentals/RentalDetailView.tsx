@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { BookNowButton, RentalBookProvider, type RentalBookingOptions } from "@/components/rentals/BookRentalModal";
 import { RentalGallery } from "@/components/rentals/RentalGallery";
 import { iconForFeature, RentalIcon, type RentalIconName } from "@/components/rentals/rental-icons";
@@ -54,6 +55,12 @@ export type RentalDetailViewProps = {
   relatedTitle: string;
   related: RelatedVehicle[];
   booking: RentalBookingOptions;
+  favorite: {
+    kind: "car" | "bike";
+    itemId: string;
+    saved: boolean;
+    signedIn: boolean;
+  };
 };
 
 function pricedLine(label: string, currency: string) {
@@ -95,6 +102,7 @@ export function RentalDetailView(props: RentalDetailViewProps) {
     relatedTitle,
     related,
     booking,
+    favorite,
   } = props;
   const tripKm = quote && includedKmPerDay > 0 ? includedKmPerDay * quote.days : 0;
   const headline = quote ? formatMoney(quote.totalAmount, currency) : formatMoney(pricePerDay, currency);
@@ -116,8 +124,19 @@ export function RentalDetailView(props: RentalDetailViewProps) {
             <RentalGallery images={images} name={name} />
 
             <header className="rental-detail__intro">
-              <p className="rental-detail__kicker">{kindLabel}</p>
-              <h1>{name}</h1>
+              <div className="rental-detail__title-row">
+                <div>
+                  <p className="rental-detail__kicker">{kindLabel}</p>
+                  <h1>{name}</h1>
+                </div>
+                <FavoriteButton
+                  kind={favorite.kind}
+                  itemId={favorite.itemId}
+                  initialSaved={favorite.saved}
+                  signedIn={favorite.signedIn}
+                  title={name}
+                />
+              </div>
               {summary ? <p className="rental-detail__lead">{summary}</p> : null}
               {vehicleFacts.length > 0 ? (
                 <p className="rental-detail__meta">

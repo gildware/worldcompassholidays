@@ -8,14 +8,19 @@ export function HomeVisaSection({ headingId = "home-visa" }: { headingId?: strin
     <section className="hx-visa" aria-labelledby={headingId}>
       <div className="hx-visa__head">
         <div>
-          <h2 id={headingId}>Visa help</h2>
+          <div className="hx-desk__title">
+            <h2 id={headingId}>Visa help</h2>
+            <Link href="/visa-services" className="hx-desk__more">
+              View more details
+            </Link>
+          </div>
           <p>
             We list every document, quote our fee, and keep the embassy fee on its own line.
             Nothing is filed until you accept.
           </p>
           <p className="hx-visa__meta">14 destinations · Reply within 24 hours · Embassy fee kept separate</p>
         </div>
-        <Link href="/visa-services" className="button -md -blue-1 bg-blue-1-05 text-blue-1">
+        <Link href="/visa-services#visa-apply" className="hx-desk__go">
           Get a visa quote
         </Link>
       </div>
@@ -38,7 +43,6 @@ export function HomeVisaSection({ headingId = "home-visa" }: { headingId?: strin
                   <li key={detail}>{detail}</li>
                 ))}
               </ul>
-              <span>{item.cta}</span>
             </div>
           </Link>
         ))}

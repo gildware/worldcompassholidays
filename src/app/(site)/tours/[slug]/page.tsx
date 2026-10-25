@@ -5,6 +5,7 @@ import type { TourStayData } from "@/components/tour-single/TourStay";
 import { modules } from "@/config/modules";
 import { getCurrentUser } from "@/lib/auth/session";
 import { loadTourCatalog } from "@/lib/catalog-query";
+import { isFavorited } from "@/lib/favorites";
 import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
 import { resolveFaqs, resolveTitles } from "@/lib/hotels/labels";
@@ -116,6 +117,7 @@ export default async function TourPage({ params }: Props) {
     getCurrentUser(),
   ]);
   if (!tour || !tour.published) notFound();
+  const saved = user?.scope === "customer" ? await isFavorited(user.id, "tour", tour.id) : false;
 
   const place = tour.destination ?? tour.destinationLinks[0]?.destination ?? null;
   const similarRows = await prisma.tour.findMany({
@@ -159,6 +161,7 @@ export default async function TourPage({ params }: Props) {
   });
 
   const data: TourStayData = {
+    id: tour.id,
     title: tour.title,
     slug: tour.slug,
     location: place?.name ?? "",
@@ -259,7 +262,11 @@ export default async function TourPage({ params }: Props) {
         href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Outfit:wght@400;500;600;700&display=swap"
         rel="stylesheet"
       />
-      <TourStay tour={data} customer={user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null} />
+      <TourStay
+        tour={data}
+        customer={user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null}
+        saved={saved}
+      />
     </>
   );
 }

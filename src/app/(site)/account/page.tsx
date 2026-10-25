@@ -5,6 +5,7 @@ import { RentalAccountList } from "@/components/account/FleetAccountPage";
 import { requireCustomer } from "@/lib/auth/guards";
 import { visibleAccountSections } from "@/lib/account-sections";
 import { prisma } from "@/lib/db";
+import { listFavoriteCards } from "@/lib/favorites";
 import { privateMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = privateMetadata("My account", "Your World Compass Holidays bookings and profile.");
@@ -13,7 +14,7 @@ export default async function AccountPage() {
   const user = await requireCustomer("account.bookings.view");
   const sections = visibleAccountSections();
 
-  const [bookings, rentals] = await Promise.all([
+  const [bookings, rentals, favorites] = await Promise.all([
     prisma.booking.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
@@ -23,6 +24,7 @@ export default async function AccountPage() {
       include: { vehicle: { select: { name: true, registrationNumber: true, kind: true } } },
       orderBy: { pickupAt: "desc" },
     }),
+    listFavoriteCards(user.id),
   ]);
 
   const knownModules = new Set(sections.map((section) => section.module));
@@ -44,6 +46,11 @@ export default async function AccountPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Link href="/account/favorites" className="rounded-lg border border-line bg-white px-4 py-3 hover:border-brand/40">
+          <p className="text-xs text-muted">Favorites</p>
+          <p className="mt-1 text-2xl font-semibold leading-none">{favorites.length}</p>
+          <p className="mt-1.5 text-xs text-muted">Tours, hotels, cars, and bikes you saved</p>
+        </Link>
         {stats.map((stat) => (
           <Link
             key={stat.key}

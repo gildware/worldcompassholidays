@@ -90,6 +90,7 @@
 .stay-crumb a:hover { text-decoration: underline; }
 
 .stay-hero { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; padding-bottom: 32px; }
+.stay-hero__side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; }
 .stay-eyebrow { color: var(--gold); font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
 .stay h1 { font-size: clamp(36px, 5vw, 58px); letter-spacing: -0.035em; line-height: 0.98; margin-bottom: 12px; }
 .stay-stars { color: var(--gold); letter-spacing: 2px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
@@ -339,12 +340,13 @@
 
 @media (max-width: 1024px) {
   .stay {
-    --stay-topbar-h: 56px;
+    --stay-topbar-h: var(--app-header-h, 64px);
     --tabbar-h: calc(68px + env(safe-area-inset-bottom, 0px));
   }
 
+  /* Shared home header replaces this page bar */
   .stay-topbar {
-    display: flex;
+    display: none;
     position: sticky;
     top: 0;
     z-index: 45;

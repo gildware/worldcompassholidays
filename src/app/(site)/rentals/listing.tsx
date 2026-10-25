@@ -2,7 +2,10 @@ import { notFound } from "next/navigation";
 import { CarListV1 } from "@/components/car-list/car-list-v1/CarListV1";
 import type { CarListCard, CarListLocation } from "@/components/car-list/types";
 import { modules } from "@/config/modules";
+import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { favoriteIds } from "@/lib/favorites";
+import type { FavoriteKind } from "@/lib/favorite-kinds";
 import { ensureRentalDefaults } from "@/lib/rentals/defaults";
 import { fleetKinds } from "@/lib/rentals/labels";
 
@@ -39,7 +42,7 @@ export async function RentalListing({
   const kind =
     lockedKind ??
     (kinds.includes(requestedKind as "car" | "bike") ? (requestedKind as "car" | "bike") : "");
-  const [vehicles, rentalLocations, freeCancellation] = await Promise.all([
+  const [vehicles, rentalLocations, freeCancellation, user] = await Promise.all([
     prisma.vehicle.findMany({
       where: {
         published: true,
@@ -74,7 +77,10 @@ export async function RentalListing({
       where: { kind: "cancellation", active: true, refundPercent: 100, ...(kind ? { fleet: kind } : {}) },
       select: { id: true },
     }),
+    getCurrentUser(),
   ]);
+  const favoriteKind: FavoriteKind | FavoriteKind[] = kind === "bike" ? "bike" : kind === "car" ? "car" : ["car", "bike"];
+  const savedIds = user?.scope === "customer" ? await favoriteIds(user.id, favoriteKind) : [];
 
   const cars: CarListCard[] = vehicles.map((vehicle) => {
     const linked = vehicle.features
@@ -138,6 +144,8 @@ export async function RentalListing({
       locations={locations}
       params={params}
       fleet={fleet === "bike" ? "bike" : fleet === "car" ? "car" : "mixed"}
+      savedIds={savedIds}
+      signedIn={user?.scope === "customer"}
     />
   );
 }

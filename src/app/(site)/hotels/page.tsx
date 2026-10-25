@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { HotelStayList } from "@/components/hotel-list/stay-list/HotelStayList";
 import { modules } from "@/config/modules";
+import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { favoriteIds } from "@/lib/favorites";
 import { loadHotelCatalog } from "@/lib/catalog-query";
 import type { CatalogOption } from "@/lib/catalog";
 import { resolveTitles } from "@/lib/hotels/labels";
@@ -58,7 +60,7 @@ export default async function HotelsPage({
 }) {
   if (!modules.hotels) notFound();
   const params = await searchParams;
-  const [rows, catalog, destinations] = await Promise.all([
+  const [rows, catalog, destinations, user] = await Promise.all([
     prisma.hotel.findMany({
       where: { published: true },
       include: {
@@ -76,7 +78,9 @@ export default async function HotelsPage({
       select: { id: true, name: true, slug: true },
       orderBy: { name: "asc" },
     }),
+    getCurrentUser(),
   ]);
+  const savedIds = user?.scope === "customer" ? await favoriteIds(user.id, "hotel") : [];
 
   const hotels: StayListHotel[] = rows.map((hotel) => {
     const room = hotel.rooms[0];
@@ -146,7 +150,15 @@ export default async function HotelsPage({
         href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Outfit:wght@400;500;600;700&display=swap"
         rel="stylesheet"
       />
-      <HotelStayList hotels={hotels} places={places} initial={initial} defaults={{ checkin, checkout }} taxEnabled={taxEnabled} />
+      <HotelStayList
+        hotels={hotels}
+        places={places}
+        initial={initial}
+        defaults={{ checkin, checkout }}
+        taxEnabled={taxEnabled}
+        savedIds={savedIds}
+        signedIn={user?.scope === "customer"}
+      />
     </>
   );
 }

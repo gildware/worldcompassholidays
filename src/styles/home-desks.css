@@ -48,9 +48,17 @@
   margin-bottom: 18px;
 }
 
+.hx-desk__title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
 .hx-visa__head h2,
 .hx-meet__head h2 {
-  margin: 0 0 6px;
+  margin: 0;
   font-size: 1.55rem;
   font-weight: 600;
   letter-spacing: -0.03em;
@@ -156,11 +164,37 @@
   background: var(--blue, #3554d1);
 }
 
-.hx-visa__body > span {
-  margin-top: 14px;
-  font-size: 0.84rem;
+.worldcompassholiday-page a.hx-desk__go,
+.home-x a.hx-desk__go,
+a.hx-desk__go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: #3554d1;
+  color: #fff;
+  font-size: 0.95rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-decoration: none;
+  box-shadow: 0 8px 18px rgba(53, 84, 209, 0.28);
+}
+
+.worldcompassholiday-page a.hx-desk__more,
+.home-x a.hx-desk__more,
+a.hx-desk__more {
+  flex-shrink: 0;
+  padding: 0;
+  background: none;
   color: var(--blue, #3554d1);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 /* Meet and assist — photograph plus a list, not another card grid. */
@@ -246,6 +280,19 @@
   margin: 8px var(--hx-pad) 22px;
 }
 
+.home-x .hx-meet__hero,
+.home-x .hx-meet__thumb {
+  display: none;
+}
+
+.home-x .hx-meet__split {
+  grid-template-columns: 1fr;
+}
+
+.home-x .hx-meet__row {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
 /* Phone PWA — visa swipes, meet stays a short list. Desktop layout is unchanged. */
 @media (max-width: 699px) {
   .home-x .hx-visa__head,
@@ -264,24 +311,20 @@
     font-size: 0.84rem;
   }
 
-  .home-x .hx-visa__head .button,
-  .home-x .hx-meet__head .button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .home-x .hx-desk__go {
     width: 100%;
-    padding: 10px 16px;
   }
 
   .home-x .hx-visa__grid {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
+    scroll-padding-left: var(--hx-pad);
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     margin-inline: calc(var(--hx-pad) * -1);
-    padding: 2px var(--hx-pad) 8px;
+    padding: 2px 0 8px;
   }
 
   .home-x .hx-visa__grid::-webkit-scrollbar {
@@ -289,17 +332,34 @@
   }
 
   .home-x .hx-visa__card {
-    flex: 0 0 84%;
-    max-width: 280px;
+    flex: 0 0 188px;
+    width: 188px;
+    max-width: 188px;
     scroll-snap-align: start;
   }
 
+  .home-x .hx-visa__card:first-child {
+    margin-left: var(--hx-pad);
+  }
+
+  .home-x .hx-visa__card:last-child {
+    margin-right: var(--hx-pad);
+  }
+
   .home-x .hx-visa__photo {
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 16 / 9;
   }
 
   .home-x .hx-visa__body {
-    padding: 12px 12px 14px;
+    padding: 12px 12px 12px 16px;
+  }
+
+  .home-x .hx-visa__body h3 {
+    font-size: 0.95rem;
+  }
+
+  .home-x .hx-visa__body ul {
+    margin-top: 8px;
   }
 
   .home-x .hx-visa__body p {
@@ -314,27 +374,20 @@
   }
 
   .home-x .hx-meet__hero {
-    aspect-ratio: 2 / 1;
-    min-height: 0;
-    max-height: 148px;
-    border-radius: 14px;
-  }
-
-  .home-x .hx-meet__row {
-    grid-template-columns: 52px minmax(0, 1fr);
-    gap: 10px;
-    align-items: start;
-    padding: 12px;
-  }
-
-  .home-x .hx-meet__n {
     display: none;
   }
 
-  .home-x .hx-meet__thumb {
-    width: 52px;
-    height: 52px;
-    border-radius: 10px;
+  .home-x .hx-meet__row {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 12px 14px;
+  }
+
+  .home-x .hx-meet__n {
+    display: block;
+    width: 22px;
+    padding-top: 1px;
   }
 
   .home-x .hx-meet__copy span,

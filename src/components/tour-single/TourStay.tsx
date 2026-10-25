@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { submitTourRequest } from "@/actions/tour-request";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { formatPhone } from "@/lib/auth/phone";
 import { initialFormState } from "@/lib/forms";
 import { formatMoney } from "@/lib/format";
@@ -27,6 +28,7 @@ export type TourStayDay = {
 };
 
 export type TourStayData = {
+  id: string;
   title: string;
   slug: string;
   location: string;
@@ -117,7 +119,15 @@ function chunk<T>(items: T[], size: number) {
   return groups;
 }
 
-export function TourStay({ tour, customer }: { tour: TourStayData; customer: Guest }) {
+export function TourStay({
+  tour,
+  customer,
+  saved = false,
+}: {
+  tour: TourStayData;
+  customer: Guest;
+  saved?: boolean;
+}) {
   const currency = tour.currency || "INR";
   const photos = tour.images.length > 0 ? tour.images : [];
   const visible = photos.slice(0, 5);
@@ -350,6 +360,13 @@ export function TourStay({ tour, customer }: { tour: TourStayData; customer: Gue
               <span>{money(tour.priceFrom, currency)} a person</span>
             </p>
           </div>
+          <FavoriteButton
+            kind="tour"
+            itemId={tour.id}
+            initialSaved={saved}
+            signedIn={signedIn}
+            title={tour.title}
+          />
         </div>
 
         {visible.length > 0 ? (

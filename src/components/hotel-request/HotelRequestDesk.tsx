@@ -27,12 +27,14 @@ export function HotelRequestDesk({
   customer,
   defaults,
   places,
+  loginHref,
 }: {
   sent: boolean;
   reference: string;
   customer: { name: string; email: string; phone: string } | null;
   defaults: HotelRequestDefaults;
   places: HotelRequestPlace[];
+  loginHref: string;
 }) {
   const [preset, setPreset] = useState({ key: 0, destination: "", stars: "", message: "" });
   const [activeStay, setActiveStay] = useState("");
@@ -205,6 +207,7 @@ export function HotelRequestDesk({
             destinationPreset={preset.destination}
             starsPreset={preset.stars}
             messagePreset={preset.message}
+            loginHref={loginHref}
           />
         </aside>
       </div>

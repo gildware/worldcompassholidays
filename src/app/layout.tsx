@@ -6,9 +6,12 @@ import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { MobileAppHeader } from "@/components/pwa/MobileAppHeader";
 import { MobileTabBar } from "@/components/pwa/MobileTabBar";
 import { SerwistProvider } from "@/components/pwa/SerwistProvider";
+import { FavoriteToast } from "@/components/favorites/FavoriteToast";
+import { WhatsAppFloat } from "@/components/site/WhatsAppFloat";
 import { siteName, siteOrigin } from "@/lib/seo";
 import "./globals.css";
 import "@/styles/mobile-app-shell.css";
+import "@/styles/whatsapp-float.css";
 
 // Pages read the live database. A production image must not freeze that data at build time.
 export const dynamic = "force-dynamic";
@@ -140,10 +143,12 @@ export default function RootLayout({
           reloadOnOnline
         >
           <RotatingFavicon />
+          <FavoriteToast />
           {/* Phone/tablet chrome on every public page; CSS hides on desktop */}
           <MobileAppHeader />
           {children}
           <MobileTabBar />
+          <WhatsAppFloat />
           <InstallPrompt />
         </SerwistProvider>
       </body>

@@ -7,6 +7,7 @@ import { modules } from "@/config/modules";
 import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
 import { getCurrentUser } from "@/lib/auth/session";
+import { isFavorited } from "@/lib/favorites";
 import { loadHotelCatalog } from "@/lib/catalog-query";
 import type { CatalogOption } from "@/lib/catalog";
 import { resolveFaqs, resolveTitles } from "@/lib/hotels/labels";
@@ -113,6 +114,7 @@ export default async function HotelPage({ params, searchParams }: Props) {
     getHotelSettings(),
   ]);
   if (!hotel || !hotel.published) notFound();
+  const saved = user?.scope === "customer" ? await isFavorited(user.id, "hotel", hotel.id) : false;
 
   const similarRows = await prisma.hotel.findMany({
     where: { published: true, id: { not: hotel.id } },
@@ -176,6 +178,7 @@ export default async function HotelPage({ params, searchParams }: Props) {
   }));
 
   const data: HotelSingleData = {
+    id: hotel.id,
     name: hotel.name,
     slug: hotel.slug,
     location: hotel.destination?.name ?? "",
@@ -277,6 +280,7 @@ export default async function HotelPage({ params, searchParams }: Props) {
       />
       <HotelStay
         hotel={data}
+        saved={saved}
         customer={user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null}
         defaultCheckIn={/^\d{4}-\d{2}-\d{2}$/.test(one(query.in)) ? one(query.in) : stayDate(0)}
         defaultCheckOut={/^\d{4}-\d{2}-\d{2}$/.test(one(query.out)) ? one(query.out) : stayDate(1)}

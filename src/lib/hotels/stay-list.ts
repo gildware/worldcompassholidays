@@ -291,7 +291,7 @@ export function activeFilters(state: StayListState, bounds: { min: number; max: 
   if (state.cancel) items.push(["cancel", "Free cancellation"]);
   if (state.pay) items.push(["pay", "Pay at the property"]);
   state.amenities.forEach((name) => items.push([`amenity:${name}`, name]));
-  if (state.savedOnly) items.push(["saved", "Saved"]);
+  if (state.savedOnly) items.push(["saved", "Favorites"]);
   return items;
 }
 

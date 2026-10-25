@@ -2,18 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { logout } from "@/actions/auth";
 import { visibleAccountSections, type AccountSectionKey } from "@/lib/account-sections";
 
 type Item = {
   href: string;
   label: string;
-  icon: "dashboard" | "settings" | AccountSectionKey;
+  icon: "dashboard" | "booking" | "favorites" | "settings" | AccountSectionKey;
+  active?: (pathname: string) => boolean;
 };
 
 function isActive(pathname: string, href: string) {
   if (href === "/account") return pathname === "/account";
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function isBookingPath(pathname: string) {
+  if (pathname.startsWith("/account/bookings") || pathname.startsWith("/account/rentals")) return true;
+  return visibleAccountSections().some((section) => isActive(pathname, section.href));
+}
+
+function itemActive(pathname: string, item: Item) {
+  return item.active ? item.active(pathname) : isActive(pathname, item.href);
 }
 
 function initials(name: string) {
@@ -26,10 +38,16 @@ function initials(name: string) {
   return letters || "A";
 }
 
-function Icon({ name }: { name: Item["icon"] | "logout" }) {
+function Icon({
+  name,
+  className = "h-4 w-4 shrink-0",
+}: {
+  name: Item["icon"] | "logout";
+  className?: string;
+}) {
   const common = {
     viewBox: "0 0 24 24",
-    className: "h-4 w-4 shrink-0",
+    className,
     fill: "none",
     stroke: "currentColor",
     strokeWidth: 1.75,
@@ -43,6 +61,21 @@ function Icon({ name }: { name: Item["icon"] | "logout" }) {
       <svg {...common}>
         <circle cx="12" cy="12" r="8.25" />
         <path d="M12 7.5v4.2l2.6 1.6" />
+      </svg>
+    );
+  }
+  if (name === "booking") {
+    return (
+      <svg {...common}>
+        <path d="M7 3.5h10A1.5 1.5 0 0 1 18.5 5v15.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z" />
+        <path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4.5" />
+      </svg>
+    );
+  }
+  if (name === "favorites") {
+    return (
+      <svg {...common}>
+        <path d="M12 19.2s-6.2-3.7-6.2-8.1A3.4 3.4 0 0 1 12 8.2a3.4 3.4 0 0 1 6.2 2.9c0 4.4-6.2 8.1-6.2 8.1z" />
       </svg>
     );
   }
@@ -122,6 +155,171 @@ function itemClass(active: boolean) {
   ].join(" ");
 }
 
+function MenuIcon({ open }: { open: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      {open ? (
+        <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" />
+      ) : (
+        <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
+      )}
+    </svg>
+  );
+}
+
+function AccountMobileNav({ name, phone, items }: { name: string; phone: string; items: Item[] }) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const barRef = useRef<HTMLDivElement>(null);
+  const panelId = useId();
+  const current = items.find((item) => itemActive(pathname, item));
+  const booking = visibleAccountSections().find((section) => isActive(pathname, section.href));
+  const subtitle = booking?.tabLabel ?? current?.label ?? "Account";
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
+
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+    const place = () => {
+      document.documentElement.style.setProperty("--account-bar-h", `${Math.round(bar.getBoundingClientRect().height)}px`);
+    };
+    place();
+    const observer = new ResizeObserver(place);
+    observer.observe(bar);
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty("--account-bar-h");
+    };
+  }, []);
+
+  const drawer =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <>
+            <button type="button" className="account-drawer-backdrop lg:hidden" aria-label="Close account menu" onClick={() => setOpen(false)} />
+            <aside id={panelId} className="account-drawer lg:hidden" role="dialog" aria-modal="true" aria-label="Account menu">
+              <div className="flex items-center gap-3 px-1">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-brand">
+                  {initials(name)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-semibold leading-tight text-navy">{name}</p>
+                  {phone ? <p className="mt-0.5 truncate text-xs text-muted">{phone}</p> : null}
+                </div>
+                <button
+                  type="button"
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-navy"
+                  aria-label="Close account menu"
+                  onClick={() => setOpen(false)}
+                >
+                  <MenuIcon open />
+                </button>
+              </div>
+              <nav aria-label="Account" className="mt-4 grid flex-1 content-start gap-1 overflow-y-auto">
+                {items.map((item) => {
+                  const active = itemActive(pathname, item);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      aria-current={active ? "page" : undefined}
+                      onClick={() => setOpen(false)}
+                      className={[
+                        "flex min-h-12 items-center gap-3 rounded-xl px-3 text-[15px] font-medium",
+                        active ? "bg-brand-soft text-brand" : "text-navy",
+                      ].join(" ")}
+                    >
+                      <Icon name={item.icon} className="h-5 w-5 shrink-0" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+              <div className="mt-3 border-t border-line pt-3">
+                <SignOut
+                  wide
+                  className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-medium text-navy"
+                />
+              </div>
+            </aside>
+          </>,
+          document.body,
+        )
+      : null;
+
+  return (
+    <div
+      ref={barRef}
+      className="sticky z-30 border-b border-line bg-white lg:hidden"
+      style={{ top: "var(--app-header-h, 64px)" }}
+    >
+      <div className="flex items-center gap-3 px-3 py-2">
+        <button
+          type="button"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-surface text-navy"
+          aria-expanded={open}
+          aria-controls={panelId}
+          aria-label="Open account menu"
+          onClick={() => setOpen(true)}
+        >
+          <MenuIcon open={false} />
+        </button>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-semibold leading-tight text-navy">{name}</p>
+          <p className="mt-0.5 truncate text-xs text-muted">{subtitle}</p>
+        </div>
+      </div>
+      {drawer}
+    </div>
+  );
+}
+
+function BookingTabs() {
+  const pathname = usePathname();
+  const sections = visibleAccountSections();
+  if (!isBookingPath(pathname)) return null;
+
+  return (
+    <nav aria-label="Bookings" className="account-booking-tabs-bar sticky z-20 border-b border-line bg-white">
+      <div className="grid grid-cols-3 gap-1.5 px-3 py-2 lg:flex lg:flex-wrap lg:px-6">
+        {sections.map((section) => {
+          const active = isActive(pathname, section.href);
+          return (
+            <Link
+              key={section.href}
+              href={section.href}
+              aria-current={active ? "page" : undefined}
+              className={[
+                "flex h-9 items-center justify-center rounded-full px-2 text-center text-[12px] font-semibold leading-none lg:h-8 lg:px-3 lg:text-[13px]",
+                active ? "bg-navy text-white" : "bg-surface text-navy",
+              ].join(" ")}
+            >
+              {section.tabLabel}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 function SignOut({ className, wide = false }: { className?: string; wide?: boolean }) {
   return (
     <form action={logout} className={wide ? "w-full" : "shrink-0"}>
@@ -146,13 +344,11 @@ export function AccountSidebar({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const bookingHref = visibleAccountSections()[0]?.href ?? "/account/tours";
   const items: Item[] = [
     { href: "/account", label: "Dashboard", icon: "dashboard" },
-    ...visibleAccountSections().map((section) => ({
-      href: section.href,
-      label: section.label,
-      icon: section.key,
-    })),
+    { href: bookingHref, label: "Booking", icon: "booking", active: isBookingPath },
+    { href: "/account/favorites", label: "Favorites", icon: "favorites" },
     ...(showSettings ? [{ href: "/account/settings", label: "Settings", icon: "settings" as const }] : []),
   ];
 
@@ -170,7 +366,7 @@ export function AccountSidebar({
         </div>
         <nav aria-label="Account" className="mt-4 grid min-h-0 flex-1 content-start gap-0.5 overflow-y-auto">
           {items.map((item) => {
-            const active = isActive(pathname, item.href);
+            const active = itemActive(pathname, item);
             return (
               <Link
                 key={item.href}
@@ -190,34 +386,8 @@ export function AccountSidebar({
       </aside>
 
       <div className="min-w-0 flex-1">
-        <div className="sticky top-20 z-20 border-b border-line bg-white md:top-[90px] lg:hidden">
-          <div className="flex items-center gap-2 px-3 py-2">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-[11px] font-semibold text-brand">
-              {initials(name)}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium leading-tight">{name}</p>
-              {phone ? <p className="truncate text-xs text-muted">{phone}</p> : null}
-            </div>
-            <SignOut className="flex h-8 shrink-0 items-center gap-1.5 rounded px-2 text-xs font-medium text-navy hover:bg-surface" />
-          </div>
-          <nav aria-label="Account" className="flex gap-1 overflow-x-auto px-3 pb-2">
-            {items.map((item) => {
-              const active = isActive(pathname, item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`${itemClass(active)} shrink-0 whitespace-nowrap`}
-                >
-                  <Icon name={item.icon} />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        <AccountMobileNav name={name} phone={phone} items={items} />
+        <BookingTabs />
         <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 lg:py-6">{children}</div>
       </div>
     </div>

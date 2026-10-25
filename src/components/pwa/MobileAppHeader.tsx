@@ -2,100 +2,124 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { CatalogSearch } from "@/components/pwa/CatalogSearch";
+import { BrandMark } from "@/components/worldcompassholiday/BrandLogo";
 
-function pageLabel(pathname: string) {
-  if (pathname.startsWith("/tours")) return "Tours";
-  if (pathname.startsWith("/hotels")) return "Hotels";
-  if (pathname.startsWith("/cars") || pathname.startsWith("/car-rental")) return "Cars";
-  if (pathname.startsWith("/bike")) return "Bikes";
-  if (pathname.startsWith("/destinations")) return "Destinations";
-  if (pathname.startsWith("/account")) return "Account";
-  if (pathname.startsWith("/visa")) return "Visa";
-  if (pathname.startsWith("/meet")) return "Meet & assist";
-  if (pathname.startsWith("/contact")) return "Contact";
-  return null;
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="M16 16l4 4" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
+function AccountIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M12 12.1a4.05 4.05 0 1 0 0-8.1 4.05 4.05 0 0 0 0 8.1Zm-6.35 7.15c.45-2.85 2.85-4.75 6.35-4.75s5.9 1.9 6.35 4.75c.12.75-.48 1.4-1.24 1.4H6.89c-.76 0-1.36-.65-1.24-1.4Z"
+      />
+    </svg>
+  );
 }
 
 export function MobileAppHeader() {
   const pathname = usePathname() || "/";
+  const [openPath, setOpenPath] = useState(pathname);
+  const [open, setOpen] = useState(false);
+  if (pathname !== openPath) {
+    setOpenPath(pathname);
+    setOpen(false);
+  }
+  const inputRef = useRef<HTMLInputElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    inputRef.current?.focus();
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+      inputRef.current?.blur();
+    };
+  }, [open]);
+
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const place = () => {
+      const box = header.getBoundingClientRect();
+      document.documentElement.style.setProperty("--app-header-h", `${Math.round(box.height)}px`);
+      header.style.setProperty("--catalog-search-top", `${Math.round(box.bottom)}px`);
+    };
+    place();
+    const observer = new ResizeObserver(place);
+    observer.observe(header);
+    window.addEventListener("resize", place);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", place);
+      document.documentElement.style.removeProperty("--app-header-h");
+    };
+  }, [open, pathname]);
+
   if (pathname.startsWith("/admin")) return null;
 
-  const isHome = pathname === "/";
-  const label = pageLabel(pathname);
-  /* Tours / hotels own their sticky search chrome — skip the global bar */
-  if (pathname.startsWith("/tours") || pathname.startsWith("/hotels")) return null;
+  const searching = open ? " is-searching" : "";
 
-  const isListing = Boolean(label) && !isHome;
-
-  if (isListing) {
-    return (
-      <header className="mobile-app-header mobile-app-header--listing app-chrome-mobile">
-        <div className="mobile-app-header__inner">
-          <Link href="/" className="mobile-app-header__back" aria-label="Home">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-              <path d="M15 5l-7 7 7 7" />
-            </svg>
-          </Link>
-          <div className="mobile-app-header__listing-title">
-            <p>{label}</p>
-            <strong>World Compass</strong>
-          </div>
-          <Link href="/account" className="mobile-app-header__icon" aria-label="Account">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-              <circle cx="12" cy="9" r="3.5" />
-              <path d="M5 19.5c1.5-3 4-4.5 7-4.5s5.5 1.5 7 4.5" />
-            </svg>
-          </Link>
-        </div>
-      </header>
-    );
+  function toggleSearch() {
+    setOpen((current) => !current);
   }
 
+  const search = (
+    <CatalogSearch open={open} onOpen={() => setOpen(true)} onClose={() => setOpen(false)} inputRef={inputRef} />
+  );
+
   return (
-    <header className="mobile-app-header app-chrome-mobile">
+    <header ref={headerRef} className={`mobile-app-header app-chrome-mobile${searching}`}>
       <div className="mobile-app-header__inner">
         <Link href="/" className="mobile-app-header__brand" aria-label="World Compass Holidays">
-          <span className="mobile-app-header__mark" aria-hidden>
-            <svg viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="8" stroke="white" strokeWidth="1.6" />
-              <path d="M14.5 9.5L11 13l-3.5 1.5L11 11l3.5-1.5z" fill="white" />
-            </svg>
-          </span>
-          <span>
+          <BrandMark className="mobile-app-header__mark" />
+          <span className="mobile-app-header__word">
             <strong>World Compass</strong>
             <small>Holidays</small>
           </span>
         </Link>
 
         <div className="mobile-app-header__actions">
-          <Link
-            href="/destinations"
+          <button
+            type="button"
             className="mobile-app-header__icon"
-            aria-label="Search destinations"
+            aria-label={open ? "Close search" : "Search"}
+            aria-expanded={open}
+            onClick={toggleSearch}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-              <circle cx="11" cy="11" r="6.5" />
-              <path d="M16 16l4 4" />
-            </svg>
-          </Link>
-          <Link href="/account" className="mobile-app-header__icon" aria-label="Account">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-              <circle cx="12" cy="9" r="3.5" />
-              <path d="M5 19.5c1.5-3 4-4.5 7-4.5s5.5 1.5 7 4.5" />
-            </svg>
+            {open ? <CloseIcon /> : <SearchIcon />}
+          </button>
+          <Link
+            href="/account"
+            className={`mobile-app-header__icon${pathname.startsWith("/account") ? " is-active" : ""}`}
+            aria-label="Account"
+            aria-current={pathname.startsWith("/account") ? "page" : undefined}
+          >
+            <AccountIcon />
           </Link>
         </div>
       </div>
 
-      {isHome ? (
-        <Link href="/destinations" className="mobile-app-header__search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-            <circle cx="11" cy="11" r="6.5" />
-            <path d="M16 16l4 4" />
-          </svg>
-          Where do you want to go?
-        </Link>
-      ) : null}
+      {open ? search : null}
     </header>
   );
 }

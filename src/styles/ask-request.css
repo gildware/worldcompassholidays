@@ -1,0 +1,49 @@
+.ask-request {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 12px 12px 12px 16px;
+  border: 1px solid #e4e7ef;
+  border-radius: 16px;
+  background: #fff;
+  color: #051036;
+  text-decoration: none;
+}
+
+.ask-request span {
+  color: #697488;
+  font-size: 14.5px;
+  line-height: 1.35;
+}
+
+.ask-request strong {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #3554d1;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.ask-request:hover strong {
+  background: #2439a8;
+}
+
+@media (max-width: 1024px) {
+  .ask-request {
+    flex-direction: column;
+    align-items: stretch;
+    margin: 2px 0 12px;
+  }
+
+  .ask-request strong {
+    min-height: 44px;
+  }
+}

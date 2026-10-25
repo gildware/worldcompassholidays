@@ -59,7 +59,7 @@ export function VisaApply({
           </button>
         </article>
       ) : (
-      <div className={compact || sent ? "mt-20" : "visa-cta"}>
+      <div id={compact || tile ? undefined : "visa-apply"} className={compact || sent ? "mt-20" : "visa-cta"}>
         {sent || compact ? null : (
           <>
             <p className="text-16 fw-500">Get the document list before you book</p>

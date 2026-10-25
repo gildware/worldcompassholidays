@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { theme } from "@/config/theme";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -15,6 +14,15 @@ import { whatsAppHref } from "@/lib/visa";
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const stars = ["any", "3", "4", "5"] as const;
+const budgetBands = ["upto-1000", "1000-5000", "5000-10000", "10000-20000", "above-20000"] as const;
+
+const budgetBandNotes: Record<(typeof budgetBands)[number], string> = {
+  "upto-1000": "Up to INR 1,000 per night",
+  "1000-5000": "INR 1,000 to 5,000 per night",
+  "5000-10000": "INR 5,000 to 10,000 per night",
+  "10000-20000": "INR 10,000 to 20,000 per night",
+  "above-20000": "Above INR 20,000 per night",
+};
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value : "";
@@ -47,10 +55,9 @@ const requestSchema = z
     phone: z
       .string()
       .trim()
-      .min(1, "Enter a phone number")
       .max(30, "That phone number is too long")
-      .regex(/^[0-9+\-\s()]+$/, "Use digits, spaces, and + for the country code")
-      .refine((value) => value.replace(/\D/g, "").length >= 8, "Enter a phone number with the country code"),
+      .refine((value) => value === "" || /^[0-9+\-\s()]+$/.test(value), "Use digits, spaces, and + for the country code")
+      .refine((value) => value === "" || value.replace(/\D/g, "").length >= 8, "Enter a phone number with the country code"),
     destination: z.string().trim().min(2, "Enter the city or area").max(120, "That place name is too long"),
     hotelName: z.string().trim().max(120, "That hotel name is too long").default(""),
     checkIn: z.string().regex(datePattern, "Choose a check-in date"),
@@ -63,14 +70,19 @@ const requestSchema = z
       .string()
       .trim()
       .default("")
-      .refine((value) => value === "" || /^\d+$/.test(value), "Enter the nightly budget in rupees")
       .refine(
-        (value) => value === "" || (Number(value) >= 500 && Number(value) <= 500000),
-        "Enter a nightly budget between 500 and 500000",
+        (value) =>
+          value === "" ||
+          (budgetBands as readonly string[]).includes(value) ||
+          (/^\d+$/.test(value) && Number(value) >= 100 && Number(value) <= 500000),
+        "Choose a nightly budget, or enter an amount from 100 to 500000",
       ),
     message: z.string().trim().max(2000, "Keep the note under 2000 characters").default(""),
   })
   .superRefine((data, ctx) => {
+    if (!data.phone.replace(/\D/g, "")) {
+      ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a phone number" });
+    }
     if (data.checkIn < localToday()) {
       ctx.addIssue({ code: "custom", path: ["checkIn"], message: "Choose a check-in date from today onward" });
     }
@@ -107,6 +119,12 @@ function starLabel(value: (typeof stars)[number]) {
   return `${value} stars or more`;
 }
 
+function budgetNote(value: string) {
+  if ((budgetBands as readonly string[]).includes(value)) return budgetBandNotes[value as (typeof budgetBands)[number]];
+  if (/^\d+$/.test(value)) return `INR ${Number(value).toLocaleString("en-IN")} per night`;
+  return "not set";
+}
+
 function requestNotes(input: z.infer<typeof requestSchema>) {
   const guests = [
     `${input.adults} ${input.adults === 1 ? "adult" : "adults"}`,
@@ -120,7 +138,7 @@ function requestNotes(input: z.infer<typeof requestSchema>) {
     `Stay: ${prettyDate(input.checkIn)} to ${prettyDate(input.checkOut)}`,
     `Party: ${guests.join(", ")}`,
     `Stars: ${starLabel(input.stars)}`,
-    input.budget ? `Budget: INR ${Number(input.budget).toLocaleString("en-IN")} per night` : "Budget: not set",
+    `Budget: ${budgetNote(input.budget)}`,
     input.message ? `Note: ${input.message}` : "",
   ];
   return lines.filter(Boolean).join("\n");
@@ -135,10 +153,12 @@ function whatsAppText(input: z.infer<typeof requestSchema> & { reference: string
 export async function submitHotelRequest(_previous: FormState, formData: FormData): Promise<FormState> {
   const user = await getCurrentUser();
   const customer = user?.scope === "customer" ? user : null;
+  const typedPhone = text(formData.get("phone")).trim();
+  const phone = typedPhone || customer?.phone || "";
   const values = {
     name: customer?.name ?? text(formData.get("name")),
     email: customer?.email ?? text(formData.get("email")),
-    phone: text(formData.get("phone")) || customer?.phone || "",
+    phone: customer?.phone ? typedPhone : phone,
     destination: text(formData.get("destination")),
     hotelName: text(formData.get("hotelName")),
     checkIn: text(formData.get("checkIn")),
@@ -151,7 +171,14 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
     message: text(formData.get("message")),
   };
 
-  const parsed = requestSchema.safeParse(values);
+  if (text(formData.get("surface")) !== "stay" && !customer) {
+    return {
+      error: "Log in to send this request.",
+      values,
+    };
+  }
+
+  const parsed = requestSchema.safeParse({ ...values, phone });
   if (!parsed.success) {
     return {
       error: firstIssue(parsed.error),
@@ -171,7 +198,12 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
       startDate: new Date(`${data.checkIn}T00:00:00`),
       endDate: new Date(`${data.checkOut}T00:00:00`),
       guests: data.adults + data.children,
-      notes: requestNotes(data),
+      notes: [
+        requestNotes(data),
+        customer?.phone && typedPhone && data.phone !== customer.phone ? `Account phone: ${customer.phone}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
       details: detailsWithEnquiryReceived({
         kind: "custom_hotel",
         destination: data.destination,
@@ -182,7 +214,8 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
         children: data.children,
         rooms: data.rooms,
         stars: data.stars,
-        budget: data.budget ? Number(data.budget) : null,
+        budget: /^\d+$/.test(data.budget) ? Number(data.budget) : null,
+        budgetBand: (budgetBands as readonly string[]).includes(data.budget) ? data.budget : null,
         message: data.message,
         channel,
       }),
@@ -208,18 +241,10 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
     };
   }
 
-  if (text(formData.get("surface")) === "stay") {
-    return {
-      error: null,
-      success: `Saved as ${booking.reference}.`,
-      reference: booking.reference,
-      values,
-    };
-  }
-
-  if (customer) {
-    redirect(`/account/bookings/${booking.reference}?created=1`);
-  }
-
-  redirect(`/hotels/request?sent=1&ref=${booking.reference}`);
+  return {
+    error: null,
+    success: `Saved as ${booking.reference}.`,
+    reference: booking.reference,
+    values,
+  };
 }

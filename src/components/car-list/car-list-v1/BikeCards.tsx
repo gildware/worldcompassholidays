@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState, type PointerEvent, type ReactNode } from "react";
 import type { CarListCard } from "@/components/car-list/types";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { formatMoney } from "@/lib/format";
 import { tagColor } from "@/lib/rentals/tag-colors";
 
@@ -97,6 +98,7 @@ function CardPhotos({
   eager,
   fuel,
   tags,
+  save,
 }: {
   images: string[];
   href: string;
@@ -104,6 +106,7 @@ function CardPhotos({
   eager: boolean;
   fuel: string;
   tags: string[];
+  save?: ReactNode;
 }) {
   const [index, setIndex] = useState(0);
   const startX = useRef(0);
@@ -132,6 +135,7 @@ function CardPhotos({
 
   return (
     <div className="bike-card__media" onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
+      {save}
       {count > 0 ? (
         <Link
           href={href}
@@ -220,11 +224,15 @@ export function BikeCards({
   noun = "bikes",
   showSeats = false,
   detailQuery = "",
+  savedIds = [],
+  signedIn = false,
 }: {
   bikes: CarListCard[];
   noun?: string;
   showSeats?: boolean;
   detailQuery?: string;
+  savedIds?: string[];
+  signedIn?: boolean;
 }) {
   if (bikes.length === 0) {
     return (
@@ -250,6 +258,17 @@ export function BikeCards({
               eager={index < 8}
               fuel={item.fuel}
               tags={item.tags}
+              save={
+                <FavoriteButton
+                  kind={item.kind === "bike" ? "bike" : "car"}
+                  itemId={item.id}
+                  initialSaved={savedIds.includes(item.id)}
+                  signedIn={signedIn}
+                  title={item.name}
+                  variant="icon"
+                  className="fav-btn--float"
+                />
+              }
             />
             <Link href={href} className="bike-card__body">
               <div className="bike-card__topline">

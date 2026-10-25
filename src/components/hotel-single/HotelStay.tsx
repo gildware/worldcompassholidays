@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { submitHotelRequest } from "@/actions/hotel-request";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import type { HotelSingleData } from "@/components/hotel-single/types";
 import { StayMark } from "@/components/hotel-single/StayMark";
 import { initialFormState } from "@/lib/forms";
@@ -64,6 +65,7 @@ function chunks<T>(items: T[], size: number) {
 export function HotelStay({
   hotel,
   customer,
+  saved = false,
   defaultCheckIn,
   defaultCheckOut,
   defaultAdults = 2,
@@ -73,6 +75,7 @@ export function HotelStay({
 }: {
   hotel: HotelSingleData;
   customer: Guest;
+  saved?: boolean;
   defaultCheckIn: string;
   defaultCheckOut: string;
   defaultAdults?: number;
@@ -261,15 +264,24 @@ export function HotelStay({
               {hotel.propertyType ? <span>{hotel.propertyType}</span> : null}
             </p>
           </div>
-          {hotel.stars > 0 ? (
-            <button className="stay-score" type="button" onClick={() => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" })}>
-              <b>{hotel.stars.toFixed(1)}</b>
-              <span>
-                <strong>{hotel.scoreLabel || "Star rating"}</strong>
-                <span>Property rating</span>
-              </span>
-            </button>
-          ) : null}
+          <div className="stay-hero__side">
+            <FavoriteButton
+              kind="hotel"
+              itemId={hotel.id}
+              initialSaved={saved}
+              signedIn={Boolean(customer)}
+              title={hotel.name}
+            />
+            {hotel.stars > 0 ? (
+              <button className="stay-score" type="button" onClick={() => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" })}>
+                <b>{hotel.stars.toFixed(1)}</b>
+                <span>
+                  <strong>{hotel.scoreLabel || "Star rating"}</strong>
+                  <span>Property rating</span>
+                </span>
+              </button>
+            ) : null}
+          </div>
         </div>
 
         <div className={`stay-gallery stay-gallery--${visible.length}`} aria-label={`Photographs of ${hotel.name}`}>

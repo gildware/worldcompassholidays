@@ -701,10 +701,24 @@ model User {
   bookings          Booking[]
   rentalBookings    RentalBooking[]
   customerDocuments CustomerDocument[]
+  favorites         Favorite[]
   createdAt      DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   @@index([roleId])
+}
+
+// A tour, hotel, car, or bike a customer saved from the public site.
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String
+  itemId    String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, kind, itemId])
+  @@index([userId, kind])
 }
 
 // One saved copy of each customer document, reused on later bookings.

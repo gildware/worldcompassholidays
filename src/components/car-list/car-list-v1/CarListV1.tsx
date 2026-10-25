@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { DateObject } from "react-multi-date-picker";
 import "rc-slider/assets/index.css";
@@ -20,6 +21,7 @@ import type { GuestCounts } from "@/components/hotel-list/common/GuestSearch";
 import { Pagination } from "@/components/hotel-list/common/Pagination";
 import { replaceOwnedQuery } from "@/lib/list-url";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import "@/styles/ask-request.css";
 import {
   formatRentalDate,
   readRentalQuery,
@@ -124,6 +126,18 @@ function defaultPickupAt() {
   return toDateTimeLocal(earliestPickupDate());
 }
 
+function fleetRequestHref(fleet: "car" | "bike" | "mixed", pickup: string, pickupAt: string, returnAt: string) {
+  const params = new URLSearchParams();
+  if (pickup && pickup !== "all") params.set("destination", pickup);
+  const start = pickupAt.slice(0, 10);
+  const end = returnAt.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(start)) params.set("start", start);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(end)) params.set("end", end);
+  const path = fleet === "bike" ? "/rentals/bikes/request" : "/rentals/cars/request";
+  const search = params.toString();
+  return search ? `${path}?${search}` : path;
+}
+
 function defaultReturnAt() {
   const next = earliestPickupDate();
   next.setDate(next.getDate() + 1);
@@ -135,11 +149,15 @@ export function CarListV1({
   locations,
   params = {},
   fleet = "car",
+  savedIds = [],
+  signedIn = false,
 }: {
   cars: CarListCard[];
   locations: CarListLocation[];
   params?: RentalQueryInput;
   fleet?: "car" | "bike" | "mixed";
+  savedIds?: string[];
+  signedIn?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -564,6 +582,10 @@ export function CarListV1({
                   />
                 )}
                 {isBoard ? null : <div className="mt-30" />}
+                <Link className="ask-request" href={fleetRequestHref(fleet, pickup, pickupAt, returnAt)}>
+                  <span>{isCar ? "Not on this list? Ask us to find a car." : "Not on this list? Ask us to find a bike."}</span>
+                  <strong>{isCar ? "Request car" : "Request bike"}</strong>
+                </Link>
                 {isBoard ? (
                   <div className="bike-grid">
                     <BikeCards
@@ -571,11 +593,18 @@ export function CarListV1({
                       noun={isCar ? "cars" : "bikes"}
                       showSeats={isCar}
                       detailQuery={detailParams.toString()}
+                      savedIds={savedIds}
+                      signedIn={signedIn}
                     />
                   </div>
                 ) : (
                   <div className="row y-gap-30">
-                    <CarProperties cars={visible} detailQuery={detailParams.toString()} />
+                    <CarProperties
+                      cars={visible}
+                      detailQuery={detailParams.toString()}
+                      savedIds={savedIds}
+                      signedIn={signedIn}
+                    />
                   </div>
                 )}
                 {hasMore ? <div ref={sentinelRef} className="bike-more" aria-hidden="true" /> : null}

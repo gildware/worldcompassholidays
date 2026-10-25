@@ -8,13 +8,18 @@ export function HomeAssistSection({ headingId = "home-assist" }: { headingId?: s
     <section className="hx-meet" aria-labelledby={headingId}>
       <div className="hx-meet__head">
         <div>
-          <h2 id={headingId}>Meet and assist</h2>
+          <div className="hx-desk__title">
+            <h2 id={headingId}>Meet and assist</h2>
+            <Link href="/meet-and-assist" className="hx-desk__more">
+              View more details
+            </Link>
+          </div>
           <p>
             A greeter at the airport on the day you fly. Send the flight number and we name
             who meets you, and the fee, before anyone is booked.
           </p>
         </div>
-        <Link href="/meet-and-assist" className="button -md -blue-1 bg-blue-1-05 text-blue-1">
+        <Link href="/meet-and-assist#assist-pass" className="hx-desk__go">
           Book a greeter
         </Link>
       </div>

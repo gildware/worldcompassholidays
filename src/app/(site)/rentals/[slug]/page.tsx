@@ -5,6 +5,7 @@ import { modules } from "@/config/modules";
 import { prisma } from "@/lib/db";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { getCurrentUser } from "@/lib/auth/session";
+import { isFavorited } from "@/lib/favorites";
 import { mapApiKey } from "@/lib/map-key";
 import { documentsRequiredToBook } from "@/lib/rentals/booking-documents";
 import { listProfileDocuments } from "@/lib/rentals/profile-documents";
@@ -99,10 +100,12 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
     notFound();
   }
 
+  const fleetKind = vehicle.kind === "bike" ? "bike" : "car";
   const [setup, user] = await Promise.all([
-    getRentalSetup(vehicle.kind === "bike" ? "bike" : "car"),
+    getRentalSetup(fleetKind),
     getCurrentUser(),
   ]);
+  const saved = user?.scope === "customer" ? await isFavorited(user.id, fleetKind, vehicle.id) : false;
   const profile =
     user?.scope === "customer"
       ? await prisma.user.findUnique({
@@ -393,6 +396,12 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
           savedAddress: profile?.address ?? "",
           savedLat: profile?.mapLat ?? "",
           savedLng: profile?.mapLng ?? "",
+        }}
+        favorite={{
+          kind: fleetKind,
+          itemId: vehicle.id,
+          saved,
+          signedIn: user?.scope === "customer",
         }}
       />
     </>

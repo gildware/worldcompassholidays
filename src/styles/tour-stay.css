@@ -308,12 +308,13 @@ body .road .road-dialog textarea {
 
 @media (max-width: 1024px) {
   .road {
-    --road-topbar-h: 56px;
+    --road-topbar-h: var(--app-header-h, 64px);
     --tabbar-h: calc(68px + env(safe-area-inset-bottom, 0px));
   }
 
+  /* Shared home header replaces this page bar */
   .road-topbar {
-    display: flex;
+    display: none;
     position: sticky;
     top: 0;
     z-index: 45;

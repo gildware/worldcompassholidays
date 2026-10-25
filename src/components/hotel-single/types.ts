@@ -30,6 +30,7 @@ export type SimilarHotelCard = {
 };
 
 export type HotelSingleData = {
+  id: string;
   name: string;
   slug: string;
   location: string;

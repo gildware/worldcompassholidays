@@ -1,0 +1,61 @@
+.whatsapp-float {
+  position: fixed;
+  z-index: 70;
+  right: max(20px, env(safe-area-inset-right, 0px));
+  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: #25d366;
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(18, 140, 76, 0.38);
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.whatsapp-float svg {
+  width: 30px;
+  height: 30px;
+}
+
+.whatsapp-float:hover {
+  background: #1ebe57;
+  transform: translateY(-2px);
+}
+
+.whatsapp-float:focus-visible {
+  outline: 3px solid var(--navy, #051036);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1024px) {
+  .whatsapp-float {
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    width: 52px;
+    height: 52px;
+  }
+}
+
+/* Booking bars sit above the phone tab bar */
+@media (max-width: 991px) {
+  body:has(.tour-detail__dock) .whatsapp-float,
+  body:has(.stay-dock) .whatsapp-float,
+  body:has(.road-dock) .whatsapp-float {
+    bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 900px) {
+  body:has(.rental-detail__dock) .whatsapp-float {
+    bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media print {
+  .whatsapp-float {
+    display: none;
+  }
+}

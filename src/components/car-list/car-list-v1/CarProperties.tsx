@@ -5,14 +5,19 @@ import Link from "next/link";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { CarListCard } from "@/components/car-list/types";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { formatMoney } from "@/lib/format";
 
 export function CarProperties({
   cars,
   detailQuery,
+  savedIds = [],
+  signedIn = false,
 }: {
   cars: CarListCard[];
   detailQuery: string;
+  savedIds?: string[];
+  signedIn?: boolean;
 }) {
   if (cars.length === 0) {
     return (
@@ -74,12 +79,14 @@ export function CarProperties({
                                   )}
                                 </div>
                                 <div className="cardImage__wishlist">
-                                  <button
-                                    type="button"
-                                    className="button -blue-1 bg-white size-30 rounded-full shadow-2"
-                                  >
-                                    <i className="icon-heart text-12" />
-                                  </button>
+                                  <FavoriteButton
+                                    kind={item.kind === "bike" ? "bike" : "car"}
+                                    itemId={item.id}
+                                    initialSaved={savedIds.includes(item.id)}
+                                    signedIn={signedIn}
+                                    title={item.name}
+                                    variant="icon"
+                                  />
                                 </div>
                               </div>
                             </SwiperSlide>

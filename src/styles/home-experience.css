@@ -202,6 +202,13 @@
   padding: 14px;
 }
 
+/* Site link rule (.worldcompassholiday-page a) is more specific and was
+   forcing these cards to inherit the page's dark text. */
+.worldcompassholiday-page a.home-x__dest,
+.home-x a.home-x__dest {
+  color: #fff;
+}
+
 .home-x__dest img {
   position: absolute;
   inset: 0;
@@ -223,6 +230,7 @@
 .home-x__dest span {
   position: relative;
   z-index: 2;
+  color: #fff;
 }
 
 .home-x__dest strong {

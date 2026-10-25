@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useFavoriteList } from "@/components/favorites/FavoriteButton";
 import { createPortal } from "react-dom";
 import { useLazySlice } from "@/hooks/useLazySlice";
 import {
@@ -64,19 +65,24 @@ export function HotelStayList({
   initial,
   defaults,
   taxEnabled = false,
+  savedIds = [],
+  signedIn = false,
 }: {
   hotels: StayListHotel[];
   places: StayPlace[];
   initial: StayListState;
   defaults: { checkin: string; checkout: string };
   taxEnabled?: boolean;
+  savedIds?: string[];
+  signedIn?: boolean;
 }) {
   const today = useMemo(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   }, []);
   const [state, setState] = useState(initial);
-  const [saved, setSaved] = useState<string[]>([]);
+  const favorites = useFavoriteList(savedIds, signedIn);
+  const saved = favorites.saved;
   const [photos, setPhotos] = useState<Record<string, number>>({});
   const [menu, setMenu] = useState<null | "place" | "in" | "out" | "who" | "sort" | "dock-sort" | "m-place" | "trip">(null);
   const [searching, setSearching] = useState(false);
@@ -138,6 +144,17 @@ export function HotelStayList({
   const { visible, sentinelRef, hasMore } = useLazySlice(results, windowKey);
   const filters = activeFilters(state, bounds, currency);
   const placeName = state.place === "all" ? "All stays" : places.find((place) => place.id === state.place)?.name || "Stays";
+  const requestHref = useMemo(() => {
+    const params = new URLSearchParams({
+      checkIn: state.checkin,
+      checkOut: state.checkout,
+      adults: String(state.adults),
+      children: String(state.children),
+      rooms: String(state.rooms),
+    });
+    if (state.place !== "all" && placeName !== "Stays") params.set("destination", placeName);
+    return `/hotels/request?${params.toString()}`;
+  }, [placeName, state.adults, state.checkin, state.checkout, state.children, state.place, state.rooms]);
   const types = [...new Set(pool.map((hotel) => hotel.type))].sort((a, b) => a.localeCompare(b));
   const areas = [...new Set(pool.map((hotel) => hotel.area).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   const amenityNames = [...new Set(pool.flatMap((hotel) => hotel.amenities))]
@@ -148,17 +165,6 @@ export function HotelStayList({
   );
   const wifiEverywhere = pool.length > 0 && pool.every((hotel) => hotel.amenities.some((name) => isWifi(name)));
   const gst = taxEnabled && currency === "INR";
-
-  useEffect(() => {
-    try {
-      const stored = JSON.parse(sessionStorage.getItem("wch-saved-stays") || "[]");
-      if (Array.isArray(stored)) {
-        setSaved(stored.filter((id) => hotels.some((hotel) => hotel.id === id)));
-      }
-    } catch {
-      /* private mode */
-    }
-  }, [hotels]);
 
   useEffect(() => {
     const next = clampStay(state, today, bounds);
@@ -309,17 +315,8 @@ export function HotelStayList({
   ];
   const sortLabel = sortOptions.find((option) => option.value === state.sort)?.label ?? "Best for these dates";
 
-  function rememberSaved(next: string[]) {
-    setSaved(next);
-    try {
-      sessionStorage.setItem("wch-saved-stays", JSON.stringify(next));
-    } catch {
-      setToast("Saving is blocked in this browser");
-    }
-  }
-
   function toggleSave(id: string) {
-    rememberSaved(saved.includes(id) ? saved.filter((item) => item !== id) : [...saved, id]);
+    void favorites.toggle("hotel", id);
   }
 
   function toggleCompare(id: string) {
@@ -713,19 +710,24 @@ export function HotelStayList({
             </div>
           </form>
           <div className="sl-actions">
+            <Link className="sl-btn sl-btn--small" href={requestHref}>Request hotel</Link>
             <button
               className="sl-btn sl-btn--ghost sl-btn--small"
               type="button"
               aria-pressed={state.savedOnly}
               onClick={() => {
+                if (!signedIn) {
+                  setToast("Log in first to mark it as a favorite");
+                  return;
+                }
                 if (!saved.length && !state.savedOnly) {
-                  setToast("Save a stay from the heart on its photo");
+                  setToast("Add a hotel from the heart on its photo");
                   return;
                 }
                 patch({ savedOnly: !state.savedOnly });
               }}
             >
-              {saved.length ? `Saved · ${saved.length}` : "Saved"}
+              {saved.length ? `Favorites · ${saved.length}` : "Favorites"}
             </button>
             <button className="sl-btn sl-btn--ghost sl-btn--small" type="button" onClick={share}>Share</button>
           </div>
@@ -956,6 +958,10 @@ export function HotelStayList({
                 )}
               </div>
             ) : null}
+            <Link className="sl-request" href={requestHref}>
+              <span>Not on this list? Ask us to find a stay.</span>
+              <strong>Request hotel</strong>
+            </Link>
             <div className="sl-list" id="list">
               {results.length === 0 ? (
                 <div className="sl-empty">
@@ -1202,7 +1208,7 @@ function StayCard({
             <img src={shot.src} alt={shot.alt} width={900} height={600} fetchPriority={index === 0 ? "high" : undefined} loading={index === 0 ? undefined : "lazy"} decoding="async" />
           ) : null}
         </Link>
-        <button className="sl-save" type="button" aria-pressed={saved} aria-label={`${saved ? "Remove" : "Save"} ${hotel.name}`} onClick={onSave}>{saved ? "♥" : "♡"}</button>
+        <button className="sl-save" type="button" aria-pressed={saved} aria-label={`${saved ? "Remove" : "Add"} ${hotel.name} ${saved ? "from" : "to"} favorites`} onClick={onSave}>{saved ? "♥" : "♡"}</button>
         {favourite ? <span className="sl-badge">Guest favourite</span> : null}
         {hotel.photos.length > 1 ? (
           <div className="sl-dots" role="tablist" aria-label={`Photos of ${hotel.name}`}>

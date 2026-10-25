@@ -521,6 +521,11 @@ export function carStudioSvg(type: CarSeed["type"]) {
 </svg>`;
 }
 
+function keepsRemotePhoto(image: { url: string; driver: string } | undefined) {
+  if (!image) return false;
+  return image.driver === "cloudinary" || image.url.startsWith("https://");
+}
+
 async function carImage(item: CarSeed) {
   const key = `vehicles/seed-${item.slug}.svg`;
   const file = path.join(process.cwd(), "public", "uploads", key);
@@ -737,15 +742,17 @@ async function seedCarCatalog() {
           transmissionId: gears.find((row) => row.name === item.transmission)?.id,
         },
       });
-      if (existing.images[0]) {
-        await prisma.vehicleImage.update({
-          where: { id: existing.images[0].id },
-          data: { url: image.url, key: image.key, driver: "local" },
-        });
-      } else {
-        await prisma.vehicleImage.create({
-          data: { vehicleId: existing.id, url: image.url, key: image.key, driver: "local", sortOrder: 0 },
-        });
+      if (!keepsRemotePhoto(existing.images[0])) {
+        if (existing.images[0]) {
+          await prisma.vehicleImage.update({
+            where: { id: existing.images[0].id },
+            data: { url: image.url, key: image.key, driver: "local" },
+          });
+        } else {
+          await prisma.vehicleImage.create({
+            data: { vehicleId: existing.id, url: image.url, key: image.key, driver: "local", sortOrder: 0 },
+          });
+        }
       }
       continue;
     }
@@ -898,15 +905,17 @@ async function seedBikeCatalog() {
           transmissionId: gears.find((row) => row.name === item.transmission)?.id,
         },
       });
-      if (existing.images[0]) {
-        await prisma.vehicleImage.update({
-          where: { id: existing.images[0].id },
-          data: { url: image.url, key: image.key, driver: "local" },
-        });
-      } else {
-        await prisma.vehicleImage.create({
-          data: { vehicleId: existing.id, url: image.url, key: image.key, driver: "local", sortOrder: 0 },
-        });
+      if (!keepsRemotePhoto(existing.images[0])) {
+        if (existing.images[0]) {
+          await prisma.vehicleImage.update({
+            where: { id: existing.images[0].id },
+            data: { url: image.url, key: image.key, driver: "local" },
+          });
+        } else {
+          await prisma.vehicleImage.create({
+            data: { vehicleId: existing.id, url: image.url, key: image.key, driver: "local", sortOrder: 0 },
+          });
+        }
       }
       continue;
     }

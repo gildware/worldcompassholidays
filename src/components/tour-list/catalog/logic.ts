@@ -464,7 +464,7 @@ export function emptyIdeas(tours: CatalogTour[], query: CatalogQuery, today: str
     { key: "cancel", label: "Drop free cancellation", active: query.cancel },
     { key: "pickup", label: "Drop hotel pickup", active: query.pickup },
     { key: "rating", label: "Drop the score filter", active: Boolean(query.rating) },
-    { key: "saved", label: "Show more than saved", active: query.savedOnly },
+    { key: "saved", label: "Show more than favorites", active: query.savedOnly },
     { key: "avail", label: "Show tours that do not run this date", active: !query.showOff || !query.showSold },
   ];
   return checks.flatMap((check) => {

@@ -6,6 +6,7 @@ import { catalogToday, readCatalogQuery } from "@/components/tour-list/catalog/l
 import { modules } from "@/config/modules";
 import { getCurrentUser } from "@/lib/auth/session";
 import { loadTourCatalog } from "@/lib/catalog-query";
+import { favoriteIds } from "@/lib/favorites";
 import { prisma } from "@/lib/db";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { toCatalogTour } from "@/lib/tours/catalog-card";
@@ -52,6 +53,7 @@ export default async function ToursPage({
   const today = catalogToday();
   const featured = tours.find((tour) => tour.featured) ?? tours[0] ?? null;
   const customer = user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null;
+  const savedIds = user?.scope === "customer" ? await favoriteIds(user.id, "tour") : [];
 
   return (
     <>
@@ -75,7 +77,15 @@ export default async function ToursPage({
           })),
         }}
       />
-      <TourCatalog tours={tours} initial={readCatalogQuery(params, tours, today)} today={today} customer={customer} featured={featured ? { href: featured.href, title: featured.title } : null} />
+      <TourCatalog
+        tours={tours}
+        initial={readCatalogQuery(params, tours, today)}
+        today={today}
+        customer={customer}
+        featured={featured ? { href: featured.href, title: featured.title } : null}
+        savedIds={savedIds}
+        signedIn={Boolean(customer)}
+      />
     </>
   );
 }

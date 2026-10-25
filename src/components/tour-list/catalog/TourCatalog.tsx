@@ -47,7 +47,9 @@ import {
   whoLabel,
 } from "@/components/tour-list/catalog/logic";
 import type { CatalogGuest, CatalogQuery, CatalogSort, CatalogTour } from "@/components/tour-list/catalog/types";
+import { useFavoriteList } from "@/components/favorites/FavoriteButton";
 import "@/components/tour-list/catalog/tour-catalog.css";
+import "@/styles/ask-request.css";
 import "@/styles/listing-app.css";
 
 const SORT_LABEL: Record<CatalogSort, string> = {
@@ -61,25 +63,38 @@ const SORT_LABEL: Record<CatalogSort, string> = {
 };
 
 const DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const SAVED_KEY = "wch-tours-saved";
+
+function tourRequestHref(query: CatalogQuery) {
+  const params = new URLSearchParams();
+  if (query.region[0]) params.set("destination", query.region[0]);
+  if (query.date) params.set("start", query.date);
+  if (query.adults) params.set("adults", String(query.adults));
+  if (query.children) params.set("children", String(query.children));
+  const search = params.toString();
+  return search ? `/tours/request?${search}` : "/tours/request";
+}
 
 export function TourCatalog({
   tours,
   initial,
   today,
   featured,
+  savedIds = [],
+  signedIn = false,
 }: {
   tours: CatalogTour[];
   initial: CatalogQuery;
   today: string;
   customer?: CatalogGuest | null;
   featured: { href: string; title: string } | null;
+  savedIds?: string[];
+  signedIn?: boolean;
 }) {
   const pathname = usePathname();
   const [query, setQuery] = useState(initial);
   const [qInput, setQInput] = useState(initial.q);
-  const [saved, setSaved] = useState<string[]>([]);
-  const [hydrated, setHydrated] = useState(false);
+  const favorites = useFavoriteList(savedIds, signedIn);
+  const saved = favorites.saved;
   const [menu, setMenu] = useState<null | "where" | "date" | "who" | "sort" | "dock" | "loc" | "trip">(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -148,29 +163,6 @@ export function TourCatalog({
     const tour = tours.find((item) => item.id === id);
     return tour ? [tour] : [];
   });
-
-  useEffect(() => {
-    try {
-      const raw = JSON.parse(localStorage.getItem(SAVED_KEY) || "[]") as unknown;
-      if (Array.isArray(raw)) {
-        const ids = new Set(tours.map((tour) => tour.id));
-        setSaved(raw.filter((id): id is string => typeof id === "string" && ids.has(id)));
-      }
-    } catch {
-      setSaved([]);
-    }
-    setHydrated(true);
-  }, [tours]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      localStorage.setItem(SAVED_KEY, JSON.stringify(saved));
-    } catch {
-      setToast("Saving is blocked in this browser");
-      setToastOn(true);
-    }
-  }, [saved, hydrated]);
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
@@ -397,7 +389,7 @@ export function TourCatalog({
           aria-pressed={query.savedOnly}
           onClick={() => setQuery((current) => ({ ...current, savedOnly: !current.savedOnly, page: 1 }))}
         >
-          Saved {saved.length ? <span>({saved.length})</span> : null}
+          Favorites {saved.length ? <span>({saved.length})</span> : null}
         </button>
         <button
           className="btn btn--ghost btn--small"
@@ -994,6 +986,10 @@ export function TourCatalog({
                 </button>
               </div>
             ) : null}
+            <Link className="ask-request" href={tourRequestHref(query)}>
+              <span>Not on this list? Ask us to find a tour.</span>
+              <strong>Request tour</strong>
+            </Link>
             {rows.length ? (
               <div className={`list${query.view === "grid" ? " is-grid" : ""}`}>
                 {slice.map((tour, index) => (
@@ -1006,7 +1002,7 @@ export function TourCatalog({
                     compared={query.compare.includes(tour.id)}
                     eager={index < 2}
                     badge={badgeFor(tour, topId, query)}
-                    onSave={() => setSaved((current) => (current.includes(tour.id) ? current.filter((id) => id !== tour.id) : [...current, tour.id]))}
+                    onSave={() => void favorites.toggle("tour", tour.id)}
                     onOpen={() => setPreviewId(tour.id)}
                     onDate={jumpDate}
                     onCompare={(on) => toggleCompare(tour.id, on)}
@@ -1495,7 +1491,7 @@ function TourCard({
       <div className="photo">
         {tour.img ? <img src={tour.img} alt={tour.alt} fetchPriority={eager ? "high" : undefined} loading={eager ? undefined : "lazy"} decoding="async" /> : null}
         {badge ? <span className={`badge${badge.hot ? " is-hot" : " is-low"}`}>{badge.text}</span> : null}
-        <button className="save" type="button" aria-pressed={saved} aria-label={`${saved ? "Remove from saved" : "Save"} ${tour.title}`} onClick={onSave}>
+        <button className="save" type="button" aria-pressed={saved} aria-label={`${saved ? "Remove" : "Add"} ${tour.title} ${saved ? "from" : "to"} favorites`} onClick={onSave}>
           {saved ? "♥" : "♡"}
         </button>
       </div>
@@ -1785,7 +1781,7 @@ function namedChips(query: CatalogQuery) {
   if (query.rating) chips.push({ key: "rating", value: "", label: `${query.rating}+ score` });
   if (query.cancel) chips.push({ key: "cancel", value: "", label: "Free cancellation" });
   if (query.pickup) chips.push({ key: "pickup", value: "", label: "Hotel pickup" });
-  if (query.savedOnly) chips.push({ key: "savedOnly", value: "", label: "Saved" });
+  if (query.savedOnly) chips.push({ key: "savedOnly", value: "", label: "Favorites" });
   if (query.showOff) chips.push({ key: "showOff", value: "", label: "Including closed days" });
   if (query.showSold) chips.push({ key: "showSold", value: "", label: "Including sold out" });
   return chips;
