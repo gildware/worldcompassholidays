@@ -1,12 +1,9 @@
-// Local SQLite database for this copy of the product.
-// Point DATABASE_URL at Postgres when a client project is delivered.
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

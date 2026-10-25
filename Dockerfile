@@ -16,7 +16,7 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 # prisma generate reads the schema provider; it does not connect.
-ENV DATABASE_URL="file:./dev.db"
+ENV DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/postgres"
 
 RUN npx prisma generate && npm run build
 
@@ -30,8 +30,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV HOME=/tmp
-# Persist the SQLite file on a volume mounted at /data.
-ENV DATABASE_URL="file:/data/app.db"
 
 COPY --from=builder /app/package.json /tmp/package.json
 RUN npm install -g "prisma@$(node -p "require('/tmp/package.json').devDependencies.prisma")" tsx \
