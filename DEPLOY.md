@@ -42,7 +42,7 @@ docker run -d --name travel --restart unless-stopped \
   travel:latest
 ```
 
-On start, the container runs `prisma migrate deploy`, then `node server.js`.
+On start, the container syncs the Postgres schema with `prisma db push`, then `node server.js`.
 
 After a Docker Hub push, on the server:
 
