@@ -8,6 +8,7 @@ import { firstIssue, type FormState } from "@/lib/forms";
 import { requirePermission } from "@/lib/auth/guards";
 import { slugify, uniqueSlug } from "@/lib/slug";
 import { deleteImage } from "@/lib/storage";
+import { deleteEntityMedia } from "@/lib/storage/cleanup";
 import { deleteDocument } from "@/lib/storage/documents";
 import { parseDateOnly, parseDateTimeLocal } from "@/lib/rentals/dates";
 import { expiredDocumentMessage, isExpiredDocumentDate } from "@/lib/rentals/document-dates";
@@ -301,6 +302,12 @@ export async function saveRentalLocation(
       where: { id },
       data,
     });
+    if (current.imageKey && current.imageKey !== imageKey) {
+      await deleteImage({
+        key: current.imageKey,
+        driver: current.imageDriver === "cloudinary" ? "cloudinary" : "local",
+      });
+    }
   } else {
     await prisma.rentalLocation.create({
       data: { ...data, slug, fleet },
@@ -320,7 +327,14 @@ export async function deleteRentalLocation(
     where: { OR: [{ pickupLocationId: id }, { returnLocationId: id }] },
   });
   if (used > 0) return { error: "This location is used on bookings. Deactivate it instead." };
+  const location = await prisma.rentalLocation.findUnique({ where: { id } });
+  if (!location) return { error: "Location not found." };
   await prisma.rentalLocation.delete({ where: { id } });
+  await deleteEntityMedia(
+    "locations",
+    [location.slug, location.id],
+    [{ key: location.imageKey, driver: location.imageDriver }],
+  );
   revalidateFleet();
   return { error: null, success: "Location deleted." };
 }
@@ -711,21 +725,20 @@ export async function deleteVehicle(
   });
   if (!vehicle) return { error: "Vehicle not found." };
   await prisma.vehicle.delete({ where: { id } });
-  await Promise.all([
-    ...vehicle.images.map((image) =>
-      deleteImage({
-        key: image.key,
-        driver: image.driver === "cloudinary" ? "cloudinary" : "local",
-      }),
-    ),
-    ...vehicle.documents.map((document) =>
+  await deleteEntityMedia(
+    "vehicles",
+    [vehicle.slug, vehicle.id],
+    vehicle.images.map((image) => ({ key: image.key, driver: image.driver })),
+  );
+  await Promise.all(
+    vehicle.documents.map((document) =>
       deleteDocument({
         key: document.fileKey,
         driver: document.fileDriver,
         resourceType: document.fileResource,
       }),
     ),
-  ]);
+  );
   revalidateFleet(vehicle.slug);
   const { redirect } = await import("next/navigation");
   const listPath = vehicle.kind === "bike" ? "/admin/rentals/bikes" : "/admin/rentals/cars";

@@ -12,6 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
+    "db:seed-prod": "tsx scripts/seed-prod.ts",
+    "media:publish": "tsx scripts/publish-cloudinary.ts",
     "db:seed-admin": "node prisma/seed-admin.mjs",
     "db:seed-fresh-bookings": "node scripts/seed-fresh-bookings.mjs",
     "db:seed-demo": "tsx scripts/seed-demo-catalog.ts",

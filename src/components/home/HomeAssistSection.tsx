@@ -1,0 +1,48 @@
+import Image from "next/image";
+import Link from "next/link";
+import { homeAssistServices } from "@/lib/homeServices";
+import "@/styles/home-desks.css";
+
+export function HomeAssistSection({ headingId = "home-assist" }: { headingId?: string }) {
+  return (
+    <section className="hx-meet" aria-labelledby={headingId}>
+      <div className="hx-meet__head">
+        <div>
+          <h2 id={headingId}>Meet and assist</h2>
+          <p>
+            A greeter at the airport on the day you fly. Send the flight number and we name
+            who meets you, and the fee, before anyone is booked.
+          </p>
+        </div>
+        <Link href="/meet-and-assist" className="button -md -blue-1 bg-blue-1-05 text-blue-1">
+          Book a greeter
+        </Link>
+      </div>
+      <div className="hx-meet__split">
+        <Link href="/meet-and-assist" className="hx-meet__hero" aria-label="Meet and assist at the airport">
+          <Image
+            src="/img/assist/assist-arrival.jpg"
+            alt="A greeter holding a name board in the arrivals hall"
+            fill
+            sizes="(max-width: 900px) 100vw, 520px"
+          />
+        </Link>
+        <div className="hx-meet__list">
+          {homeAssistServices.map((item, index) => (
+            <Link key={item.title} href={item.href} className="hx-meet__row">
+              <span className="hx-meet__n">{index + 1}</span>
+              <span className="hx-meet__thumb">
+                <Image src={item.image} alt="" fill sizes="72px" />
+              </span>
+              <span className="hx-meet__copy">
+                <strong>{item.title}</strong>
+                <span>{item.text}</span>
+                <em>{item.details.join(" · ")}</em>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

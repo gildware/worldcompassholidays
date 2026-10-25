@@ -9,6 +9,7 @@ import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
 import { requirePermission } from "@/lib/auth/guards";
 import { deleteImage } from "@/lib/storage";
+import { deleteEntityMedia } from "@/lib/storage/cleanup";
 import { readUploadedImage, validateUploadedImage } from "@/lib/storage/form";
 import { parentAssignmentError } from "@/lib/destinations";
 import { readMapFields } from "@/lib/maps";
@@ -297,10 +298,11 @@ export async function deleteDestination(formData: FormData) {
   }
 
   await prisma.destination.delete({ where: { id: destinationId } });
-  await deleteImage({
-    key: destination.imageKey,
-    driver: destination.imageDriver === "cloudinary" ? "cloudinary" : "local",
-  });
+  await deleteEntityMedia(
+    "destinations",
+    [destination.slug, destination.id],
+    [{ key: destination.imageKey, driver: destination.imageDriver }],
+  );
   revalidateDestinationPaths(destination.slug);
   redirect("/admin/destinations?deleted=1");
 }

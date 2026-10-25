@@ -33,7 +33,7 @@ export default async function LoginPage({
       <div className="mt-8">
         <PhoneLogin
           next={returnPath}
-          ready={firebaseWebConfig() !== null}
+          config={firebaseWebConfig()}
           defaultCountry={countryIsoFromHeaders(await headers())}
         />
       </div>

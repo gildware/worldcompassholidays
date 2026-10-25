@@ -2,7 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { theme } from "@/config/theme";
 import { formatMoney } from "@/lib/format";
-import { homeTravelDeskServices } from "@/lib/homeServices";
+import { HomeAssistSection } from "@/components/home/HomeAssistSection";
+import {
+  bikeHomeFallback,
+  carHomeFallback,
+  HomeRidePromoCard,
+  type HomeRide,
+} from "@/components/home/HomeFleetSection";
+import { HomeVisaSection } from "@/components/home/HomeVisaSection";
 import type { TourListLocation } from "@/components/tour-list/types";
 import "@/styles/home-experience.css";
 
@@ -33,15 +40,7 @@ export type HomeHotel = {
   image: string;
 };
 
-export type HomeCar = {
-  slug: string;
-  name: string;
-  place: string;
-  seats: number;
-  pricePerDay: number;
-  currency: string;
-  image: string;
-};
+export type HomeCar = HomeRide;
 
 export type HomeCatalog = {
   locations: TourListLocation[];
@@ -52,35 +51,92 @@ export type HomeCatalog = {
   currency: string;
 };
 
-const chips = [
-  { href: "/tours", label: "Tours & treks", accent: true },
-  { href: "/hotels", label: "Hotels" },
-  { href: "/rentals/cars", label: "Cars" },
-  { href: "/rentals/bikes", label: "Bikes" },
-  { href: "/destinations", label: "Destinations" },
-  { href: "/visa-services", label: "Visa" },
-  { href: "/meet-and-assist", label: "Meet & assist" },
-] as const;
-
 function RailHead({
   title,
   subtitle,
   href,
   linkLabel,
+  headingId,
 }: {
   title: string;
   subtitle: string;
   href: string;
   linkLabel: string;
+  headingId?: string;
 }) {
   return (
     <div className="home-x__rail-head">
       <div>
-        <h2>{title}</h2>
+        <h2 id={headingId}>{title}</h2>
         <p>{subtitle}</p>
       </div>
       <Link href={href}>{linkLabel}</Link>
     </div>
+  );
+}
+
+function RideRail({
+  id,
+  title,
+  subtitle,
+  href,
+  linkLabel,
+  kindLabel,
+  items,
+  empty,
+}: {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  linkLabel: string;
+  kindLabel: string;
+  items: HomeRide[];
+  empty: typeof carHomeFallback;
+}) {
+  return (
+    <section className="home-x__rail" aria-labelledby={id}>
+      <RailHead
+        title={title}
+        subtitle={subtitle}
+        href={href}
+        linkLabel={linkLabel}
+        headingId={id}
+      />
+      {items.length > 0 ? (
+        <div className="home-x__scroller">
+          {items.map((ride) => (
+            <Link key={ride.slug} href={`/rentals/${ride.slug}`} className="home-x__card">
+              <div className="home-x__card-media">
+                <Image
+                  src={ride.image}
+                  alt=""
+                  fill
+                  sizes="280px"
+                  style={{ objectFit: "cover" }}
+                />
+                <span className="home-x__badge">{kindLabel}</span>
+              </div>
+              <div className="home-x__card-body">
+                <h3>{ride.name}</h3>
+                <p className="home-x__meta">
+                  {[ride.place, ride.detail, ride.seats ? `${ride.seats} seats` : ""]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+                {ride.pricePerDay > 0 ? (
+                  <p className="home-x__price">
+                    {formatMoney(ride.pricePerDay, ride.currency)} <small>/ day</small>
+                  </p>
+                ) : null}
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <HomeRidePromoCard promo={empty} />
+      )}
+    </section>
   );
 }
 
@@ -89,25 +145,27 @@ export function HomeExperience({
   tours,
   hotels,
   cars,
+  bikes,
   showCars,
   showBikes,
+  coverUrl,
 }: {
   destinations: HomeDestination[];
   tours: HomeTour[];
   hotels: HomeHotel[];
-  cars: HomeCar[];
+  cars: HomeRide[];
+  bikes: HomeRide[];
   tourCatalog?: HomeCatalog;
   showCars: boolean;
   showBikes: boolean;
+  coverUrl?: string;
 }) {
-  const serviceLinks = homeTravelDeskServices;
-
   return (
     <div className="home-x">
       <section className="home-x__hero">
         <div className="home-x__hero-media" aria-hidden>
           <Image
-            src="/img/masthead/1/bg.webp"
+            src={coverUrl || "/img/masthead/1/bg.webp"}
             alt=""
             fill
             priority
@@ -120,24 +178,6 @@ export function HomeExperience({
           <p>{theme.tagline}</p>
         </div>
       </section>
-
-      <nav className="home-x__cats" aria-label="Browse">
-        {chips
-          .filter((c) => {
-            if (c.href === "/rentals/cars" && !showCars) return false;
-            if (c.href === "/rentals/bikes" && !showBikes) return false;
-            return true;
-          })
-          .map((chip) => (
-            <Link
-              key={chip.href}
-              href={chip.href}
-              className={`home-x__chip${"accent" in chip && chip.accent ? " is-accent" : ""}`}
-            >
-              {chip.label}
-            </Link>
-          ))}
-      </nav>
 
       {destinations.length > 0 ? (
         <section className="home-x__rail" aria-labelledby="home-destinations">
@@ -240,39 +280,30 @@ export function HomeExperience({
         </section>
       ) : null}
 
-      {cars.length > 0 ? (
-        <section className="home-x__rail" aria-labelledby="home-cars">
-          <RailHead
-            title="Cars for the trip"
-            subtitle="Self-drive and chauffeur, by the day"
-            href="/rentals/cars"
-            linkLabel="All cars"
-          />
-          <div className="home-x__scroller" id="home-cars">
-            {cars.map((car) => (
-              <Link key={car.slug} href={`/rentals/${car.slug}`} className="home-x__card">
-                <div className="home-x__card-media">
-                  <Image
-                    src={car.image}
-                    alt=""
-                    fill
-                    sizes="280px"
-                    style={{ objectFit: "cover" }}
-                  />
-                  <span className="home-x__badge">{car.seats} seats</span>
-                </div>
-                <div className="home-x__card-body">
-                  <h3>{car.name}</h3>
-                  <p className="home-x__meta">{car.place}</p>
-                  <p className="home-x__price">
-                    {formatMoney(car.pricePerDay, car.currency)}{" "}
-                    <small>/ day</small>
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+      {showCars ? (
+        <RideRail
+          id="home-cars"
+          title="Cars for the trip"
+          subtitle="Self-drive and chauffeur, by the day"
+          href="/rentals/cars"
+          linkLabel="All cars"
+          kindLabel="Car"
+          items={cars}
+          empty={carHomeFallback}
+        />
+      ) : null}
+
+      {showBikes ? (
+        <RideRail
+          id="home-bikes"
+          title="Bikes for the road"
+          subtitle="Scooters and motorcycles, with a helmet"
+          href="/rentals/bikes"
+          linkLabel="All bikes"
+          kindLabel="Bike"
+          items={bikes}
+          empty={bikeHomeFallback}
+        />
       ) : null}
 
       <div className="home-x__trust">
@@ -290,40 +321,8 @@ export function HomeExperience({
         </div>
       </div>
 
-      {serviceLinks.length > 0 ? (
-        <section className="home-x__services">
-          <RailHead
-            title="Visa, meet & assist"
-            subtitle="Papers before you fly, a greeter when you land"
-            href="/visa-services"
-            linkLabel="Visa desk"
-          />
-          <div className="home-x__scroller">
-            {serviceLinks.map((item) => (
-              <Link
-                key={`${item.href}-${item.title}`}
-                href={item.href}
-                className="home-x__service home-x__service--photo"
-              >
-                <div className="home-x__service-media">
-                  <Image
-                    src={item.image}
-                    alt=""
-                    fill
-                    sizes="280px"
-                    style={{ objectFit: "cover" }}
-                  />
-                </div>
-                <div className="home-x__service-body">
-                  <h3>{item.title}</h3>
-                  <p>{item.text}</p>
-                  <span className="home-x__service-cta">{item.cta}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <HomeVisaSection headingId="home-visa-app" />
+      <HomeAssistSection headingId="home-assist-app" />
 
       <div className="home-x__cta">
         <div>

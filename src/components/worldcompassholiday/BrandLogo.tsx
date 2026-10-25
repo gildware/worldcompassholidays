@@ -16,10 +16,23 @@ export function BrandMark({ className }: { className?: string }) {
 export function BrandLogo({
   tone = "light",
   className,
+  logoUrl,
 }: {
   tone?: "light" | "dark";
   className?: string;
+  logoUrl?: string | null;
 }) {
+  if (logoUrl) {
+    return (
+      <span
+        className={["brand-lockup", tone === "dark" ? "is-dark" : "", className]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <img src={logoUrl} alt="World Compass Holidays" className="brand-logo-img" />
+      </span>
+    );
+  }
   return (
     <span
       className={["brand-lockup", tone === "dark" ? "is-dark" : "", className]

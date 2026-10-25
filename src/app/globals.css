@@ -208,6 +208,14 @@ body > .worldcompassholiday-page > main > .footer {
   color: #fff;
 }
 
+.worldcompassholiday-page .brand-logo-img {
+  display: block;
+  height: 42px;
+  width: auto;
+  max-width: 168px;
+  object-fit: contain;
+}
+
 .worldcompassholiday-page .brand-mark {
   width: 36px;
   height: 36px;

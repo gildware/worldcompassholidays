@@ -1,6 +1,6 @@
 "use client";
 
-import { getApp, getApps, initializeApp } from "firebase/app";
+import { getApp, getApps, initializeApp, type FirebaseOptions } from "firebase/app";
 import {
   getAuth,
   RecaptchaVerifier,
@@ -8,13 +8,10 @@ import {
   signOut,
   type ConfirmationResult,
 } from "firebase/auth";
-import { firebaseWebConfig } from "@/lib/firebase/config";
 
 let verifier: RecaptchaVerifier | null = null;
 
-function clientAuth() {
-  const config = firebaseWebConfig();
-  if (!config) throw new Error("missing-config");
+function clientAuth(config: FirebaseOptions) {
   const app = getApps().length ? getApp() : initializeApp(config);
   const auth = getAuth(app);
   auth.languageCode = "en";
@@ -26,8 +23,8 @@ export function clearPhoneVerifier() {
   verifier = null;
 }
 
-export async function sendFirebaseCode(e164: string, container: HTMLElement) {
-  const auth = clientAuth();
+export async function sendFirebaseCode(e164: string, container: HTMLElement, config: FirebaseOptions) {
+  const auth = clientAuth(config);
   clearPhoneVerifier();
   verifier = new RecaptchaVerifier(auth, container, { size: "invisible" });
   try {
@@ -38,10 +35,14 @@ export async function sendFirebaseCode(e164: string, container: HTMLElement) {
   }
 }
 
-export async function confirmFirebaseCode(confirmation: ConfirmationResult, code: string) {
+export async function confirmFirebaseCode(
+  confirmation: ConfirmationResult,
+  code: string,
+  config: FirebaseOptions,
+) {
   const credential = await confirmation.confirm(code);
   const idToken = await credential.user.getIdToken();
-  await signOut(clientAuth()).catch(() => undefined);
+  await signOut(clientAuth(config)).catch(() => undefined);
   return idToken;
 }
 

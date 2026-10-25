@@ -9,6 +9,7 @@ import { requirePermission } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import { isMealPlan, isPropertyType } from "@/lib/hotels/options";
 import { deleteImage } from "@/lib/storage";
+import { deleteEntityMedia } from "@/lib/storage/cleanup";
 import { readUploadedImage, validateUploadedImage } from "@/lib/storage/form";
 import { uniqueSlug } from "@/lib/slug";
 import { sanitizeTourHtml } from "@/lib/tours/html";
@@ -525,7 +526,7 @@ export async function deleteHotel(formData: FormData) {
 
   const images = hotelImages(hotel);
   await prisma.hotel.delete({ where: { id: hotelId } });
-  await deleteUnused(images, new Set());
+  await deleteEntityMedia("hotels", [hotel.slug, hotel.id], images);
   revalidateHotelPaths(hotel.destination?.slug);
   revalidatePath(`/hotels/${hotel.slug}`);
   redirect("/admin/hotels?deleted=1");

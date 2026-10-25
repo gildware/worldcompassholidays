@@ -1,0 +1,1424 @@
+{
+  "files": {
+    "destinations/gulmarg.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907141/worldcompass/destinations/gulmarg.jpg",
+      "key": "worldcompass/destinations/gulmarg",
+      "driver": "cloudinary"
+    },
+    "destinations/jammu.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907141/worldcompass/destinations/jammu.jpg",
+      "key": "worldcompass/destinations/jammu",
+      "driver": "cloudinary"
+    },
+    "destinations/katra.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907142/worldcompass/destinations/katra.jpg",
+      "key": "worldcompass/destinations/katra",
+      "driver": "cloudinary"
+    },
+    "destinations/himachal.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907142/worldcompass/destinations/himachal.jpg",
+      "key": "worldcompass/destinations/himachal",
+      "driver": "cloudinary"
+    },
+    "destinations/ladakh.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907142/worldcompass/destinations/ladakh.jpg",
+      "key": "worldcompass/destinations/ladakh",
+      "driver": "cloudinary"
+    },
+    "destinations/kashmir.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907142/worldcompass/destinations/kashmir.jpg",
+      "key": "worldcompass/destinations/kashmir",
+      "driver": "cloudinary"
+    },
+    "destinations/nubra.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907143/worldcompass/destinations/nubra.jpg",
+      "key": "worldcompass/destinations/nubra",
+      "driver": "cloudinary"
+    },
+    "destinations/pahalgam.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907143/worldcompass/destinations/pahalgam.jpg",
+      "key": "worldcompass/destinations/pahalgam",
+      "driver": "cloudinary"
+    },
+    "destinations/seed-goa.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907143/worldcompass/destinations/seed-goa.svg",
+      "key": "worldcompass/destinations/seed-goa",
+      "driver": "cloudinary"
+    },
+    "destinations/seed-gulmarg.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907143/worldcompass/destinations/seed-gulmarg.svg",
+      "key": "worldcompass/destinations/seed-gulmarg",
+      "driver": "cloudinary"
+    },
+    "destinations/seed-jammu.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907145/worldcompass/destinations/seed-jammu.svg",
+      "key": "worldcompass/destinations/seed-jammu",
+      "driver": "cloudinary"
+    },
+    "destinations/seed-kerala.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907145/worldcompass/destinations/seed-kerala.svg",
+      "key": "worldcompass/destinations/seed-kerala",
+      "driver": "cloudinary"
+    },
+    "destinations/seed-himachal.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907145/worldcompass/destinations/seed-himachal.svg",
+      "key": "worldcompass/destinations/seed-himachal",
+      "driver": "cloudinary"
+    },
+    "destinations/seed-kashmir.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907145/worldcompass/destinations/seed-kashmir.svg",
+      "key": "worldcompass/destinations/seed-kashmir",
+      "driver": "cloudinary"
+    },
+    "destinations/seed-ladakh.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907146/worldcompass/destinations/seed-ladakh.svg",
+      "key": "worldcompass/destinations/seed-ladakh",
+      "driver": "cloudinary"
+    },
+    "destinations/seed-thailand.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907147/worldcompass/destinations/seed-thailand.svg",
+      "key": "worldcompass/destinations/seed-thailand",
+      "driver": "cloudinary"
+    },
+    "destinations/seed-vietnam.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907147/worldcompass/destinations/seed-vietnam.svg",
+      "key": "worldcompass/destinations/seed-vietnam",
+      "driver": "cloudinary"
+    },
+    "destinations/seed-pahalgam.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907147/worldcompass/destinations/seed-pahalgam.svg",
+      "key": "worldcompass/destinations/seed-pahalgam",
+      "driver": "cloudinary"
+    },
+    "hotels/dal-lake-house-hotel-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907148/worldcompass/hotels/dal-lake-house-hotel/cover.jpg",
+      "key": "worldcompass/hotels/dal-lake-house-hotel/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/gulmarg-meadow-resort-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907149/worldcompass/hotels/gulmarg-meadow-resort/cover.jpg",
+      "key": "worldcompass/hotels/gulmarg-meadow-resort/cover",
+      "driver": "cloudinary"
+    },
+    "destinations/shimla.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907150/worldcompass/destinations/shimla.jpg",
+      "key": "worldcompass/destinations/shimla",
+      "driver": "cloudinary"
+    },
+    "hotels/katra-yatra-lodge-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907150/worldcompass/hotels/katra-yatra-lodge/cover.jpg",
+      "key": "worldcompass/hotels/katra-yatra-lodge/cover",
+      "driver": "cloudinary"
+    },
+    "destinations/sonamarg.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907150/worldcompass/destinations/sonamarg.jpg",
+      "key": "worldcompass/destinations/sonamarg",
+      "driver": "cloudinary"
+    },
+    "hotels/jammu-ridge-hotel-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907149/worldcompass/hotels/jammu-ridge-hotel/cover.jpg",
+      "key": "worldcompass/hotels/jammu-ridge-hotel/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/nubra-desert-camp-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907151/worldcompass/hotels/nubra-desert-camp/cover.jpg",
+      "key": "worldcompass/hotels/nubra-desert-camp/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/leh-view-hotel-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907151/worldcompass/hotels/leh-view-hotel/cover.jpg",
+      "key": "worldcompass/hotels/leh-view-hotel/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/pahalgam-river-homestay-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907151/worldcompass/hotels/pahalgam-river-homestay/cover.jpg",
+      "key": "worldcompass/hotels/pahalgam-river-homestay/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/manali-cedar-resort-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907151/worldcompass/hotels/manali-cedar-resort/cover.jpg",
+      "key": "worldcompass/hotels/manali-cedar-resort/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-alleppey-backwater-villa-banner.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907152/worldcompass/hotels/seed-alleppey-backwater-villa/banner.svg",
+      "key": "worldcompass/hotels/seed-alleppey-backwater-villa/banner",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-alleppey-backwater-villa.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907152/worldcompass/hotels/seed-alleppey-backwater-villa/cover.svg",
+      "key": "worldcompass/hotels/seed-alleppey-backwater-villa/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-calangute-beach-hotel-banner.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907152/worldcompass/hotels/seed-calangute-beach-hotel/banner.svg",
+      "key": "worldcompass/hotels/seed-calangute-beach-hotel/banner",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-calangute-beach-hotel.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907152/worldcompass/hotels/seed-calangute-beach-hotel/cover.svg",
+      "key": "worldcompass/hotels/seed-calangute-beach-hotel/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-chao-phraya-riverside-hotel-banner.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907154/worldcompass/hotels/seed-chao-phraya-riverside-hotel/banner.svg",
+      "key": "worldcompass/hotels/seed-chao-phraya-riverside-hotel/banner",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-chao-phraya-riverside-hotel.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907154/worldcompass/hotels/seed-chao-phraya-riverside-hotel/cover.svg",
+      "key": "worldcompass/hotels/seed-chao-phraya-riverside-hotel/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-dal-lake-house-hotel.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907154/worldcompass/hotels/seed-dal-lake-house-hotel/cover.svg",
+      "key": "worldcompass/hotels/seed-dal-lake-house-hotel/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-dal-lake-house-hotel-banner.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907154/worldcompass/hotels/seed-dal-lake-house-hotel/banner.svg",
+      "key": "worldcompass/hotels/seed-dal-lake-house-hotel/banner",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-gulmarg-meadow-resort-banner.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907156/worldcompass/hotels/seed-gulmarg-meadow-resort/banner.svg",
+      "key": "worldcompass/hotels/seed-gulmarg-meadow-resort/banner",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-hoi-an-lantern-guesthouse.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907156/worldcompass/hotels/seed-hoi-an-lantern-guesthouse/cover.svg",
+      "key": "worldcompass/hotels/seed-hoi-an-lantern-guesthouse/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-hoi-an-lantern-guesthouse-banner.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907156/worldcompass/hotels/seed-hoi-an-lantern-guesthouse/banner.svg",
+      "key": "worldcompass/hotels/seed-hoi-an-lantern-guesthouse/banner",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-gulmarg-meadow-resort.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907156/worldcompass/hotels/seed-gulmarg-meadow-resort/cover.svg",
+      "key": "worldcompass/hotels/seed-gulmarg-meadow-resort/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-jammu-ridge-hotel.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907157/worldcompass/hotels/seed-jammu-ridge-hotel/cover.svg",
+      "key": "worldcompass/hotels/seed-jammu-ridge-hotel/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-leh-view-hotel-banner.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907158/worldcompass/hotels/seed-leh-view-hotel/banner.svg",
+      "key": "worldcompass/hotels/seed-leh-view-hotel/banner",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-jammu-ridge-hotel-banner.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907157/worldcompass/hotels/seed-jammu-ridge-hotel/banner.svg",
+      "key": "worldcompass/hotels/seed-jammu-ridge-hotel/banner",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-leh-view-hotel.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907158/worldcompass/hotels/seed-leh-view-hotel/cover.svg",
+      "key": "worldcompass/hotels/seed-leh-view-hotel/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-manali-cedar-resort.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907159/worldcompass/hotels/seed-manali-cedar-resort/cover.svg",
+      "key": "worldcompass/hotels/seed-manali-cedar-resort/cover",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-manali-cedar-resort-banner.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907159/worldcompass/hotels/seed-manali-cedar-resort/banner.svg",
+      "key": "worldcompass/hotels/seed-manali-cedar-resort/banner",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-pahalgam-river-homestay-banner.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907159/worldcompass/hotels/seed-pahalgam-river-homestay/banner.svg",
+      "key": "worldcompass/hotels/seed-pahalgam-river-homestay/banner",
+      "driver": "cloudinary"
+    },
+    "hotels/seed-pahalgam-river-homestay.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907160/worldcompass/hotels/seed-pahalgam-river-homestay/cover.svg",
+      "key": "worldcompass/hotels/seed-pahalgam-river-homestay/cover",
+      "driver": "cloudinary"
+    },
+    "tours/1791177603747-28118a13bc58.png": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907161/worldcompass/tours/1791177603747-28118a13bc58/image.png",
+      "key": "worldcompass/tours/1791177603747-28118a13bc58/image",
+      "driver": "cloudinary"
+    },
+    "hotels/shimla-ridge-boutique-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907162/worldcompass/hotels/shimla-ridge-boutique/cover.jpg",
+      "key": "worldcompass/hotels/shimla-ridge-boutique/cover",
+      "driver": "cloudinary"
+    },
+    "tours/1791177734394-d96aac80129c.png": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907162/worldcompass/tours/1791177734394-d96aac80129c/image.png",
+      "key": "worldcompass/tours/1791177734394-d96aac80129c/image",
+      "driver": "cloudinary"
+    },
+    "hotels/sonamarg-glacier-lodge-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907162/worldcompass/hotels/sonamarg-glacier-lodge/cover.jpg",
+      "key": "worldcompass/hotels/sonamarg-glacier-lodge/cover",
+      "driver": "cloudinary"
+    },
+    "tours/amarnath-yatra-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907162/worldcompass/tours/amarnath-yatra/cover.jpg",
+      "key": "worldcompass/tours/amarnath-yatra/cover",
+      "driver": "cloudinary"
+    },
+    "tours/amarnath-yatra-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907163/worldcompass/tours/amarnath-yatra/gallery-1.jpg",
+      "key": "worldcompass/tours/amarnath-yatra/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/amarnath-yatra-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907163/worldcompass/tours/amarnath-yatra/gallery-2.jpg",
+      "key": "worldcompass/tours/amarnath-yatra/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/dal-lake-mughal-gardens-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907163/worldcompass/tours/dal-lake-mughal-gardens/cover.jpg",
+      "key": "worldcompass/tours/dal-lake-mughal-gardens/cover",
+      "driver": "cloudinary"
+    },
+    "tours/dal-lake-mughal-gardens-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907164/worldcompass/tours/dal-lake-mughal-gardens/gallery-1.jpg",
+      "key": "worldcompass/tours/dal-lake-mughal-gardens/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/dal-lake-mughal-gardens-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907164/worldcompass/tours/dal-lake-mughal-gardens/gallery-2.jpg",
+      "key": "worldcompass/tours/dal-lake-mughal-gardens/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/gulmarg-gondola-meadows-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907164/worldcompass/tours/gulmarg-gondola-meadows/cover.jpg",
+      "key": "worldcompass/tours/gulmarg-gondola-meadows/cover",
+      "driver": "cloudinary"
+    },
+    "tours/gulmarg-gondola-meadows-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907164/worldcompass/tours/gulmarg-gondola-meadows/gallery-1.jpg",
+      "key": "worldcompass/tours/gulmarg-gondola-meadows/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/gulmarg-gondola-meadows-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907165/worldcompass/tours/gulmarg-gondola-meadows/gallery-2.jpg",
+      "key": "worldcompass/tours/gulmarg-gondola-meadows/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/gulmarg-pahalgam-family-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907165/worldcompass/tours/gulmarg-pahalgam-family/cover.jpg",
+      "key": "worldcompass/tours/gulmarg-pahalgam-family/cover",
+      "driver": "cloudinary"
+    },
+    "tours/gulmarg-pahalgam-family-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907165/worldcompass/tours/gulmarg-pahalgam-family/gallery-1.jpg",
+      "key": "worldcompass/tours/gulmarg-pahalgam-family/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/gulmarg-pahalgam-family-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907165/worldcompass/tours/gulmarg-pahalgam-family/gallery-2.jpg",
+      "key": "worldcompass/tours/gulmarg-pahalgam-family/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/hampta-pass-trek-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907166/worldcompass/tours/hampta-pass-trek/cover.jpg",
+      "key": "worldcompass/tours/hampta-pass-trek/cover",
+      "driver": "cloudinary"
+    },
+    "tours/hampta-pass-trek-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907166/worldcompass/tours/hampta-pass-trek/gallery-1.jpg",
+      "key": "worldcompass/tours/hampta-pass-trek/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/hemkund-sahib-yatra-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907166/worldcompass/tours/hemkund-sahib-yatra/cover.jpg",
+      "key": "worldcompass/tours/hemkund-sahib-yatra/cover",
+      "driver": "cloudinary"
+    },
+    "tours/hemkund-sahib-yatra-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907167/worldcompass/tours/hemkund-sahib-yatra/gallery-1.jpg",
+      "key": "worldcompass/tours/hemkund-sahib-yatra/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/hemkund-sahib-yatra-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907167/worldcompass/tours/hemkund-sahib-yatra/gallery-2.jpg",
+      "key": "worldcompass/tours/hemkund-sahib-yatra/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/hampta-pass-trek-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907168/worldcompass/tours/hampta-pass-trek/gallery-2.jpg",
+      "key": "worldcompass/tours/hampta-pass-trek/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/kashmir-shrine-circuit-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907168/worldcompass/tours/kashmir-shrine-circuit/gallery-2.jpg",
+      "key": "worldcompass/tours/kashmir-shrine-circuit/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/kashmir-shrine-circuit-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907168/worldcompass/tours/kashmir-shrine-circuit/cover.jpg",
+      "key": "worldcompass/tours/kashmir-shrine-circuit/cover",
+      "driver": "cloudinary"
+    },
+    "tours/kashmir-valley-trek-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907168/worldcompass/tours/kashmir-valley-trek/cover.jpg",
+      "key": "worldcompass/tours/kashmir-valley-trek/cover",
+      "driver": "cloudinary"
+    },
+    "tours/kashmir-valley-trek-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907169/worldcompass/tours/kashmir-valley-trek/gallery-1.jpg",
+      "key": "worldcompass/tours/kashmir-valley-trek/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/kolahoi-lidder-trek-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907169/worldcompass/tours/kolahoi-lidder-trek/cover.jpg",
+      "key": "worldcompass/tours/kolahoi-lidder-trek/cover",
+      "driver": "cloudinary"
+    },
+    "tours/kashmir-valley-trek-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907170/worldcompass/tours/kashmir-valley-trek/gallery-2.jpg",
+      "key": "worldcompass/tours/kashmir-valley-trek/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/kashmir-shrine-circuit-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907169/worldcompass/tours/kashmir-shrine-circuit/gallery-1.jpg",
+      "key": "worldcompass/tours/kashmir-shrine-circuit/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/kolahoi-lidder-trek-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907170/worldcompass/tours/kolahoi-lidder-trek/gallery-1.jpg",
+      "key": "worldcompass/tours/kolahoi-lidder-trek/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/kolahoi-lidder-trek-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907170/worldcompass/tours/kolahoi-lidder-trek/gallery-2.jpg",
+      "key": "worldcompass/tours/kolahoi-lidder-trek/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/ladakh-monastery-pilgrimage-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907170/worldcompass/tours/ladakh-monastery-pilgrimage/cover.jpg",
+      "key": "worldcompass/tours/ladakh-monastery-pilgrimage/cover",
+      "driver": "cloudinary"
+    },
+    "tours/ladakh-monastery-pilgrimage-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907171/worldcompass/tours/ladakh-monastery-pilgrimage/gallery-1.jpg",
+      "key": "worldcompass/tours/ladakh-monastery-pilgrimage/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/ladakh-monastery-pilgrimage-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907171/worldcompass/tours/ladakh-monastery-pilgrimage/gallery-2.jpg",
+      "key": "worldcompass/tours/ladakh-monastery-pilgrimage/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/leh-nubra-pangong-loop-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907171/worldcompass/tours/leh-nubra-pangong-loop/cover.jpg",
+      "key": "worldcompass/tours/leh-nubra-pangong-loop/cover",
+      "driver": "cloudinary"
+    },
+    "tours/leh-nubra-pangong-loop-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907171/worldcompass/tours/leh-nubra-pangong-loop/gallery-1.jpg",
+      "key": "worldcompass/tours/leh-nubra-pangong-loop/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/leh-nubra-pangong-loop-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907172/worldcompass/tours/leh-nubra-pangong-loop/gallery-2.jpg",
+      "key": "worldcompass/tours/leh-nubra-pangong-loop/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/leh-palace-heritage-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907172/worldcompass/tours/leh-palace-heritage/cover.jpg",
+      "key": "worldcompass/tours/leh-palace-heritage/cover",
+      "driver": "cloudinary"
+    },
+    "tours/leh-palace-heritage-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907172/worldcompass/tours/leh-palace-heritage/gallery-1.jpg",
+      "key": "worldcompass/tours/leh-palace-heritage/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/leh-palace-heritage-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907172/worldcompass/tours/leh-palace-heritage/gallery-2.jpg",
+      "key": "worldcompass/tours/leh-palace-heritage/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/manali-family-hills-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907172/worldcompass/tours/manali-family-hills/cover.jpg",
+      "key": "worldcompass/tours/manali-family-hills/cover",
+      "driver": "cloudinary"
+    },
+    "tours/manali-family-hills-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907173/worldcompass/tours/manali-family-hills/gallery-1.jpg",
+      "key": "worldcompass/tours/manali-family-hills/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/manali-family-hills-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907173/worldcompass/tours/manali-family-hills/gallery-2.jpg",
+      "key": "worldcompass/tours/manali-family-hills/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/manali-leh-highway-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907174/worldcompass/tours/manali-leh-highway/cover.jpg",
+      "key": "worldcompass/tours/manali-leh-highway/cover",
+      "driver": "cloudinary"
+    },
+    "tours/manali-leh-highway-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907174/worldcompass/tours/manali-leh-highway/gallery-1.jpg",
+      "key": "worldcompass/tours/manali-leh-highway/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/markha-valley-trek-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907174/worldcompass/tours/markha-valley-trek/cover.jpg",
+      "key": "worldcompass/tours/markha-valley-trek/cover",
+      "driver": "cloudinary"
+    },
+    "tours/markha-valley-trek-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907175/worldcompass/tours/markha-valley-trek/gallery-1.jpg",
+      "key": "worldcompass/tours/markha-valley-trek/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/martand-anantnag-circuit-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907175/worldcompass/tours/martand-anantnag-circuit/cover.jpg",
+      "key": "worldcompass/tours/martand-anantnag-circuit/cover",
+      "driver": "cloudinary"
+    },
+    "tours/manali-leh-highway-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907176/worldcompass/tours/manali-leh-highway/gallery-2.jpg",
+      "key": "worldcompass/tours/manali-leh-highway/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/martand-anantnag-circuit-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907176/worldcompass/tours/martand-anantnag-circuit/gallery-1.jpg",
+      "key": "worldcompass/tours/martand-anantnag-circuit/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/pahalgam-betaab-valley-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907177/worldcompass/tours/pahalgam-betaab-valley/cover.jpg",
+      "key": "worldcompass/tours/pahalgam-betaab-valley/cover",
+      "driver": "cloudinary"
+    },
+    "tours/markha-valley-trek-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907177/worldcompass/tours/markha-valley-trek/gallery-2.jpg",
+      "key": "worldcompass/tours/markha-valley-trek/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/pahalgam-betaab-valley-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907177/worldcompass/tours/pahalgam-betaab-valley/gallery-1.jpg",
+      "key": "worldcompass/tours/pahalgam-betaab-valley/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/pahalgam-betaab-valley-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907177/worldcompass/tours/pahalgam-betaab-valley/gallery-2.jpg",
+      "key": "worldcompass/tours/pahalgam-betaab-valley/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/martand-anantnag-circuit-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907178/worldcompass/tours/martand-anantnag-circuit/gallery-2.jpg",
+      "key": "worldcompass/tours/martand-anantnag-circuit/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/srinagar-leh-road-trip-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907178/worldcompass/tours/srinagar-leh-road-trip/cover.jpg",
+      "key": "worldcompass/tours/srinagar-leh-road-trip/cover",
+      "driver": "cloudinary"
+    },
+    "tours/seed-kashmir-trek.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907178/worldcompass/tours/seed-kashmir-trek/image.svg",
+      "key": "worldcompass/tours/seed-kashmir-trek/image",
+      "driver": "cloudinary"
+    },
+    "tours/seed-ladakh-ride.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907178/worldcompass/tours/seed-ladakh-ride/image.svg",
+      "key": "worldcompass/tours/seed-ladakh-ride/image",
+      "driver": "cloudinary"
+    },
+    "tours/srinagar-leh-road-trip-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907179/worldcompass/tours/srinagar-leh-road-trip/gallery-2.jpg",
+      "key": "worldcompass/tours/srinagar-leh-road-trip/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/srinagar-old-city-crafts-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907180/worldcompass/tours/srinagar-old-city-crafts/gallery-1.jpg",
+      "key": "worldcompass/tours/srinagar-old-city-crafts/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/srinagar-old-city-crafts-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907180/worldcompass/tours/srinagar-old-city-crafts/gallery-2.jpg",
+      "key": "worldcompass/tours/srinagar-old-city-crafts/gallery-2",
+      "driver": "cloudinary"
+    },
+    "tours/vaishno-devi-yatra-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907181/worldcompass/tours/vaishno-devi-yatra/cover.jpg",
+      "key": "worldcompass/tours/vaishno-devi-yatra/cover",
+      "driver": "cloudinary"
+    },
+    "tours/srinagar-leh-road-trip-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907180/worldcompass/tours/srinagar-leh-road-trip/gallery-1.jpg",
+      "key": "worldcompass/tours/srinagar-leh-road-trip/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/srinagar-old-city-crafts-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907181/worldcompass/tours/srinagar-old-city-crafts/cover.jpg",
+      "key": "worldcompass/tours/srinagar-old-city-crafts/cover",
+      "driver": "cloudinary"
+    },
+    "tours/vaishno-devi-yatra-g1.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907181/worldcompass/tours/vaishno-devi-yatra/gallery-1.jpg",
+      "key": "worldcompass/tours/vaishno-devi-yatra/gallery-1",
+      "driver": "cloudinary"
+    },
+    "tours/vaishno-devi-yatra-g2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907181/worldcompass/tours/vaishno-devi-yatra/gallery-2.jpg",
+      "key": "worldcompass/tours/vaishno-devi-yatra/gallery-2",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/ather-450x.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907182/worldcompass/vehicles/ather-450x/cover.jpg",
+      "key": "worldcompass/vehicles/ather-450x/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/ather-rizta.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907182/worldcompass/vehicles/ather-rizta/cover.jpg",
+      "key": "worldcompass/vehicles/ather-rizta/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/aprilia-sr-160.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907182/worldcompass/vehicles/aprilia-sr-160/cover.jpg",
+      "key": "worldcompass/vehicles/aprilia-sr-160/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/bajaj-chetak.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907183/worldcompass/vehicles/bajaj-chetak/cover.jpg",
+      "key": "worldcompass/vehicles/bajaj-chetak/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/bajaj-freedom-125-kerala.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907183/worldcompass/vehicles/bajaj-freedom-125-kerala/cover.jpg",
+      "key": "worldcompass/vehicles/bajaj-freedom-125-kerala/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/bajaj-freedom-125.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907183/worldcompass/vehicles/bajaj-freedom-125/cover.jpg",
+      "key": "worldcompass/vehicles/bajaj-freedom-125/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/ampere-magnus.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907183/worldcompass/vehicles/ampere-magnus/cover.jpg",
+      "key": "worldcompass/vehicles/ampere-magnus/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/bajaj-pulsar-150.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907184/worldcompass/vehicles/bajaj-pulsar-150/cover.jpg",
+      "key": "worldcompass/vehicles/bajaj-pulsar-150/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/bmw-3-series.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907184/worldcompass/vehicles/bmw-3-series/cover.jpg",
+      "key": "worldcompass/vehicles/bmw-3-series/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/bajaj-pulsar-ns200.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907184/worldcompass/vehicles/bajaj-pulsar-ns200/cover.jpg",
+      "key": "worldcompass/vehicles/bajaj-pulsar-ns200/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/byd-atto-3.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907185/worldcompass/vehicles/byd-atto-3/cover.jpg",
+      "key": "worldcompass/vehicles/byd-atto-3/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/hero-vida-v2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907185/worldcompass/vehicles/hero-vida-v2/cover.jpg",
+      "key": "worldcompass/vehicles/hero-vida-v2/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/bmw-g310-gs.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907186/worldcompass/vehicles/bmw-g310-gs/cover.jpg",
+      "key": "worldcompass/vehicles/bmw-g310-gs/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/hero-xpulse-200.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907186/worldcompass/vehicles/hero-xpulse-200/cover.jpg",
+      "key": "worldcompass/vehicles/hero-xpulse-200/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/hero-splendor-plus.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907186/worldcompass/vehicles/hero-splendor-plus/cover.jpg",
+      "key": "worldcompass/vehicles/hero-splendor-plus/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/honda-activa.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907186/worldcompass/vehicles/honda-activa/cover.jpg",
+      "key": "worldcompass/vehicles/honda-activa/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/honda-city-hybrid.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907187/worldcompass/vehicles/honda-city-hybrid/cover.jpg",
+      "key": "worldcompass/vehicles/honda-city-hybrid/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/honda-amaze.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907187/worldcompass/vehicles/honda-amaze/cover.jpg",
+      "key": "worldcompass/vehicles/honda-amaze/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/honda-dio.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907187/worldcompass/vehicles/honda-dio/cover.jpg",
+      "key": "worldcompass/vehicles/honda-dio/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/honda-hness-cb350.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907188/worldcompass/vehicles/honda-hness-cb350/cover.jpg",
+      "key": "worldcompass/vehicles/honda-hness-cb350/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/honda-city.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907187/worldcompass/vehicles/honda-city/cover.jpg",
+      "key": "worldcompass/vehicles/honda-city/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/honda-shine.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907188/worldcompass/vehicles/honda-shine/cover.jpg",
+      "key": "worldcompass/vehicles/honda-shine/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/honda-sp-125.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907188/worldcompass/vehicles/honda-sp-125/cover.jpg",
+      "key": "worldcompass/vehicles/honda-sp-125/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/hyundai-aura.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907189/worldcompass/vehicles/hyundai-aura/cover.png",
+      "key": "worldcompass/vehicles/hyundai-aura/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/hyundai-creta-diesel.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907189/worldcompass/vehicles/hyundai-creta-diesel/cover.jpg",
+      "key": "worldcompass/vehicles/hyundai-creta-diesel/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/jawa-42.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907190/worldcompass/vehicles/jawa-42/cover.jpg",
+      "key": "worldcompass/vehicles/jawa-42/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/hyundai-i20.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907190/worldcompass/vehicles/hyundai-i20/cover.jpg",
+      "key": "worldcompass/vehicles/hyundai-i20/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/jawa-perak.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907191/worldcompass/vehicles/jawa-perak/cover.jpg",
+      "key": "worldcompass/vehicles/jawa-perak/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/kia-carens.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907191/worldcompass/vehicles/kia-carens/cover.jpg",
+      "key": "worldcompass/vehicles/kia-carens/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/hyundai-exter.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907192/worldcompass/vehicles/hyundai-exter/cover.png",
+      "key": "worldcompass/vehicles/hyundai-exter/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/hyundai-creta.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907192/worldcompass/vehicles/hyundai-creta/cover.jpg",
+      "key": "worldcompass/vehicles/hyundai-creta/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/ktm-390-adventure.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907192/worldcompass/vehicles/ktm-390-adventure/cover.jpg",
+      "key": "worldcompass/vehicles/ktm-390-adventure/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/mahindra-scorpio-n.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907193/worldcompass/vehicles/mahindra-scorpio-n/cover.jpg",
+      "key": "worldcompass/vehicles/mahindra-scorpio-n/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/mahindra-thar.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907193/worldcompass/vehicles/mahindra-thar/cover.jpg",
+      "key": "worldcompass/vehicles/mahindra-thar/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/maruti-swift.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907193/worldcompass/vehicles/maruti-swift/cover.jpg",
+      "key": "worldcompass/vehicles/maruti-swift/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/maruti-dzire.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907193/worldcompass/vehicles/maruti-dzire/cover.jpg",
+      "key": "worldcompass/vehicles/maruti-dzire/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/re-himalayan-450.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907194/worldcompass/vehicles/re-himalayan-450/cover.jpg",
+      "key": "worldcompass/vehicles/re-himalayan-450/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/re-meteor-350.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907194/worldcompass/vehicles/re-meteor-350/cover.jpg",
+      "key": "worldcompass/vehicles/re-meteor-350/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/royal-enfield-classic-350.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907194/worldcompass/vehicles/royal-enfield-classic-350/cover.jpg",
+      "key": "worldcompass/vehicles/royal-enfield-classic-350/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/suzuki-access-125.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907195/worldcompass/vehicles/suzuki-access-125/cover.jpg",
+      "key": "worldcompass/vehicles/suzuki-access-125/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/re-bullet-350.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907195/worldcompass/vehicles/re-bullet-350/cover.jpg",
+      "key": "worldcompass/vehicles/re-bullet-350/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/tork-kratos.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907195/worldcompass/vehicles/tork-kratos/cover.jpg",
+      "key": "worldcompass/vehicles/tork-kratos/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/toyota-fortuner.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907196/worldcompass/vehicles/toyota-fortuner/cover.jpg",
+      "key": "worldcompass/vehicles/toyota-fortuner/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/tvs-iqube.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907196/worldcompass/vehicles/tvs-iqube/cover.jpg",
+      "key": "worldcompass/vehicles/tvs-iqube/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/triumph-scrambler-400x.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907196/worldcompass/vehicles/triumph-scrambler-400x/cover.jpg",
+      "key": "worldcompass/vehicles/triumph-scrambler-400x/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/tvs-jupiter.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907197/worldcompass/vehicles/tvs-jupiter/cover.jpg",
+      "key": "worldcompass/vehicles/tvs-jupiter/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/tvs-ntorq-125.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907197/worldcompass/vehicles/tvs-ntorq-125/cover.jpg",
+      "key": "worldcompass/vehicles/tvs-ntorq-125/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/ultraviolette-f77.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907197/worldcompass/vehicles/ultraviolette-f77/cover.jpg",
+      "key": "worldcompass/vehicles/ultraviolette-f77/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-ampere-magnus.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907198/worldcompass/vehicles/ampere-magnus/cover.svg",
+      "key": "worldcompass/vehicles/ampere-magnus/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/tvs-scooty-pep.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907199/worldcompass/vehicles/tvs-scooty-pep/cover.jpg",
+      "key": "worldcompass/vehicles/tvs-scooty-pep/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-aprilia-sr-160.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907198/worldcompass/vehicles/aprilia-sr-160/cover.svg",
+      "key": "worldcompass/vehicles/aprilia-sr-160/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-ather-450x.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907200/worldcompass/vehicles/ather-450x/cover.svg",
+      "key": "worldcompass/vehicles/ather-450x/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-ather-rizta.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907200/worldcompass/vehicles/ather-rizta/cover.svg",
+      "key": "worldcompass/vehicles/ather-rizta/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-audi-a4.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907200/worldcompass/vehicles/audi-a4/cover.svg",
+      "key": "worldcompass/vehicles/audi-a4/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-bajaj-chetak.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907202/worldcompass/vehicles/bajaj-chetak/cover.svg",
+      "key": "worldcompass/vehicles/bajaj-chetak/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-bajaj-freedom-125-kerala.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907202/worldcompass/vehicles/bajaj-freedom-125-kerala/cover.svg",
+      "key": "worldcompass/vehicles/bajaj-freedom-125-kerala/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-bajaj-freedom-125.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907203/worldcompass/vehicles/bajaj-freedom-125/cover.svg",
+      "key": "worldcompass/vehicles/bajaj-freedom-125/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-bajaj-pulsar-ns200.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907205/worldcompass/vehicles/bajaj-pulsar-ns200/cover.svg",
+      "key": "worldcompass/vehicles/bajaj-pulsar-ns200/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/toyota-innova-crysta.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907206/worldcompass/vehicles/toyota-innova-crysta/cover.jpg",
+      "key": "worldcompass/vehicles/toyota-innova-crysta/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-bajaj-pulsar-150.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907205/worldcompass/vehicles/bajaj-pulsar-150/cover.svg",
+      "key": "worldcompass/vehicles/bajaj-pulsar-150/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-bmw-3-series.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907205/worldcompass/vehicles/bmw-3-series/cover.svg",
+      "key": "worldcompass/vehicles/bmw-3-series/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-bmw-g310-gs.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907206/worldcompass/vehicles/bmw-g310-gs/cover.svg",
+      "key": "worldcompass/vehicles/bmw-g310-gs/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-harley-davidson-x440.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907207/worldcompass/vehicles/harley-davidson-x440/cover.svg",
+      "key": "worldcompass/vehicles/harley-davidson-x440/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hero-pleasure-plus.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907207/worldcompass/vehicles/hero-pleasure-plus/cover.svg",
+      "key": "worldcompass/vehicles/hero-pleasure-plus/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-byd-atto-3.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907207/worldcompass/vehicles/byd-atto-3/cover.svg",
+      "key": "worldcompass/vehicles/byd-atto-3/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hero-splendor-plus.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907209/worldcompass/vehicles/hero-splendor-plus/cover.svg",
+      "key": "worldcompass/vehicles/hero-splendor-plus/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-honda-activa.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907209/worldcompass/vehicles/honda-activa/cover.svg",
+      "key": "worldcompass/vehicles/honda-activa/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hero-vida-v2.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907209/worldcompass/vehicles/hero-vida-v2/cover.svg",
+      "key": "worldcompass/vehicles/hero-vida-v2/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hero-xpulse-200.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907209/worldcompass/vehicles/hero-xpulse-200/cover.svg",
+      "key": "worldcompass/vehicles/hero-xpulse-200/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-honda-amaze.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907211/worldcompass/vehicles/honda-amaze/cover.svg",
+      "key": "worldcompass/vehicles/honda-amaze/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-honda-dio.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907211/worldcompass/vehicles/honda-dio/cover.svg",
+      "key": "worldcompass/vehicles/honda-dio/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-honda-city.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907211/worldcompass/vehicles/honda-city/cover.svg",
+      "key": "worldcompass/vehicles/honda-city/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-honda-city-hybrid.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907211/worldcompass/vehicles/honda-city-hybrid/cover.svg",
+      "key": "worldcompass/vehicles/honda-city-hybrid/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-honda-hness-cb350.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907213/worldcompass/vehicles/honda-hness-cb350/cover.svg",
+      "key": "worldcompass/vehicles/honda-hness-cb350/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-honda-shine.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907213/worldcompass/vehicles/honda-shine/cover.svg",
+      "key": "worldcompass/vehicles/honda-shine/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hyundai-aura.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907214/worldcompass/vehicles/hyundai-aura/cover.svg",
+      "key": "worldcompass/vehicles/hyundai-aura/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-honda-sp-125.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907213/worldcompass/vehicles/honda-sp-125/cover.svg",
+      "key": "worldcompass/vehicles/honda-sp-125/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hyundai-creta-diesel.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907215/worldcompass/vehicles/hyundai-creta-diesel/cover.svg",
+      "key": "worldcompass/vehicles/hyundai-creta-diesel/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hyundai-creta.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907215/worldcompass/vehicles/hyundai-creta/cover.svg",
+      "key": "worldcompass/vehicles/hyundai-creta/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hyundai-exter.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907216/worldcompass/vehicles/hyundai-exter/cover.svg",
+      "key": "worldcompass/vehicles/hyundai-exter/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hyundai-grand-i10.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907216/worldcompass/vehicles/hyundai-grand-i10/cover.svg",
+      "key": "worldcompass/vehicles/hyundai-grand-i10/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hyundai-i20.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907217/worldcompass/vehicles/hyundai-i20/cover.svg",
+      "key": "worldcompass/vehicles/hyundai-i20/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hyundai-ioniq-5.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907217/worldcompass/vehicles/hyundai-ioniq-5/cover.svg",
+      "key": "worldcompass/vehicles/hyundai-ioniq-5/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hyundai-venue.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907217/worldcompass/vehicles/hyundai-venue/cover.svg",
+      "key": "worldcompass/vehicles/hyundai-venue/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-hyundai-verna.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907218/worldcompass/vehicles/hyundai-verna/cover.svg",
+      "key": "worldcompass/vehicles/hyundai-verna/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-jawa-42.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907219/worldcompass/vehicles/jawa-42/cover.svg",
+      "key": "worldcompass/vehicles/jawa-42/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-jawa-perak.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907219/worldcompass/vehicles/jawa-perak/cover.svg",
+      "key": "worldcompass/vehicles/jawa-perak/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-kia-carens.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907219/worldcompass/vehicles/kia-carens/cover.svg",
+      "key": "worldcompass/vehicles/kia-carens/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-kia-ev6.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907220/worldcompass/vehicles/kia-ev6/cover.svg",
+      "key": "worldcompass/vehicles/kia-ev6/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-kia-seltos.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907221/worldcompass/vehicles/kia-seltos/cover.svg",
+      "key": "worldcompass/vehicles/kia-seltos/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-kia-sonet.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907221/worldcompass/vehicles/kia-sonet/cover.svg",
+      "key": "worldcompass/vehicles/kia-sonet/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-ktm-390-adventure.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907222/worldcompass/vehicles/ktm-390-adventure/cover.svg",
+      "key": "worldcompass/vehicles/ktm-390-adventure/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-mahindra-scorpio-n.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907223/worldcompass/vehicles/mahindra-scorpio-n/cover.svg",
+      "key": "worldcompass/vehicles/mahindra-scorpio-n/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-ktm-duke-390.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907224/worldcompass/vehicles/ktm-duke-390/cover.svg",
+      "key": "worldcompass/vehicles/ktm-duke-390/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-mahindra-thar.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907223/worldcompass/vehicles/mahindra-thar/cover.svg",
+      "key": "worldcompass/vehicles/mahindra-thar/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-komaki-ranger.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907225/worldcompass/vehicles/komaki-ranger/cover.svg",
+      "key": "worldcompass/vehicles/komaki-ranger/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-mahindra-xuv-3xo.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907225/worldcompass/vehicles/mahindra-xuv-3xo/cover.svg",
+      "key": "worldcompass/vehicles/mahindra-xuv-3xo/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-mahindra-xuv700.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907225/worldcompass/vehicles/mahindra-xuv700/cover.svg",
+      "key": "worldcompass/vehicles/mahindra-xuv700/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-maruti-baleno.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907226/worldcompass/vehicles/maruti-baleno/cover.svg",
+      "key": "worldcompass/vehicles/maruti-baleno/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-maruti-celerio.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907227/worldcompass/vehicles/maruti-celerio/cover.svg",
+      "key": "worldcompass/vehicles/maruti-celerio/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-maruti-dzire-cng.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907227/worldcompass/vehicles/maruti-dzire-cng/cover.svg",
+      "key": "worldcompass/vehicles/maruti-dzire-cng/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-maruti-dzire.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907227/worldcompass/vehicles/maruti-dzire/cover.svg",
+      "key": "worldcompass/vehicles/maruti-dzire/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-maruti-ertiga-cng.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907228/worldcompass/vehicles/maruti-ertiga-cng/cover.svg",
+      "key": "worldcompass/vehicles/maruti-ertiga-cng/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-maruti-ertiga.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907228/worldcompass/vehicles/maruti-ertiga/cover.svg",
+      "key": "worldcompass/vehicles/maruti-ertiga/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-maruti-wagonr-cng.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907229/worldcompass/vehicles/maruti-wagonr-cng/cover.svg",
+      "key": "worldcompass/vehicles/maruti-wagonr-cng/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-maruti-swift.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907228/worldcompass/vehicles/maruti-swift/cover.svg",
+      "key": "worldcompass/vehicles/maruti-swift/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-maruti-wagonr.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907229/worldcompass/vehicles/maruti-wagonr/cover.svg",
+      "key": "worldcompass/vehicles/maruti-wagonr/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-maruti-xl6.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907229/worldcompass/vehicles/maruti-xl6/cover.svg",
+      "key": "worldcompass/vehicles/maruti-xl6/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-matter-aera.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907230/worldcompass/vehicles/matter-aera/cover.svg",
+      "key": "worldcompass/vehicles/matter-aera/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-mg-hector.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907231/worldcompass/vehicles/mg-hector/cover.svg",
+      "key": "worldcompass/vehicles/mg-hector/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-mercedes-c-class.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907230/worldcompass/vehicles/mercedes-c-class/cover.svg",
+      "key": "worldcompass/vehicles/mercedes-c-class/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-mg-zs-ev.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907232/worldcompass/vehicles/mg-zs-ev/cover.svg",
+      "key": "worldcompass/vehicles/mg-zs-ev/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-mercedes-e-class.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907231/worldcompass/vehicles/mercedes-e-class/cover.svg",
+      "key": "worldcompass/vehicles/mercedes-e-class/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-oben-rorr.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907234/worldcompass/vehicles/oben-rorr/cover.svg",
+      "key": "worldcompass/vehicles/oben-rorr/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-okinawa-praise.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907234/worldcompass/vehicles/okinawa-praise/cover.svg",
+      "key": "worldcompass/vehicles/okinawa-praise/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-ola-s1-pro.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907234/worldcompass/vehicles/ola-s1-pro/cover.svg",
+      "key": "worldcompass/vehicles/ola-s1-pro/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-nissan-magnite.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907234/worldcompass/vehicles/nissan-magnite/cover.svg",
+      "key": "worldcompass/vehicles/nissan-magnite/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-ola-s1-x.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907235/worldcompass/vehicles/ola-s1-x/cover.svg",
+      "key": "worldcompass/vehicles/ola-s1-x/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-re-bullet-350.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907235/worldcompass/vehicles/re-bullet-350/cover.svg",
+      "key": "worldcompass/vehicles/re-bullet-350/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-re-himalayan-450.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907236/worldcompass/vehicles/re-himalayan-450/cover.svg",
+      "key": "worldcompass/vehicles/re-himalayan-450/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-re-hunter-350.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907236/worldcompass/vehicles/re-hunter-350/cover.svg",
+      "key": "worldcompass/vehicles/re-hunter-350/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-re-shotgun-650.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907237/worldcompass/vehicles/re-shotgun-650/cover.svg",
+      "key": "worldcompass/vehicles/re-shotgun-650/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-re-super-meteor-650.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907237/worldcompass/vehicles/re-super-meteor-650/cover.svg",
+      "key": "worldcompass/vehicles/re-super-meteor-650/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-re-meteor-350.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907237/worldcompass/vehicles/re-meteor-350/cover.svg",
+      "key": "worldcompass/vehicles/re-meteor-350/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-re-taurus-himachal.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907238/worldcompass/vehicles/re-taurus-himachal/cover.svg",
+      "key": "worldcompass/vehicles/re-taurus-himachal/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-re-taurus-ladakh.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907239/worldcompass/vehicles/re-taurus-ladakh/cover.svg",
+      "key": "worldcompass/vehicles/re-taurus-ladakh/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-renault-kiger.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907239/worldcompass/vehicles/renault-kiger/cover.svg",
+      "key": "worldcompass/vehicles/renault-kiger/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-renault-triber.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907240/worldcompass/vehicles/renault-triber/cover.svg",
+      "key": "worldcompass/vehicles/renault-triber/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-revolt-rv400.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907241/worldcompass/vehicles/revolt-rv400/cover.svg",
+      "key": "worldcompass/vehicles/revolt-rv400/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-re-taurus-kashmir.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907239/worldcompass/vehicles/re-taurus-kashmir/cover.svg",
+      "key": "worldcompass/vehicles/re-taurus-kashmir/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-simple-one.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907242/worldcompass/vehicles/simple-one/cover.svg",
+      "key": "worldcompass/vehicles/simple-one/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-royal-enfield-himalayan.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907242/worldcompass/vehicles/royal-enfield-himalayan/cover.svg",
+      "key": "worldcompass/vehicles/royal-enfield-himalayan/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-skoda-superb.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907244/worldcompass/vehicles/skoda-superb/cover.svg",
+      "key": "worldcompass/vehicles/skoda-superb/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-skoda-slavia.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907244/worldcompass/vehicles/skoda-slavia/cover.svg",
+      "key": "worldcompass/vehicles/skoda-slavia/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-royal-enfield-classic-350.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907244/worldcompass/vehicles/royal-enfield-classic-350/cover.svg",
+      "key": "worldcompass/vehicles/royal-enfield-classic-350/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-suzuki-access-125.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907245/worldcompass/vehicles/suzuki-access-125/cover.svg",
+      "key": "worldcompass/vehicles/suzuki-access-125/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-suzuki-burgman-street.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907245/worldcompass/vehicles/suzuki-burgman-street/cover.svg",
+      "key": "worldcompass/vehicles/suzuki-burgman-street/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-suzuki-gixxer.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907246/worldcompass/vehicles/suzuki-gixxer/cover.svg",
+      "key": "worldcompass/vehicles/suzuki-gixxer/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-tata-altroz.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907247/worldcompass/vehicles/tata-altroz/cover.svg",
+      "key": "worldcompass/vehicles/tata-altroz/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-tata-nexon-ev.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907247/worldcompass/vehicles/tata-nexon-ev/cover.svg",
+      "key": "worldcompass/vehicles/tata-nexon-ev/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-tata-punch.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907247/worldcompass/vehicles/tata-punch/cover.svg",
+      "key": "worldcompass/vehicles/tata-punch/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-tata-harrier.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907247/worldcompass/vehicles/tata-harrier/cover.svg",
+      "key": "worldcompass/vehicles/tata-harrier/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-tata-safari.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907249/worldcompass/vehicles/tata-safari/cover.svg",
+      "key": "worldcompass/vehicles/tata-safari/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-tata-tiago-ev.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907249/worldcompass/vehicles/tata-tiago-ev/cover.svg",
+      "key": "worldcompass/vehicles/tata-tiago-ev/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-toyota-camry.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907249/worldcompass/vehicles/toyota-camry/cover.svg",
+      "key": "worldcompass/vehicles/toyota-camry/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-tork-kratos.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907249/worldcompass/vehicles/tork-kratos/cover.svg",
+      "key": "worldcompass/vehicles/tork-kratos/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-toyota-innova-crysta.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907250/worldcompass/vehicles/toyota-innova-crysta/cover.svg",
+      "key": "worldcompass/vehicles/toyota-innova-crysta/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-toyota-innova-hycross.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907251/worldcompass/vehicles/toyota-innova-hycross/cover.svg",
+      "key": "worldcompass/vehicles/toyota-innova-hycross/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-tvs-apache-rtr-160.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907251/worldcompass/vehicles/tvs-apache-rtr-160/cover.svg",
+      "key": "worldcompass/vehicles/tvs-apache-rtr-160/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-triumph-scrambler-400x.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907251/worldcompass/vehicles/triumph-scrambler-400x/cover.svg",
+      "key": "worldcompass/vehicles/triumph-scrambler-400x/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-tvs-jupiter.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907252/worldcompass/vehicles/tvs-jupiter/cover.svg",
+      "key": "worldcompass/vehicles/tvs-jupiter/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-tvs-ntorq-125.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907253/worldcompass/vehicles/tvs-ntorq-125/cover.svg",
+      "key": "worldcompass/vehicles/tvs-ntorq-125/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-tvs-scooty-pep.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907253/worldcompass/vehicles/tvs-scooty-pep/cover.svg",
+      "key": "worldcompass/vehicles/tvs-scooty-pep/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-tvs-iqube.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907253/worldcompass/vehicles/tvs-iqube/cover.svg",
+      "key": "worldcompass/vehicles/tvs-iqube/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-vespa-sxl.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907254/worldcompass/vehicles/vespa-sxl/cover.svg",
+      "key": "worldcompass/vehicles/vespa-sxl/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-vespa-vxl.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907255/worldcompass/vehicles/vespa-vxl/cover.svg",
+      "key": "worldcompass/vehicles/vespa-vxl/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-ultraviolette-f77.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907254/worldcompass/vehicles/ultraviolette-f77/cover.svg",
+      "key": "worldcompass/vehicles/ultraviolette-f77/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-volkswagen-virtus.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907255/worldcompass/vehicles/volkswagen-virtus/cover.svg",
+      "key": "worldcompass/vehicles/volkswagen-virtus/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-yamaha-fascino.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907256/worldcompass/vehicles/yamaha-fascino/cover.svg",
+      "key": "worldcompass/vehicles/yamaha-fascino/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-yamaha-r15.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907256/worldcompass/vehicles/yamaha-r15/cover.svg",
+      "key": "worldcompass/vehicles/yamaha-r15/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-yamaha-mt-15.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907256/worldcompass/vehicles/yamaha-mt-15/cover.svg",
+      "key": "worldcompass/vehicles/yamaha-mt-15/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-yamaha-rayzr.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907257/worldcompass/vehicles/yamaha-rayzr/cover.svg",
+      "key": "worldcompass/vehicles/yamaha-rayzr/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-yezdi-adventure.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907258/worldcompass/vehicles/yezdi-adventure/cover.svg",
+      "key": "worldcompass/vehicles/yezdi-adventure/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/seed-yezdi-roadster.svg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907259/worldcompass/vehicles/yezdi-roadster/cover.svg",
+      "key": "worldcompass/vehicles/yezdi-roadster/cover",
+      "driver": "cloudinary"
+    },
+    "brand/logos/logo-light": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907259/worldcompass/brand/logos/logo-light.svg",
+      "key": "worldcompass/brand/logos/logo-light",
+      "driver": "cloudinary"
+    },
+    "brand/logos/logo-dark": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907259/worldcompass/brand/logos/logo-dark.svg",
+      "key": "worldcompass/brand/logos/logo-dark",
+      "driver": "cloudinary"
+    },
+    "brand/favicon": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907261/worldcompass/brand/favicon.gif",
+      "key": "worldcompass/brand/favicon",
+      "driver": "cloudinary"
+    },
+    "brand/covers/home": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907264/worldcompass/brand/covers/home.webp",
+      "key": "worldcompass/brand/covers/home",
+      "driver": "cloudinary"
+    }
+  },
+  "brand": {
+    "logo": null,
+    "covers": [
+      {
+        "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907264/worldcompass/brand/covers/home.webp",
+        "key": "worldcompass/brand/covers/home",
+        "driver": "cloudinary"
+      }
+    ]
+  }
+}

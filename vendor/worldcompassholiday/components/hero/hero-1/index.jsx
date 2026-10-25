@@ -1,11 +1,15 @@
 import { theme } from "@/config/theme";
 import MainFilterSearchBox from "./MainFilterSearchBox";
 
-const index = ({ tourCatalog }) => {
+const index = ({ tourCatalog, coverUrl }) => {
   return (
     <section className="masthead -type-1 z-5">
       <div className="masthead__bg">
-        <img alt="A mountain road planned by World Compass Holidays" src="/img/masthead/1/bg.webp" className="js-lazy" />
+        <img
+          alt="A mountain road planned by World Compass Holidays"
+          src={coverUrl || "/img/masthead/1/bg.webp"}
+          className="js-lazy"
+        />
       </div>
       <div className="container">
         <div className="row justify-center">

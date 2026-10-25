@@ -1185,6 +1185,7 @@ export function TourTabsForm({
                         <div className="grid items-start gap-4 p-3 sm:grid-cols-[11rem_minmax(0,1fr)]">
                         <ImageUploader
                           folder="tours"
+                        scope={tour?.id}
                           label=""
                           compact
                           value={image}
@@ -1569,6 +1570,7 @@ export function TourTabsForm({
               <div className="grid grid-cols-[minmax(0,1.46fr)_minmax(0,1fr)] items-start gap-3">
                 <ImageUploader
                   folder="tours"
+                        scope={tour?.id}
                   label="Banner image"
                   required
                   fieldName="banner"
@@ -1583,6 +1585,7 @@ export function TourTabsForm({
                 />
                 <ImageUploader
                   folder="tours"
+                        scope={tour?.id}
                   label="Cover image"
                   required
                   fieldName="cover"
@@ -1635,6 +1638,7 @@ export function TourTabsForm({
                   <li>
                     <ImageUploader
                       folder="tours"
+                        scope={tour?.id}
                       label=""
                       tile
                       multiple
@@ -1673,6 +1677,7 @@ export function TourTabsForm({
               <div className="flex items-start gap-4">
                 <ImageUploader
                   folder="tours"
+                        scope={tour?.id}
                   label="Featured SEO image"
                   compact
                   value={draft.seoImage}

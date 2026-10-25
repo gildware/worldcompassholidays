@@ -745,6 +745,9 @@ async function main() {
   const { runDemoCatalogSeed } = await import("../scripts/seed-demo-catalog");
   await runDemoCatalogSeed();
 
+  const { applyCloudinaryManifest } = await import("../src/lib/storage/manifest");
+  await applyCloudinaryManifest(prisma);
+
   if (process.env.NODE_ENV === "production") {
     await seedAdminFromEnv();
     return;

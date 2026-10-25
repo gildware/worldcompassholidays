@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
 import { keepCatalogIds, keepFaqEntries } from "@/lib/catalog-query";
 import { firstIssue, type FormState } from "@/lib/forms";
 import { requirePermission } from "@/lib/auth/guards";
-import { deleteImage } from "@/lib/storage";
+import { deleteEntityMedia, type StoredImage } from "@/lib/storage/cleanup";
 import { readUploadedImage, validateUploadedImage } from "@/lib/storage/form";
 import { uniqueSlug } from "@/lib/slug";
 import { sanitizeTourHtml } from "@/lib/tours/html";
@@ -264,6 +264,32 @@ async function syncDestinations(tourId: string, ids: string[]) {
   });
 }
 
+function remember(list: StoredImage[], key: string, driver: string) {
+  if (!key) return;
+  list.push({ key, driver });
+}
+
+function tourImages(tour: {
+  imageKey: string;
+  imageDriver: string;
+  featuredImageKey: string;
+  featuredImageDriver: string;
+  seoImageKey: string;
+  seoImageDriver: string;
+  galleryJson: string;
+  days: { imageKey: string; imageDriver: string }[];
+}) {
+  const images: StoredImage[] = [];
+  remember(images, tour.imageKey, tour.imageDriver);
+  remember(images, tour.featuredImageKey, tour.featuredImageDriver);
+  remember(images, tour.seoImageKey, tour.seoImageDriver);
+  for (const item of parseJsonArray<GalleryItem>(tour.galleryJson)) {
+    if (item?.key) remember(images, item.key, item.driver);
+  }
+  for (const day of tour.days) remember(images, day.imageKey, day.imageDriver);
+  return images;
+}
+
 async function syncItinerary(tourId: string, items: ItineraryItem[]) {
   await prisma.itineraryDay.deleteMany({ where: { tourId } });
   if (items.length === 0) return;
@@ -496,6 +522,7 @@ export async function updateTour(
       destinationLinks: {
         select: { destination: { select: { slug: true } } },
       },
+      days: { select: { imageKey: true, imageDriver: true } },
     },
   });
   if (!existing) return { error: "Tour not found." };
@@ -548,16 +575,16 @@ export async function updateTour(
       )
     : existing.slug;
 
-  const nextCoverKey = payload.data.imageKey;
-  const nextBannerKey = payload.data.featuredImageKey;
-  const replacedCover =
-    Boolean(existing.imageKey) &&
-    Boolean(nextCoverKey) &&
-    nextCoverKey !== existing.imageKey;
-  const replacedBanner =
-    Boolean(existing.featuredImageKey) &&
-    Boolean(nextBannerKey) &&
-    nextBannerKey !== existing.featuredImageKey;
+  const nextKeys = new Set<string>();
+  for (const key of [
+    payload.data.imageKey,
+    payload.data.featuredImageKey,
+    payload.data.seoImageKey,
+    ...payload.gallery.map((item) => item.key),
+    ...payload.itinerary.map((item) => item.imageKey ?? ""),
+  ]) {
+    if (key) nextKeys.add(key);
+  }
 
   await prisma.tour.update({
     where: { id: tourId },
@@ -571,20 +598,11 @@ export async function updateTour(
 
   await syncItinerary(tourId, payload.itinerary);
   await syncDestinations(tourId, links.destinationIds);
-
-  if (replacedCover) {
-    await deleteImage({
-      key: existing.imageKey,
-      driver: existing.imageDriver === "cloudinary" ? "cloudinary" : "local",
-    });
-  }
-  if (replacedBanner && existing.featuredImageKey) {
-    await deleteImage({
-      key: existing.featuredImageKey,
-      driver:
-        existing.featuredImageDriver === "cloudinary" ? "cloudinary" : "local",
-    });
-  }
+  await deleteEntityMedia(
+    "tours",
+    [],
+    tourImages(existing).filter((image) => !nextKeys.has(image.key)),
+  );
 
   const slugs = new Set<string>();
   if (existing.destination?.slug) slugs.add(existing.destination.slug);
@@ -638,18 +656,15 @@ export async function deleteTour(formData: FormData) {
     where: { id: tourId },
     include: {
       destination: { select: { slug: true } },
+      days: { select: { imageKey: true, imageDriver: true } },
     },
   });
 
   if (!tour) redirect("/admin/tours");
 
+  const images = tourImages(tour);
   await prisma.tour.delete({ where: { id: tourId } });
-  if (tour.imageKey) {
-    await deleteImage({
-      key: tour.imageKey,
-      driver: tour.imageDriver === "cloudinary" ? "cloudinary" : "local",
-    });
-  }
+  await deleteEntityMedia("tours", [tour.slug, tour.id], images);
 
   revalidateTourPaths(tour.destination?.slug);
   redirect("/admin/tours?deleted=1");

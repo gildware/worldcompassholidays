@@ -9,6 +9,7 @@ import {
   loadBookingDeskStats,
   loadFleetActionCounts,
 } from "@/lib/booking-admin";
+import { getSiteBrand } from "@/lib/brand";
 import { getAdminNav } from "@/lib/navigation";
 import { noIndexRobots } from "@/lib/seo";
 
@@ -35,6 +36,7 @@ export default async function AdminPanelLayout({
       ? loadFleetActionCounts()
       : Promise.resolve({ cars: 0, bikes: 0 }),
   ]);
+  const brand = await getSiteBrand();
   const items = applyBookingNavBadges(
     getAdminNav((permission) => can(user, permission)),
     stats,
@@ -46,6 +48,7 @@ export default async function AdminPanelLayout({
       <AdminShell
         items={items}
         user={{ name: user.name, roleName: user.roleName }}
+        logoUrl={brand.logoUrl || null}
         signOut={
           <LogoutButton
             to="admin"

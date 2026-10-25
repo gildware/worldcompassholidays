@@ -29,6 +29,7 @@ function validateClientFile(file: File | null | undefined): string | null {
 function uploadOnce(
   file: File,
   folder: ImageFolder,
+  scope: string | undefined,
   onProgress: (percent: number) => void,
   signal: AbortSignal,
 ): Promise<UploadedImage> {
@@ -36,6 +37,7 @@ function uploadOnce(
     const xhr = new XMLHttpRequest();
     const body = new FormData();
     body.set("folder", folder);
+    if (scope) body.set("scope", scope);
     body.set("file", file);
 
     const onAbort = () => {
@@ -104,22 +106,24 @@ function uploadOnce(
 function uploadWithProgress(
   file: File,
   folder: ImageFolder,
+  scope: string | undefined,
   onProgress: (percent: number) => void,
   signal: AbortSignal,
 ): Promise<UploadedImage> {
-  return uploadOnce(file, folder, onProgress, signal).catch(async (error: unknown) => {
+  return uploadOnce(file, folder, scope, onProgress, signal).catch(async (error: unknown) => {
     const message = error instanceof Error ? error.message : "";
     if (signal.aborted || !message.includes("did not reach the server")) {
       throw error;
     }
     await new Promise((resolve) => setTimeout(resolve, 400));
     if (signal.aborted) throw new Error("Upload cancelled.");
-    return uploadOnce(file, folder, onProgress, signal);
+    return uploadOnce(file, folder, scope, onProgress, signal);
   });
 }
 
 export function ImageUploader({
   folder,
+  scope,
   label = "Image",
   required = false,
   value,
@@ -138,6 +142,8 @@ export function ImageUploader({
   className,
 }: {
   folder: ImageFolder;
+  /** Groups this file under the entity in Cloudinary, for example a tour id. */
+  scope?: string;
   label?: string;
   required?: boolean;
   /** Controlled value. When omitted, the uploader manages its own state. */
@@ -229,6 +235,7 @@ export function ImageUploader({
         const uploaded = await uploadWithProgress(
           file,
           folder,
+          scope,
           setProgress,
           controller.signal,
         );
@@ -248,7 +255,7 @@ export function ImageUploader({
         setLocalPreview(null);
       }
     },
-    [folder, localPreview, setValue],
+    [folder, localPreview, scope, setValue],
   );
 
   const acceptFile = useCallback(

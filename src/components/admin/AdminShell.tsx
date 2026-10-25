@@ -167,6 +167,15 @@ function NavIcon({ href, label }: { href: string; label?: string }) {
       </svg>
     );
   }
+  if (href === "/admin/brand") {
+    return (
+      <svg {...common}>
+        <rect x="4" y="6" width="16" height="12" rx="2" />
+        <circle cx="9" cy="11" r="1.6" />
+        <path d="m8 16 3.2-3.2a1 1 0 0 1 1.4 0L16 16" />
+      </svg>
+    );
+  }
   if (href === "/admin/staff" || href === "/admin/roles") {
     return (
       <svg {...common}>
@@ -336,6 +345,7 @@ function pageSub(pathname: string) {
     return "Guest, trip, quote, owner, and status desk.";
   }
   if (pathname.startsWith("/admin/hotels")) return "Stay inventory and property details.";
+  if (pathname.startsWith("/admin/brand")) return "Logo and homepage cover photos.";
   if (pathname.startsWith("/admin/destinations")) return "Places shown on the site.";
   return theme.brandName;
 }
@@ -344,11 +354,13 @@ export function AdminShell({
   items,
   user,
   signOut,
+  logoUrl,
   children,
 }: {
   items: NavItem[];
   user: { name: string; roleName: string };
   signOut: React.ReactNode;
+  logoUrl?: string | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -441,7 +453,7 @@ export function AdminShell({
       <div className="app">
         <aside className={`sidebar${navOpen ? " open" : ""}`} aria-label="Primary">
           <div className="brand worldcompassholiday-page worldcompassholiday-header-scope">
-            <BrandLogo />
+            <BrandLogo logoUrl={logoUrl} />
             <span className="brand-ops">Operations</span>
           </div>
 

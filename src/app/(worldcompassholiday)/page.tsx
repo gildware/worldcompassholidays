@@ -5,17 +5,24 @@ import BlockGuide from "@/components/block/BlockGuide";
 import CallToActions from "@/components/common/CallToActions";
 import PopularDestinations from "@/components/destinations/PopularDestinations";
 import Hero1 from "@/components/hero/hero-1";
+import { HomeAssistSection } from "@/components/home/HomeAssistSection";
 import { HomeExperience } from "@/components/home/HomeExperience";
-import { HomeServiceCards } from "@/components/home/HomeServiceCards";
+import {
+  bikeHomeFallback,
+  carHomeFallback,
+  HomeFleetSection,
+  type HomeRide,
+} from "@/components/home/HomeFleetSection";
+import { HomeVisaSection } from "@/components/home/HomeVisaSection";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { durationChoices } from "@/components/tour-list/tour-list-v2/query";
 import type { TourListLocation } from "@/components/tour-list/types";
 import { HomeFooter } from "@/components/worldcompassholiday/HomeFooter";
 import { modules } from "@/config/modules";
 import { theme } from "@/config/theme";
+import { getSiteBrand } from "@/lib/brand";
 import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
-import { homeTravelDeskServices } from "@/lib/homeServices";
 import { getPublicNav } from "@/lib/navigation";
 import { graphLd, organizationNode, pageMetadata, websiteNode } from "@/lib/seo";
 
@@ -62,6 +69,32 @@ function tourDurationLabel(tour: {
   return `${tour.durationDays} ${unit}`;
 }
 
+function toRide(
+  vehicle: {
+    slug: string;
+    name: string;
+    seats: number;
+    pricePerDay: number;
+    currency: string;
+    destination: { name: string } | null;
+    vehicleType: { name: string } | null;
+    transmission: { name: string } | null;
+    images: { url: string }[];
+  },
+  fallback: string,
+): HomeRide {
+  return {
+    slug: vehicle.slug,
+    name: vehicle.name,
+    place: vehicle.destination?.name || "",
+    seats: vehicle.seats,
+    detail: [vehicle.vehicleType?.name, vehicle.transmission?.name].filter(Boolean).join(" · "),
+    pricePerDay: vehicle.pricePerDay,
+    currency: vehicle.currency || "INR",
+    image: vehicle.images[0]?.url || fallback,
+  };
+}
+
 const homeTitle = `${theme.brandName} | Tours, Hotels & Rentals`;
 
 export const metadata: Metadata = pageMetadata({
@@ -82,6 +115,7 @@ export default async function Page() {
     featuredTours,
     featuredHotels,
     featuredCars,
+    featuredBikes,
   ] = await Promise.all([
     prisma.destination.findMany({
       where: {
@@ -166,6 +200,30 @@ export default async function Page() {
             pricePerDay: true,
             currency: true,
             destination: { select: { name: true } },
+            vehicleType: { select: { name: true } },
+            transmission: { select: { name: true } },
+            images: {
+              orderBy: { sortOrder: "asc" },
+              take: 1,
+              select: { url: true },
+            },
+          },
+        })
+      : Promise.resolve([]),
+    modules.bikes
+      ? prisma.vehicle.findMany({
+          where: { published: true, kind: "bike" },
+          orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
+          take: 10,
+          select: {
+            slug: true,
+            name: true,
+            seats: true,
+            pricePerDay: true,
+            currency: true,
+            destination: { select: { name: true } },
+            vehicleType: { select: { name: true } },
+            transmission: { select: { name: true } },
             images: {
               orderBy: { sortOrder: "asc" },
               take: 1,
@@ -197,6 +255,7 @@ export default async function Page() {
     currency: publishedTours[0]?.currency || "INR",
   };
 
+  const brand = await getSiteBrand();
   const desktopTours = featuredTours.slice(0, 4);
   const desktopHotels = featuredHotels.slice(0, 4);
 
@@ -207,8 +266,6 @@ export default async function Page() {
       {/* Phone / tablet only — new app home */}
       <div className="home-mobile-only">
         <HomeExperience
-          showCars={modules.cars}
-          showBikes={modules.bikes}
           tourCatalog={tourCatalog}
           destinations={popularDestinations.map((destination) => ({
             slug: destination.slug,
@@ -247,21 +304,17 @@ export default async function Page() {
             image:
               hotel.featuredImageUrl || hotel.imageUrl || "/img/stays/1/1.png",
           }))}
-          cars={featuredCars.map((car) => ({
-            slug: car.slug,
-            name: car.name,
-            place: car.destination?.name || "",
-            seats: car.seats,
-            pricePerDay: car.pricePerDay,
-            currency: car.currency || "INR",
-            image: car.images[0]?.url || "/img/cars/1.png",
-          }))}
+          cars={featuredCars.map((car) => toRide(car, "/img/cars/1.png"))}
+          bikes={featuredBikes.map((bike) => toRide(bike, "/img/bikes/bike-rental-banner.jpg"))}
+          showCars={modules.cars}
+          showBikes={modules.bikes}
+          coverUrl={brand.covers[0]?.url || ""}
         />
       </div>
 
       {/* Large screen — original site home (unchanged) */}
       <div className="home-desktop-only">
-        <Hero1 tourCatalog={tourCatalog} />
+        <Hero1 tourCatalog={tourCatalog} coverUrl={brand.covers[0]?.url || ""} />
 
         <section className="layout-pt-lg layout-pb-md" data-aos="fade-up">
           <div className="container">
@@ -329,7 +382,7 @@ export default async function Page() {
                   </Link>
                 </div>
               </div>
-              <div className="row y-gap-30 pt-40">
+              <div className="row y-gap-30 pt-20">
                 {desktopTours.map((tour, index) => {
                   const image =
                     tour.featuredImageUrl || tour.imageUrl || "/img/tours/header-bg.jpg";
@@ -384,14 +437,14 @@ export default async function Page() {
                   </Link>
                 </div>
               </div>
-              <div className="row y-gap-30 pt-40">
+              <div className="row y-gap-30 pt-20">
                 {desktopHotels.map((hotel, index) => {
                   const image =
                     hotel.featuredImageUrl || hotel.imageUrl || "/img/stays/1/1.png";
                   return (
                     <div className="col-lg-3 col-sm-6" key={hotel.slug}>
                       <Link href={`/hotels/${hotel.slug}`} className="d-block">
-                        <div className="ratio ratio-1:1 rounded-4 overflow-hidden">
+                        <div className="ratio ratio-4:3 rounded-4 overflow-hidden">
                           <Image
                             src={image}
                             alt={hotel.name}
@@ -420,6 +473,35 @@ export default async function Page() {
           </section>
         ) : null}
 
+        {modules.cars || modules.bikes ? (
+          <section className="home-web-road" aria-label="Car and bike rental">
+            {modules.cars ? (
+              <HomeFleetSection
+                nested
+                title="Cars for the trip"
+                subtitle="Self-drive and chauffeur, priced by the day."
+                href="/rentals/cars"
+                linkLabel="All cars"
+                kindLabel="Car"
+                items={featuredCars.slice(0, 4).map((car) => toRide(car, "/img/cars/1.png"))}
+                empty={carHomeFallback}
+              />
+            ) : null}
+            {modules.bikes ? (
+              <HomeFleetSection
+                nested
+                title="Bikes for the road"
+                subtitle="Scooters and motorcycles, with a helmet on the hire."
+                href="/rentals/bikes"
+                linkLabel="All bikes"
+                kindLabel="Bike"
+                items={featuredBikes.slice(0, 4).map((bike) => toRide(bike, "/img/bikes/bike-rental-banner.jpg"))}
+                empty={bikeHomeFallback}
+              />
+            ) : null}
+          </section>
+        ) : null}
+
         <section className="layout-pt-md layout-pb-lg">
           <div className="container">
             <div className="row y-gap-20 justify-between">
@@ -428,30 +510,15 @@ export default async function Page() {
           </div>
         </section>
 
+        <section className="layout-pt-md layout-pb-md">
+          <div className="container">
+            <HomeVisaSection headingId="home-visa-desk" />
+          </div>
+        </section>
+
         <section className="layout-pt-md layout-pb-lg">
           <div className="container">
-            <div className="row y-gap-20 justify-between items-end">
-              <div className="col-auto">
-                <div className="sectionTitle -md">
-                  <h2 className="sectionTitle__title">Visa, meet &amp; assist</h2>
-                  <p className="sectionTitle__text mt-5 sm:mt-0">
-                    Papers before you fly, and a greeter when you land or leave.
-                  </p>
-                </div>
-              </div>
-              <div className="col-auto md:d-none">
-                <Link
-                  href="/visa-services"
-                  className="button -md -blue-1 bg-blue-1-05 text-blue-1"
-                >
-                  Visa desk
-                  <div className="icon-arrow-top-right ml-15" />
-                </Link>
-              </div>
-            </div>
-            <div className="pt-40">
-              <HomeServiceCards items={homeTravelDeskServices} />
-            </div>
+            <HomeAssistSection headingId="home-assist-desk" />
           </div>
         </section>
 

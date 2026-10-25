@@ -10,6 +10,7 @@ const FOLDER_PERMISSION: Record<string, StaffPermission> = {
   hotels: "hotels.manage",
   vehicles: "vehicles.manage",
   buses: "buses.manage",
+  brand: "staff.manage",
 };
 
 export async function POST(request: Request) {
@@ -29,6 +30,12 @@ export async function POST(request: Request) {
   if (!isImageFolder(folderValue)) {
     return NextResponse.json({ error: "Unknown upload folder." }, { status: 400 });
   }
+  const scope = String(formData.get("scope") ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "")
+    .slice(0, 80);
+  const storageFolder = scope ? `${folderValue}/${scope}` : folderValue;
 
   const permission = FOLDER_PERMISSION[folderValue];
   if (!permission || !can(user, permission)) {
@@ -43,7 +50,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const uploaded = await uploadImage({ file: file!, folder: folderValue });
+    const uploaded = await uploadImage({ file: file!, folder: storageFolder });
     return NextResponse.json(uploaded);
   } catch (error) {
     return NextResponse.json(

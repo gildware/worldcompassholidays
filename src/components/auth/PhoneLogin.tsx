@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
 import { unstable_rethrow } from "next/navigation";
+import type { FirebaseOptions } from "firebase/app";
 import type { ConfirmationResult } from "firebase/auth";
 import { finishPhoneLogin } from "@/actions/phone-auth";
 import { CountryCodeSelect } from "@/components/auth/CountryCodeSelect";
@@ -24,13 +25,14 @@ function constraintMessage(input: HTMLInputElement, message: string) {
 
 export function PhoneLogin({
   next,
-  ready,
+  config,
   defaultCountry = "",
 }: {
   next: string;
-  ready: boolean;
+  config: FirebaseOptions | null;
   defaultCountry?: string;
 }) {
+  const ready = config !== null;
   const [step, setStep] = useState<"phone" | "code" | "name">("phone");
   const [country, setCountry] = useState(countryByIso(defaultCountry)?.iso || "IN");
   const [phone, setPhone] = useState("");
@@ -106,10 +108,10 @@ export function PhoneLogin({
 
   function send(e164: string) {
     return run(async () => {
-      if (!ready) throw new Error("missing-config");
+      if (!config) throw new Error("missing-config");
       const container = recaptcha.current;
       if (!container) throw new Error("missing-config");
-      confirmation.current = await sendFirebaseCode(e164, container);
+      confirmation.current = await sendFirebaseCode(e164, container, config);
       idToken.current = "";
       sentTo.current = e164;
       setPhone(formatPhone(e164));
@@ -200,7 +202,8 @@ export function PhoneLogin({
           const entered = otpRefs.current.map((input) => input?.value ?? "").join("");
           void run(async () => {
             if (!confirmation.current) throw new Error("expired");
-            idToken.current = await confirmFirebaseCode(confirmation.current, entered);
+            if (!config) throw new Error("missing-config");
+            idToken.current = await confirmFirebaseCode(confirmation.current, entered, config);
             const result = await finishPhoneLogin(idToken.current, next);
             if (result.error) {
               setError(result.error);

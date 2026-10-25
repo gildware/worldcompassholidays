@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { staffLogin } from "@/actions/auth";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { BrandLogo } from "@/components/worldcompassholiday/BrandLogo";
+import { getSiteBrand } from "@/lib/brand";
 import { getCurrentUser } from "@/lib/auth/session";
 import { safeRedirectPath } from "@/lib/forms";
 import { privateMetadata } from "@/lib/seo";
@@ -17,6 +18,7 @@ export default async function AdminLoginPage({
 }) {
   const user = await getCurrentUser();
   if (user?.scope === "staff") redirect("/admin");
+  const brand = await getSiteBrand();
 
   const { next } = await searchParams;
 
@@ -28,7 +30,7 @@ export default async function AdminLoginPage({
 
       <div className="admin-login__inner">
         <header className="admin-login__brand worldcompassholiday-page worldcompassholiday-header-scope">
-          <BrandLogo />
+          <BrandLogo logoUrl={brand.logoUrl || null} />
           <p className="admin-login__brand-meta">Operations</p>
         </header>
 

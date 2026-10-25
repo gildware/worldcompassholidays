@@ -752,6 +752,16 @@ model LoginAttempt {
   @@index([key, createdAt])
 }
 
+// Logo and homepage covers. Replacing either removes the previous Cloudinary file.
+model SiteBrand {
+  id         String   @id @default("default")
+  logoUrl    String   @default("")
+  logoKey    String   @default("")
+  logoDriver String   @default("local")
+  coversJson String   @default("[]")
+  updatedAt  DateTime @updatedAt
+}
+
 model Page {
   id            String       @id @default(cuid())
   slug          String       @unique

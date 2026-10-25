@@ -935,6 +935,7 @@ export function HotelTabsForm({
                   <div className="grid gap-3 md:grid-cols-[16rem_1fr] md:items-end">
                     <ImageUploader
                       folder="hotels"
+                    scope={hotel?.id}
                       label="Room photo"
                       frame={tourImageFrames.cover}
                       value={room.image}
@@ -968,6 +969,7 @@ export function HotelTabsForm({
               <div className="grid gap-4 md:grid-cols-2">
                 <ImageUploader
                   folder="hotels"
+                    scope={hotel?.id}
                   label="Banner image"
                   required
                   fieldName="banner"
@@ -981,6 +983,7 @@ export function HotelTabsForm({
                 />
                 <ImageUploader
                   folder="hotels"
+                    scope={hotel?.id}
                   label="Cover image"
                   required
                   fieldName="cover"
@@ -1018,6 +1021,7 @@ export function HotelTabsForm({
                   <li>
                     <ImageUploader
                       folder="hotels"
+                    scope={hotel?.id}
                       label=""
                       tile
                       multiple
@@ -1070,6 +1074,7 @@ export function HotelTabsForm({
               </Field>
               <ImageUploader
                 folder="hotels"
+                    scope={hotel?.id}
                 label="Social image"
                 frame={tourImageFrames.cover}
                 value={draft.seoImage}

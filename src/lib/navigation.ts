@@ -142,6 +142,12 @@ const adminNav: (NavItem & {
       permission: "roles.manage",
       enabled: true,
     },
+    {
+      href: "/admin/brand",
+      label: "Brand",
+      permission: "staff.manage",
+      enabled: true,
+    },
   ];
 
 export function getAdminNav(

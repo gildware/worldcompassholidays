@@ -816,6 +816,7 @@ export function VehicleForm({
               <li>
                 <ImageUploader
                   folder="vehicles"
+                  scope={values.id}
                   label=""
                   tile
                   multiple

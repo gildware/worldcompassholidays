@@ -15,10 +15,12 @@ export function HomeHeader({
   items,
   actions,
   overlay = false,
+  logoUrl,
 }: {
   items: NavItem[];
   actions: React.ReactNode;
   overlay?: boolean;
+  logoUrl?: string | null;
 }) {
   const pathname = usePathname();
   const [stuck, setStuck] = useState(false);
@@ -59,7 +61,7 @@ export function HomeHeader({
             <div className="col-auto">
               <div className="d-flex items-center">
                 <Link href="/" className="header-logo mr-20" aria-label="World Compass Holidays">
-                  <BrandLogo />
+                  <BrandLogo logoUrl={logoUrl} />
                 </Link>
                 <div className="header-menu">
                   <div className="header-menu__content">
@@ -126,7 +128,7 @@ export function HomeHeader({
       >
         <div className="pro-header d-flex align-items-center justify-between border-bottom-light">
           <Link href="/" aria-label="World Compass Holidays" onClick={() => setMenuOpen(false)}>
-            <BrandLogo tone="dark" />
+            <BrandLogo tone="dark" logoUrl={logoUrl} />
           </Link>
           <button
             className="fix-icon"

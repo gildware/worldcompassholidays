@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/worldcompassholiday/BrandLogo";
 import { theme } from "@/config/theme";
+import { getSiteBrand } from "@/lib/brand";
 import type { NavItem } from "@/lib/navigation";
 import { whatsAppHref } from "@/lib/visa";
 
 const exploreHrefs = ["/", "/destinations", "/tours", "/hotels"];
 
-export function HomeFooter({ items }: { items: NavItem[] }) {
+export async function HomeFooter({ items }: { items: NavItem[] }) {
+  const brand = await getSiteBrand();
   const explore = items.filter((item) => exploreHrefs.includes(item.href));
   const services = items.filter((item) => !exploreHrefs.includes(item.href) && item.href !== "/contact");
   const phone = theme.contact.phone.replace(/\s/g, "");
@@ -18,7 +20,7 @@ export function HomeFooter({ items }: { items: NavItem[] }) {
       <div className="site-footer__main">
         <div className="site-footer__brand">
           <Link href="/" aria-label={theme.brandName}>
-            <BrandLogo />
+            <BrandLogo logoUrl={brand.logoUrl || null} />
           </Link>
           <p>{theme.tagline}</p>
           <ul className="site-footer__reach">

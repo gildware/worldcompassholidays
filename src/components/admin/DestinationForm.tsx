@@ -179,6 +179,7 @@ export function DestinationForm({
 
         <ImageUploader
           folder="destinations"
+          scope={destination?.id}
           label="Image"
           required
           value={image}

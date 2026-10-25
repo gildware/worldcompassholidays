@@ -34,7 +34,7 @@ ENV HOME=/tmp
 ENV DATABASE_URL="file:/data/app.db"
 
 COPY --from=builder /app/package.json /tmp/package.json
-RUN npm install -g "prisma@$(node -p "require('/tmp/package.json').devDependencies.prisma")" \
+RUN npm install -g "prisma@$(node -p "require('/tmp/package.json').devDependencies.prisma")" tsx \
   && rm /tmp/package.json
 
 RUN addgroup --system --gid 1001 nodejs \
@@ -46,6 +46,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/vendor/worldcompassholiday/public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+COPY --from=builder --chown=nextjs:nodejs /app/src ./src
+COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
