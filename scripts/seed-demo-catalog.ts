@@ -12,17 +12,23 @@ import {
   demoHotels,
   demoTours,
 } from "../src/lib/demo/north-india-catalog";
+import { readCloudinaryManifest, type CloudAsset } from "../src/lib/storage/manifest";
 
 const prisma = new PrismaClient();
 const uploads = path.join(process.cwd(), "public", "uploads");
+let cloudFiles: Record<string, CloudAsset> = {};
 
-function asset(rel: string) {
+function asset(rel: string, optional = false) {
   const file = path.join(uploads, rel);
-  if (!existsSync(file)) {
-    console.warn(`Missing asset: ${rel}`);
-    return null;
+  if (existsSync(file)) {
+    return { url: `/uploads/${rel}`, key: rel, driver: "local" as const };
   }
-  return { url: `/uploads/${rel}`, key: rel, driver: "local" as const };
+  const cloud = cloudFiles[rel];
+  if (cloud) {
+    return { url: cloud.url, key: cloud.key, driver: "cloudinary" as const };
+  }
+  if (!optional) console.warn(`Missing asset: ${rel}`);
+  return null;
 }
 
 const parentOf: Record<string, string | undefined> = {
@@ -89,7 +95,7 @@ async function seedTours() {
 
     const cover = asset(`tours/${tour.slug}-cover.jpg`);
     const galleryItems = [`g1`, `g2`, `g3`, `g4`]
-      .map((suffix) => asset(`tours/${tour.slug}-${suffix}.jpg`))
+      .map((suffix) => asset(`tours/${tour.slug}-${suffix}.jpg`, true))
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
       .map((item) => ({ url: item.url, key: item.key, driver: item.driver }));
 
@@ -111,10 +117,10 @@ async function seedTours() {
       destinationId: destination.id,
       imageUrl: cover?.url ?? "",
       imageKey: cover?.key ?? "",
-      imageDriver: "local",
+      imageDriver: cover?.driver ?? "local",
       featuredImageUrl: cover?.url ?? "",
       featuredImageKey: cover?.key ?? "",
-      featuredImageDriver: "local",
+      featuredImageDriver: cover?.driver ?? "local",
       galleryJson: JSON.stringify(galleryItems),
       includesJson: JSON.stringify([
         "Accommodation as per itinerary",
@@ -152,7 +158,7 @@ async function seedHotels() {
 
     const cover = asset(`hotels/${hotel.slug}-cover.jpg`);
     const galleryItems = [`g1`, `g2`, `g3`, `g4`]
-      .map((suffix) => asset(`hotels/${hotel.slug}-${suffix}.jpg`))
+      .map((suffix) => asset(`hotels/${hotel.slug}-${suffix}.jpg`, true))
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
       .map((item) => ({ url: item.url, key: item.key, driver: item.driver }));
     const priceFrom = Math.min(...hotel.rooms.map((r) => r.pricePerNight));
@@ -182,10 +188,10 @@ async function seedHotels() {
       destinationId: destination.id,
       imageUrl: cover?.url ?? "",
       imageKey: cover?.key ?? "",
-      imageDriver: "local",
+      imageDriver: cover?.driver ?? "local",
       featuredImageUrl: cover?.url ?? "",
       featuredImageKey: cover?.key ?? "",
-      featuredImageDriver: "local",
+      featuredImageDriver: cover?.driver ?? "local",
       galleryJson: JSON.stringify(galleryItems),
     };
 
@@ -252,7 +258,9 @@ async function syncVehicles() {
     if (!destination) continue;
 
     const photos = ["", "-2", "-3", "-4", "-5"]
-      .map((suffix) => asset(`vehicles/photos/${item.slug}${suffix}.jpg`))
+      .map((suffix, index) =>
+        asset(`vehicles/photos/${item.slug}${suffix}.jpg`, index > 0),
+      )
       .filter((item): item is NonNullable<typeof item> => Boolean(item));
     const existing = await prisma.vehicle.findUnique({
       where: { slug: item.slug },
@@ -287,7 +295,7 @@ async function syncVehicles() {
         vehicleId: existing.id,
         url: photo.url,
         key: photo.key,
-        driver: "local",
+        driver: photo.driver,
         sortOrder: index,
       })),
     });
@@ -295,6 +303,7 @@ async function syncVehicles() {
 }
 
 export async function runDemoCatalogSeed() {
+  cloudFiles = (await readCloudinaryManifest())?.files ?? {};
   console.log("Seeding destinations…");
   await seedDestinations();
   console.log("Seeding tours…");
