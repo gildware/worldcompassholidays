@@ -351,7 +351,7 @@ export default async function Page() {
 
       {/* Large screen — original site home (unchanged) */}
       <div className="home-desktop-only">
-        <Hero1 tourCatalog={tourCatalog} coverUrl={brand.covers[0]?.url || ""} />
+        <Hero1 coverUrl={brand.covers[0]?.url || ""} />
 
         <section className="layout-pt-lg layout-pb-md" data-aos="fade-up">
           <div className="container">

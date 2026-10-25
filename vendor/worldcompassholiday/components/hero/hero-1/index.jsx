@@ -1,5 +1,5 @@
 import { theme } from "@/config/theme";
-import { HeroCatalogSearch } from "@/components/home/HeroCatalogSearch";
+import { HeroCatalogSearch } from "@/components/hero/HeroCatalogSearch";
 
 const index = ({ coverUrl }) => {
   return (
