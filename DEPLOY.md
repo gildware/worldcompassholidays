@@ -16,6 +16,8 @@ These are read when the container **starts**. They are not baked into the image.
 | `CLOUDINARY_API_KEY` | | Used when `CLOUDINARY_URL` is unset. |
 | `CLOUDINARY_API_SECRET` | | Used when `CLOUDINARY_URL` is unset. |
 
+Phone sign-in does not depend on the server env file. The public Firebase web config is in the app, because `NEXT_PUBLIC_*` values are frozen at image build and GitHub Actions does not have `.env`. Optional overrides, if you ever change Firebase projects: `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID`.
+
 Copy `.env.example` to `.env` for local dev. On the server, use a separate env file and set `DATABASE_URL=file:/data/app.db`.
 
 Set GitHub repo secrets `DOCKER_HUB_USERNAME` and `DOCKER_HUB_ACCESS_TOKEN` for `.github/workflows/deploy-prod.yml` (push to `main`) and `.github/workflows/deploy.yml` (push to `development`). Both publish `DOCKER_HUB_USERNAME/travel:latest`.
