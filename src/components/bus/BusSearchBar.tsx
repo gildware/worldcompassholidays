@@ -36,6 +36,7 @@ export function BusSearchBar({
   time,
   citiesFrom,
   citiesTo,
+  onSearch,
 }: {
   from: string;
   to: string;
@@ -45,6 +46,7 @@ export function BusSearchBar({
   time: string;
   citiesFrom: string[];
   citiesTo: string[];
+  onSearch?: (next: { from: string; to: string; date: string; coach: string; passengers: string }) => void;
 }) {
   const today = useMemo(() => startOfDay(new Date()), []);
   const todayIso = toISO(today);
@@ -54,6 +56,14 @@ export function BusSearchBar({
   const [coachType, setCoachType] = useState(coach || "any");
   const [party, setParty] = useState(Math.min(20, Math.max(1, Number(passengers) || 1)));
   const [menu, setMenu] = useState<Menu>(null);
+
+  useEffect(() => {
+    setFromCity(from);
+    setToCity(to);
+    setTravelDate(date);
+    setCoachType(coach || "any");
+    setParty(Math.min(20, Math.max(1, Number(passengers) || 1)));
+  }, [from, to, date, coach, passengers]);
 
   useEffect(() => {
     if (!menu) return;
@@ -72,13 +82,32 @@ export function BusSearchBar({
   }
 
   return (
-    <form className="bus-search" action="/buses" method="get">
-      {fromCity ? <input type="hidden" name="from" value={fromCity} /> : null}
-      {toCity ? <input type="hidden" name="to" value={toCity} /> : null}
-      {travelDate ? <input type="hidden" name="date" value={travelDate} /> : null}
-      {coachType && coachType !== "any" ? <input type="hidden" name="coach" value={coachType} /> : null}
-      {party !== 1 ? <input type="hidden" name="passengers" value={String(party)} /> : null}
-      {time && time !== "any" ? <input type="hidden" name="time" value={time} /> : null}
+    <form
+      className="bus-search"
+      action={onSearch ? undefined : "/buses"}
+      method={onSearch ? undefined : "get"}
+      onSubmit={(event) => {
+        if (!onSearch) return;
+        event.preventDefault();
+        onSearch({
+          from: fromCity,
+          to: toCity,
+          date: travelDate,
+          coach: coachType,
+          passengers: String(party),
+        });
+      }}
+    >
+      {onSearch ? null : (
+        <>
+          {fromCity ? <input type="hidden" name="from" value={fromCity} /> : null}
+          {toCity ? <input type="hidden" name="to" value={toCity} /> : null}
+          {travelDate ? <input type="hidden" name="date" value={travelDate} /> : null}
+          {coachType && coachType !== "any" ? <input type="hidden" name="coach" value={coachType} /> : null}
+          {party !== 1 ? <input type="hidden" name="passengers" value={String(party)} /> : null}
+          {time && time !== "any" ? <input type="hidden" name="time" value={time} /> : null}
+        </>
+      )}
 
       <div className="bus-search__field" data-picker>
         <button className="bus-search__who" type="button" aria-haspopup="listbox" aria-expanded={menu === "from"} onClick={() => toggle("from")}>
