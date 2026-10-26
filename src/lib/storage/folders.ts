@@ -7,6 +7,7 @@ export const IMAGE_FOLDERS = [
   "buses",
   "catalog",
   "brand",
+  "home",
 ] as const;
 
 export type ImageFolder = (typeof IMAGE_FOLDERS)[number];

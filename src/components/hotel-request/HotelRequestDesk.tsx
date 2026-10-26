@@ -28,6 +28,7 @@ export function HotelRequestDesk({
   defaults,
   places,
   loginHref,
+  contact,
 }: {
   sent: boolean;
   reference: string;
@@ -35,13 +36,16 @@ export function HotelRequestDesk({
   defaults: HotelRequestDefaults;
   places: HotelRequestPlace[];
   loginHref: string;
+  contact?: { phone: string; email: string; whatsapp: string };
 }) {
   const [preset, setPreset] = useState({ key: 0, destination: "", stars: "", message: "" });
   const [activeStay, setActiveStay] = useState("");
   const [activePlace, setActivePlace] = useState(defaults.destination);
   const [query, setQuery] = useState("");
   const [openFaq, setOpenFaq] = useState(0);
-  const whatsapp = whatsAppHref(theme.contact.whatsapp);
+  const phone = contact?.phone || theme.contact.phone;
+  const email = contact?.email || theme.contact.email;
+  const whatsapp = whatsAppHref(contact?.whatsapp || theme.contact.whatsapp);
   const shownPlaces = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return places;
@@ -186,8 +190,8 @@ export function HotelRequestDesk({
             </div>
             <div className="hotel-brief-contact">
               <a href="/hotels">Hotel list</a>
-              <a href={`tel:${theme.contact.phone.replace(/\s/g, "")}`}>{theme.contact.phone}</a>
-              <a href={`mailto:${theme.contact.email}`}>Email</a>
+              <a href={`tel:${phone.replace(/\s/g, "")}`}>{phone}</a>
+              <a href={`mailto:${email}`}>Email</a>
               {whatsapp ? (
                 <a href={`${whatsapp}?text=${encodeURIComponent("Hello, I need help finding a hotel.")}`} target="_blank" rel="noreferrer">
                   WhatsApp

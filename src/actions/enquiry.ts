@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { theme } from "@/config/theme";
 import { prisma } from "@/lib/db";
+import { deskWhatsAppHref } from "@/lib/brand";
 import { firstIssue, type FormState } from "@/lib/forms";
 import { getCurrentUser } from "@/lib/auth/session";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
@@ -12,7 +12,6 @@ import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
 import { enquiryInterests } from "@/lib/navigation";
 import { emailField } from "@/lib/validation";
-import { whatsAppHref } from "@/lib/visa";
 
 const enquirySchema = z.object({
   name: z.string().trim().min(2, "Enter your name").max(80, "That name is too long"),
@@ -115,7 +114,7 @@ export async function submitEnquiry(
   if (customer) revalidateCustomerBooking(parsed.data.interest, booking.reference);
 
   if (channel === "whatsapp") {
-    const desk = whatsAppHref(theme.contact.whatsapp);
+    const desk = await deskWhatsAppHref();
     const message = enquiryWhatsAppText({
       reference: booking.reference,
       name: parsed.data.name,

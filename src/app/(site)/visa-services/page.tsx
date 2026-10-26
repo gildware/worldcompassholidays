@@ -9,6 +9,7 @@ import { PromiseIcon, VisaStatIcon, VisaStepIcon } from "@/components/visa/VisaI
 import { theme } from "@/config/theme";
 import "@/styles/service-desk.css";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getSiteSettings } from "@/lib/brand";
 import { pageMetadata } from "@/lib/seo";
 
 const pageTitle = "Visa help for Indian passports";
@@ -153,7 +154,11 @@ export default async function VisaPage({
 }: {
   searchParams: Promise<{ sent?: string; ref?: string }>;
 }) {
-  const [{ sent, ref }, user] = await Promise.all([searchParams, getCurrentUser()]);
+  const [{ sent, ref }, user, settings] = await Promise.all([
+    searchParams,
+    getCurrentUser(),
+    getSiteSettings(),
+  ]);
   const customer =
     user?.scope === "customer"
       ? { name: user.name, email: user.email, phone: user.phone }
@@ -195,7 +200,12 @@ export default async function VisaPage({
                   </span>
                 ))}
               </div>
-              <VisaApply sent={sent === "1"} reference={reference} customer={customer} />
+              <VisaApply
+                sent={sent === "1"}
+                reference={reference}
+                customer={customer}
+                whatsappPhone={settings.whatsapp}
+              />
               <p className="text-14 mt-15">
                 <a href="/meet-and-assist">Need someone at the airport? Meet and assist is separate.</a>
               </p>
@@ -263,6 +273,7 @@ export default async function VisaPage({
         sent={sent === "1"}
         reference={reference}
         customer={customer}
+        whatsappPhone={settings.whatsapp}
       />
 
       <section className="visa-band pt-40 pb-40">

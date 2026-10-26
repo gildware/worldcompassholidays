@@ -5,6 +5,7 @@ import type { HotelRequestDefaults } from "@/components/hotel-request/HotelReque
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { modules } from "@/config/modules";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getSiteSettings } from "@/lib/brand";
 import { prisma } from "@/lib/db";
 import { hotelBudgetBands, hotelMeals, hotelRoomTypes, isBudgetValue } from "@/lib/custom-request";
 import { hotelRequestFaqs } from "@/lib/hotels/request-content";
@@ -52,7 +53,7 @@ export default async function HotelRequestPage({
   }>;
 }) {
   if (!modules.hotels) notFound();
-  const [params, user, destinations] = await Promise.all([
+  const [params, user, destinations, settings] = await Promise.all([
     searchParams,
     getCurrentUser(),
     prisma.destination.findMany({
@@ -60,6 +61,7 @@ export default async function HotelRequestPage({
       select: { name: true, region: true, country: true, summary: true, imageUrl: true },
       orderBy: [{ popular: "desc" }, { name: "asc" }],
     }),
+    getSiteSettings(),
   ]);
   const customer = user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null;
   const reference = params.ref && /^BK-[A-Z0-9]+$/.test(params.ref) ? params.ref : "";
@@ -127,6 +129,7 @@ export default async function HotelRequestPage({
         defaults={defaults}
         places={places}
         loginHref={loginHref}
+        contact={{ phone: settings.phone, email: settings.email, whatsapp: settings.whatsapp }}
       />
     </WorldCompassHolidayFrame>
   );

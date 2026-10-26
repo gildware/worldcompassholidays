@@ -28,7 +28,7 @@ const publicModuleLabels: Record<ModuleKey, string> = {
   hotels: "Find a stay",
   cars: "Rent a car",
   bikes: "Rent a bike",
-  buses: "Bus booking",
+  buses: "Find a bus",
 };
 
 export function getPublicNav(): NavItem[] {
@@ -157,8 +157,14 @@ const adminNav: (NavItem & {
       enabled: true,
     },
     {
-      href: "/admin/brand",
-      label: "Brand",
+      href: "/admin/home",
+      label: "Homepage",
+      permission: "staff.manage",
+      enabled: true,
+    },
+    {
+      href: "/admin/settings",
+      label: "Settings",
       permission: "staff.manage",
       enabled: true,
     },

@@ -612,6 +612,18 @@ model BusRoute {
   fromCity      String
   toCity        String
   summary       String        @default("")
+  operator      String        @default("")
+  coachType     String        @default("seater")
+  pickup        String        @default("")
+  dropoff       String        @default("")
+  departTime    String        @default("")
+  arriveTime    String        @default("")
+  duration      String        @default("")
+  fareFrom      Int           @default(0)
+  imageUrl      String        @default("")
+  galleryJson   String        @default("[]")
+  amenitiesJson String        @default("[]")
+  about         String        @default("")
   published     Boolean       @default(false)
   destinationId String?
   destination   Destination?  @relation(fields: [destinationId], references: [id])
@@ -763,14 +775,31 @@ model LoginAttempt {
   @@index([key, createdAt])
 }
 
-// Logo and homepage covers. Replacing either removes the previous Cloudinary file.
+// Logo, homepage covers, and public appearance. Replacing images removes the previous Cloudinary file.
 model SiteBrand {
-  id         String   @id @default("default")
-  logoUrl    String   @default("")
-  logoKey    String   @default("")
-  logoDriver String   @default("local")
-  coversJson String   @default("[]")
-  updatedAt  DateTime @updatedAt
+  id            String   @id @default("default")
+  logoUrl       String   @default("")
+  logoKey       String   @default("")
+  logoDriver    String   @default("local")
+  coversJson    String   @default("[]")
+  primaryColor  String   @default("")
+  phone         String   @default("")
+  whatsapp      String   @default("")
+  email         String   @default("")
+  address       String   @default("")
+  facebookUrl   String   @default("")
+  instagramUrl  String   @default("")
+  twitterUrl    String   @default("")
+  linkedinUrl   String   @default("")
+  youtubeUrl    String   @default("")
+  updatedAt     DateTime @updatedAt
+}
+
+// Homepage copy, section order, and featured lists.
+model SiteHome {
+  id          String   @id @default("default")
+  contentJson String   @default("{}")
+  updatedAt   DateTime @updatedAt
 }
 
 model Page {

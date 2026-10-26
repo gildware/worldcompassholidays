@@ -422,7 +422,7 @@ export default async function DestinationPage({ params }: Props) {
           <div className="row y-gap-30">
             {destination.busRoutes.map((route) => (
               <div className="col-lg-4 col-md-6" key={route.id}>
-                <div className="rounded-4 border-light px-30 py-30">
+                <Link href={`/buses/${route.slug}`} className="rounded-4 border-light px-30 py-30 d-block">
                   <h3 className="text-18 fw-500">{route.name}</h3>
                   <p className="text-15 text-light-1 mt-10">
                     {route.fromCity} to {route.toCity}
@@ -430,7 +430,7 @@ export default async function DestinationPage({ params }: Props) {
                   {route.summary ? (
                     <p className="text-15 mt-10">{route.summary}</p>
                   ) : null}
-                </div>
+                </Link>
               </div>
             ))}
           </div>

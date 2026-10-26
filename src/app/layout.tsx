@@ -8,6 +8,7 @@ import { MobileTabBar } from "@/components/pwa/MobileTabBar";
 import { SerwistProvider } from "@/components/pwa/SerwistProvider";
 import { FavoriteToast } from "@/components/favorites/FavoriteToast";
 import { WhatsAppFloat } from "@/components/site/WhatsAppFloat";
+import { getSiteSettings } from "@/lib/brand";
 import { siteName, siteOrigin } from "@/lib/seo";
 import "./globals.css";
 import "@/styles/mobile-app-shell.css";
@@ -116,15 +117,16 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const appearance = await getSiteSettings();
   const style = {
     "--navy": theme.colors.navy,
-    "--blue": theme.colors.blue,
-    "--blue-soft": theme.colors.blueSoft,
+    "--blue": appearance.primaryColor,
+    "--blue-soft": appearance.primarySoft,
     "--muted": theme.colors.muted,
     "--line": theme.colors.line,
     "--surface": theme.colors.surface,
@@ -148,7 +150,7 @@ export default function RootLayout({
           <MobileAppHeader />
           {children}
           <MobileTabBar />
-          <WhatsAppFloat />
+          <WhatsAppFloat phone={appearance.whatsapp} />
           <InstallPrompt />
         </SerwistProvider>
       </body>

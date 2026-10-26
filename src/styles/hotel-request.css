@@ -587,6 +587,54 @@
   margin-inline: auto;
 }
 
+.worldcompassholiday-page .hotel-brief-layout.is-art {
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 1.05fr);
+  align-items: stretch;
+}
+
+.worldcompassholiday-page .hotel-brief-art {
+  position: relative;
+  min-height: 560px;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #eef2fb;
+}
+
+.worldcompassholiday-page .hotel-brief-art img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.worldcompassholiday-page .hotel-brief-art figcaption {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(5, 16, 54, 0.78);
+  color: #fff;
+}
+
+.worldcompassholiday-page .hotel-brief-art strong {
+  display: block;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.worldcompassholiday-page .hotel-brief-art span {
+  display: block;
+  margin-top: 4px;
+  color: #d7dce8;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
 .worldcompassholiday-page .hotel-brief-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 400px;
@@ -906,6 +954,14 @@
     order: -1;
   }
 
+  .worldcompassholiday-page .hotel-brief-layout.is-art .hotel-brief-side {
+    order: 0;
+  }
+
+  .worldcompassholiday-page .hotel-brief-art {
+    min-height: 240px;
+  }
+
   .worldcompassholiday-page .hotel-brief-steps {
     grid-template-columns: 1fr 1fr;
   }
@@ -1034,5 +1090,100 @@
   .worldcompassholiday-page .hotel-brief-side button.hotel-request-whatsapp {
     height: 44px;
     width: 100%;
+  }
+}
+
+@media (min-width: 1101px) {
+  .worldcompassholiday-page .hotel-brief.is-bus-request {
+    min-height: calc(100dvh - 90px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-brief-top {
+    padding: 8px 0 0;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-brief-layout.is-art {
+    flex: 1 1 auto;
+    min-height: 0;
+    gap: 16px;
+    padding: 10px 0 16px;
+    grid-template-columns: minmax(0, 1fr) minmax(440px, 1fr);
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-brief-art {
+    position: relative;
+    height: calc(100dvh - 142px);
+    min-height: 0;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-brief-side {
+    position: static;
+    height: calc(100dvh - 142px);
+    min-height: 0;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 14px 16px 16px;
+    overflow: hidden;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-back {
+    display: none;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-card h2 {
+    font-size: 20px;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-lede {
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-form {
+    flex: 1 1 auto;
+    gap: 8px 10px;
+    margin-top: 10px;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-cell > label,
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-span > label,
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-span > p.hotel-request-label {
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-control input,
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-stepper {
+    min-height: 40px;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-control textarea {
+    min-height: 48px;
+    padding: 8px 12px;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-budget button {
+    min-height: 34px;
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-submit,
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-whatsapp {
+    height: 42px;
+  }
+
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-brief-art figcaption {
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+    padding: 12px 14px;
   }
 }

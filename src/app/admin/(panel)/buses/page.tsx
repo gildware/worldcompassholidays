@@ -29,7 +29,9 @@ export default async function AdminBusesPage() {
             <li key={route.id} className="px-4 py-3 text-sm">
               <p className="font-medium">{route.name}</p>
               <p className="text-muted">
-                {route.fromCity} to {route.toCity} · {route.schedules.length}{" "}
+                {route.fromCity} to {route.toCity}
+                {route.departTime ? ` · ${route.departTime}` : ""}
+                {route.fareFrom ? ` · from ₹${route.fareFrom}` : ""} · {route.schedules.length}{" "}
                 schedules
               </p>
             </li>

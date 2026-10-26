@@ -1,26 +1,36 @@
 import Image from "next/image";
 import Link from "next/link";
 import { homeAssistServices } from "@/lib/homeServices";
+import { defaultHomePageContent } from "@/lib/home-page";
 import "@/styles/home-desks.css";
 
-export function HomeAssistSection({ headingId = "home-assist" }: { headingId?: string }) {
+export function HomeAssistSection({
+  headingId = "home-assist",
+  title = defaultHomePageContent.assist.title,
+  subtitle = defaultHomePageContent.assist.subtitle,
+  moreLabel = defaultHomePageContent.assist.moreLabel,
+  ctaLabel = defaultHomePageContent.assist.ctaLabel,
+}: {
+  headingId?: string;
+  title?: string;
+  subtitle?: string;
+  moreLabel?: string;
+  ctaLabel?: string;
+}) {
   return (
     <section className="hx-meet" aria-labelledby={headingId}>
       <div className="hx-meet__head">
         <div>
           <div className="hx-desk__title">
-            <h2 id={headingId}>Meet and assist</h2>
+            <h2 id={headingId}>{title}</h2>
             <Link prefetch={false} href="/meet-and-assist" className="hx-desk__more">
-              View more details
+              {moreLabel}
             </Link>
           </div>
-          <p>
-            A greeter at the airport on the day you fly. Send the flight number and we name
-            who meets you, and the fee, before anyone is booked.
-          </p>
+          <p>{subtitle}</p>
         </div>
         <Link prefetch={false} href="/meet-and-assist/request" className="hx-desk__go">
-          Book a greeter
+          {ctaLabel}
         </Link>
       </div>
       <div className="hx-meet__split">

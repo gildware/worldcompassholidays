@@ -2,17 +2,19 @@ import { moduleLabel, statusLabel } from "@/lib/bookings";
 import { sendMail } from "@/lib/mail";
 import { rentalStatusLabel } from "@/lib/rentals/labels";
 import { theme } from "@/config/theme";
+import { getSiteSettings } from "@/lib/brand";
 
 function siteOrigin() {
   return (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
 }
 
-function wrapHtml(title: string, body: string) {
+async function wrapHtml(title: string, body: string) {
+  const settings = await getSiteSettings();
   return `<!doctype html><html><body style="font-family:system-ui,sans-serif;line-height:1.5;color:#0f172a">
   <p style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#64748b">${theme.brandName}</p>
   <h1 style="font-size:20px;margin:8px 0 16px">${title}</h1>
   ${body}
-  <p style="margin-top:24px;font-size:13px;color:#64748b">Questions? ${theme.contact.email} · ${theme.contact.phone}</p>
+  <p style="margin-top:24px;font-size:13px;color:#64748b">Questions? ${settings.email} · ${settings.phone}</p>
 </body></html>`;
 }
 
@@ -53,7 +55,7 @@ export async function notifyEnquiryStatusChange(input: {
     .filter(Boolean)
     .join("\n");
 
-  const html = wrapHtml(
+  const html = await wrapHtml(
     `${input.reference} · ${status}`,
     `<p>Hi ${escapeHtml(input.contactName || "there")},</p>
      <p>Your <strong>${escapeHtml(service.toLowerCase())}</strong> request
@@ -101,7 +103,7 @@ export async function notifyRentalStatusChange(input: {
     .filter(Boolean)
     .join("\n");
 
-  const html = wrapHtml(
+  const html = await wrapHtml(
     `${input.reference} · ${status}`,
     `<p>Hi ${escapeHtml(input.contactName || "there")},</p>
      <p>Your rental <strong>${escapeHtml(input.reference)}</strong> for

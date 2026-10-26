@@ -2,19 +2,20 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/worldcompassholiday/BrandLogo";
 import { theme } from "@/config/theme";
 import { company, companyLinks, policyLinks } from "@/lib/company";
-import { getSiteBrand } from "@/lib/brand";
+import { getSiteSettings } from "@/lib/brand";
 import type { NavItem } from "@/lib/navigation";
 import { whatsAppHref } from "@/lib/visa";
 
-const exploreHrefs = ["/", "/destinations", "/tours", "/hotels"];
+const exploreHrefs = ["/", "/destinations", "/tours", "/hotels", "/buses"];
 
 export async function HomeFooter({ items }: { items: NavItem[] }) {
-  const brand = await getSiteBrand();
+  const brand = await getSiteSettings();
   const explore = items.filter((item) => exploreHrefs.includes(item.href));
   const services = items.filter((item) => !exploreHrefs.includes(item.href) && item.href !== "/contact");
-  const phone = theme.contact.phone.replace(/\s/g, "");
-  const whatsapp = whatsAppHref(theme.contact.whatsapp);
+  const phone = brand.phone.replace(/\s/g, "");
+  const whatsapp = whatsAppHref(brand.whatsapp);
   const showHotelRequest = items.some((item) => item.href === "/hotels");
+  const showBusRequest = items.some((item) => item.href === "/buses");
 
   return (
     <footer className="footer site-footer">
@@ -28,13 +29,13 @@ export async function HomeFooter({ items }: { items: NavItem[] }) {
             <li>
               <a href={`tel:${phone}`}>
                 <PhoneIcon />
-                {theme.contact.phone}
+                {brand.phone}
               </a>
             </li>
             <li>
-              <a href={`mailto:${theme.contact.email}`}>
+              <a href={`mailto:${brand.email}`}>
                 <MailIcon />
-                {theme.contact.email}
+                {brand.email}
               </a>
             </li>
             {whatsapp ? (
@@ -46,6 +47,45 @@ export async function HomeFooter({ items }: { items: NavItem[] }) {
               </li>
             ) : null}
           </ul>
+          {Object.values(brand.social).some(Boolean) ? (
+            <ul className="site-footer__reach">
+              {brand.social.facebook ? (
+                <li>
+                  <a href={brand.social.facebook} target="_blank" rel="noreferrer">
+                    Facebook
+                  </a>
+                </li>
+              ) : null}
+              {brand.social.instagram ? (
+                <li>
+                  <a href={brand.social.instagram} target="_blank" rel="noreferrer">
+                    Instagram
+                  </a>
+                </li>
+              ) : null}
+              {brand.social.twitter ? (
+                <li>
+                  <a href={brand.social.twitter} target="_blank" rel="noreferrer">
+                    X
+                  </a>
+                </li>
+              ) : null}
+              {brand.social.linkedin ? (
+                <li>
+                  <a href={brand.social.linkedin} target="_blank" rel="noreferrer">
+                    LinkedIn
+                  </a>
+                </li>
+              ) : null}
+              {brand.social.youtube ? (
+                <li>
+                  <a href={brand.social.youtube} target="_blank" rel="noreferrer">
+                    YouTube
+                  </a>
+                </li>
+              ) : null}
+            </ul>
+          ) : null}
         </div>
 
         <nav aria-label="Explore">
@@ -82,6 +122,11 @@ export async function HomeFooter({ items }: { items: NavItem[] }) {
             {showHotelRequest ? (
               <li>
                 <Link prefetch={false} href="/hotels/request">Find a hotel</Link>
+              </li>
+            ) : null}
+            {showBusRequest ? (
+              <li>
+                <Link prefetch={false} href="/buses/request">Request a bus</Link>
               </li>
             ) : null}
             <li>

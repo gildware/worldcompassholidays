@@ -140,6 +140,14 @@ function Icon({
       </svg>
     );
   }
+  if (name === "bus") {
+    return (
+      <svg {...common}>
+        <rect x="4.5" y="4.5" width="15" height="12.5" rx="1.8" />
+        <path d="M4.5 11h15M8 19v-2M16 19v-2" />
+      </svg>
+    );
+  }
   if (name === "settings") {
     return (
       <svg {...common}>

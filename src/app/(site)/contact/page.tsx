@@ -3,8 +3,8 @@ import Link from "next/link";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { EnquiryForm } from "@/components/site/EnquiryForm";
 import { PageIntro } from "@/components/site/PageIntro";
-import { theme } from "@/config/theme";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getSiteSettings, type SiteSettings } from "@/lib/brand";
 import { enquiryInterests } from "@/lib/navigation";
 import { absoluteUrl, graphLd, organizationNode, pageMetadata, phoneE164, siteOrigin } from "@/lib/seo";
 
@@ -17,17 +17,18 @@ export const metadata: Metadata = pageMetadata({
   path: "/contact",
 });
 
-const officeLabel = theme.contact.city;
 const officeMapEmbed = "https://maps.google.com/maps?q=India&z=5&output=embed";
-const officeMapLink = "https://www.google.com/maps/search/?api=1&query=India";
-const phoneHref = `tel:${phoneE164(theme.contact.phone)}`;
 
 export default async function ContactPage({
   searchParams,
 }: {
   searchParams: Promise<{ sent?: string }>;
 }) {
-  const [{ sent }, user] = await Promise.all([searchParams, getCurrentUser()]);
+  const [{ sent }, user, settings] = await Promise.all([
+    searchParams,
+    getCurrentUser(),
+    getSiteSettings(),
+  ]);
   const customer =
     user?.scope === "customer"
       ? { name: user.name, email: user.email, phone: user.phone }
@@ -60,7 +61,7 @@ export default async function ContactPage({
 
       <section className="relative z-10 mx-auto max-w-[1320px] px-5 pt-6 pb-8 lg:pt-0">
         <div className="lg:w-[calc(50%-1.25rem)]">
-          <ContactDetails />
+          <ContactDetails settings={settings} />
         </div>
         <div className="relative z-10 mt-6 rounded bg-white px-5 py-5 shadow-[0px_10px_60px_rgba(5,16,54,0.05)] lg:absolute lg:top-[-130px] lg:right-5 lg:mt-0 lg:w-[42%] lg:px-6 lg:py-6">
           <PageIntro
@@ -83,41 +84,41 @@ export default async function ContactPage({
   );
 }
 
-const contactDetails = [
-  {
-    title: "Based in",
-    icon: "pin" as const,
-    value: officeLabel,
-    href: officeMapLink,
-    hint: "Open the map",
-    external: true,
-  },
-  {
-    title: "Phone and WhatsApp",
-    icon: "phone" as const,
-    value: theme.contact.phone,
-    href: phoneHref,
-    hint: "Call now",
-    external: false,
-  },
-  {
-    title: "Email",
-    icon: "mail" as const,
-    value: theme.contact.email,
-    href: `mailto:${theme.contact.email}`,
-    hint: "Write an email",
-    external: false,
-  },
-];
-
-const socialLinks = [
-  { label: "Facebook", href: "https://facebook.com/", icon: "facebook" as const },
-  { label: "Twitter", href: "https://twitter.com/", icon: "twitter" as const },
-  { label: "Instagram", href: "https://instagram.com/", icon: "instagram" as const },
-  { label: "LinkedIn", href: "https://linkedin.com/", icon: "linkedin" as const },
-];
-
-function ContactDetails() {
+function ContactDetails({ settings }: { settings: SiteSettings }) {
+  const officeMapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`;
+  const contactDetails = [
+    {
+      title: "Based in",
+      icon: "pin" as const,
+      value: settings.address,
+      href: officeMapLink,
+      hint: "Open the map",
+      external: true,
+    },
+    {
+      title: "Phone and WhatsApp",
+      icon: "phone" as const,
+      value: settings.phone,
+      href: `tel:${phoneE164(settings.phone)}`,
+      hint: "Call now",
+      external: false,
+    },
+    {
+      title: "Email",
+      icon: "mail" as const,
+      value: settings.email,
+      href: `mailto:${settings.email}`,
+      hint: "Write an email",
+      external: false,
+    },
+  ];
+  const socialLinks = [
+    { label: "Facebook", href: settings.social.facebook, icon: "facebook" as const },
+    { label: "Twitter", href: settings.social.twitter, icon: "twitter" as const },
+    { label: "Instagram", href: settings.social.instagram, icon: "instagram" as const },
+    { label: "LinkedIn", href: settings.social.linkedin, icon: "linkedin" as const },
+    { label: "YouTube", href: settings.social.youtube, icon: "youtube" as const },
+  ].filter((item) => item.href);
   return (
     <div>
       <h2 className="text-2xl font-semibold tracking-tight">Contact Us</h2>
@@ -146,6 +147,7 @@ function ContactDetails() {
             </p>
           </a>
         ))}
+        {socialLinks.length ? (
         <article className="rounded-xl border border-line bg-white p-5 shadow-[0px_10px_60px_rgba(5,16,54,0.05)]">
           <span className="flex size-11 items-center justify-center rounded-full bg-brand-soft text-brand">
             <ContactIcon name="share" />
@@ -166,6 +168,7 @@ function ContactDetails() {
             ))}
           </div>
         </article>
+        ) : null}
       </div>
     </div>
   );
@@ -174,7 +177,7 @@ function ContactDetails() {
 function ContactIcon({
   name,
 }: {
-  name: "pin" | "phone" | "mail" | "share" | "facebook" | "twitter" | "instagram" | "linkedin";
+  name: "pin" | "phone" | "mail" | "share" | "facebook" | "twitter" | "instagram" | "linkedin" | "youtube";
 }) {
   const common = {
     viewBox: "0 0 24 24",
@@ -240,6 +243,14 @@ function ContactIcon({
         <rect x="4" y="4" width="16" height="16" rx="4" />
         <circle cx="12" cy="12" r="3.5" />
         <circle cx="17.2" cy="6.8" r="0.8" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  }
+  if (name === "youtube") {
+    return (
+      <svg {...common}>
+        <rect x="3.5" y="6" width="17" height="12" rx="3" />
+        <path d="m10 9.5 5 2.5-5 2.5z" fill="currentColor" stroke="none" />
       </svg>
     );
   }

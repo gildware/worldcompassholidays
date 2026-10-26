@@ -616,6 +616,8 @@ export function siteMapGroups() {
     ...(modules.cars ? [{ href: "/rentals/cars/request", label: "Ask for a car" }] : []),
     ...(modules.bikes ? [{ href: "/rentals/bikes", label: "Rent a bike" }] : []),
     ...(modules.bikes ? [{ href: "/rentals/bikes/request", label: "Ask for a bike" }] : []),
+    ...(modules.buses ? [{ href: "/buses", label: "Find a bus" }] : []),
+    ...(modules.buses ? [{ href: "/buses/request", label: "Request a bus" }] : []),
     { href: "/visa-services", label: "Apply for a visa" },
     { href: "/meet-and-assist", label: "Request a greeter" },
     { href: "/meet-and-assist/request", label: "Send a greeter request" },

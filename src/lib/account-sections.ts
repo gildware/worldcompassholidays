@@ -1,6 +1,6 @@
 import { modules } from "@/config/modules";
 
-export const accountSectionKeys = ["tour", "hotel", "visa", "assist", "car", "bike"] as const;
+export const accountSectionKeys = ["tour", "hotel", "visa", "assist", "car", "bike", "bus"] as const;
 
 export type AccountSectionKey = (typeof accountSectionKeys)[number];
 
@@ -97,6 +97,19 @@ export const accountSections: AccountSection[] = [
     module: "bike",
     fleet: "bike",
   },
+  {
+    key: "bus",
+    href: "/account/buses",
+    label: "Bus booking",
+    tabLabel: "Bus booking",
+    serviceLabel: "Bus",
+    description: "Bus requests",
+    empty: "No bus bookings yet.",
+    actionHref: "/buses/request",
+    actionLabel: "Request a bus",
+    module: "bus",
+    fleet: null,
+  },
 ];
 
 export function visibleAccountSections() {
@@ -105,6 +118,7 @@ export function visibleAccountSections() {
     if (section.key === "hotel") return modules.hotels;
     if (section.key === "car") return modules.cars;
     if (section.key === "bike") return modules.bikes;
+    if (section.key === "bus") return modules.buses;
     return true;
   });
 }

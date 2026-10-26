@@ -10,9 +10,9 @@ import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import type { FormState } from "@/lib/forms";
-import { theme } from "@/config/theme";
+import { deskWhatsAppHref } from "@/lib/brand";
 import { emailField } from "@/lib/validation";
-import { visaWhatsAppText, whatsAppHref } from "@/lib/visa";
+import { visaWhatsAppText } from "@/lib/visa";
 
 const visaTypes = ["tourist", "business", "family", "transit", "other"] as const;
 
@@ -171,7 +171,7 @@ export async function submitVisaRequest(
   if (customer) revalidateCustomerBooking("visa", booking.reference);
 
   if (channel === "whatsapp") {
-    const desk = whatsAppHref(theme.contact.whatsapp);
+    const desk = await deskWhatsAppHref();
     const message = visaWhatsAppText({
       reference: booking.reference,
       name: data.name,

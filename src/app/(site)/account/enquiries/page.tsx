@@ -7,9 +7,9 @@ import { withEnquiryImages } from "@/lib/enquiry-images";
 import { customEnquiryWhere, toEnquiryView } from "@/lib/enquiries";
 import { privateMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = privateMetadata("Enquiries", "Tour, hotel, car, and bike requests on your account.");
+export const metadata: Metadata = privateMetadata("Enquiries", "Tour, hotel, car, bike, and bus requests on your account.");
 
-const types = new Set(["tour", "hotel", "car", "bike"]);
+const types = new Set(["tour", "hotel", "car", "bike", "bus"]);
 
 export default async function AccountEnquiriesPage({
   searchParams,

@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Srinagar → Jammu · 12 Nov — World Compass Holidays</title>
+  <meta name="description" content="Choose a listed bus or send a request. Web and PWA demo.">
+  <meta name="theme-color" content="#051036">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #051036;
+      --blue: #3554d1;
+      --blue-dark: #2a43b0;
+      --blue-soft: #e5f0fd;
+      --muted: #697488;
+      --line: #e4e7ef;
+      --surface: #f6f7fb;
+      --white: #ffffff;
+      --green: #0d6b52;
+      --gold: #e7c98a;
+      --danger: #9f1239;
+      --shadow: 0 12px 40px rgba(5, 16, 54, 0.08);
+      --sans: "Jost", sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--surface);
+      color: var(--navy);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.45;
+      accent-color: var(--blue);
+    }
+    [hidden] { display: none !important; }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    h1, h2, p { margin: 0; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+    .preview-bar {
+      position: sticky; top: 0; z-index: 80;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 8px 16px; background: var(--navy); color: #fff;
+    }
+    .preview-bar strong { font-size: 13px; font-weight: 600; }
+    .preview-bar span { color: #c5cbe0; font-size: 13px; }
+    .modes { display: flex; gap: 4px; background: rgba(255,255,255,.08); padding: 4px; border-radius: 999px; }
+    .modes button {
+      border: 0; background: transparent; color: #c5cbe0; border-radius: 999px;
+      padding: 8px 14px; font-weight: 600; font-size: 13px;
+    }
+    .modes button[aria-pressed="true"] { background: #fff; color: var(--navy); }
+
+    .stage { padding: 16px; }
+    .app {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      min-height: 760px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .mast {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 18px;
+      background: var(--navy);
+      color: #fff;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .brand b {
+      display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px;
+      background: var(--blue); color: #fff; font-size: 11px; font-weight: 700;
+    }
+    .brand strong { display: block; font-size: 14px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+    .brand em { font-style: normal; color: var(--gold); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; }
+    .mast-meta { font-size: 12px; color: #c5cbe0; text-align: right; }
+    .mast-meta span { color: var(--gold); }
+
+    .finder {
+      display: grid;
+      grid-template-columns: 28px 1fr 1fr 160px 140px auto;
+      gap: 10px;
+      align-items: stretch;
+      padding: 14px 18px;
+      background: var(--white);
+      border-bottom: 1px solid var(--line);
+    }
+    .spine {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--blue);
+    }
+    .spine i { width: 8px; height: 8px; border: 2px solid var(--blue); border-radius: 50%; display: block; background: var(--white); }
+    .spine b { width: 2px; flex: 1; background: var(--blue); min-height: 18px; display: block; }
+    .cell { display: grid; gap: 4px; min-width: 0; }
+    .cell span { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .cell select, .cell input, .who {
+      width: 100%; border: 1px solid var(--line); background: var(--surface); color: var(--navy);
+      min-height: 44px; padding: 0 12px; border-radius: 12px;
+    }
+    .who { text-align: left; background: var(--surface); }
+    .who strong { display: block; font-weight: 600; }
+    .who-wrap { position: relative; }
+    .who-panel {
+      position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; width: 260px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 8px;
+    }
+    .guest { display: flex; justify-content: space-between; align-items: center; padding: 8px; }
+    .step { display: inline-flex; align-items: center; gap: 8px; }
+    .step button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--white); }
+    .step b { min-width: 1.4ch; text-align: center; }
+    .go, .ghost, .hold, .wa {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid transparent; min-height: 44px; padding: 0 16px; font-weight: 600; border-radius: 999px;
+    }
+    .go { background: var(--blue); color: #fff; border: 0; }
+    .go:hover { background: var(--blue-dark); }
+    .ghost { background: var(--white); color: var(--navy); border-color: var(--line); }
+    .hold { background: var(--blue); color: #fff; border: 0; }
+    .hold:hover { background: var(--blue-dark); }
+    .wa { background: #128c7e; color: #fff; border: 0; }
+    .block { width: 100%; }
+
+    .board { display: grid; grid-template-columns: minmax(0, 1fr) 340px; min-height: 560px; }
+    .results { padding: 18px 18px 28px; }
+    .board-head { display: flex; justify-content: space-between; gap: 12px; align-items: end; margin-bottom: 8px; }
+    .board-head h1 { font-size: 28px; font-weight: 600; letter-spacing: -.02em; }
+    .board-head h1 b { color: var(--blue); font-weight: 600; }
+    .live { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--blue); }
+    .hint { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0 10px; }
+    .tabs button {
+      border: 1px solid var(--line); background: var(--white); color: var(--navy); border-radius: 999px;
+      padding: 8px 12px; font-size: 13px; font-weight: 600;
+    }
+    .tabs button.is-on { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+    .cols {
+      display: grid; grid-template-columns: 1.5fr 1.2fr .9fr;
+      gap: 8px; padding: 6px 12px; color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600;
+    }
+    .list { display: flex; flex-direction: column; gap: 10px; }
+    .svc {
+      display: grid; grid-template-columns: 1.5fr 1.2fr .9fr; gap: 8px; align-items: center;
+      background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 14px 12px;
+    }
+    .svc.is-on { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+    .op { display: flex; gap: 10px; align-items: center; min-width: 0; }
+    .thumb { flex: none; width: 88px; height: 64px; object-fit: cover; border-radius: 12px; background: var(--blue-soft); }
+    .code {
+      flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px;
+      background: var(--blue-soft); color: var(--blue); font-size: 11px; font-weight: 700;
+    }
+    .op h2 { font-size: 16px; font-weight: 600; }
+    .op h2 a { text-decoration: none; }
+    .op h2 a:hover { color: var(--blue); }
+    .op p { color: var(--muted); font-size: 13px; }
+    .details { color: var(--blue); font-weight: 600; font-size: 13px; text-decoration: none; }
+    .clock strong { display: block; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .clock span { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .06em; }
+    .path { display: flex; align-items: center; gap: 8px; }
+    .path .clock:last-child { text-align: right; }
+    .dur {
+      flex: 1; text-align: center; font-size: 11px; color: var(--muted); font-weight: 600;
+      border-bottom: 1px dashed var(--line); padding-bottom: 2px;
+    }
+    .fare { text-align: right; }
+    .fare strong { display: block; font-size: 18px; font-weight: 650; }
+    .fare span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+
+    .empty { background: var(--white); border: 1px dashed var(--line); border-radius: 16px; padding: 20px; color: var(--muted); }
+    .empty h2 { margin-bottom: 8px; color: var(--navy); }
+
+    .ticket {
+      background: var(--white);
+      border-left: 1px solid var(--line);
+      padding: 18px;
+    }
+    .ticket h2 { font-size: 22px; font-weight: 600; }
+    .lede { color: var(--muted); font-size: 14px; margin: 6px 0 12px; }
+    .stub {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px;
+      background: var(--blue-soft); border-radius: 12px; padding: 12px; margin-bottom: 12px; font-size: 13px;
+    }
+    .stub strong { display: block; color: var(--blue); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+    .form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form .span { grid-column: 1 / -1; }
+    .form label { display: grid; gap: 6px; font-size: 13px; font-weight: 650; }
+    .form input, .form select, .form textarea {
+      width: 100%; min-height: 44px; border: 1px solid var(--line); background: var(--white); padding: 8px 12px; border-radius: 12px;
+    }
+    .form textarea { min-height: 72px; }
+    .kinds { display: flex; flex-wrap: wrap; gap: 6px; }
+    .kinds button {
+      border: 1px solid var(--line); background: var(--white); color: var(--navy); border-radius: 999px; min-height: 36px; padding: 6px 12px; font-size: 13px; font-weight: 600;
+    }
+    .kinds button[aria-pressed="true"] { background: var(--navy); color: #fff; border-color: var(--navy); }
+    .actions { display: grid; gap: 8px; }
+    .fine { color: var(--muted); font-size: 12px; font-weight: 500; }
+    .ok { background: #e8f7f1; color: var(--green); border-radius: 12px; padding: 12px; font-size: 14px; }
+
+    .pwa-status, .pwa-header, .tabbar, .search-summary, .sheet-close { display: none; }
+
+    body.mode-pwa { background: #e8ebf3; }
+    body.mode-pwa .stage { display: flex; justify-content: center; padding: 24px 12px 48px; }
+    body.mode-pwa .app {
+      width: 390px; height: 844px; min-height: 0; border-radius: 28px;
+      border: 10px solid var(--navy); display: flex; flex-direction: column;
+    }
+    body.mode-pwa .pwa-status {
+      display: flex; justify-content: space-between; padding: 8px 16px 0; font-size: 11px; font-weight: 600; color: #c5cbe0; background: var(--navy);
+    }
+    body.mode-pwa .pwa-header {
+      display: flex; gap: 8px; align-items: center; padding: 8px 12px 12px; background: var(--navy); color: #fff;
+    }
+    body.mode-pwa .pwa-header .code { background: var(--blue); color: #fff; width: 32px; height: 32px; font-size: 10px; }
+    body.mode-pwa .mast, body.mode-pwa .finder { display: none; }
+    body.mode-pwa .search-summary {
+      display: block; flex: 1; text-align: left; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16);
+      border-radius: 999px; padding: 8px 14px; color: #fff;
+    }
+    body.mode-pwa .search-summary strong { display: block; font-size: 14px; }
+    body.mode-pwa .search-summary span { color: #c5cbe0; font-size: 12px; }
+    body.mode-pwa .board { display: block; flex: 1; overflow: auto; background: var(--surface); }
+    body.mode-pwa .results { padding: 12px 12px 96px; }
+    body.mode-pwa .cols { display: none; }
+    body.mode-pwa .svc { grid-template-columns: 1fr; }
+    body.mode-pwa .fare { text-align: left; border-top: 1px solid var(--line); padding-top: 10px; }
+    body.mode-pwa .ticket {
+      position: absolute; left: 0; right: 0; bottom: 56px; z-index: 12; max-height: 72%; overflow: auto; display: none;
+      border-left: 0; border-radius: 20px 20px 0 0; box-shadow: var(--shadow);
+    }
+    body.mode-pwa .ticket.is-open { display: block; }
+    body.mode-pwa .sheet-close { display: inline-flex; margin-bottom: 8px; }
+    body.mode-pwa .shade {
+      display: none; position: absolute; inset: 0 0 56px; background: rgba(5,16,54,.46); z-index: 11; border: 0;
+    }
+    body.mode-pwa .shade.is-on { display: block; }
+    body.mode-pwa .dock {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      position: absolute; left: 10px; right: 10px; bottom: 72px; z-index: 8;
+      background: var(--navy); color: #fff; border-radius: 16px; padding: 10px 12px;
+    }
+    body.mode-pwa .dock .sub { color: #c5cbe0; font-size: 12px; }
+    body.mode-pwa .tabbar {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      background: var(--white); border-top: 1px solid var(--line);
+      padding: 6px 0 calc(8px + env(safe-area-inset-bottom));
+    }
+    body.mode-pwa .tabbar a, body.mode-pwa .tabbar button {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      border: 0; background: none; color: var(--muted); font-size: 10px; font-weight: 650; text-decoration: none;
+    }
+    body.mode-pwa .tabbar a[aria-current="page"] { color: var(--blue); }
+    body.mode-web .dock, body.mode-web .shade { display: none; }
+
+    @media (max-width: 980px) {
+      body.mode-web .finder { grid-template-columns: 28px 1fr 1fr; }
+      body.mode-web .finder .go, body.mode-web .who-wrap, body.mode-web .cell.date { grid-column: 2 / -1; }
+      body.mode-web .board { grid-template-columns: 1fr; }
+      body.mode-web .ticket { border-left: 0; border-top: 1px solid var(--line); }
+      body.mode-web .cols { display: none; }
+      body.mode-web .svc { grid-template-columns: 1fr; }
+      body.mode-web .fare { text-align: left; }
+    }
+    @media (max-width: 720px) { .preview-bar span { display: none; } }
+  </style>
+</head>
+<body class="mode-web">
+  <div class="preview-bar">
+    <div>
+      <strong>Bus demo</strong>
+      <span>Project light theme · Jost · navy / blue. Timetable, not a stay card.</span>
+    </div>
+    <div class="modes" role="group" aria-label="Layout">
+      <button type="button" id="mode-web" aria-pressed="true">Web</button>
+      <button type="button" id="mode-pwa" aria-pressed="false">PWA</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="app" id="app">
+      <div class="pwa-status"><span>9:41</span><span>World Compass</span></div>
+      <header class="pwa-header">
+        <b class="code">WCH</b>
+        <button class="search-summary" id="search-summary" type="button">
+          <strong id="summary-route">Srinagar → Jammu</strong>
+          <span id="summary-when">12 Nov · 2 pax</span>
+        </button>
+      </header>
+
+      <header class="mast" id="top">
+        <a class="brand" href="#top">
+          <b>WCH</b>
+          <span><strong>World Compass</strong><em>Holidays</em></span>
+        </a>
+        <div class="mast-meta">Buses <span>Srinagar depot</span></div>
+      </header>
+
+      <form class="finder" id="search">
+        <div class="spine" aria-hidden="true"><i></i><b></b><i></i></div>
+        <label class="cell from"><span>From</span>
+          <select id="from" name="from">
+            <option>Srinagar</option><option>Jammu</option><option>Leh</option><option>Gulmarg</option><option>Katra</option><option>Delhi</option>
+          </select>
+        </label>
+        <label class="cell to"><span>To</span>
+          <select id="to" name="to">
+            <option>Jammu</option><option>Srinagar</option><option>Leh</option><option>Gulmarg</option><option>Katra</option><option>Delhi</option>
+          </select>
+        </label>
+        <label class="cell date"><span>Date</span>
+          <input id="date" name="date" type="date" required>
+        </label>
+        <div class="who-wrap cell" id="who-wrap">
+          <span>Passengers</span>
+          <button class="who" id="who" type="button" aria-expanded="false" aria-controls="who-panel">
+            <strong id="who-label">2 adults</strong>
+          </button>
+          <div class="who-panel" id="who-panel" hidden>
+            <div class="guest"><span>Adults</span><div class="step"><button type="button" data-step="adults" data-dir="-1">−</button><b id="adults-n">2</b><button type="button" data-step="adults" data-dir="1">+</button></div></div>
+            <div class="guest"><span>Children</span><div class="step"><button type="button" data-step="children" data-dir="-1">−</button><b id="children-n">0</b><button type="button" data-step="children" data-dir="1">+</button></div></div>
+          </div>
+        </div>
+        <button class="go" type="submit">Search buses</button>
+      </form>
+
+      <div class="board">
+        <section class="results">
+          <div class="board-head">
+            <div>
+              <p class="live">Buses</p>
+              <h1 id="heading">Srinagar <b>→</b> Jammu</h1>
+              <p class="hint"><span id="count">3</span> buses on this route. Choose one, or request a bus if it is not listed. We quote before anything is booked.</p>
+            </div>
+            <button class="ghost" type="button" id="custom-open">Request a bus</button>
+          </div>
+          <div class="tabs" id="chips" role="toolbar" aria-label="Service type">
+            <button class="is-on" type="button" data-filter="all">All</button>
+            <button type="button" data-filter="volvo">Volvo AC</button>
+            <button type="button" data-filter="sleeper">Sleeper</button>
+            <button type="button" data-filter="seater">Seater</button>
+            <button type="button" data-filter="night">Night</button>
+          </div>
+          <div class="cols"><span>Operator / boarding</span><span>Depart — arrive</span><span>From</span></div>
+          <div class="list" id="list"></div>
+          <div class="empty" id="empty" hidden>
+            <h2>No bus on this route</h2>
+            <p>Send from, to, date, and passengers. We quote operators that are not on this list.</p>
+            <button class="go" type="button" id="empty-request">Request this route</button>
+          </div>
+        </section>
+
+        <aside class="ticket" id="brief" aria-labelledby="brief-title">
+          <button class="ghost sheet-close" type="button" id="brief-close">Close</button>
+          <h2 id="brief-title">Request this bus</h2>
+          <p class="lede" id="brief-lede">Choose a listed bus or tell us the route. We reply with a quote. Nothing is booked until you accept it.</p>
+          <div class="stub" id="picked">
+            <div><strong>Bus</strong>Not listed — custom request</div>
+            <div><strong>Passengers</strong>2 adults</div>
+            <div><strong>From</strong>Srinagar</div>
+            <div><strong>To</strong>Jammu</div>
+          </div>
+          <form class="form" id="request">
+            <label>Name <input name="name" required autocomplete="name"></label>
+            <label>Phone <input name="phone" type="tel" required autocomplete="tel" placeholder="+91 70064 22204"></label>
+            <label>From <input name="fromCity" id="req-from" required></label>
+            <label>To <input name="toCity" id="req-to" required></label>
+            <label>Travel date <input name="travelDate" id="req-date" type="date" required></label>
+            <label>Preferred time
+              <select name="time">
+                <option value="any">Any</option>
+                <option>Morning</option>
+                <option>Afternoon</option>
+                <option>Night / sleeper</option>
+              </select>
+            </label>
+            <div class="span">
+              <p class="fine" style="margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Class</p>
+              <div class="kinds" role="group" aria-label="Class">
+                <button type="button" data-type="any" aria-pressed="true">Any</button>
+                <button type="button" data-type="volvo" aria-pressed="false">Volvo AC</button>
+                <button type="button" data-type="sleeper" aria-pressed="false">Sleeper</button>
+                <button type="button" data-type="seater" aria-pressed="false">Seater</button>
+              </div>
+              <input type="hidden" name="coach" id="req-coach" value="any">
+            </div>
+            <label class="span">Boarding note
+              <textarea name="note" rows="3" placeholder="Pickup at TRC, extra bags, prefer Volvo"></textarea>
+            </label>
+            <div class="span actions">
+              <button class="hold block" type="submit">Send request</button>
+              <button class="wa block" type="button" id="whatsapp">Send on WhatsApp</button>
+              <p class="fine">Demo only. Nobody is contacted. This is a quote request, not a ticket.</p>
+            </div>
+          </form>
+          <div class="ok" id="success" hidden></div>
+        </aside>
+      </div>
+
+      <button class="shade" id="shade" type="button" aria-label="Close request"></button>
+      <div class="dock" id="dock">
+        <div><strong id="dock-title">Request a bus</strong><div class="sub" id="dock-sub">If it is not on the list</div></div>
+        <button class="go" type="button" id="dock-open">Request</button>
+      </div>
+      <nav class="tabbar" aria-label="Primary">
+        <a href="/"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 10 12 3l8 7v11H4z"/></svg>Home</a>
+        <a href="/hotel-list-demo.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 21V7l8-4 8 4v14H4z"/></svg>Stays</a>
+        <a href="#" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 16h16l-2-5H6zm3 3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm10 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>Buses</a>
+        <a href="/tour-list-demo.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z"/></svg>Tours</a>
+      </nav>
+    </div>
+  </div>
+  <script>
+    const BUSES = [
+      { id: "jk-day", code: "JK12", from: "Srinagar", to: "Jammu", name: "JKSRTC Super Deluxe", type: "seater", when: "day", depart: "06:00", arrive: "12:40", duration: "6h 40m", pickup: "TRC bay 2", drop: "Jammu RS", price: 890, klass: "2×2 seater", photo: "https://images.unsplash.com/photo-1544620341-11cb2cd96c10?auto=format&fit=crop&w=400&q=70" },
+      { id: "himalaya-night", code: "HV09", from: "Srinagar", to: "Jammu", name: "Himalayan Volvo", type: "volvo", when: "night", depart: "21:30", arrive: "04:15+1", duration: "6h 45m", pickup: "Lal Chowk", drop: "Jammu stand", price: 1450, klass: "AC recliner", photo: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=400&q=70" },
+      { id: "snowline", code: "SL04", from: "Srinagar", to: "Leh", name: "Snowline Benz", type: "sleeper", when: "day", depart: "07:30", arrive: "18:00", duration: "10h 30m", pickup: "Pantha Chowk", drop: "Leh bazaar", price: 2200, klass: "AC sleeper", photo: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=400&q=70" },
+      { id: "valley", code: "VC21", from: "Srinagar", to: "Gulmarg", name: "Valley Connect", type: "seater", when: "day", depart: "08:15", arrive: "10:35", duration: "2h 20m", pickup: "TRC", drop: "Gondola base", price: 420, klass: "Seater", photo: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=400&q=70" },
+      { id: "katra", code: "KT08", from: "Jammu", to: "Katra", name: "Katra Express", type: "seater", when: "day", depart: "08:15", arrive: "09:45", duration: "1h 30m", pickup: "Jammu Tawi", drop: "Katra stand", price: 180, klass: "Shuttle seater", photo: "https://images.unsplash.com/photo-1544620341-11cb2cd96c10?auto=format&fit=crop&w=400&q=70" },
+      { id: "night-rider", code: "NR22", from: "Srinagar", to: "Jammu", name: "Night Rider", type: "sleeper", when: "night", depart: "22:15", arrive: "05:00+1", duration: "6h 45m", pickup: "Nowgam", drop: "Satwari", price: 1680, klass: "Sleeper", photo: "https://images.unsplash.com/photo-1529070538774-184bbc794a38?auto=format&fit=crop&w=400&q=70" },
+      { id: "leh-return", code: "SL19", from: "Leh", to: "Srinagar", name: "Snowline return", type: "sleeper", when: "day", depart: "06:00", arrive: "17:20", duration: "11h 20m", pickup: "Leh bazaar", drop: "TRC", price: 2150, klass: "Via Kargil", photo: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=70" },
+      { id: "delhi-night", code: "NB20", from: "Delhi", to: "Jammu", name: "Northbound Volvo", type: "volvo", when: "night", depart: "20:00", arrive: "07:30+1", duration: "11h 30m", pickup: "Kashmere Gate", drop: "Jammu stand", price: 1890, klass: "Volvo AC", photo: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=400&q=70" }
+    ];
+
+    const money = (n) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+    const state = { from: "Srinagar", to: "Jammu", date: "2026-11-12", adults: 2, children: 0, filter: "all", selected: null, coach: "any" };
+    const $ = (id) => document.getElementById(id);
+
+    $("date").value = state.date;
+    $("req-date").value = state.date;
+    $("req-from").value = state.from;
+    $("req-to").value = state.to;
+
+    function whoText() {
+      const parts = [`${state.adults} adult${state.adults === 1 ? "" : "s"}`];
+      if (state.children) parts.push(`${state.children} child${state.children === 1 ? "" : "ren"}`);
+      return parts.join(" · ");
+    }
+    function seatsNeeded() { return state.adults + state.children; }
+    function shown() {
+      return BUSES.filter((bus) => {
+        if (bus.from !== state.from || bus.to !== state.to) return false;
+        if (state.filter === "night") return bus.when === "night";
+        if (state.filter !== "all") return bus.type === state.filter;
+        return true;
+      });
+    }
+
+    function renderList() {
+      const buses = shown();
+      $("heading").innerHTML = `${state.from} <b>→</b> ${state.to}`;
+      $("count").textContent = String(buses.length);
+      $("summary-route").textContent = `${state.from} → ${state.to}`;
+      $("summary-when").textContent = `${new Date(state.date + "T12:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" })} · ${seatsNeeded()} pax`;
+      $("who-label").textContent = whoText();
+      $("list").innerHTML = buses.map((bus) => {
+        const on = state.selected === bus.id;
+        return `<article class="svc${on ? " is-on" : ""}" data-id="${bus.id}">
+          <div class="op">
+            <a href="bus-details-demo.html?id=${bus.id}"><img class="thumb" alt="" src="${bus.photo}"></a>
+            <div>
+              <h2><a href="bus-details-demo.html?id=${bus.id}">${bus.name}</a></h2>
+              <p>${bus.klass} · ${bus.pickup} · <a class="details" href="bus-details-demo.html?id=${bus.id}">Photos &amp; details</a></p>
+            </div>
+          </div>
+          <div class="path">
+            <div class="clock"><strong>${bus.depart}</strong><span>${bus.from}</span></div>
+            <div class="dur">${bus.duration}</div>
+            <div class="clock"><strong>${bus.arrive}</strong><span>${bus.to}</span></div>
+          </div>
+          <div class="fare">
+            <strong>${money(bus.price * seatsNeeded())}</strong>
+            <span>From ${money(bus.price)} a person · ${whoText()}</span>
+            <button class="hold" type="button" data-request="${bus.id}">Choose this bus</button>
+          </div>
+        </article>`;
+      }).join("");
+      $("empty").hidden = buses.length > 0;
+      if (!buses.length) selectBus(null);
+    }
+
+    function selectBus(id) {
+      state.selected = id;
+      const bus = BUSES.find((item) => item.id === id);
+      $("picked").innerHTML = bus
+        ? `<div><strong>Bus</strong>${bus.code} ${bus.name}</div><div><strong>Passengers</strong>${whoText()}</div><div><strong>Depart</strong>${bus.depart} · ${bus.pickup}</div><div><strong>Arrive</strong>${bus.arrive} · ${bus.drop}</div>`
+        : `<div><strong>Bus</strong>Not listed — custom request</div><div><strong>Passengers</strong>${whoText()}</div><div><strong>From</strong>${state.from}</div><div><strong>To</strong>${state.to}</div>`;
+      $("brief-title").textContent = bus ? "Request this bus" : "Request a bus";
+      $("brief-lede").textContent = bus
+        ? `You chose ${bus.name}. We confirm availability and send a quote. Nothing is booked until you accept it.`
+        : "The bus you want is not on the list. Send the route, date, and passengers. We quote an operator.";
+      $("req-from").value = bus ? bus.from : state.from;
+      $("req-to").value = bus ? bus.to : state.to;
+      $("req-date").value = state.date;
+      if (bus) {
+        state.coach = bus.type;
+        $("req-coach").value = bus.type;
+        document.querySelectorAll("[data-type]").forEach((btn) => btn.setAttribute("aria-pressed", String(btn.dataset.type === bus.type)));
+      }
+      $("dock-title").textContent = bus ? bus.name : "Request a bus";
+      $("dock-sub").textContent = bus ? `${bus.depart} · ${money(bus.price * seatsNeeded())}` : "If it is not on the list";
+      $("request").hidden = false;
+      $("success").hidden = true;
+      document.querySelectorAll(".svc").forEach((el) => el.classList.toggle("is-on", el.dataset.id === id));
+    }
+
+    function openBrief() {
+      $("brief").classList.add("is-open");
+      $("shade").classList.add("is-on");
+    }
+    function closeBrief() {
+      $("brief").classList.remove("is-open");
+      $("shade").classList.remove("is-on");
+    }
+    function setMode(mode) {
+      document.body.className = "mode-" + mode;
+      $("mode-web").setAttribute("aria-pressed", String(mode === "web"));
+      $("mode-pwa").setAttribute("aria-pressed", String(mode === "pwa"));
+      closeBrief();
+    }
+
+    $("mode-web").onclick = () => setMode("web");
+    $("mode-pwa").onclick = () => setMode("pwa");
+    $("search").onsubmit = (event) => {
+      event.preventDefault();
+      state.from = $("from").value;
+      state.to = $("to").value;
+      state.date = $("date").value;
+      renderList();
+      selectBus(null);
+    };
+    $("who").onclick = () => {
+      const open = $("who-panel").hidden;
+      $("who-panel").hidden = !open;
+      $("who").setAttribute("aria-expanded", String(open));
+    };
+    document.addEventListener("click", (event) => {
+      if (!$("who-wrap")?.contains(event.target)) {
+        $("who-panel").hidden = true;
+        $("who").setAttribute("aria-expanded", "false");
+      }
+    });
+    document.querySelectorAll("[data-step]").forEach((btn) => {
+      btn.onclick = () => {
+        const key = btn.dataset.step;
+        const dir = Number(btn.dataset.dir);
+        const min = key === "adults" ? 1 : 0;
+        state[key] = Math.min(9, Math.max(min, state[key] + dir));
+        $("adults-n").textContent = state.adults;
+        $("children-n").textContent = state.children;
+        $("who-label").textContent = whoText();
+        renderList();
+      };
+    });
+    $("chips").onclick = (event) => {
+      const btn = event.target.closest("[data-filter]");
+      if (!btn) return;
+      state.filter = btn.dataset.filter;
+      document.querySelectorAll("[data-filter]").forEach((el) => el.classList.toggle("is-on", el === btn));
+      renderList();
+    };
+    $("list").onclick = (event) => {
+      const btn = event.target.closest("[data-request]");
+      if (!btn) return;
+      selectBus(btn.dataset.request);
+      openBrief();
+    };
+    $("custom-open").onclick = $("empty-request").onclick = $("dock-open").onclick = () => {
+      selectBus(null);
+      openBrief();
+    };
+    $("brief-close").onclick = $("shade").onclick = closeBrief;
+    document.querySelectorAll("[data-type]").forEach((btn) => {
+      btn.onclick = () => {
+        state.coach = btn.dataset.type;
+        $("req-coach").value = state.coach;
+        document.querySelectorAll("[data-type]").forEach((el) => el.setAttribute("aria-pressed", String(el === btn)));
+      };
+    });
+    $("request").onsubmit = (event) => {
+      event.preventDefault();
+      const data = new FormData(event.currentTarget);
+      const bus = BUSES.find((item) => item.id === state.selected);
+      $("request").hidden = true;
+      $("success").hidden = false;
+      $("success").textContent = `Noted as WCH-BUS-1042. ${data.get("name")}, ${bus ? bus.name : "a custom bus"} ${data.get("fromCity")} to ${data.get("toCity")} on ${data.get("travelDate")} for ${whoText()}. This is a quote request only.`;
+    };
+    $("whatsapp").onclick = () => $("request").requestSubmit();
+
+    renderList();
+  </script>
+</body>
+</html>

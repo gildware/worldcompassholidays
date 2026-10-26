@@ -14,19 +14,21 @@ export function VisaApply({
   reference,
   compact = false,
   tile = false,
+  whatsappPhone,
 }: {
   sent: boolean;
   reference: string;
   customer: { name: string; email: string; phone: string } | null;
   compact?: boolean;
   tile?: boolean;
+  whatsappPhone?: string;
 }) {
   const label = compact || tile
     ? "Check if you can take my country"
     : sent
       ? "Apply for another traveller"
       : "Apply for visa help";
-  const whatsapp = whatsAppHref(theme.contact.whatsapp);
+  const whatsapp = whatsAppHref(whatsappPhone || theme.contact.whatsapp);
   const whatsappHref = whatsapp
     ? `${whatsapp}?text=${encodeURIComponent("Hello, I need visa help for an Indian passport.")}`
     : null;

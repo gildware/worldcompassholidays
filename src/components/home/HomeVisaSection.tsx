@@ -1,27 +1,39 @@
 import Image from "next/image";
 import Link from "next/link";
 import { homeVisaServices } from "@/lib/homeServices";
+import { defaultHomePageContent } from "@/lib/home-page";
 import "@/styles/home-desks.css";
 
-export function HomeVisaSection({ headingId = "home-visa" }: { headingId?: string }) {
+export function HomeVisaSection({
+  headingId = "home-visa",
+  title = defaultHomePageContent.visa.title,
+  subtitle = defaultHomePageContent.visa.subtitle,
+  meta = defaultHomePageContent.visa.meta,
+  moreLabel = defaultHomePageContent.visa.moreLabel,
+  ctaLabel = defaultHomePageContent.visa.ctaLabel,
+}: {
+  headingId?: string;
+  title?: string;
+  subtitle?: string;
+  meta?: string;
+  moreLabel?: string;
+  ctaLabel?: string;
+}) {
   return (
     <section className="hx-visa" aria-labelledby={headingId}>
       <div className="hx-visa__head">
         <div>
           <div className="hx-desk__title">
-            <h2 id={headingId}>Visa help</h2>
+            <h2 id={headingId}>{title}</h2>
             <Link prefetch={false} href="/visa-services" className="hx-desk__more">
-              View more details
+              {moreLabel}
             </Link>
           </div>
-          <p>
-            We list every document, quote our fee, and keep the embassy fee on its own line.
-            Nothing is filed until you accept.
-          </p>
-          <p className="hx-visa__meta">14 destinations · Reply within 24 hours · Embassy fee kept separate</p>
+          <p>{subtitle}</p>
+          {meta ? <p className="hx-visa__meta">{meta}</p> : null}
         </div>
         <Link prefetch={false} href="/visa-services/apply" className="hx-desk__go">
-          Get a visa quote
+          {ctaLabel}
         </Link>
       </div>
       <div className="hx-visa__grid">

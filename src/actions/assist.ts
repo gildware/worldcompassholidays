@@ -11,12 +11,11 @@ import {
   assistServiceLabel,
   assistServices,
   assistWhatsAppText,
-  whatsAppHref,
 } from "@/lib/assist";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
-import { theme } from "@/config/theme";
+import { deskWhatsAppHref } from "@/lib/brand";
 import { airportLabel, findAirport } from "@/lib/data/airports";
 import { prisma } from "@/lib/db";
 import type { FormState } from "@/lib/forms";
@@ -213,7 +212,7 @@ export async function submitAssistRequest(
   if (customer) revalidateCustomerBooking("assist", booking.reference);
 
   if (channel === "whatsapp") {
-    const desk = whatsAppHref(theme.contact.whatsapp);
+    const desk = await deskWhatsAppHref();
     const message = assistWhatsAppText({
       reference: booking.reference,
       name: data.name,

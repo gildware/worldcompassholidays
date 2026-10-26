@@ -1,7 +1,7 @@
 import { theme } from "@/config/theme";
 import { HeroCatalogSearch } from "@/components/hero/HeroCatalogSearch";
 
-const index = ({ coverUrl }) => {
+const index = ({ coverUrl, title, description }) => {
   return (
     <section className="masthead -type-1 z-5">
       <div className="masthead__bg">
@@ -19,14 +19,14 @@ const index = ({ coverUrl }) => {
                 className="text-60 lg:text-40 md:text-30 text-white"
                 data-aos="fade-up"
               >
-                {theme.headline}
+                {title || theme.headline}
               </h1>
               <p
                 className="text-white mt-6 md:mt-10"
                 data-aos="fade-up"
                 data-aos-delay="100"
               >
-                {theme.tagline}
+                {description || theme.tagline}
               </p>
             </div>
             {/* End hero title */}

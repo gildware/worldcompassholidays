@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Bus details — World Compass Holidays</title>
+  <meta name="description" content="Photos, boarding points, and a quote request for a listed bus.">
+  <meta name="theme-color" content="#051036">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #051036;
+      --blue: #3554d1;
+      --blue-dark: #2a43b0;
+      --blue-soft: #e5f0fd;
+      --muted: #697488;
+      --line: #e4e7ef;
+      --surface: #f6f7fb;
+      --white: #ffffff;
+      --green: #0d6b52;
+      --gold: #e7c98a;
+      --shadow: 0 12px 40px rgba(5, 16, 54, 0.08);
+      --sans: "Jost", sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: var(--surface); color: var(--navy); font-family: var(--sans); font-size: 15px; line-height: 1.5; }
+    [hidden] { display: none !important; }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    h1, h2, h3, p { margin: 0; }
+    img { display: block; max-width: 100%; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+    .wrap { width: min(1100px, calc(100% - 32px)); margin: 0 auto; }
+
+    .top {
+      background: var(--navy); color: #fff; padding: 12px 0;
+    }
+    .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .brand b { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: var(--blue); font-size: 11px; }
+    .brand strong { display: block; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; }
+    .brand em { font-style: normal; color: var(--gold); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; }
+    .back { color: #c5cbe0; text-decoration: none; font-weight: 600; font-size: 14px; }
+    .back:hover { color: #fff; }
+
+    .crumb { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 0 8px; color: var(--muted); font-size: 14px; }
+    .crumb a { color: var(--blue); text-decoration: none; font-weight: 600; }
+
+    .hero { display: grid; grid-template-columns: 1.4fr .9fr; gap: 8px; border-radius: 16px; overflow: hidden; min-height: 380px; }
+    .hero button { border: 0; padding: 0; background: #d9deea; position: relative; overflow: hidden; }
+    .hero img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+    .hero__main { min-height: 380px; }
+    .hero__side { display: grid; gap: 8px; }
+    .all {
+      position: absolute; right: 12px; bottom: 12px; z-index: 1;
+      background: #fff; border: 0; border-radius: 999px; padding: 8px 12px; font-weight: 600; box-shadow: var(--shadow);
+    }
+
+    .page { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; align-items: start; padding: 22px 0 48px; }
+    .kicker { color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { font-size: clamp(26px, 4vw, 36px); font-weight: 600; letter-spacing: -.02em; }
+    .route { color: var(--muted); margin: 6px 0 16px; }
+    .times { display: flex; align-items: center; gap: 12px; background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+    .times strong { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+    .times span { color: var(--muted); font-size: 13px; }
+    .dur { flex: 1; text-align: center; color: var(--muted); font-size: 12px; font-weight: 600; border-bottom: 1px dashed var(--line); }
+
+    .block { background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin-top: 14px; }
+    .block h2 { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
+    .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .facts div { background: var(--surface); border-radius: 12px; padding: 12px; }
+    .facts strong { display: block; font-size: 12px; color: var(--blue); letter-spacing: .06em; text-transform: uppercase; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag { background: var(--blue-soft); color: var(--blue); border-radius: 999px; padding: 6px 10px; font-size: 13px; font-weight: 600; }
+    .copy { color: var(--muted); }
+    .others { display: grid; gap: 8px; }
+    .other { display: grid; grid-template-columns: 72px 1fr auto; gap: 10px; align-items: center; text-decoration: none; padding: 8px; border: 1px solid var(--line); border-radius: 12px; }
+    .other img { width: 72px; height: 52px; object-fit: cover; border-radius: 8px; }
+    .other strong { display: block; }
+    .other span { color: var(--muted); font-size: 13px; }
+
+    .ticket { position: sticky; top: 16px; background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+    .ticket h2 { font-size: 20px; }
+    .lede { color: var(--muted); font-size: 14px; margin: 6px 0 12px; }
+    .price { font-size: 26px; font-weight: 650; }
+    .price small { display: block; color: var(--muted); font-size: 13px; font-weight: 500; }
+    .form { display: grid; gap: 10px; margin-top: 12px; }
+    .form label { display: grid; gap: 6px; font-size: 13px; font-weight: 650; }
+    .form input, .form textarea {
+      min-height: 44px; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px;
+    }
+    .form textarea { min-height: 72px; }
+    .go, .wa {
+      border: 0; border-radius: 999px; min-height: 44px; font-weight: 600;
+    }
+    .go { background: var(--blue); color: #fff; }
+    .go:hover { background: var(--blue-dark); }
+    .wa { background: #128c7e; color: #fff; }
+    .fine { color: var(--muted); font-size: 12px; }
+    .ok { background: #e8f7f1; color: var(--green); border-radius: 12px; padding: 12px; }
+
+    .light {
+      position: fixed; inset: 0; z-index: 40; background: rgba(5,16,54,.88);
+      display: none; align-items: center; justify-content: center; padding: 24px;
+    }
+    .light.is-on { display: flex; }
+    .light img { max-height: 80vh; max-width: min(960px, 100%); border-radius: 12px; position: static; }
+    .light button {
+      position: absolute; top: 16px; right: 16px; border: 0; background: #fff; border-radius: 999px; padding: 8px 14px; font-weight: 600;
+    }
+
+    .dock { display: none; }
+
+    @media (max-width: 900px) {
+      .hero, .page, .facts { grid-template-columns: 1fr; }
+      .hero__main { min-height: 240px; }
+      .hero__side { grid-template-columns: 1fr 1fr 1fr; }
+      .hero__side button { min-height: 88px; }
+      .ticket { position: static; }
+      .dock {
+        display: flex; position: sticky; bottom: 0; align-items: center; justify-content: space-between; gap: 10px;
+        background: var(--navy); color: #fff; padding: 12px 16px; margin: 0 -16px -16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="bus-list-demo.html">
+        <b>WCH</b>
+        <span><strong>World Compass</strong><em>Holidays</em></span>
+      </a>
+      <a class="back" href="bus-list-demo.html">← All buses</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="crumb"><a href="bus-list-demo.html">Buses</a> / <span id="crumb-route">Srinagar → Jammu</span> / <span id="crumb-name">Bus</span></p>
+    <div class="hero" id="gallery"></div>
+
+    <div class="page">
+      <div>
+        <p class="kicker" id="kicker">Volvo AC</p>
+        <h1 id="name">Bus</h1>
+        <p class="route" id="route"></p>
+        <div class="times">
+          <div><strong id="depart">—</strong><span id="pickup"></span></div>
+          <div class="dur" id="duration"></div>
+          <div style="text-align:right"><strong id="arrive">—</strong><span id="drop"></span></div>
+        </div>
+
+        <section class="block">
+          <h2>On this coach</h2>
+          <div class="tags" id="tags"></div>
+          <p class="copy" id="about" style="margin-top:12px"></p>
+        </section>
+
+        <section class="block">
+          <h2>Boarding and drop</h2>
+          <div class="facts">
+            <div><strong>Pickup</strong><span id="pickup-2"></span></div>
+            <div><strong>Drop</strong><span id="drop-2"></span></div>
+            <div><strong>Operator</strong><span id="operator"></span></div>
+            <div><strong>Service</strong><span id="code"></span></div>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>Other buses on this route</h2>
+          <div class="others" id="others"></div>
+        </section>
+      </div>
+
+      <aside class="ticket">
+        <h2>Request this bus</h2>
+        <p class="lede">Photos are for the coach type. We confirm the operator and send a quote. Nothing is booked until you accept it.</p>
+        <p class="price" id="price"></p>
+        <form class="form" id="request">
+          <label>Name <input name="name" required autocomplete="name"></label>
+          <label>Phone <input name="phone" type="tel" required autocomplete="tel" placeholder="+91 70064 22204"></label>
+          <label>Note
+            <textarea name="note" placeholder="Pickup point, extra bags"></textarea>
+          </label>
+          <button class="go" type="submit">Send request</button>
+          <button class="wa" type="button" id="whatsapp">Send on WhatsApp</button>
+          <p class="fine">Demo only. This is a quote request, not a ticket. There is no live seat map.</p>
+        </form>
+        <div class="ok" id="success" hidden></div>
+        <div class="dock">
+          <div><strong id="dock-price"></strong></div>
+          <button class="go" type="button" id="dock-go">Request</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <div class="light" id="light" role="dialog" aria-label="Photo">
+    <button type="button" id="light-close">Close</button>
+    <img id="light-img" alt="">
+  </div>
+
+  <script>
+    const BUSES = [
+      { id: "jk-day", code: "JK12", from: "Srinagar", to: "Jammu", name: "JKSRTC Super Deluxe", type: "seater", depart: "06:00", arrive: "12:40", duration: "6h 40m", pickup: "TRC bay 2", drop: "Jammu Railway Station", price: 890, klass: "2×2 seater", about: "A daytime state-run seater on the Srinagar–Jammu highway. Windows on both sides. We request this operator; we do not assign a seat number here.", tags: ["Day service", "2×2 seater", "Water", "GST in quote"], photos: [
+        "https://images.unsplash.com/photo-1544620341-11cb2cd96c10?auto=format&fit=crop&w=1400&q=75",
+        "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1464219789935-c2d9d9aba644?auto=format&fit=crop&w=900&q=70"
+      ]},
+      { id: "himalaya-night", code: "HV09", from: "Srinagar", to: "Jammu", name: "Himalayan Volvo", type: "volvo", depart: "21:30", arrive: "04:15+1", duration: "6h 45m", pickup: "Lal Chowk", drop: "Jammu bus stand", price: 1450, klass: "AC recliner", about: "Overnight Volvo-style AC coach. Recliners, reading lights, and a charging point. Photos show this class of coach, not a live seat.", tags: ["Night", "AC", "Recliner", "Charging point", "Blanket"], photos: [
+        "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1400&q=75",
+        "https://images.unsplash.com/photo-1544620341-11cb2cd96c10?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1529070538774-184bbc794a38?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1464219789935-c2d9d9aba644?auto=format&fit=crop&w=900&q=70"
+      ]},
+      { id: "snowline", code: "SL04", from: "Srinagar", to: "Leh", name: "Snowline Benz", type: "sleeper", depart: "07:30", arrive: "18:00", duration: "10h 30m", pickup: "Pantha Chowk", drop: "Leh Main Bazaar", price: 2200, klass: "AC sleeper", about: "High-altitude day run via Kargil. Sleeper berths and oxygen on board when the operator runs this coach. Quote confirms the vehicle on the day.", tags: ["Sleeper", "Via Kargil", "Blanket", "High altitude"], photos: [
+        "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1400&q=75",
+        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1544620341-11cb2cd96c10?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=900&q=70"
+      ]},
+      { id: "valley", code: "VC21", from: "Srinagar", to: "Gulmarg", name: "Valley Connect", type: "seater", depart: "08:15", arrive: "10:35", duration: "2h 20m", pickup: "TRC", drop: "Gulmarg Gondola base", price: 420, klass: "Seater", about: "Short scenic seater to the gondola. Daily morning departure.", tags: ["Scenic", "Seater", "Daily"], photos: [
+        "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1400&q=75",
+        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1544620341-11cb2cd96c10?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1464219789935-c2d9d9aba644?auto=format&fit=crop&w=900&q=70"
+      ]},
+      { id: "katra", code: "KT08", from: "Jammu", to: "Katra", name: "Katra Express", type: "seater", depart: "08:15", arrive: "09:45", duration: "1h 30m", pickup: "Jammu Tawi", drop: "Katra bus stand", price: 180, klass: "Shuttle seater", about: "Frequent shuttle seater between Jammu and Katra.", tags: ["Shuttle", "Seater"], photos: [
+        "https://images.unsplash.com/photo-1544620341-11cb2cd96c10?auto=format&fit=crop&w=1400&q=75",
+        "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1464219789935-c2d9d9aba644?auto=format&fit=crop&w=900&q=70"
+      ]},
+      { id: "night-rider", code: "NR22", from: "Srinagar", to: "Jammu", name: "Night Rider", type: "sleeper", depart: "22:15", arrive: "05:00+1", duration: "6h 45m", pickup: "Nowgam", drop: "Satwari", price: 1680, klass: "Sleeper", about: "Night sleeper. Upper or lower berth is confirmed in the quote, not on this page.", tags: ["Night", "Sleeper", "AC"], photos: [
+        "https://images.unsplash.com/photo-1529070538774-184bbc794a38?auto=format&fit=crop&w=1400&q=75",
+        "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1544620341-11cb2cd96c10?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1464219789935-c2d9d9aba644?auto=format&fit=crop&w=900&q=70"
+      ]},
+      { id: "leh-return", code: "SL19", from: "Leh", to: "Srinagar", name: "Snowline return", type: "sleeper", depart: "06:00", arrive: "17:20", duration: "11h 20m", pickup: "Leh Main Bazaar", drop: "TRC, Srinagar", price: 2150, klass: "Via Kargil", about: "Return sleeper from Leh. Stops at Kargil.", tags: ["Sleeper", "Via Kargil"], photos: [
+        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=75",
+        "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1544620341-11cb2cd96c10?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=900&q=70"
+      ]},
+      { id: "delhi-night", code: "NB20", from: "Delhi", to: "Jammu", name: "Northbound Volvo", type: "volvo", depart: "20:00", arrive: "07:30+1", duration: "11h 30m", pickup: "Kashmere Gate ISBT", drop: "Jammu bus stand", price: 1890, klass: "Volvo AC", about: "Overnight Volvo from Delhi ISBT. Toilet on board on this class of coach.", tags: ["Night", "Volvo AC", "Toilet", "Blanket"], photos: [
+        "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1400&q=75",
+        "https://images.unsplash.com/photo-1544620341-11cb2cd96c10?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1529070538774-184bbc794a38?auto=format&fit=crop&w=900&q=70",
+        "https://images.unsplash.com/photo-1464219789935-c2d9d9aba644?auto=format&fit=crop&w=900&q=70"
+      ]}
+    ];
+
+    const money = (n) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+    const id = new URLSearchParams(location.search).get("id") || "himalaya-night";
+    const bus = BUSES.find((item) => item.id === id) || BUSES[1];
+    const $ = (key) => document.getElementById(key);
+
+    document.title = `${bus.name} — World Compass Holidays`;
+    $("crumb-route").textContent = `${bus.from} → ${bus.to}`;
+    $("crumb-name").textContent = bus.name;
+    $("kicker").textContent = bus.klass;
+    $("name").textContent = bus.name;
+    $("route").textContent = `${bus.from} to ${bus.to} · ${bus.code}`;
+    $("depart").textContent = bus.depart;
+    $("arrive").textContent = bus.arrive;
+    $("duration").textContent = bus.duration;
+    $("pickup").textContent = bus.pickup;
+    $("drop").textContent = bus.drop;
+    $("pickup-2").textContent = bus.pickup;
+    $("drop-2").textContent = bus.drop;
+    $("operator").textContent = bus.name;
+    $("code").textContent = bus.code;
+    $("about").textContent = bus.about;
+    $("tags").innerHTML = bus.tags.map((tag) => `<span class="tag">${tag}</span>`).join("");
+    $("price").innerHTML = `${money(bus.price)} <small>From, a person. Final total is in the quote.</small>`;
+    $("dock-price").textContent = money(bus.price);
+
+    $("gallery").innerHTML = `
+      <button class="hero__main" type="button" data-src="${bus.photos[0]}"><img alt="${bus.name} exterior" src="${bus.photos[0]}"><span class="all">See all photos</span></button>
+      <div class="hero__side">
+        ${bus.photos.slice(1, 4).map((src, i) => `<button type="button" data-src="${src}"><img alt="Coach photo ${i + 2}" src="${src}"></button>`).join("")}
+      </div>`;
+
+    $("others").innerHTML = BUSES.filter((item) => item.from === bus.from && item.to === bus.to && item.id !== bus.id).slice(0, 3).map((item) => `
+      <a class="other" href="bus-details-demo.html?id=${item.id}">
+        <img alt="" src="${item.photos[0]}">
+        <span><strong>${item.name}</strong><span>${item.depart} → ${item.arrive}</span></span>
+        <span>${money(item.price)}</span>
+      </a>`).join("") || `<p class="copy">No other listed bus on this corridor. <a href="bus-list-demo.html">Request a bus</a>.</p>`;
+
+    function openPhoto(src) {
+      $("light-img").src = src;
+      $("light").classList.add("is-on");
+    }
+    $("gallery").onclick = (event) => {
+      const btn = event.target.closest("[data-src]");
+      if (btn) openPhoto(btn.dataset.src);
+    };
+    $("light-close").onclick = $("light").onclick = (event) => {
+      if (event.target === $("light") || event.target === $("light-close")) $("light").classList.remove("is-on");
+    };
+    $("request").onsubmit = (event) => {
+      event.preventDefault();
+      const data = new FormData(event.currentTarget);
+      $("request").hidden = true;
+      $("success").hidden = false;
+      $("success").textContent = `Noted as WCH-BUS-1042. ${data.get("name")}, ${bus.name} ${bus.from} to ${bus.to}. Quote request only.`;
+    };
+    $("whatsapp").onclick = $("dock-go").onclick = () => $("request").requestSubmit();
+  </script>
+</body>
+</html>

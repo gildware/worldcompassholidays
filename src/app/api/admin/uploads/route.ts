@@ -11,6 +11,7 @@ const FOLDER_PERMISSION: Record<string, StaffPermission> = {
   vehicles: "vehicles.manage",
   buses: "buses.manage",
   brand: "staff.manage",
+  home: "staff.manage",
 };
 
 export async function POST(request: Request) {

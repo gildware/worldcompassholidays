@@ -21,4 +21,11 @@ export const theme = {
     whatsapp: "+91- 70064 22204",
     email: "hi@worldcompassholiday.com",
   },
+  social: {
+    facebook: "https://facebook.com/",
+    instagram: "https://instagram.com/",
+    twitter: "https://twitter.com/",
+    linkedin: "https://linkedin.com/",
+    youtube: "",
+  },
 } as const;

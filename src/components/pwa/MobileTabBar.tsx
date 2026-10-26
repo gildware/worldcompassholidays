@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-type TabIcon = "home" | "hotels" | "tours" | "bikes" | "cars" | "more" | "account" | "visa" | "meet" | "about" | "help" | "contact" | "pages";
+type TabIcon = "home" | "hotels" | "tours" | "bikes" | "cars" | "buses" | "more" | "account" | "visa" | "meet" | "about" | "help" | "contact" | "pages";
 
 const tabs: {
   href: string;
@@ -51,6 +51,12 @@ const moreLinks: {
   icon: TabIcon;
   match: (p: string) => boolean;
 }[] = [
+  {
+    href: "/buses",
+    label: "Find a bus",
+    icon: "buses",
+    match: (p) => p === "/buses" || p.startsWith("/buses/"),
+  },
   {
     href: "/account",
     label: "See your bookings",
@@ -142,6 +148,14 @@ function TabGlyph({ name }: { name: TabIcon }) {
         <g transform="translate(0 300) scale(1 -1)">
           <path fill="currentColor" d="M4 150Q4 151 4 152L39 246Q46 265 62.0 276.0Q78 287 98 288H203Q222 287 238.0 276.0Q254 265 261 246L296 150ZM250 125V100Q250 95 246.5 91.5Q243 88 237.5 88.0Q232 88 228.5 91.5Q225 95 225 100V125H75V100Q75 95 71.5 91.5Q68 88 62.5 88.0Q57 88 53.5 91.5Q50 95 50 100V125H0V100Q0 81 10.0 65.5Q20 50 37 43V25Q37 15 44.5 7.5Q52 0 62.5 0.0Q73 0 80.5 7.5Q88 15 88 25V38H213V25Q212 15 219.5 7.5Q227 0 237.5 0.0Q248 0 255.0 7.5Q262 15 262 25V43Q280 50 290.0 65.5Q300 81 300 100V125Z" />
         </g>
+      </svg>
+    ),
+    buses: (
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path
+          fill="currentColor"
+          d="M7 3.5h10A3.5 3.5 0 0 1 20.5 7v9.2a2.3 2.3 0 0 1-2.3 2.3h-.4a1.8 1.8 0 1 1-3.6 0H9.8a1.8 1.8 0 1 1-3.6 0h-.4A2.3 2.3 0 0 1 3.5 16.2V7A3.5 3.5 0 0 1 7 3.5Zm.5 2.2h9v5.2h-9V5.7Zm1.4 9.2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Zm6.2 0a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Z"
+        />
       </svg>
     ),
     more: (

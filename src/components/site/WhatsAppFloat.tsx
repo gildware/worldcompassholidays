@@ -6,11 +6,11 @@ import { whatsAppHref } from "@/lib/visa";
 
 const greeting = "Hello, I need help planning a trip.";
 
-export function WhatsAppFloat() {
+export function WhatsAppFloat({ phone }: { phone?: string }) {
   const pathname = usePathname() || "/";
   if (pathname.startsWith("/admin")) return null;
 
-  const href = whatsAppHref(theme.contact.whatsapp);
+  const href = whatsAppHref(phone || theme.contact.whatsapp);
   if (!href) return null;
 
   return (

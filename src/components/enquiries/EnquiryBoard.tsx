@@ -15,6 +15,7 @@ const kindClass: Record<EnquiryView["module"], string> = {
   hotel: "bg-amber-50 text-amber-900",
   car: "bg-emerald-50 text-emerald-800",
   bike: "bg-violet-50 text-violet-900",
+  bus: "bg-indigo-50 text-indigo-900",
 };
 
 export function EnquiryBoard({

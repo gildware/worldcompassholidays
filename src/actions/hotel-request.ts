@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { theme } from "@/config/theme";
+import { deskWhatsAppHref } from "@/lib/brand";
 import { getCurrentUser } from "@/lib/auth/session";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
@@ -11,7 +11,6 @@ import { budgetNote, hotelBudgetBands, hotelMeals, hotelRoomTypes, isBudgetValue
 import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
 import { emailField } from "@/lib/validation";
-import { whatsAppHref } from "@/lib/visa";
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const stars = ["any", "3", "4", "5"] as const;
@@ -260,7 +259,7 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
   if (customer) revalidateCustomerBooking("hotel", booking.reference);
 
   if (channel === "whatsapp") {
-    const desk = whatsAppHref(theme.contact.whatsapp);
+    const desk = await deskWhatsAppHref();
     const message = whatsAppText({ ...data, reference: booking.reference });
     return {
       error: null,

@@ -1,3 +1,4 @@
+import { busCoachTypes, busTimeWindows, coachLabel, timeWindowLabel } from "@/lib/buses";
 import {
   bikeBudgetBands,
   bikeTypes,
@@ -16,9 +17,9 @@ import {
 } from "@/lib/custom-request";
 import { formatDate } from "@/lib/format";
 
-export const customEnquiryKinds = ["custom_tour", "custom_hotel", "custom_car", "custom_bike"] as const;
+export const customEnquiryKinds = ["custom_tour", "custom_hotel", "custom_car", "custom_bike", "custom_bus"] as const;
 
-export type EnquiryModule = "tour" | "hotel" | "car" | "bike";
+export type EnquiryModule = "tour" | "hotel" | "car" | "bike" | "bus";
 
 export const enquiryFilters = [
   { value: "all", label: "All" },
@@ -26,6 +27,7 @@ export const enquiryFilters = [
   { value: "hotel", label: "Hotels" },
   { value: "car", label: "Cars" },
   { value: "bike", label: "Bikes" },
+  { value: "bus", label: "Buses" },
 ] as const;
 
 export const enquiryStatuses = ["pending", "under_review", "review", "closed"] as const;
@@ -87,6 +89,7 @@ export function enquiryModule(kind: string): EnquiryModule | null {
   if (kind === "custom_hotel") return "hotel";
   if (kind === "custom_car") return "car";
   if (kind === "custom_bike") return "bike";
+  if (kind === "custom_bus") return "bus";
   return null;
 }
 
@@ -128,6 +131,7 @@ function budgetLabel(module: EnquiryModule, details: Record<string, unknown>) {
   if (module === "tour") return budgetNote(tourBudgetBands, value, "per person");
   if (module === "hotel") return budgetNote(hotelBudgetBands, value, "per night");
   if (module === "car") return budgetNote(carBudgetBands, value, "per day");
+  if (module === "bus") return "";
   return budgetNote(bikeBudgetBands, value, "per day");
 }
 
@@ -189,6 +193,16 @@ function factsFor(module: EnquiryModule, details: Record<string, unknown>) {
     if (transmission && transmission !== "either") push(facts, "Transmission", optionLabel(transmissionOptions, transmission));
     const seats = text(details, "childSeats");
     if (seats && seats !== "0") push(facts, "Child seats", seats);
+  } else if (module === "bus") {
+    push(facts, "From", text(details, "fromCity"));
+    push(facts, "To", text(details, "toCity"));
+    push(facts, "Bus", text(details, "itemName"));
+    push(facts, "Date", showDate(text(details, "start")));
+    const coach = text(details, "coach");
+    if (coach && coach !== "any") push(facts, "Coach", coachLabel(coach) || optionLabel(busCoachTypes, coach));
+    const window = text(details, "timeWindow");
+    if (window && window !== "any") push(facts, "Time", timeWindowLabel(window) || optionLabel(busTimeWindows, window));
+    push(facts, "Passengers", text(details, "passengers"));
   } else {
     push(facts, "Pickup", text(details, "destination"));
     push(facts, "Point", text(details, "pickupPoint"));
@@ -213,6 +227,7 @@ const kindLabels: Record<EnquiryModule, string> = {
   hotel: "Hotel",
   car: "Car",
   bike: "Bike",
+  bus: "Bus",
 };
 
 export function toEnquiryView(booking: {
@@ -234,7 +249,7 @@ export function toEnquiryView(booking: {
   } catch {
     return null;
   }
-  const module = enquiryModule(typeof parsed.kind === "string" ? parsed.kind : "") ?? (["tour", "hotel", "car", "bike"].includes(booking.module) ? (booking.module as EnquiryModule) : null);
+  const module = enquiryModule(typeof parsed.kind === "string" ? parsed.kind : "") ?? (["tour", "hotel", "car", "bike", "bus"].includes(booking.module) ? (booking.module as EnquiryModule) : null);
   if (!module || !isCustomEnquiry(parsed)) return null;
   const facts = factsFor(module, parsed);
   const summary = facts

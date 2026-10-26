@@ -2,6 +2,7 @@ import Link from "next/link";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { CompanyLinks, GoldRule } from "@/components/company/CompanyChrome";
 import { branches, company, companyUpdated, moreServices, signServices } from "@/lib/company";
+import { getSiteSettings } from "@/lib/brand";
 import { absoluteUrl, graphLd, organizationNode, phoneE164, siteOrigin } from "@/lib/seo";
 import { whatsAppHref } from "@/lib/visa";
 
@@ -23,9 +24,10 @@ const steps = [
   },
 ];
 
-export function AboutView() {
-  const phoneHref = `tel:${phoneE164(company.phone)}`;
-  const whatsapp = whatsAppHref(company.whatsapp);
+export async function AboutView() {
+  const settings = await getSiteSettings();
+  const phoneHref = `tel:${phoneE164(settings.phone)}`;
+  const whatsapp = whatsAppHref(settings.whatsapp);
 
   return (
     <article>
@@ -209,9 +211,9 @@ export function AboutView() {
             <p className="text-xs font-semibold tracking-[0.18em] text-[#8a6230] uppercase">Talk to the desk</p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight">Start with the place and the dates</h2>
             <p className="mt-3 max-w-xl text-base leading-7 text-muted">
-              {company.contactName} · {company.phone}
+              {company.contactName} · {settings.phone}
               <br />
-              {company.email}
+              {settings.email}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

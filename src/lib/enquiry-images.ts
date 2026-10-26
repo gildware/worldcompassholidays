@@ -7,9 +7,10 @@ const fallback: Record<EnquiryModule, string> = {
   hotel: "/img/company/service-hotels.jpg",
   car: "/img/cars/car-rental-banner.jpg",
   bike: "/img/bikes/bike-rental-banner.jpg",
+  bus: "/img/company/service-holidays.jpg",
 };
 
-const placeFacts = new Set(["City", "From", "Pickup", "Area", "Places", "Drop-off", "Hotel", "Tour", "Model"]);
+const placeFacts = new Set(["City", "From", "To", "Pickup", "Area", "Places", "Drop-off", "Hotel", "Tour", "Model", "Bus"]);
 
 function cover(...urls: Array<string | null | undefined>) {
   return urls.map((url) => url?.trim() ?? "").find(Boolean) ?? "";
@@ -17,7 +18,7 @@ function cover(...urls: Array<string | null | undefined>) {
 
 function subject(title: string) {
   return title
-    .replace(/^(hotel|tour|car|bike)\s+request:?\s*/i, "")
+    .replace(/^(hotel|tour|car|bike|bus)\s+request:?\s*/i, "")
     .replace(/^in\s+/i, "")
     .trim();
 }
@@ -54,7 +55,7 @@ function best<T>(items: T[], terms: string[], name: (item: T) => string) {
 export async function withEnquiryImages(rows: EnquiryView[]) {
   if (rows.length === 0) return rows;
   const modules = new Set(rows.map((row) => row.module));
-  const [tours, hotels, vehicles, destinations] = await Promise.all([
+  const [tours, hotels, vehicles, destinations, buses] = await Promise.all([
     modules.has("tour")
       ? prisma.tour.findMany({
           where: { published: true },
@@ -80,10 +81,16 @@ export async function withEnquiryImages(rows: EnquiryView[]) {
           },
         })
       : [],
-    modules.has("hotel") || modules.has("tour")
+    modules.has("hotel") || modules.has("tour") || modules.has("bus")
       ? prisma.destination.findMany({
           where: { published: true },
           select: { name: true, imageUrl: true },
+        })
+      : [],
+    modules.has("bus")
+      ? prisma.busRoute.findMany({
+          where: { published: true },
+          select: { name: true, imageUrl: true, fromCity: true, toCity: true },
         })
       : [],
   ]);
@@ -98,6 +105,10 @@ export async function withEnquiryImages(rows: EnquiryView[]) {
     } else if (row.module === "tour") {
       const tour = best(tours, terms, (item) => item.title);
       image = tour ? cover(tour.featuredImageUrl, tour.imageUrl) : "";
+      if (!image) image = best(destinations, terms, (item) => item.name)?.imageUrl ?? "";
+    } else if (row.module === "bus") {
+      const bus = best(buses, terms, (item) => `${item.name} ${item.fromCity} ${item.toCity}`);
+      image = bus?.imageUrl ?? "";
       if (!image) image = best(destinations, terms, (item) => item.name)?.imageUrl ?? "";
     } else {
       const vehicle = best(

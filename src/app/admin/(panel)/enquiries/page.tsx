@@ -7,7 +7,7 @@ import { customEnquiryWhere, enquiryIsOpen, toEnquiryView } from "@/lib/enquirie
 
 export const metadata: Metadata = { title: "Enquiries" };
 
-const types = new Set(["tour", "hotel", "car", "bike"]);
+const types = new Set(["tour", "hotel", "car", "bike", "bus"]);
 
 export default async function AdminEnquiriesPage({
   searchParams,

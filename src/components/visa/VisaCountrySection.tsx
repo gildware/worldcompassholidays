@@ -15,11 +15,13 @@ export function VisaCountrySection({
   sent,
   reference,
   customer,
+  whatsappPhone,
 }: {
   countries: Country[];
   sent: boolean;
   reference: string;
   customer: Customer;
+  whatsappPhone?: string;
 }) {
   return (
     <section className="pt-20 pb-40">
@@ -47,7 +49,13 @@ export function VisaCountrySection({
             </div>
           ))}
           <div className="col-6 col-md-4 col-lg-3">
-            <VisaApply sent={sent} reference={reference} customer={customer} tile />
+            <VisaApply
+              sent={sent}
+              reference={reference}
+              customer={customer}
+              tile
+              whatsappPhone={whatsappPhone}
+            />
           </div>
         </div>
       </div>

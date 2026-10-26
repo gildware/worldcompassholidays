@@ -43,10 +43,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (modules.cars || modules.bikes) staticEntries.push(entry("/rentals", 0.8, "daily"));
   if (modules.cars) staticEntries.push(entry("/rentals/cars", 0.8, "daily"));
   if (modules.bikes) staticEntries.push(entry("/rentals/bikes", 0.8, "daily"));
-  if (modules.buses) staticEntries.push(entry("/buses", 0.5, "weekly"));
+  if (modules.buses) {
+    staticEntries.push(entry("/buses", 0.7, "weekly"));
+    staticEntries.push(entry("/buses/request", 0.6, "monthly"));
+  }
 
   const kinds = fleetKinds();
-  const [destinations, tours, hotels, vehicles] = await Promise.all([
+  const [destinations, tours, hotels, vehicles, buses] = await Promise.all([
     prisma.destination.findMany({
       where: { published: true },
       select: { slug: true, updatedAt: true },
@@ -69,6 +72,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           select: { slug: true, updatedAt: true },
         })
       : Promise.resolve([]),
+    modules.buses
+      ? prisma.busRoute.findMany({
+          where: { published: true },
+          select: { slug: true, updatedAt: true },
+        })
+      : Promise.resolve([]),
   ]);
 
   return [
@@ -77,5 +86,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...tours.map((item) => entry(`/tours/${item.slug}`, 0.8, "weekly", item.updatedAt)),
     ...hotels.map((item) => entry(`/hotels/${item.slug}`, 0.8, "weekly", item.updatedAt)),
     ...vehicles.map((item) => entry(`/rentals/${item.slug}`, 0.7, "weekly", item.updatedAt)),
+    ...buses.map((item) => entry(`/buses/${item.slug}`, 0.6, "weekly", item.updatedAt)),
   ];
 }
