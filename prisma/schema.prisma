@@ -109,7 +109,12 @@ model CatalogItem {
   iconUrl    String   @default("")
   iconKey    String   @default("")
   iconDriver String   @default("local")
+  mapLat     String   @default("")
+  mapLng     String   @default("")
+  mapZoom    Int      @default(14)
   sortOrder  Int      @default(0)
+  routesFrom BusRoute[] @relation("BusFromLocation")
+  routesTo   BusRoute[] @relation("BusToLocation")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -605,6 +610,25 @@ model RentalBookingEvent {
   @@index([bookingId])
 }
 
+model Bus {
+  id            String     @id @default(cuid())
+  slug          String     @unique
+  name          String
+  operator      String     @default("")
+  coachType     String     @default("seater")
+  summary       String     @default("")
+  about         String     @default("")
+  imageUrl      String     @default("")
+  imageKey      String     @default("")
+  imageDriver   String     @default("local")
+  galleryJson   String     @default("[]")
+  amenitiesJson String     @default("[]")
+  published     Boolean    @default(false)
+  routes        BusRoute[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
 model BusRoute {
   id            String        @id @default(cuid())
   slug          String        @unique
@@ -621,15 +645,27 @@ model BusRoute {
   duration      String        @default("")
   fareFrom      Int           @default(0)
   imageUrl      String        @default("")
+  imageKey      String        @default("")
+  imageDriver   String        @default("local")
   galleryJson   String        @default("[]")
   amenitiesJson String        @default("[]")
   about         String        @default("")
-  published     Boolean       @default(false)
-  destinationId String?
-  destination   Destination?  @relation(fields: [destinationId], references: [id])
-  schedules     BusSchedule[]
+  published      Boolean       @default(false)
+  destinationId  String?
+  destination    Destination?  @relation(fields: [destinationId], references: [id])
+  fromLocationId String?
+  toLocationId   String?
+  fromLocation   CatalogItem?  @relation("BusFromLocation", fields: [fromLocationId], references: [id], onDelete: SetNull)
+  toLocation     CatalogItem?  @relation("BusToLocation", fields: [toLocationId], references: [id], onDelete: SetNull)
+  busId          String?
+  bus            Bus?          @relation(fields: [busId], references: [id], onDelete: Restrict)
+  schedules      BusSchedule[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+
+  @@index([fromLocationId])
+  @@index([toLocationId])
+  @@index([busId])
 }
 
 model BusSchedule {

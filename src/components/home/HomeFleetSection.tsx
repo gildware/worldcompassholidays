@@ -105,9 +105,9 @@ export function HomeFleetSection({
           </div>
         </div>
         {items.length > 0 ? (
-          <div className="row y-gap-30 pt-20">
+          <div className="home-fleet-scroll pt-20">
             {items.map((ride, index) => (
-              <div className="col-lg-3 col-sm-6" key={ride.slug}>
+              <div className="home-fleet-scroll__item" key={ride.slug}>
                 <div className="home-fav-photo">
                   <Link prefetch={false} href={`/rentals/${ride.slug}`} className="d-block">
                     <div className="ratio ratio-16:9 rounded-4 overflow-hidden">

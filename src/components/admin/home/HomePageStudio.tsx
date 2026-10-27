@@ -7,17 +7,26 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Toggle } from "@/components/ui/Toggle";
-import { tourImageFrames } from "@/lib/tours/image-frames";
+import { tourImageFrames, type ImageFrame } from "@/lib/tours/image-frames";
 import { initialFormState } from "@/lib/forms";
 import {
   HOME_SECTION_LABELS,
   type HomePageContent,
   type HomeRailConfig,
   type HomeSectionId,
+  type HomeServiceGroup,
+  type HomeServiceItem,
   type HomeWhyItem,
 } from "@/lib/home-page";
 import type { UploadedImage } from "@/lib/storage/types";
 import "./home-studio.css";
+
+const servicePhotoFrame: ImageFrame = {
+  aspect: 16 / 10,
+  outputWidth: 1600,
+  outputHeight: 1000,
+  label: "16:10",
+};
 
 export type HomePickItem = {
   id: string;
@@ -310,8 +319,11 @@ function sectionDetail(
     const n = content.buses.mode === "manual" ? content.buses.ids.length : live.buses.length;
     return `${content.buses.title} · ${n}`;
   }
-  if (id === "visa") return content.visa.title;
-  if (id === "assist") return content.assist.title;
+  if (id === "services") {
+    const groups = content.services.groups.length;
+    const cards = content.services.groups.reduce((sum, group) => sum + group.items.length, 0);
+    return `${groups} section${groups === 1 ? "" : "s"} · ${cards} card${cards === 1 ? "" : "s"}`;
+  }
   if (id === "cta") return content.cta.title;
   if (id === "why") {
     const n = content.why.items.length;
@@ -409,6 +421,239 @@ function WhyEditor({
           }
         >
           Add a point
+        </button>
+      ) : null}
+    </>
+  );
+}
+
+function emptyServiceCard(): HomeServiceItem {
+  return {
+    id: `card-${Date.now()}`,
+    title: "New card",
+    description: "",
+    href: "/",
+    imageUrl: "",
+    image: null,
+  };
+}
+
+function ServicesEditor({
+  services,
+  onChange,
+}: {
+  services: HomePageContent["services"];
+  onChange: (next: HomePageContent["services"]) => void;
+}) {
+  const [groupDrag, setGroupDrag] = useState<number | null>(null);
+  const [cardDrag, setCardDrag] = useState<{ group: number; index: number } | null>(null);
+  const groups = services.groups;
+
+  const setGroups = (next: HomeServiceGroup[]) => onChange({ ...services, groups: next });
+
+  const patchGroup = (index: number, next: Partial<HomeServiceGroup>) => {
+    setGroups(groups.map((group, i) => (i === index ? { ...group, ...next } : group)));
+  };
+
+  const patchCard = (groupIndex: number, cardIndex: number, next: Partial<HomeServiceItem>) => {
+    const group = groups[groupIndex];
+    if (!group) return;
+    patchGroup(groupIndex, {
+      items: group.items.map((item, i) => (i === cardIndex ? { ...item, ...next } : item)),
+    });
+  };
+
+  return (
+    <>
+      <p className="hs-hint">
+        Each block is a section on the homepage. Every card has a title, a photo, a short
+        description, and a link. Drag a section or a card to change the order.
+      </p>
+      <Field
+        label="Eyebrow"
+        value={services.badge}
+        maxLength={24}
+        onChange={(badge) => onChange({ ...services, badge })}
+      />
+      <Field
+        label="Title"
+        value={services.title}
+        maxLength={80}
+        onChange={(title) => onChange({ ...services, title })}
+      />
+      <Field
+        label="Description"
+        value={services.subtitle}
+        multiline
+        maxLength={240}
+        onChange={(subtitle) => onChange({ ...services, subtitle })}
+      />
+      <div className="hs-why">
+        {groups.map((group, groupIndex) => (
+          <div
+            key={group.id}
+            className={`hs-why-card is-sortable${groupDrag === groupIndex ? " is-dragging" : ""}`}
+            draggable
+            onDragStart={(event) => {
+              if (
+                isDragIgnore(event.target) ||
+                (event.target instanceof Element && event.target.closest(".hs-service-card"))
+              ) {
+                if (event.target instanceof Element && event.target.closest(".hs-service-card")) {
+                  return;
+                }
+                event.preventDefault();
+                return;
+              }
+              event.dataTransfer.effectAllowed = "move";
+              event.dataTransfer.setData("text/plain", group.id);
+              setGroupDrag(groupIndex);
+            }}
+            onDragOver={(event) => {
+              if (cardDrag) return;
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "move";
+              if (groupDrag === null || groupDrag === groupIndex) return;
+              setGroups(moveItem(groups, groupDrag, groupIndex));
+              setGroupDrag(groupIndex);
+            }}
+            onDragEnd={() => setGroupDrag(null)}
+          >
+            <span className="hs-handle" aria-hidden>
+              <GripIcon />
+            </span>
+            <div className="hs-why-fields">
+              <Field
+                label="Section title"
+                value={group.title}
+                maxLength={80}
+                onChange={(title) => patchGroup(groupIndex, { title })}
+              />
+              <Field
+                label="Section description"
+                value={group.subtitle}
+                multiline
+                maxLength={200}
+                onChange={(subtitle) => patchGroup(groupIndex, { subtitle })}
+              />
+              {group.items.map((item, cardIndex) => (
+                <div
+                  key={item.id}
+                  className={`hs-service-card${cardDrag?.group === groupIndex && cardDrag.index === cardIndex ? " is-dragging" : ""}`}
+                  draggable
+                  onDragStart={(event) => {
+                    event.stopPropagation();
+                    if (isDragIgnore(event.target)) {
+                      event.preventDefault();
+                      return;
+                    }
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData("text/plain", item.id);
+                    setCardDrag({ group: groupIndex, index: cardIndex });
+                  }}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.dataTransfer.dropEffect = "move";
+                    if (!cardDrag || cardDrag.group !== groupIndex || cardDrag.index === cardIndex) return;
+                    patchGroup(groupIndex, {
+                      items: moveItem(group.items, cardDrag.index, cardIndex),
+                    });
+                    setCardDrag({ group: groupIndex, index: cardIndex });
+                  }}
+                  onDragEnd={() => setCardDrag(null)}
+                >
+                  <ImageUploader
+                    folder="home"
+                    scope="services"
+                    label={`${item.title || `Card ${cardIndex + 1}`} photo`}
+                    withHiddenFields={false}
+                    frame={servicePhotoFrame}
+                    compact
+                    value={
+                      item.image ??
+                      (item.imageUrl ? { url: item.imageUrl, key: "", driver: "local" } : null)
+                    }
+                    onChange={(image: UploadedImage | null) =>
+                      patchCard(groupIndex, cardIndex, { image: image?.key ? image : null })
+                    }
+                    hint="The photo at the top of the card."
+                  />
+                  <Field
+                    label="Title"
+                    value={item.title}
+                    maxLength={60}
+                    onChange={(title) => patchCard(groupIndex, cardIndex, { title })}
+                  />
+                  <Field
+                    label="Description"
+                    value={item.description}
+                    multiline
+                    maxLength={220}
+                    onChange={(description) => patchCard(groupIndex, cardIndex, { description })}
+                  />
+                  <Field
+                    label="Link"
+                    value={item.href}
+                    maxLength={200}
+                    hint="A path such as /hotels, or a full https link."
+                    onChange={(href) => patchCard(groupIndex, cardIndex, { href })}
+                  />
+                  <button
+                    type="button"
+                    className="hs-add"
+                    disabled={group.items.length <= 1}
+                    onClick={() =>
+                      patchGroup(groupIndex, {
+                        items: group.items.filter((row) => row.id !== item.id),
+                      })
+                    }
+                  >
+                    Remove card
+                  </button>
+                </div>
+              ))}
+              {group.items.length < 8 ? (
+                <button
+                  type="button"
+                  className="hs-add"
+                  onClick={() =>
+                    patchGroup(groupIndex, { items: [...group.items, emptyServiceCard()] })
+                  }
+                >
+                  Add a card
+                </button>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className="hs-icon"
+              aria-label={`Remove ${group.title || `section ${groupIndex + 1}`}`}
+              disabled={groups.length <= 1}
+              onClick={() => setGroups(groups.filter((row) => row.id !== group.id))}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+      {groups.length < 6 ? (
+        <button
+          type="button"
+          className="hs-add"
+          onClick={() =>
+            setGroups([
+              ...groups,
+              {
+                id: `group-${Date.now()}`,
+                title: "New section",
+                subtitle: "",
+                items: [emptyServiceCard()],
+              },
+            ])
+          }
+        >
+          Add a section
         </button>
       ) : null}
     </>
@@ -713,23 +958,11 @@ export function HomePageStudio({
                 />
               ) : null}
 
-              {selected === "visa" ? (
-                <>
-                  <Field label="Title" value={content.visa.title} maxLength={80} onChange={(title) => patch("visa", { ...content.visa, title })} />
-                  <Field label="Description" value={content.visa.subtitle} multiline maxLength={320} onChange={(subtitle) => patch("visa", { ...content.visa, subtitle })} />
-                  <Field label="Supporting line" value={content.visa.meta} maxLength={160} onChange={(meta) => patch("visa", { ...content.visa, meta })} />
-                  <Field label="Details link" value={content.visa.moreLabel} maxLength={40} onChange={(moreLabel) => patch("visa", { ...content.visa, moreLabel })} />
-                  <Field label="Button" value={content.visa.ctaLabel} maxLength={40} onChange={(ctaLabel) => patch("visa", { ...content.visa, ctaLabel })} />
-                </>
-              ) : null}
-
-              {selected === "assist" ? (
-                <>
-                  <Field label="Title" value={content.assist.title} maxLength={80} onChange={(title) => patch("assist", { ...content.assist, title })} />
-                  <Field label="Description" value={content.assist.subtitle} multiline maxLength={320} onChange={(subtitle) => patch("assist", { ...content.assist, subtitle })} />
-                  <Field label="Details link" value={content.assist.moreLabel} maxLength={40} onChange={(moreLabel) => patch("assist", { ...content.assist, moreLabel })} />
-                  <Field label="Button" value={content.assist.ctaLabel} maxLength={40} onChange={(ctaLabel) => patch("assist", { ...content.assist, ctaLabel })} />
-                </>
+              {selected === "services" ? (
+                <ServicesEditor
+                  services={content.services}
+                  onChange={(services) => patch("services", services)}
+                />
               ) : null}
 
               {selected === "cta" ? (

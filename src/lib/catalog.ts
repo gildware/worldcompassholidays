@@ -9,6 +9,8 @@ export const catalogKinds = [
   "room_feature",
   "room_amenity",
   "hotel_faq",
+  "bus_location",
+  "bus_facility",
 ] as const;
 
 export type CatalogKind = (typeof catalogKinds)[number];
@@ -34,6 +36,12 @@ export const catalogGroups = [
       "Lists used when adding a hotel. Property amenities belong to the hotel. Room features and room amenities belong to each room.",
     kinds: ["hotel_amenity", "room_feature", "room_amenity", "hotel_faq"],
   },
+  {
+    id: "buses",
+    label: "Buses",
+    description: "Locations and facilities used by buses and routes.",
+    kinds: ["bus_location", "bus_facility"],
+  },
 ] as const;
 
 export function isCatalogKind(value: string): value is CatalogKind {
@@ -50,7 +58,9 @@ export function catalogKindLabel(kind: CatalogKind) {
   if (kind === "hotel_amenity") return "Hotel amenity";
   if (kind === "room_feature") return "Room feature";
   if (kind === "room_amenity") return "Room amenity";
-  return "Hotel FAQ";
+  if (kind === "hotel_faq") return "Hotel FAQ";
+  if (kind === "bus_location") return "Location";
+  return "Facility";
 }
 
 export function isHotelCatalogKind(kind: CatalogKind) {
@@ -62,6 +72,10 @@ export function isHotelCatalogKind(kind: CatalogKind) {
   );
 }
 
+export function isBusCatalogKind(kind: CatalogKind) {
+  return kind === "bus_location" || kind === "bus_facility";
+}
+
 export function catalogKindHasIcon(kind: CatalogKind) {
   return (
     kind === "category" ||
@@ -71,12 +85,18 @@ export function catalogKindHasIcon(kind: CatalogKind) {
     kind === "exclude" ||
     kind === "hotel_amenity" ||
     kind === "room_feature" ||
-    kind === "room_amenity"
+    kind === "room_amenity" ||
+    kind === "bus_facility"
   );
 }
 
 export function catalogKindHasAnswer(kind: CatalogKind) {
   return kind === "faq" || kind === "hotel_faq";
+}
+
+/** Optional boarding note stored on a bus location. */
+export function catalogKindHasNote(kind: CatalogKind) {
+  return kind === "bus_location";
 }
 
 /** Question and answer stored on one tour, not in the shared FAQ list. */

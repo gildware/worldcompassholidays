@@ -1,0 +1,337 @@
+.home-plan,
+.home-plan * {
+  box-sizing: border-box;
+}
+
+.home-plan {
+  --navy: #051036;
+  --blue: #3554d1;
+  --blue-deep: #2a46b8;
+  --muted: #697488;
+  --line: #e4e7ef;
+  --surface: #f6f7fb;
+  color: var(--navy);
+  font-family: var(--font-jost), "Jost", sans-serif;
+}
+
+.home-plan h2,
+.home-plan h3,
+.home-plan p {
+  margin: 0;
+}
+
+.home-plan button {
+  font-family: inherit;
+  appearance: none;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.home-plan__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.home-plan__kicker {
+  color: var(--blue);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-plan__head h2 {
+  margin-top: 4px;
+  font-size: 1.65rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.home-plan__head p,
+.home-plan__note {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.home-plan__head p {
+  max-width: 46ch;
+}
+
+.home-plan__all {
+  flex: none;
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.home-plan button.home-plan__btn,
+.home-plan a.home-plan__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--blue);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+
+.home-plan button.home-plan__btn:hover,
+.home-plan a.home-plan__btn:hover {
+  background: var(--blue-deep);
+  color: #fff;
+}
+
+.home-plan button.home-plan__btn--line {
+  background: #fff;
+  color: var(--navy);
+  border: 1px solid var(--line);
+}
+
+.home-plan button.home-plan__btn--line:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: #fff;
+}
+
+.home-plan__price strong {
+  font-size: 1.12rem;
+  font-weight: 600;
+}
+
+.home-plan :focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.home-plan__split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.home-plan__trips {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-plan__trip {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: box-shadow 0.25s ease;
+}
+
+.home-plan__trip.is-open {
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  box-shadow: 0 16px 36px rgba(5, 16, 54, 0.1);
+}
+
+.home-plan button.home-plan__media {
+  min-height: 108px;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: #d9deea;
+  display: block;
+  cursor: pointer;
+}
+
+.home-plan img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-plan__main {
+  min-width: 0;
+  padding: 12px 14px 14px;
+}
+
+.home-plan__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+}
+
+.home-plan__toggle strong {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.home-plan__toggle small {
+  color: var(--muted);
+}
+
+.home-plan__more {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.home-plan__more p {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.home-plan__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.home-plan__chips span {
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.82rem;
+}
+
+.home-plan__stage {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 16px 16px 14px;
+}
+
+.home-plan__stage-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin-top: 4px;
+}
+
+.home-plan__deck {
+  position: relative;
+  height: 430px;
+  outline: none;
+}
+
+.home-plan button.home-plan__card {
+  position: absolute;
+  top: 18px;
+  left: 8px;
+  width: min(280px, 78%);
+  height: 370px;
+  border-radius: 24px;
+  overflow: hidden;
+  color: #fff;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  box-shadow: 0 16px 36px rgba(5, 16, 54, 0.2);
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.45s ease;
+}
+
+.home-plan__card img {
+  position: absolute;
+  inset: 0;
+}
+
+.home-plan__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5, 16, 54, 0.05) 20%, rgba(5, 16, 54, 0.82) 100%);
+}
+
+.home-plan__copy {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home-plan__copy strong {
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.home-plan__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.home-plan__dots {
+  display: flex;
+  gap: 6px;
+}
+
+.home-plan .home-plan__dots button {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: #d5dbeb;
+}
+
+.home-plan .home-plan__dots button.is-on {
+  width: 18px;
+  background: var(--blue);
+}
+
+.home-x .home-plan {
+  padding: 8px var(--hx-pad) 12px;
+}
+
+@media (max-width: 900px) {
+  .home-plan__split {
+    grid-template-columns: 1fr;
+  }
+
+  .home-plan__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-plan__trip,
+  .home-plan__trip.is-open {
+    grid-template-columns: 1fr;
+  }
+
+  .home-plan__media {
+    height: 170px;
+  }
+
+  .home-plan__deck {
+    height: 400px;
+  }
+
+  .home-plan button.home-plan__card {
+    width: min(260px, 86%);
+    height: 340px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-plan__trip,
+  .home-plan button.home-plan__card {
+    transition: none;
+  }
+}

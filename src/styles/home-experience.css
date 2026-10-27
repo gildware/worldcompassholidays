@@ -178,9 +178,10 @@
 }
 
 .home-x__rail-head h2 {
+  font-family: var(--font-jost), "Jost", sans-serif;
   font-size: 1.2rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   margin: 0 0 2px;
   color: var(--navy);
 }
@@ -242,6 +243,12 @@
   height: 100%;
   object-fit: cover;
   z-index: 0;
+  transition: transform 0.45s ease;
+}
+
+.home-x__dest:hover img,
+.home-x__dest:focus-visible img {
+  transform: scale(1.06);
 }
 
 .home-x__dest::after {
@@ -282,7 +289,23 @@
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--line);
-  transition: transform 0.15s ease;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.home-x__card:hover,
+.home-x__card:focus-within {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 28px rgba(5, 16, 54, 0.12);
+}
+
+.home-x__dest {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.home-x__dest:hover,
+.home-x__dest:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(5, 16, 54, 0.16);
 }
 
 @media (min-width: 640px) and (max-width: 1024px) {
@@ -302,6 +325,12 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.45s ease;
+}
+
+.home-x__card:hover .home-x__card-media img,
+.home-x__card:focus-within .home-x__card-media img {
+  transform: scale(1.06);
 }
 
 .home-x__card-shot {
@@ -500,6 +529,15 @@
   font-weight: 600;
   font-size: 0.9rem;
   text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-x__card,
+  .home-x__dest,
+  .home-x__card-media img,
+  .home-x__dest img {
+    transition: none;
+  }
 }
 
 /* Hide old mobile quick links when app home is shown */

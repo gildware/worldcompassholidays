@@ -51,6 +51,7 @@ function childIsActive(
       "availability",
       "bookings",
       "locations",
+      "routes",
       "rules",
       ...bookingDeskSegments,
     ]);
@@ -155,6 +156,18 @@ function NavIcon({ href, label }: { href: string; label?: string }) {
         <path d="M6 16 7.6 10.5h8.8L18 16" />
         <circle cx="8" cy="18.5" r="1.6" />
         <circle cx="16" cy="18.5" r="1.6" />
+      </svg>
+    );
+  }
+  if (href === "/admin/buses") {
+    return (
+      <svg {...common}>
+        <path d="M6.5 16.5V7.8A1.5 1.5 0 0 1 8 6.3h8a1.5 1.5 0 0 1 1.5 1.5v8.7" />
+        <path d="M8.2 6.3 9.4 3.8h5.2l1.2 2.5" />
+        <path d="M4.5 16.5h15" />
+        <path d="M8.2 10.2h7.6M8.2 13.2h7.6" />
+        <circle cx="8.2" cy="18.2" r="1.35" />
+        <circle cx="15.8" cy="18.2" r="1.35" />
       </svg>
     );
   }
@@ -346,6 +359,24 @@ function pageSub(pathname: string) {
   }
   if (pathname.startsWith("/admin/rentals/bikes/configuration")) {
     return "Tags, types, fuel, features, and required documents.";
+  }
+  if (pathname.startsWith("/admin/buses/locations")) {
+    return "Cities and stops. Each one needs a boarding point and a map pin.";
+  }
+  if (pathname.startsWith("/admin/buses/configuration")) {
+    return "Facilities a bus can offer. A route uses the bus, not its own list.";
+  }
+  if (pathname.startsWith("/admin/buses/routes/new") || /^\/admin\/buses\/routes\/[^/]+/.test(pathname)) {
+    return "Which bus runs, which locations it uses, and how long it takes.";
+  }
+  if (pathname.startsWith("/admin/buses/routes")) {
+    return "Runs between locations, with boarding points, duration, and fare.";
+  }
+  if (pathname.startsWith("/admin/buses/new") || /^\/admin\/buses\/[^/]+/.test(pathname)) {
+    return "The coach, its facilities, and its photos.";
+  }
+  if (pathname.startsWith("/admin/buses")) {
+    return "Coaches you can put on a route.";
   }
   if (pathname.startsWith("/admin/tours")) return "Packages, treks, and departures.";
   if (pathname.startsWith("/admin/enquiries")) return "Tour, hotel, car, and bike requests. Not bookings.";

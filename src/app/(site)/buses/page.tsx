@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { BusCatalog } from "@/components/bus/BusCatalog";
 import { readBusQuery } from "@/components/bus/query";
 import { modules } from "@/config/modules";
-import { parseStringList } from "@/lib/buses";
+import { loadBusFacilities } from "@/lib/bus-catalog";
+import { busAmenityLabels } from "@/lib/buses";
 import { prisma } from "@/lib/db";
 import { pageMetadata } from "@/lib/seo";
 
@@ -21,31 +22,38 @@ export default async function BusesPage({
 }) {
   if (!modules.buses) notFound();
   const params = await searchParams;
-  const routes = await prisma.busRoute.findMany({
-    where: { published: true },
-    orderBy: [{ fromCity: "asc" }, { departTime: "asc" }],
-  });
+  const [routes, facilities] = await Promise.all([
+    prisma.busRoute.findMany({
+      where: { published: true },
+      orderBy: [{ fromCity: "asc" }, { departTime: "asc" }],
+      include: { bus: true },
+    }),
+    loadBusFacilities(),
+  ]);
 
   return (
     <BusCatalog
       initial={readBusQuery(params)}
-      routes={routes.map((route) => ({
-        id: route.id,
-        slug: route.slug,
-        name: route.name,
-        fromCity: route.fromCity,
-        toCity: route.toCity,
-        operator: route.operator,
-        coachType: route.coachType,
-        pickup: route.pickup,
-        dropoff: route.dropoff,
-        departTime: route.departTime,
-        arriveTime: route.arriveTime,
-        duration: route.duration,
-        fareFrom: route.fareFrom,
-        imageUrl: route.imageUrl,
-        amenities: parseStringList(route.amenitiesJson),
-      }))}
+      routes={routes.map((route) => {
+        const coach = route.bus;
+        return {
+          id: route.id,
+          slug: route.slug,
+          name: coach?.name || route.name,
+          fromCity: route.fromCity,
+          toCity: route.toCity,
+          operator: coach?.operator || route.operator,
+          coachType: coach?.coachType || route.coachType,
+          pickup: route.pickup,
+          dropoff: route.dropoff,
+          departTime: route.departTime,
+          arriveTime: route.arriveTime,
+          duration: route.duration,
+          fareFrom: route.fareFrom,
+          imageUrl: coach?.imageUrl || route.imageUrl,
+          amenities: busAmenityLabels(coach?.amenitiesJson || route.amenitiesJson, facilities),
+        };
+      })}
     />
   );
 }

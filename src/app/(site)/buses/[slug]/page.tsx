@@ -3,9 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BusBookLink, BusBookPanel } from "@/components/bus/BusBookPanel";
 import { BusGallery } from "@/components/bus/BusGallery";
+import { BusStopsMap } from "@/components/bus/BusStopsMap";
 import { modules } from "@/config/modules";
 import { getCurrentUser } from "@/lib/auth/session";
-import { coachLabel, parseStringList } from "@/lib/buses";
+import { loadBusFacilities, loadBusLocations, matchBusPlace } from "@/lib/bus-catalog";
+import { mapApiKey } from "@/lib/map-key";
+import { arrivesNextDay, busAmenityLabels, coachLabel, parseGallery } from "@/lib/buses";
 import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
@@ -19,7 +22,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const route = await prisma.busRoute.findUnique({
     where: { slug },
-    select: { name: true, fromCity: true, toCity: true, summary: true, published: true },
+    select: {
+      name: true,
+      fromCity: true,
+      toCity: true,
+      summary: true,
+      published: true,
+      bus: { select: { name: true, summary: true } },
+    },
   });
   if (!route || !route.published || !modules.buses) {
     return pageMetadata({
@@ -30,8 +40,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     });
   }
   return pageMetadata({
-    title: route.name,
-    description: route.summary || `${route.fromCity} to ${route.toCity}. Request a quote for this listed bus.`,
+    title: route.bus?.name || route.name,
+    description: route.bus?.summary || route.summary || `${route.fromCity} to ${route.toCity}. Request a quote for this listed bus.`,
     path: `/buses/${slug}`,
   });
 }
@@ -39,19 +49,35 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BusDetailsPage({ params }: Props) {
   if (!modules.buses) notFound();
   const { slug } = await params;
-  const [route, user] = await Promise.all([prisma.busRoute.findUnique({ where: { slug } }), getCurrentUser()]);
+  const [route, user, facilities, places] = await Promise.all([
+    prisma.busRoute.findUnique({ where: { slug }, include: { bus: true } }),
+    getCurrentUser(),
+    loadBusFacilities(),
+    loadBusLocations(),
+  ]);
   if (!route || !route.published) notFound();
   const signedIn = user?.scope === "customer";
   const loginHref = `/login?next=${encodeURIComponent(`/buses/${route.slug}`)}`;
 
-  const gallery = parseStringList(route.galleryJson);
-  const images = [route.imageUrl, ...gallery.filter((src) => src !== route.imageUrl)].filter(Boolean);
-  const amenities = parseStringList(route.amenitiesJson);
+  const coach = route.bus;
+  const name = coach?.name || route.name;
+  const operator = coach?.operator || route.operator;
+  const coachType = coach?.coachType || route.coachType;
+  const summary = coach?.summary || route.summary;
+  const about = coach?.about || route.about;
+  const imageUrl = coach?.imageUrl || route.imageUrl;
+  const gallery = parseGallery(coach?.galleryJson || route.galleryJson).map((item) => item.url);
+  const images = [imageUrl, ...gallery.filter((src) => src !== imageUrl)].filter(Boolean);
+  const amenities = busAmenityLabels(coach?.amenitiesJson || route.amenitiesJson, facilities);
+  const nextDay = arrivesNextDay(route.departTime, route.arriveTime);
+  const fromPlace = matchBusPlace(places, route.fromLocationId, route.fromCity);
+  const toPlace = matchBusPlace(places, route.toLocationId, route.toCity);
 
-  const others = await prisma.busRoute.findMany({
+  const others = await     prisma.busRoute.findMany({
     where: { published: true, slug: { not: route.slug }, fromCity: route.fromCity, toCity: route.toCity },
     orderBy: { departTime: "asc" },
     take: 4,
+    include: { bus: true },
   });
 
   return (
@@ -64,10 +90,10 @@ export default async function BusDetailsPage({ params }: Props) {
           </p>
           <header className="bus-run__hero">
             <div>
-              <p className="bus-desk__kicker">{route.operator || "Listed coach"}</p>
-              <h1>{route.name}</h1>
+              <p className="bus-desk__kicker">{operator || "Listed coach"}</p>
+              <h1>{name}</h1>
               <p className="bus-run__place">
-                {coachLabel(route.coachType)} · {route.fromCity} to {route.toCity}
+                {coachLabel(coachType)} · {route.fromCity} to {route.toCity}
               </p>
             </div>
             <div className="bus-run__hero-side">
@@ -84,18 +110,21 @@ export default async function BusDetailsPage({ params }: Props) {
             </div>
             <em>{route.duration || "Travel time"}</em>
             <div>
-              <strong>{route.arriveTime || "—"}</strong>
+              <strong>
+                {route.arriveTime || "—"}
+                {nextDay ? " · next day" : ""}
+              </strong>
               <span>{route.dropoff || route.toCity}</span>
             </div>
           </div>
 
-          <BusGallery images={images} name={route.name} />
+          <BusGallery images={images} name={name} />
 
           <div className="bus-run__grid">
             <div>
               <section className="bus-run__block">
                 <h2>On this run</h2>
-                <p className="bus-run__lede">{route.about || route.summary || `${route.fromCity} to ${route.toCity}.`}</p>
+                <p className="bus-run__lede">{about || summary || `${route.fromCity} to ${route.toCity}.`}</p>
               </section>
               <section className="bus-run__block">
                 <h2>Boarding</h2>
@@ -110,6 +139,31 @@ export default async function BusDetailsPage({ params }: Props) {
                   </div>
                 </div>
               </section>
+              <BusStopsMap
+                apiKey={mapApiKey()}
+                from={
+                  fromPlace
+                    ? {
+                        title: fromPlace.title,
+                        label: "Pickup",
+                        lat: fromPlace.mapLat,
+                        lng: fromPlace.mapLng,
+                        zoom: fromPlace.mapZoom,
+                      }
+                    : null
+                }
+                to={
+                  toPlace
+                    ? {
+                        title: toPlace.title,
+                        label: "Drop-off",
+                        lat: toPlace.mapLat,
+                        lng: toPlace.mapLng,
+                        zoom: toPlace.mapZoom,
+                      }
+                    : null
+                }
+              />
               {amenities.length ? (
                 <section className="bus-run__block">
                   <h2>On board</h2>
@@ -122,10 +176,10 @@ export default async function BusDetailsPage({ params }: Props) {
               ) : null}
             </div>
             <BusBookPanel
-              name={route.name}
+              name={name}
               fromCity={route.fromCity}
               toCity={route.toCity}
-              coach={route.coachType}
+              coach={coachType}
               slug={route.slug}
               fare={route.fareFrom ? formatMoney(route.fareFrom) : "On request"}
               signedIn={signedIn}
@@ -139,11 +193,11 @@ export default async function BusDetailsPage({ params }: Props) {
               <div className="bus-more__list">
                 {others.map((item) => (
                   <Link href={`/buses/${item.slug}`} key={item.id}>
-                    {item.imageUrl ? <img src={item.imageUrl} alt="" /> : <span />}
+                    {(item.bus?.imageUrl || item.imageUrl) ? <img src={item.bus?.imageUrl || item.imageUrl} alt="" /> : <span />}
                     <div>
-                      <h3>{item.name}</h3>
+                      <h3>{item.bus?.name || item.name}</h3>
                       <p>
-                        {item.departTime} · {coachLabel(item.coachType)}
+                        {item.departTime} · {coachLabel(item.bus?.coachType || item.coachType)}
                       </p>
                       <p>{item.fareFrom ? formatMoney(item.fareFrom) : "On request"}</p>
                     </div>

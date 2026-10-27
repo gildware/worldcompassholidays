@@ -116,6 +116,12 @@ const adminNav: (NavItem & {
       label: "Buses",
       permission: "buses.view",
       enabled: modules.buses,
+      children: [
+        { href: "/admin/buses", label: "Buses" },
+        { href: "/admin/buses/routes", label: "Routes" },
+        { href: "/admin/buses/locations", label: "Locations" },
+        { href: "/admin/buses/configuration", label: "Facilities" },
+      ],
     },
     {
       href: "/admin/enquiries",

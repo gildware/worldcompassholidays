@@ -18,6 +18,9 @@ export default async function ConfigurationRedirectPage({
   if (section === "tours" && modules.tours && can(user, "tours.manage")) {
     redirect("/admin/tours/configuration");
   }
+  if (section === "buses" && modules.buses && can(user, "buses.manage")) {
+    redirect("/admin/buses/configuration");
+  }
   if (section === "rentals") {
     if (modules.cars && can(user, "vehicles.manage")) {
       redirect("/admin/rentals/cars/configuration");
@@ -38,6 +41,9 @@ export default async function ConfigurationRedirectPage({
   }
   if (modules.bikes && can(user, "vehicles.manage")) {
     redirect("/admin/rentals/bikes/configuration");
+  }
+  if (modules.buses && can(user, "buses.manage")) {
+    redirect("/admin/buses/configuration");
   }
 
   redirect("/admin/no-access");

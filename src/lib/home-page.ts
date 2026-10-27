@@ -6,6 +6,7 @@ import type { GalleryItem } from "@/lib/tours/json";
 
 export const HOME_SECTION_IDS = [
   "hero",
+  "services",
   "destinations",
   "tours",
   "hotels",
@@ -13,8 +14,6 @@ export const HOME_SECTION_IDS = [
   "bikes",
   "buses",
   "why",
-  "visa",
-  "assist",
   "cta",
 ] as const;
 
@@ -41,6 +40,30 @@ export type HomeWhyItem = {
   text: string;
 };
 
+export type HomeServiceItem = {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  /** Stock or pasted photo, used when no upload is set. */
+  imageUrl: string;
+  image: GalleryItem | null;
+};
+
+export type HomeServiceGroup = {
+  id: string;
+  title: string;
+  subtitle: string;
+  items: HomeServiceItem[];
+};
+
+export type HomeServicesContent = {
+  badge: string;
+  title: string;
+  subtitle: string;
+  groups: HomeServiceGroup[];
+};
+
 export type HomePageContent = {
   hero: {
     title: string;
@@ -54,19 +77,7 @@ export type HomePageContent = {
   cars: HomeRailConfig;
   bikes: HomeRailConfig;
   buses: HomeRailConfig;
-  visa: {
-    title: string;
-    subtitle: string;
-    meta: string;
-    moreLabel: string;
-    ctaLabel: string;
-  };
-  assist: {
-    title: string;
-    subtitle: string;
-    moreLabel: string;
-    ctaLabel: string;
-  };
+  services: HomeServicesContent;
   cta: {
     title: string;
     subtitle: string;
@@ -79,6 +90,7 @@ export type HomePageContent = {
 
 export const HOME_SECTION_LABELS: Record<HomeSectionId, string> = {
   hero: "Hero",
+  services: "Our services",
   destinations: "Popular destinations",
   tours: "Tours and treks",
   hotels: "Hotels and stays",
@@ -86,8 +98,6 @@ export const HOME_SECTION_LABELS: Record<HomeSectionId, string> = {
   bikes: "Bikes for the road",
   buses: "Buses between cities",
   why: "Why book with us",
-  visa: "Visa help",
-  assist: "Meet and assist",
   cta: "Contact banner",
 };
 
@@ -141,20 +151,184 @@ export const defaultHomePageContent: HomePageContent = {
     mode: "auto",
     ids: [],
   },
-  visa: {
-    title: "Visa help",
-    subtitle:
-      "We list every document, quote our fee, and keep the embassy fee on its own line. Nothing is filed until you accept.",
-    meta: "14 destinations · Reply within 24 hours · Embassy fee kept separate",
-    moreLabel: "View more details",
-    ctaLabel: "Get a visa quote",
-  },
-  assist: {
-    title: "Meet and assist",
-    subtitle:
-      "A greeter at the airport on the day you fly. Send the flight number and we name who meets you, and the fee, before anyone is booked.",
-    moreLabel: "View more details",
-    ctaLabel: "Book a greeter",
+  services: {
+    badge: "Services",
+    title: "Our Services",
+    subtitle: "We have the strategy for serving things right, book with us and know the difference",
+    groups: [
+      {
+        id: "all",
+        title: "All services",
+        subtitle: "Hotels, cars, bikes, buses, visas, and a greeter at the airport.",
+        items: [
+          {
+            id: "hotels",
+            title: "Hotels",
+            description: "Published stays, and a search when the hotel you want is not on the list.",
+            href: "/hotels",
+            imageUrl: "/img/company/service-hotels.jpg",
+            image: null,
+          },
+          {
+            id: "cars",
+            title: "Cars",
+            description: "Self-drive and chauffeur cars, priced by the day before you pay.",
+            href: "/rentals/cars",
+            imageUrl: "/img/cars/car-rental-banner.jpg",
+            image: null,
+          },
+          {
+            id: "bikes",
+            title: "Bike service",
+            description: "Scooters and motorcycles for the hill roads and the coast, helmet included.",
+            href: "/rentals/bikes",
+            imageUrl: "/img/bikes/bike-rental-banner.jpg",
+            image: null,
+          },
+          {
+            id: "buses",
+            title: "Buses",
+            description: "Coaches between cities, with the time and an indicative fare on the card.",
+            href: "/buses",
+            imageUrl: "/img/buses/valley-volvo-cover.jpg",
+            image: null,
+          },
+          {
+            id: "visa",
+            title: "Visa",
+            description: "The document list and our fee, with the embassy fee kept on its own line.",
+            href: "/visa-services",
+            imageUrl: "/img/visa/visa-hero.jpg",
+            image: null,
+          },
+          {
+            id: "assist",
+            title: "Meet and assist",
+            description: "A named greeter at the airport. The fee is in the quote before anyone is booked.",
+            href: "/meet-and-assist",
+            imageUrl: "/img/assist/assist-arrival.jpg",
+            image: null,
+          },
+        ],
+      },
+      {
+        id: "stays",
+        title: "Stays",
+        subtitle: "Houseboats, villas, homestays, and hotels.",
+        items: [
+          {
+            id: "houseboats",
+            title: "Houseboats",
+            description: "A night on the water, quoted with the meals and the boat named before you pay.",
+            href: "/hotels?q=houseboat",
+            imageUrl: "/img/company/service-holidays.jpg",
+            image: null,
+          },
+          {
+            id: "villas",
+            title: "Villas",
+            description: "A whole house for the family, with the rooms and the price written down first.",
+            href: "/hotels?types=Villa",
+            imageUrl: "/img/tours/header-bg.jpg",
+            image: null,
+          },
+          {
+            id: "homestays",
+            title: "Homestays",
+            description: "A room in a home, with breakfast and the house rules in the quote.",
+            href: "/hotels?types=Homestay",
+            imageUrl: "/img/company/service-sightseeing.jpg",
+            image: null,
+          },
+          {
+            id: "hotels-stay",
+            title: "Hotels",
+            description: "City and hill hotels, with the nightly rate on the stay page.",
+            href: "/hotels?types=Hotel",
+            imageUrl: "/img/company/service-hotels.jpg",
+            image: null,
+          },
+        ],
+      },
+      {
+        id: "tour-types",
+        title: "Tours",
+        subtitle: "Religious tours, honeymoon tours, family tours, and camping.",
+        items: [
+          {
+            id: "religious",
+            title: "Religious tours",
+            description: "Shrine and yatra routes, with the days and the stay named in the plan.",
+            href: "/tours?q=religious",
+            imageUrl: "/img/company/service-sightseeing.jpg",
+            image: null,
+          },
+          {
+            id: "honeymoon",
+            title: "Honeymoon tours",
+            description: "A quieter plan for two, with the hotels and the transfers in one quote.",
+            href: "/tours?q=honeymoon",
+            imageUrl: "/img/company/service-holidays.jpg",
+            image: null,
+          },
+          {
+            id: "family",
+            title: "Family tours",
+            description: "A pace that suits children and elders, with the rooms counted before you leave.",
+            href: "/tours?q=family",
+            imageUrl: "/img/company/service-packages.jpg",
+            image: null,
+          },
+          {
+            id: "camping",
+            title: "Camping",
+            description: "Nights in camp, with the tents, meals, and the road written down first.",
+            href: "/tours?q=camping",
+            imageUrl: "/img/tours/header-bg.jpg",
+            image: null,
+          },
+        ],
+      },
+      {
+        id: "vehicles",
+        title: "Vehicles",
+        subtitle: "SUVs, adventure bikes, and buses.",
+        items: [
+          {
+            id: "suvs",
+            title: "SUVs",
+            description: "Higher cars for the mountain roads, priced by the day.",
+            href: "/rentals/cars",
+            imageUrl: "/img/cars/car-rental-banner.jpg",
+            image: null,
+          },
+          {
+            id: "adventure-bikes",
+            title: "Adventure bikes",
+            description: "Bikes for a long hill day, with the licence rule on the bike page.",
+            href: "/rentals/bikes",
+            imageUrl: "/img/bikes/bike-rental-banner.jpg",
+            image: null,
+          },
+          {
+            id: "coaches",
+            title: "Buses",
+            description: "Seater and sleeper coaches, with the departure time on the route.",
+            href: "/buses",
+            imageUrl: "/img/buses/night-sleeper-cover.jpg",
+            image: null,
+          },
+          {
+            id: "city-cars",
+            title: "Cars",
+            description: "A car for the airport, the city, or the whole trip.",
+            href: "/rentals/cars",
+            imageUrl: "/img/company/service-transfers.jpg",
+            image: null,
+          },
+        ],
+      },
+    ],
   },
   cta: {
     title: "Tell us the trip. We quote it before you pay.",
@@ -230,6 +404,73 @@ function asRail(
   };
 }
 
+function asHref(value: unknown, fallback: string) {
+  const raw = asString(value, fallback).trim().slice(0, 200);
+  if (!raw) return fallback;
+  if (raw.startsWith("/") || raw.startsWith("https://") || raw.startsWith("http://")) return raw;
+  return `/${raw.replace(/^\/+/, "")}`;
+}
+
+function asStockImage(value: unknown, fallback: string) {
+  const raw = asString(value, fallback).trim().slice(0, 400);
+  if (
+    raw.startsWith("/img/") ||
+    raw.startsWith("/uploads/") ||
+    raw.startsWith("https://")
+  ) {
+    return raw;
+  }
+  return fallback;
+}
+
+function asServiceCard(entry: unknown, index: number, seen: Set<string>): HomeServiceItem | null {
+  const row = entry && typeof entry === "object" ? (entry as Record<string, unknown>) : {};
+  const title = asString(row.title, asString(row.label, "")).trim().slice(0, 60);
+  if (!title) return null;
+  let id = asString(row.id, `card-${index + 1}`).trim().slice(0, 40) || `card-${index + 1}`;
+  if (seen.has(id)) id = `${id}-${index + 1}`.slice(0, 40);
+  seen.add(id);
+  return {
+    id,
+    title,
+    description: asString(row.description, "").trim().slice(0, 220),
+    href: asHref(row.href, "/"),
+    imageUrl: asStockImage(row.imageUrl, ""),
+    image: asImage(row.image),
+  };
+}
+
+function asServiceGroups(value: unknown): HomeServiceGroup[] {
+  const fallback = defaultHomePageContent.services.groups;
+  if (!Array.isArray(value) || value.length === 0) return fallback;
+  const groups: HomeServiceGroup[] = [];
+  const seenGroups = new Set<string>();
+  for (const [index, entry] of value.entries()) {
+    const row = entry && typeof entry === "object" ? (entry as Record<string, unknown>) : {};
+    const title = asString(row.title, "").trim().slice(0, 80);
+    if (!title) continue;
+    let id = asString(row.id, `group-${index + 1}`).trim().slice(0, 40) || `group-${index + 1}`;
+    if (seenGroups.has(id)) id = `${id}-${index + 1}`.slice(0, 40);
+    seenGroups.add(id);
+    const seenCards = new Set<string>();
+    const items = Array.isArray(row.items)
+      ? row.items.flatMap((item, cardIndex) => {
+          const card = asServiceCard(item, cardIndex, seenCards);
+          return card ? [card] : [];
+        }).slice(0, 8)
+      : [];
+    if (!items.length) continue;
+    groups.push({
+      id,
+      title,
+      subtitle: asString(row.subtitle, "").trim().slice(0, 200),
+      items,
+    });
+    if (groups.length >= 6) break;
+  }
+  return groups.length ? groups : fallback;
+}
+
 function asWhyItems(value: unknown): HomeWhyItem[] {
   const fallback = defaultHomePageContent.why.items;
   if (!Array.isArray(value) || value.length === 0) return fallback;
@@ -286,11 +527,8 @@ export function parseHomePageContent(raw: string | null | undefined): HomePageCo
   const hero = parsed.hero && typeof parsed.hero === "object"
     ? (parsed.hero as Record<string, unknown>)
     : {};
-  const visa = parsed.visa && typeof parsed.visa === "object"
-    ? (parsed.visa as Record<string, unknown>)
-    : {};
-  const assist = parsed.assist && typeof parsed.assist === "object"
-    ? (parsed.assist as Record<string, unknown>)
+  const services = parsed.services && typeof parsed.services === "object"
+    ? (parsed.services as Record<string, unknown>)
     : {};
   const cta = parsed.cta && typeof parsed.cta === "object"
     ? (parsed.cta as Record<string, unknown>)
@@ -312,18 +550,11 @@ export function parseHomePageContent(raw: string | null | undefined): HomePageCo
     cars: asRail(parsed.cars, defaultHomePageContent.cars),
     bikes: asRail(parsed.bikes, defaultHomePageContent.bikes),
     buses: asRail(parsed.buses, defaultHomePageContent.buses),
-    visa: {
-      title: asString(visa.title, defaultHomePageContent.visa.title).slice(0, 80),
-      subtitle: asString(visa.subtitle, defaultHomePageContent.visa.subtitle).slice(0, 320),
-      meta: asString(visa.meta, defaultHomePageContent.visa.meta).slice(0, 160),
-      moreLabel: asString(visa.moreLabel, defaultHomePageContent.visa.moreLabel).slice(0, 40),
-      ctaLabel: asString(visa.ctaLabel, defaultHomePageContent.visa.ctaLabel).slice(0, 40),
-    },
-    assist: {
-      title: asString(assist.title, defaultHomePageContent.assist.title).slice(0, 80),
-      subtitle: asString(assist.subtitle, defaultHomePageContent.assist.subtitle).slice(0, 320),
-      moreLabel: asString(assist.moreLabel, defaultHomePageContent.assist.moreLabel).slice(0, 40),
-      ctaLabel: asString(assist.ctaLabel, defaultHomePageContent.assist.ctaLabel).slice(0, 40),
+    services: {
+      badge: asString(services.badge, defaultHomePageContent.services.badge).slice(0, 24),
+      title: asString(services.title, defaultHomePageContent.services.title).slice(0, 80),
+      subtitle: asString(services.subtitle, defaultHomePageContent.services.subtitle).slice(0, 240),
+      groups: asServiceGroups(services.groups),
     },
     cta: {
       title: asString(cta.title, defaultHomePageContent.cta.title).slice(0, 90),

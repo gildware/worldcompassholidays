@@ -16,7 +16,74 @@
   padding-top: 16px !important;
 }
 
-.worldcompassholiday-page .home-desktop-only section.bg-dark-2 {
+.worldcompassholiday-page .home-desktop-only .sectionTitle__title {
+  font-family: var(--font-jost), "Jost", sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: #051036;
+}
+
+.home-desktop-only .col-lg-3:has(.ratio),
+.home-desktop-only .col-sm-6:has(.ratio) {
+  transition: transform 0.25s ease;
+}
+
+.home-desktop-only .col-lg-3:has(.ratio):hover,
+.home-desktop-only .col-sm-6:has(.ratio):hover {
+  transform: translateY(-6px);
+}
+
+.home-desktop-only .citiesCard.-type-1 .citiesCard__image {
+  overflow: hidden;
+}
+
+.home-desktop-only .ratio img,
+.home-desktop-only .citiesCard__image img {
+  transition: transform 0.5s ease;
+}
+
+.home-desktop-only .col-lg-3:has(.ratio):hover .ratio img,
+.home-desktop-only .col-sm-6:has(.ratio):hover .ratio img,
+.home-desktop-only .citiesCard.-type-1:hover .citiesCard__image img {
+  transform: scale(1.07);
+}
+
+.home-desktop-only .col-lg-3:has(.ratio):hover h3,
+.home-desktop-only .col-sm-6:has(.ratio):hover h3 {
+  color: #3554d1;
+}
+
+.home-desktop-only .featureIcon {
+  border-radius: 16px;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.home-desktop-only .col-lg-3:hover .featureIcon,
+.home-desktop-only .col-sm-6:hover .featureIcon {
+  transform: translateY(-4px);
+}
+
+.home-desktop-only a.ride-promo {
+  transition: transform 0.25s ease;
+}
+
+.home-desktop-only a.ride-promo:hover {
+  transform: translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-desktop-only .col-lg-3:has(.ratio),
+  .home-desktop-only .col-sm-6:has(.ratio),
+  .home-desktop-only .ratio img,
+  .home-desktop-only .citiesCard__image img,
+  .home-desktop-only .featureIcon,
+  .home-desktop-only a.ride-promo {
+    transition: none;
+  }
+}
+
+.home-desktop-only section.bg-dark-2 {
   margin-top: 36px;
   padding-top: 48px;
   padding-bottom: 48px;
@@ -291,6 +358,20 @@ a.hx-desk__more {
 
 .home-x .hx-meet__row {
   grid-template-columns: auto minmax(0, 1fr);
+}
+
+.home-fleet-scroll {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.home-fleet-scroll__item {
+  flex: 0 0 260px;
+  scroll-snap-align: start;
 }
 
 /* Phone PWA — visa swipes, meet stays a short list. Desktop layout is unchanged. */

@@ -311,6 +311,19 @@
   gap: 10px;
 }
 
+.hs-service-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--hs-line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.hs-service-card.is-dragging {
+  opacity: 0.55;
+}
+
 .hs-add {
   justify-self: start;
   border: 1px dashed var(--hs-line);

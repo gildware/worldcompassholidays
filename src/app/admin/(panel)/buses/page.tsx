@@ -1,43 +1,44 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BusFleetWorkspace } from "@/components/admin/BusFleetWorkspace";
 import { modules } from "@/config/modules";
 import { requirePermission } from "@/lib/auth/guards";
+import { can } from "@/lib/auth/session";
+import { ensureBusCatalog } from "@/lib/bus-catalog";
+import { parseStringList } from "@/lib/buses";
 import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = { title: "Buses" };
 
-export default async function AdminBusesPage() {
+export default async function AdminBusesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ deleted?: string; saved?: string; blocked?: string }>;
+}) {
   if (!modules.buses) notFound();
-  await requirePermission("buses.view");
+  const user = await requirePermission("buses.view");
+  const { deleted, saved, blocked } = await searchParams;
+  await ensureBusCatalog();
 
-  const routes = await prisma.busRoute.findMany({
-    include: { schedules: true },
-    orderBy: { name: "asc" },
+  const buses = await prisma.bus.findMany({
+    orderBy: [{ name: "asc" }],
+    include: { _count: { select: { routes: true } } },
   });
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Buses</h1>
-      <p className="mt-2 text-sm text-muted">
-        Routes and schedules are stored separately from tours and hotels.
-      </p>
-      {routes.length === 0 ? (
-        <p className="mt-8 text-sm text-muted">No routes yet.</p>
-      ) : (
-        <ul className="mt-8 divide-y divide-line rounded-xl border border-line bg-white">
-          {routes.map((route) => (
-            <li key={route.id} className="px-4 py-3 text-sm">
-              <p className="font-medium">{route.name}</p>
-              <p className="text-muted">
-                {route.fromCity} to {route.toCity}
-                {route.departTime ? ` · ${route.departTime}` : ""}
-                {route.fareFrom ? ` · from ₹${route.fareFrom}` : ""} · {route.schedules.length}{" "}
-                schedules
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <BusFleetWorkspace
+      canManage={can(user, "buses.manage")}
+      notice={blocked ? "blocked" : deleted ? "deleted" : saved ? "saved" : null}
+      buses={buses.map((bus) => ({
+        id: bus.id,
+        name: bus.name,
+        operator: bus.operator,
+        coachType: bus.coachType,
+        published: bus.published,
+        imageUrl: bus.imageUrl,
+        facilityCount: parseStringList(bus.amenitiesJson).length,
+        routeCount: bus._count.routes,
+      }))}
+    />
   );
 }

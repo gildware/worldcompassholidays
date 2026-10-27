@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { BusSearchBar } from "@/components/bus/BusSearchBar";
 import { useLazySlice } from "@/hooks/useLazySlice";
-import { busCoachTypes, busTimeWindows, coachLabel, inTimeWindow, requestBusHref } from "@/lib/buses";
+import { arrivesNextDay, busCoachTypes, busTimeWindows, coachLabel, inTimeWindow, requestBusHref } from "@/lib/buses";
 import type { BusListItem, BusQuery, BusSort } from "@/components/bus/query";
 import { formatMoney } from "@/lib/format";
 import "@/components/tour-list/catalog/tour-catalog.css";
@@ -618,7 +618,10 @@ export function BusCatalog({ routes, initial }: { routes: BusListItem[]; initial
                           </div>
                           <em>{route.duration || "On road"}</em>
                           <div>
-                            <strong>{route.arriveTime || "—"}</strong>
+                            <strong>
+                              {route.arriveTime || "—"}
+                              {arrivesNextDay(route.departTime, route.arriveTime) ? " · next day" : ""}
+                            </strong>
                             <span>{route.dropoff || route.toCity}</span>
                           </div>
                         </div>
@@ -630,7 +633,10 @@ export function BusCatalog({ routes, initial }: { routes: BusListItem[]; initial
                           ) : null}
                           {route.duration ? (
                             <li>
-                              <span>{route.duration}</span>
+                              <span>
+                                {route.duration}
+                                {arrivesNextDay(route.departTime, route.arriveTime) ? " · next day" : ""}
+                              </span>
                             </li>
                           ) : null}
                         </ul>

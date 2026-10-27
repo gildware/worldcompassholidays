@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HomeDealList, type HomeDealCard } from "@/components/home/HomeInteractive";
 import { HomeRidePromoCard, type HomeRidePromo } from "@/components/home/HomeFleetSection";
 import { formatMoney } from "@/lib/format";
 
@@ -27,12 +28,20 @@ export const busHomeFallback: HomeRidePromo = {
 
 export const busHomeImage = "/img/buses/bus-request-illustration.jpg";
 
-function routeLine(bus: HomeBus) {
-  return [bus.fromCity, bus.toCity].filter(Boolean).join(" to ");
-}
-
-function timeLine(bus: HomeBus) {
-  return [bus.departTime, bus.duration].filter(Boolean).join(" · ");
+export function busDeal(bus: HomeBus): HomeDealCard {
+  const route = [bus.fromCity, bus.toCity].filter(Boolean).join(" to ");
+  const when = [bus.departTime, bus.duration].filter(Boolean).join(" · ");
+  return {
+    id: bus.id,
+    title: bus.name,
+    meta: route,
+    detail: [bus.operator, when].filter(Boolean).join(" · "),
+    price: bus.fareFrom > 0 ? formatMoney(bus.fareFrom) : "On request",
+    unit: bus.fareFrom > 0 ? "fare" : "",
+    ribbon: bus.coach || "Coach",
+    image: bus.image || busHomeImage,
+    href: `/buses/${bus.slug}`,
+  };
 }
 
 export function HomeBusSection({
@@ -66,38 +75,8 @@ export function HomeBusSection({
           </div>
         </div>
         {items.length > 0 ? (
-          <div className="row y-gap-30 pt-20">
-            {items.map((bus, index) => (
-              <div className="col-lg-3 col-sm-6" key={bus.id}>
-                <Link prefetch={false} href={`/buses/${bus.slug}`} className="d-block">
-                  <div className="ratio ratio-16:9 rounded-4 overflow-hidden">
-                    {/* Plain img: listed coaches can use hosts outside the Next image allowlist. */}
-                    <img
-                      src={bus.image || busHomeImage}
-                      alt={bus.name}
-                      width={400}
-                      height={225}
-                      className="img-ratio object-cover"
-                      loading={index < 4 ? "eager" : "lazy"}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  </div>
-                  <p className="text-14 fw-500 text-blue-1 mt-15">
-                    {[bus.coach, bus.operator].filter(Boolean).join(" · ") || "Bus"}
-                  </p>
-                  <h3 className="text-18 fw-500 text-dark-1 mt-5">{bus.name}</h3>
-                  {routeLine(bus) ? (
-                    <p className="text-15 text-light-1 mt-5">{routeLine(bus)}</p>
-                  ) : null}
-                  {timeLine(bus) ? (
-                    <p className="text-15 text-light-1 mt-5">{timeLine(bus)}</p>
-                  ) : null}
-                  <p className="text-15 fw-500 mt-5">
-                    {bus.fareFrom > 0 ? `${formatMoney(bus.fareFrom)} fare` : "Fare on request"}
-                  </p>
-                </Link>
-              </div>
-            ))}
+          <div className="pt-20">
+            <HomeDealList items={items.map(busDeal)} />
           </div>
         ) : (
           <div className="pt-40">

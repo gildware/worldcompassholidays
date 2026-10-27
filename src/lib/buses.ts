@@ -28,6 +28,113 @@ export function coachLabel(value: string) {
   return busCoachTypes.find((option) => option.value === value)?.label ?? value;
 }
 
+const CLOCK = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+export function parseClock(value: string) {
+  const match = CLOCK.exec(value.trim());
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+export function formatClock(totalMinutes: number) {
+  const mins = ((totalMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
+  const hours = String(Math.floor(mins / 60)).padStart(2, "0");
+  const minutes = String(mins % 60).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+export function formatBusDuration(hours: number, minutes: number) {
+  const h = Math.max(0, Math.floor(hours));
+  const m = Math.max(0, Math.floor(minutes));
+  const parts: string[] = [];
+  if (h) parts.push(`${h}h`);
+  if (m) parts.push(`${m}m`);
+  return parts.join(" ");
+}
+
+export function parseBusDuration(value: string) {
+  const hours = /(\d+)\s*h/i.exec(value);
+  const minutes = /(\d+)\s*m/i.exec(value);
+  return {
+    hours: hours ? Number(hours[1]) : 0,
+    minutes: minutes ? Number(minutes[1]) : 0,
+  };
+}
+
+/** Arrival clock from a departure and a travel time. `days` is 0 on the same day. */
+export function arriveFromDepart(depart: string, hours: number, minutes: number) {
+  const start = parseClock(depart);
+  const span = Math.max(0, Math.floor(hours)) * 60 + Math.max(0, Math.floor(minutes));
+  if (start === null || span <= 0) return { time: "", days: 0 };
+  const total = start + span;
+  return {
+    time: formatClock(total),
+    days: Math.floor(total / (24 * 60)),
+  };
+}
+
+/** Travel time from two clocks. `dayOffset` is 0, 1, or 2. */
+export function durationFromClocks(depart: string, arrive: string, dayOffset: number) {
+  const start = parseClock(depart);
+  const end = parseClock(arrive);
+  if (start === null || end === null) return null;
+  const span = end - start + Math.max(0, Math.floor(dayOffset)) * 24 * 60;
+  if (span <= 0 || span > 48 * 60) return null;
+  return { hours: Math.floor(span / 60), minutes: span % 60 };
+}
+
+export function arrivesNextDay(depart: string, arrive: string) {
+  const start = parseClock(depart);
+  const end = parseClock(arrive);
+  if (start === null || end === null) return false;
+  return end <= start;
+}
+
+export function arrivalDayLabel(days: number) {
+  if (days <= 0) return "same day";
+  if (days === 1) return "next day";
+  return `${days} days later`;
+}
+
+/** Catalog ids, catalog titles, or older plain amenity strings. */
+export function busAmenityLabels(
+  stored: string,
+  options: { id: string; title: string }[],
+) {
+  const byId = new Map(options.map((item) => [item.id, item.title]));
+  const byTitle = new Map(options.map((item) => [item.title.toLowerCase(), item.title]));
+  return parseStringList(stored).map(
+    (value) => byId.get(value) ?? byTitle.get(value.toLowerCase()) ?? value,
+  );
+}
+
+export type BusGalleryItem = {
+  url: string;
+  key: string;
+  driver: "local" | "cloudinary";
+};
+
+export function parseGallery(value: string): BusGalleryItem[] {
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((item) => {
+      if (typeof item === "string" && item.trim()) {
+        return [{ url: item.trim(), key: "", driver: "local" as const }];
+      }
+      if (!item || typeof item !== "object" || !("url" in item)) return [];
+      const url = typeof item.url === "string" ? item.url.trim() : "";
+      if (!url) return [];
+      const key = "key" in item && typeof item.key === "string" ? item.key : "";
+      const driver =
+        "driver" in item && item.driver === "cloudinary" ? "cloudinary" : "local";
+      return [{ url, key, driver }];
+    });
+  } catch {
+    return [];
+  }
+}
+
 export function timeWindowLabel(value: string) {
   return busTimeWindows.find((option) => option.value === value)?.label ?? value;
 }

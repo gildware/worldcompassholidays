@@ -10,12 +10,14 @@ import { Field } from "@/components/forms/Field";
 import { FormMessage } from "@/components/forms/FormMessage";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { LocationMapPicker } from "@/components/admin/LocationMapPicker";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import { Modal } from "@/components/ui/Modal";
 import {
   catalogGroups,
   catalogKindHasAnswer,
   catalogKindHasIcon,
+  catalogKindHasNote,
   catalogKindLabel,
   type CatalogKind,
 } from "@/lib/catalog";
@@ -31,6 +33,9 @@ export type CatalogRow = {
   iconUrl: string;
   iconKey: string;
   iconDriver: "local" | "cloudinary";
+  mapLat: string;
+  mapLng: string;
+  mapZoom: number;
 };
 
 const KIND_HINTS: Record<CatalogKind, { label: string; hint: string }> = {
@@ -74,6 +79,14 @@ const KIND_HINTS: Record<CatalogKind, { label: string; hint: string }> = {
     label: "Hotel FAQs",
     hint: "Questions and answers a hotel can reuse.",
   },
+  bus_location: {
+    label: "Locations",
+    hint: "Cities and stops a route can start or end at. Each one needs a boarding point and a map pin.",
+  },
+  bus_facility: {
+    label: "Facilities",
+    hint: "What a bus can offer, such as charging points, a blanket, or air conditioning. Routes reuse the bus.",
+  },
 };
 
 export function CatalogWorkspace({
@@ -83,6 +96,8 @@ export function CatalogWorkspace({
   sections,
   hotelTaxEnabled = false,
   hideSectionTabs = false,
+  onlyKinds,
+  mapApiKey = "",
 }: {
   items: CatalogRow[];
   rentalItems?: ConfigRow[];
@@ -90,6 +105,8 @@ export function CatalogWorkspace({
   sections?: string[];
   hotelTaxEnabled?: boolean;
   hideSectionTabs?: boolean;
+  onlyKinds?: CatalogKind[];
+  mapApiKey?: string;
 }) {
   const router = useRouter();
   const groups = [
@@ -126,7 +143,9 @@ export function CatalogWorkspace({
   const [removing, setRemoving] = useState<CatalogRow | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const group = visibleGroups.find((item) => item.id === groupId) ?? visibleGroups[0];
-  const kinds = group.kinds;
+  const kinds = onlyKinds?.length
+    ? group.kinds.filter((item) => onlyKinds.includes(item))
+    : group.kinds;
   const showTaxTab = group.id === "hotels";
   const taxSelected = showTaxTab && hotelTab === "tax";
   const activeKind = taxSelected ? null : kinds.includes(kind) ? kind : kinds[0];
@@ -166,7 +185,7 @@ export function CatalogWorkspace({
       {group.id === "rentals" && rentalItems ? (
         <ConfigWorkspace items={rentalItems} />
       ) : kinds.length > 0 || showTaxTab ? (
-      <div className="flex flex-wrap gap-2">
+      <div className={`flex flex-wrap gap-2 ${kinds.length < 2 && !showTaxTab ? "hidden" : ""}`}>
         {kinds.map((item) => {
           const selected = !taxSelected && item === activeKind;
           const count = items.filter((row) => row.kind === item).length;
@@ -281,6 +300,13 @@ export function CatalogWorkspace({
                   {item.content ? (
                     <p className="truncate text-xs text-muted">{item.content}</p>
                   ) : null}
+                  {item.kind === "bus_location" ? (
+                    <p className={`truncate text-xs ${item.mapLat && item.mapLng ? "text-muted" : "text-amber-800"}`}>
+                      {item.mapLat && item.mapLng
+                        ? `${item.mapLat}, ${item.mapLng}`
+                        : "No map pin yet"}
+                    </p>
+                  ) : null}
                 </div>
                 <Button
                   type="button"
@@ -318,17 +344,22 @@ export function CatalogWorkspace({
           setCreating(false);
           setEditing(null);
         }}
+        size={activeKind === "bus_location" ? "xl" : "md"}
         title={
           activeKind
             ? `${editing ? "Edit" : "Add"} ${catalogKindLabel(activeKind).toLowerCase()}`
             : "Add"
         }
         description={
-          activeKind && catalogKindHasAnswer(activeKind)
-            ? "Question and answer. Tours can reuse this."
-            : activeKind && catalogKindHasIcon(activeKind)
-              ? "Icon and title. Tours can reuse this."
-              : "A title tours can reuse."
+          activeKind === "bus_location"
+            ? "Name the stop, then search the map or drop a pin. Routes reuse this place."
+            : activeKind === "bus_facility"
+              ? "A facility you can attach to any coach, such as charging points or a blanket."
+              : activeKind && catalogKindHasAnswer(activeKind)
+                ? "Question and answer. Tours can reuse this."
+                : activeKind && catalogKindHasIcon(activeKind)
+                  ? "Icon and title. Tours can reuse this."
+                  : "A title tours can reuse."
         }
       >
         {activeKind && (creating || editing) ? (
@@ -336,6 +367,7 @@ export function CatalogWorkspace({
             key={editing?.id ?? "new"}
             kind={activeKind}
             item={editing}
+            mapApiKey={mapApiKey}
             onClose={() => {
               setCreating(false);
               setEditing(null);
@@ -353,7 +385,13 @@ export function CatalogWorkspace({
         open={Boolean(removing)}
         onClose={() => setRemoving(null)}
         title={`Delete ${removing?.title ?? "item"}?`}
-        description="Tours that already use it must drop it before it can be deleted."
+        description={
+          group?.id === "buses"
+            ? "Routes that already use it must drop it before it can be deleted."
+            : group?.id === "hotels"
+              ? "Hotels that already use it must drop it before it can be deleted."
+              : "Tours that already use it must drop it before it can be deleted."
+        }
         confirmLabel="Delete"
         onConfirm={async () => {
           if (!removing) return;
@@ -374,16 +412,22 @@ export function CatalogWorkspace({
 function CatalogItemForm({
   kind,
   item,
+  mapApiKey,
   onClose,
   onSaved,
 }: {
   kind: CatalogKind;
   item: CatalogRow | null;
+  mapApiKey: string;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const [state, action, pending] = useActionState(saveCatalogItem, initialFormState);
   const [imageBusy, setImageBusy] = useState(false);
+  const [note, setNote] = useState(item?.content ?? "");
+  const [mapLat, setMapLat] = useState(item?.mapLat ?? "");
+  const [mapLng, setMapLng] = useState(item?.mapLng ?? "");
+  const [mapZoom, setMapZoom] = useState(item?.mapZoom || 14);
   const initialImage: UploadedImage | null =
     item?.iconUrl && item.iconKey
       ? { url: item.iconUrl, key: item.iconKey, driver: item.iconDriver }
@@ -398,15 +442,110 @@ function CatalogItemForm({
     <form action={action} className="grid gap-4">
       <input type="hidden" name="id" value={item?.id ?? ""} />
       <input type="hidden" name="kind" value={kind} />
-      <Field label={catalogKindHasAnswer(kind) ? "Question" : "Title"} required>
+      <Field
+        label={
+          catalogKindHasAnswer(kind)
+            ? "Question"
+            : kind === "bus_location"
+              ? "City or stop"
+              : kind === "bus_facility"
+                ? "Facility"
+                : "Title"
+        }
+        required
+      >
         <input
           name="title"
           defaultValue={item?.title ?? ""}
-          placeholder={catalogKindHasAnswer(kind) ? "Question" : "Title"}
+          placeholder={
+            catalogKindHasAnswer(kind)
+              ? "Question"
+              : kind === "bus_location"
+                ? "Srinagar"
+                : kind === "bus_facility"
+                  ? "Charging points"
+                  : "Title"
+          }
           className="!h-10"
           required
         />
       </Field>
+      {catalogKindHasNote(kind) ? (
+        <>
+          <Field label="Usual boarding point">
+            <input
+              name="content"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Pantha Chowk, main stand"
+              maxLength={160}
+              className="!h-10"
+            />
+          </Field>
+          <div className="grid gap-3">
+            <p className="text-xs text-muted">
+              Search the map for the stop, or enter latitude and longitude. A route cannot be published until both ends have a pin.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="Latitude">
+                <input
+                  name="mapLat"
+                  value={mapLat}
+                  onChange={(event) => setMapLat(event.target.value)}
+                  inputMode="decimal"
+                  placeholder="34.0837"
+                  autoComplete="off"
+                  required
+                  className="!h-10"
+                />
+              </Field>
+              <Field label="Longitude">
+                <input
+                  name="mapLng"
+                  value={mapLng}
+                  onChange={(event) => setMapLng(event.target.value)}
+                  inputMode="decimal"
+                  placeholder="74.7973"
+                  autoComplete="off"
+                  required
+                  className="!h-10"
+                />
+              </Field>
+              <Field label="Map zoom">
+                <input
+                  name="mapZoom"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={mapZoom}
+                  onChange={(event) => setMapZoom(Number(event.target.value))}
+                  className="!h-10"
+                />
+              </Field>
+            </div>
+            {mapApiKey ? (
+              <LocationMapPicker
+                apiKey={mapApiKey}
+                lat={mapLat}
+                lng={mapLng}
+                zoom={mapZoom}
+                onChange={({ lat, lng, zoom }) => {
+                  setMapLat(lat);
+                  setMapLng(lng);
+                  setMapZoom(zoom);
+                }}
+                onAddress={(address) => {
+                  setNote((current) => (current.trim() ? current : address.slice(0, 160)));
+                }}
+              />
+            ) : (
+              <div className="flex h-52 items-center justify-center rounded-lg border border-dashed border-line bg-surface px-4 text-center text-xs text-muted">
+                Set MAP_API_KEY to search and preview this pin on Google Maps. You can still enter latitude and longitude.
+              </div>
+            )}
+          </div>
+        </>
+      ) : null}
       {catalogKindHasAnswer(kind) ? (
         <Field label="Answer" required>
           <textarea

@@ -5,7 +5,9 @@ import { clearTtlCache } from "@/lib/ttl-cache";
 import { z } from "zod";
 import {
   catalogKindHasAnswer,
+  catalogKindHasNote,
   catalogKindLabel,
+  isBusCatalogKind,
   isCatalogKind,
   isHotelCatalogKind,
   mapStoredSelection,
@@ -17,6 +19,8 @@ import { firstIssue, type FormState } from "@/lib/forms";
 import { requirePermission } from "@/lib/auth/guards";
 import { deleteImage } from "@/lib/storage";
 import { readUploadedImage, validateUploadedImage } from "@/lib/storage/form";
+import { mirrorBusOntoRoutes } from "@/lib/bus-catalog";
+import { readMapFields } from "@/lib/maps";
 import { parseJsonArray } from "@/lib/tours/json";
 
 const itemSchema = z.object({
@@ -24,14 +28,26 @@ const itemSchema = z.object({
   content: z.string().trim().max(2000),
 });
 
+function catalogPermission(kind: CatalogKind) {
+  if (isHotelCatalogKind(kind)) return "hotels.manage" as const;
+  if (isBusCatalogKind(kind)) return "buses.manage" as const;
+  return "tours.manage" as const;
+}
+
 function revalidateCatalog() {
   clearTtlCache();
   revalidatePath("/admin/tours/configuration");
   revalidatePath("/admin/hotels/configuration");
+  revalidatePath("/admin/buses/configuration");
+  revalidatePath("/admin/buses/locations");
   revalidatePath("/admin/tours");
   revalidatePath("/admin/tours/new");
   revalidatePath("/admin/hotels");
   revalidatePath("/admin/hotels/new");
+  revalidatePath("/admin/buses");
+  revalidatePath("/admin/buses/new");
+  revalidatePath("/admin/buses/routes");
+  revalidatePath("/buses");
 }
 
 export async function saveCatalogItem(
@@ -40,9 +56,7 @@ export async function saveCatalogItem(
 ): Promise<FormState> {
   const kindValue = String(formData.get("kind") ?? "");
   if (!isCatalogKind(kindValue)) return { error: "Choose a configuration type." };
-  await requirePermission(
-    isHotelCatalogKind(kindValue) ? "hotels.manage" : "tours.manage",
-  );
+  await requirePermission(catalogPermission(kindValue));
 
   const parsed = itemSchema.safeParse({
     title: formData.get("title"),
@@ -52,14 +66,31 @@ export async function saveCatalogItem(
   if (catalogKindHasAnswer(kindValue) && parsed.data.content.length < 2) {
     return { error: "Enter an answer." };
   }
+  if (catalogKindHasNote(kindValue) && parsed.data.content.length > 160) {
+    return { error: "Keep the boarding note under 160 characters." };
+  }
 
   const icon = readUploadedImage(formData);
   const iconError = validateUploadedImage(icon, "catalog", { required: false });
   if (iconError) return { error: iconError };
 
+  const map = readMapFields(
+    formData.get("mapLat"),
+    formData.get("mapLng"),
+    formData.get("mapZoom"),
+  );
+  if (!map.ok) return { error: map.error };
+  if (kindValue === "bus_location" && (!map.mapLat || !map.mapLng)) {
+    return { error: "Drop a pin on the map for this location." };
+  }
+  const place = kindValue === "bus_location" ? map : { mapLat: "", mapLng: "", mapZoom: 14 };
+
   const id = String(formData.get("id") ?? "").trim();
   const title = parsed.data.title;
-  const content = catalogKindHasAnswer(kindValue) ? parsed.data.content : "";
+  const content =
+    catalogKindHasAnswer(kindValue) || catalogKindHasNote(kindValue)
+      ? parsed.data.content
+      : "";
   const siblings = await prisma.catalogItem.findMany({
     where: { kind: kindValue },
     select: { id: true, title: true },
@@ -85,6 +116,9 @@ export async function saveCatalogItem(
         iconUrl: icon?.url ?? "",
         iconKey: icon?.key ?? "",
         iconDriver: icon?.driver ?? "local",
+        mapLat: place.mapLat,
+        mapLng: place.mapLng,
+        mapZoom: place.mapZoom,
       },
     });
 
@@ -97,6 +131,8 @@ export async function saveCatalogItem(
 
     if (isHotelCatalogKind(kindValue)) {
       await bindHotels(kindValue, id, existing.title);
+    } else if (isBusCatalogKind(kindValue)) {
+      await bindBuses(kindValue, id, existing.title, title);
     } else {
       await bindTours(kindValue, id, existing.title, title);
     }
@@ -111,6 +147,9 @@ export async function saveCatalogItem(
         iconUrl: icon?.url ?? "",
         iconKey: icon?.key ?? "",
         iconDriver: icon?.driver ?? "local",
+        mapLat: place.mapLat,
+        mapLng: place.mapLng,
+        mapZoom: place.mapZoom,
       },
     });
   }
@@ -123,14 +162,17 @@ export async function deleteCatalogItem(id: string): Promise<FormState> {
   const item = await prisma.catalogItem.findUnique({ where: { id } });
   if (!item || !isCatalogKind(item.kind)) return { error: "That item was not found." };
   const hotelKind = isHotelCatalogKind(item.kind);
-  await requirePermission(hotelKind ? "hotels.manage" : "tours.manage");
+  const busKind = isBusCatalogKind(item.kind);
+  await requirePermission(catalogPermission(item.kind));
 
   const used = hotelKind
     ? await hotelsUsing(item.kind, item.id, item.title)
-    : await toursUsing(item.kind, item.id, item.title);
+    : busKind
+      ? await routesUsing(item.kind, item.id, item.title)
+      : await toursUsing(item.kind, item.id, item.title);
   if (used > 0) {
     const noun = catalogKindLabel(item.kind).toLowerCase();
-    const place = hotelKind ? "hotel" : "tour";
+    const place = hotelKind ? "hotel" : busKind ? "route" : "tour";
     return {
       error: `This ${noun} is used by ${used} ${place}${used === 1 ? "" : "s"}. Remove it from those ${place}s first.`,
     };
@@ -238,6 +280,69 @@ function rewritten(raw: string, id: string, previousTitle: string) {
       value === previousTitle || value === id ? id : value,
     ),
   );
+}
+
+async function bindBuses(
+  kind: CatalogKind,
+  id: string,
+  previousTitle: string,
+  nextTitle: string,
+) {
+  if (kind === "bus_location") {
+    if (previousTitle === nextTitle) return;
+    await prisma.busRoute.updateMany({
+      where: { fromCity: previousTitle },
+      data: { fromCity: nextTitle },
+    });
+    await prisma.busRoute.updateMany({
+      where: { toCity: previousTitle },
+      data: { toCity: nextTitle },
+    });
+    return;
+  }
+
+  if (kind !== "bus_facility") return;
+  const [buses, routes] = await Promise.all([
+    prisma.bus.findMany({ select: { id: true, amenitiesJson: true } }),
+    prisma.busRoute.findMany({
+      where: { busId: null },
+      select: { id: true, amenitiesJson: true },
+    }),
+  ]);
+  for (const bus of buses) {
+    const next = rewritten(bus.amenitiesJson, id, previousTitle);
+    if (!next) continue;
+    await prisma.bus.update({ where: { id: bus.id }, data: { amenitiesJson: next } });
+    await mirrorBusOntoRoutes(bus.id);
+  }
+  for (const route of routes) {
+    const next = rewritten(route.amenitiesJson, id, previousTitle);
+    if (!next) continue;
+    await prisma.busRoute.update({
+      where: { id: route.id },
+      data: { amenitiesJson: next },
+    });
+  }
+}
+
+async function routesUsing(kind: CatalogKind, id: string, title: string) {
+  if (kind === "bus_location") {
+    return prisma.busRoute.count({
+      where: {
+        OR: [
+          { fromCity: title },
+          { toCity: title },
+          { fromLocationId: id },
+          { toLocationId: id },
+        ],
+      },
+    });
+  }
+  const [buses, routes] = await Promise.all([
+    prisma.bus.findMany({ select: { amenitiesJson: true } }),
+    prisma.busRoute.findMany({ where: { busId: null }, select: { amenitiesJson: true } }),
+  ]);
+  return [...buses, ...routes].filter((row) => usesSelection(row.amenitiesJson, id, title)).length;
 }
 
 async function bindHotels(kind: CatalogKind, id: string, previousTitle: string) {

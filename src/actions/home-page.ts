@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import type { FormState } from "@/lib/forms";
-import { parseHomePageContent } from "@/lib/home-page";
+import { parseHomePageContent, type HomePageContent } from "@/lib/home-page";
 import { deleteStoredImages, type StoredImage } from "@/lib/storage/cleanup";
 import { validateUploadedImage } from "@/lib/storage/form";
 import type { UploadedImage } from "@/lib/storage/types";
@@ -14,6 +14,12 @@ function heroImageOk(image: UploadedImage) {
   const folderError = validateUploadedImage(image, "home", { required: false });
   if (!folderError) return true;
   return image.key.includes("/home/") || image.key.startsWith("home/");
+}
+
+function serviceUploads(content: HomePageContent) {
+  return content.services.groups.flatMap((group) =>
+    group.items.flatMap((item) => (item.image ? [item.image] : [])),
+  );
 }
 
 export async function saveHomePage(
@@ -30,12 +36,21 @@ export async function saveHomePage(
     if (content.hero.image && !heroImageOk(content.hero.image)) {
       return { error: "The hero image is not a valid upload. Try the image again." };
     }
+    if (serviceUploads(content).some((image) => !heroImageOk(image))) {
+      return { error: "A service photo is not a valid upload. Try that image again." };
+    }
 
     const existing = await prisma.siteHome.findUnique({ where: { id: "default" } });
     const previous = parseHomePageContent(existing?.contentJson);
     const stale: StoredImage[] = [];
     if (previous.hero.image?.key && previous.hero.image.key !== content.hero.image?.key) {
       stale.push({ key: previous.hero.image.key, driver: previous.hero.image.driver });
+    }
+    const keptServiceKeys = new Set(serviceUploads(content).map((image) => image.key));
+    for (const image of serviceUploads(previous)) {
+      if (image.key && !keptServiceKeys.has(image.key)) {
+        stale.push({ key: image.key, driver: image.driver });
+      }
     }
 
     const payload = JSON.stringify(content);

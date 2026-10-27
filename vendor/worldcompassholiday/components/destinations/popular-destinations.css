@@ -1,0 +1,72 @@
+.pop-dest__frame {
+  position: relative;
+}
+
+.pop-dest__track {
+  display: flex;
+  gap: 22px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pop-dest__track::-webkit-scrollbar {
+  display: none;
+}
+
+.pop-dest__slide {
+  flex: 0 0 calc((100% - 66px) / 4);
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+.pop-dest__scroll {
+  position: relative;
+  height: 3px;
+  margin-top: 28px;
+  border-radius: 4px;
+  background: #e9ecef;
+  overflow: hidden;
+}
+
+.pop-dest__scroll > span {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: #051036;
+}
+
+.pop-dest .section-slider-nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (max-width: 1199px) {
+  .pop-dest__slide {
+    flex-basis: calc((100% - 44px) / 3);
+  }
+}
+
+@media (max-width: 1023px) {
+  .pop-dest__slide {
+    flex-basis: calc((100% - 22px) / 2);
+  }
+}
+
+@media (max-width: 499px) {
+  .pop-dest__track {
+    gap: 16px;
+  }
+
+  .pop-dest__slide {
+    flex-basis: 78%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pop-dest__track {
+    scroll-behavior: auto;
+  }
+}

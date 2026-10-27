@@ -1,0 +1,722 @@
+.hic,
+.hic * {
+  box-sizing: border-box;
+}
+
+.hic {
+  --navy: #051036;
+  --blue: #3554d1;
+  --blue-deep: #2a46b8;
+  --muted: #697488;
+  --line: #e4e7ef;
+  --surface: #f6f7fb;
+  color: var(--navy);
+  font-family: var(--font-jost), "Jost", sans-serif;
+}
+
+.home-x .hic {
+  padding-left: var(--hx-pad);
+  padding-right: var(--hx-pad);
+}
+
+.hic h2,
+.hic h3,
+.hic p,
+.hic ul {
+  margin: 0;
+}
+
+.hic button:not(.fav-btn) {
+  font-family: inherit;
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+.hic a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.hic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hic-block {
+  margin-top: 28px;
+}
+
+.hic-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.hic-kicker {
+  color: var(--blue);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hic-head h2 {
+  margin-top: 4px;
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.hic-note {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.hic-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.hic-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.hic-row::-webkit-scrollbar {
+  display: none;
+}
+
+.hic-row > .hic-stay {
+  flex: 0 0 280px;
+  scroll-snap-align: start;
+}
+
+.hic button.hic-btn,
+.hic a.hic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--blue);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.hic button.hic-btn:hover,
+.hic button.hic-btn:focus-visible,
+.hic a.hic-btn:hover,
+.hic a.hic-btn:focus-visible {
+  background: var(--blue-deep);
+  color: #fff;
+}
+
+.hic button.hic-btn--ghost,
+.hic a.hic-btn--ghost {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.hic button.hic-btn--ghost:hover,
+.hic button.hic-btn--ghost:focus-visible,
+.hic a.hic-btn--ghost:hover,
+.hic a.hic-btn--ghost:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.hic button.hic-btn--line,
+.hic a.hic-btn--line {
+  background: #fff;
+  color: var(--navy);
+  border: 1px solid var(--line);
+}
+
+.hic button.hic-btn--line:hover,
+.hic button.hic-btn--line:focus-visible,
+.hic a.hic-btn--line:hover,
+.hic a.hic-btn--line:focus-visible {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: #fff;
+}
+
+.hic :focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.hic-price strong {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.hic-price small {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.hic-fav {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 4;
+}
+
+.hic-tilt {
+  position: relative;
+  min-height: 390px;
+  border-radius: 22px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 24px rgba(5, 16, 54, 0.08);
+  transform-style: preserve-3d;
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.45s ease, box-shadow 0.45s ease;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.hic-tilt.is-hot {
+  transition: transform 0.06s linear, box-shadow 0.2s ease;
+  box-shadow: 0 22px 44px rgba(5, 16, 54, 0.18);
+}
+
+.hic-tilt__media {
+  position: relative;
+  height: 230px;
+  border-radius: 22px 22px 0 0;
+  overflow: hidden;
+}
+
+.hic-tilt__media img {
+  transform: scale(1.04);
+}
+
+.hic-tilt__glare {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    280px circle at var(--mx, 50%) var(--my, 30%),
+    rgba(255, 255, 255, 0.55),
+    transparent 46%
+  );
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+}
+
+.hic-tilt.is-hot .hic-tilt__glare {
+  opacity: 1;
+}
+
+.hic-tilt__chip,
+.hic-score,
+.hic-ribbon {
+  position: absolute;
+  z-index: 2;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--navy);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 10px;
+}
+
+.hic-tilt__chip {
+  top: 14px;
+  left: 14px;
+}
+
+.hic-tilt__sheet {
+  margin: 2px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--navy);
+  color: #fff;
+  line-height: 1.4;
+}
+
+.hic-tilt__body,
+.hic-flip__front-body,
+.hic-stay__body,
+.hic-deal__body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.hic-tilt__body h3,
+.hic-flip__front-body h3,
+.hic-stay__body h3,
+.hic-deal__body h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.hic-tilt__foot,
+.hic-stay__foot,
+.hic-deal__foot {
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.hic-stay {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(5, 16, 54, 0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hic-stay:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 36px rgba(5, 16, 54, 0.12);
+}
+
+.hic-stay__media {
+  position: relative;
+  height: 210px;
+  background: #d9deea;
+}
+
+.hic-stay__media.is-cycle {
+  cursor: pointer;
+}
+
+.hic-stay__media img {
+  transition: transform 0.45s ease;
+}
+
+.hic-stay:hover .hic-stay__media img {
+  transform: scale(1.06);
+}
+
+.hic-score {
+  left: 12px;
+  bottom: 12px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.hic-score b {
+  background: var(--navy);
+  color: #fff;
+  border-radius: 8px;
+  padding: 2px 6px;
+}
+
+.hic-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.hic .hic-stepper button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--navy);
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.hic .hic-stepper button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.hic-stepper span {
+  min-width: 4.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.hic button.hic-stay__nav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  margin-top: -16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--navy);
+  font-size: 1.1rem;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgba(5, 16, 54, 0.16);
+}
+
+.hic-stay__nav--prev {
+  left: 10px;
+}
+
+.hic-stay__nav--next {
+  right: 10px;
+}
+
+.hic-dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  z-index: 2;
+}
+
+.hic .hic-dots button {
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.hic .hic-dots button.is-on {
+  width: 16px;
+  background: #fff;
+}
+
+.hic-flip__front {
+  pointer-events: auto;
+}
+
+.hic-flip.is-flipped .hic-flip__front,
+.hic-flip__back {
+  pointer-events: none;
+}
+
+.hic-flip.is-flipped .hic-flip__back {
+  pointer-events: auto;
+}
+
+.hic-flip {
+  perspective: 1200px;
+  height: 430px;
+}
+
+.hic-flip__inner {
+  position: relative;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.hic-flip.is-flipped .hic-flip__inner {
+  transform: rotateY(180deg);
+}
+
+.hic-flip__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(5, 16, 54, 0.08);
+}
+
+.hic-flip__front {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.hic-flip__shot {
+  position: relative;
+  height: 230px;
+}
+
+.hic-flip__back {
+  transform: rotateY(180deg);
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hic-flip__back h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.hic-flip__back ul {
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.hic-flip__back li {
+  padding-left: 16px;
+  position: relative;
+}
+
+.hic-flip__back li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8eb0ff;
+}
+
+.hic-flip__actions {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hic.is-calm .hic-tilt,
+.hic.is-calm .hic-tilt.is-hot,
+.hic.is-calm .hic-stay,
+.hic.is-calm .hic-stay__media img,
+.hic.is-calm .hic-flip__inner,
+.hic.is-calm .hic-flip.is-flipped .hic-flip__inner {
+  transform: none;
+  transition: none;
+}
+
+.hic.is-calm .hic-flip.is-flipped .hic-flip__front {
+  visibility: hidden;
+}
+
+.hic.is-calm .hic-flip__back {
+  transform: none;
+}
+
+.hic-deals {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.hic-deals::-webkit-scrollbar {
+  display: none;
+}
+
+.hic-deal {
+  display: flex;
+  flex: 0 0 300px;
+  flex-direction: column;
+  scroll-snap-align: start;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.hic-deal__media {
+  position: relative;
+  height: 168px;
+  background: #d9deea;
+}
+
+.hic-deal__media img {
+  position: absolute;
+  inset: 0;
+}
+
+.hic-ribbon {
+  top: 12px;
+  left: 12px;
+}
+
+.hic-deal__body h3 {
+  min-height: 2.6em;
+}
+
+.hic-deal__extra {
+  color: var(--muted);
+  line-height: 1.45;
+  min-height: 2.9em;
+}
+
+.hic-deal__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hic-glow {
+  position: relative;
+  isolation: isolate;
+}
+
+.hic-glow::before,
+.hic-spot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.hic-glow::before {
+  padding: 2px;
+  background: radial-gradient(170px circle at var(--mx, 50%) var(--my, 20%), #fff, transparent 68%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  z-index: 3;
+}
+
+.hic-spot::after {
+  background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 20%), rgba(255, 255, 255, 0.34), transparent 55%);
+  z-index: 1;
+}
+
+.hic-glow:hover::before,
+.hic-glow:focus-visible::before,
+.hic-glow.is-lit::before,
+.hic-spot:hover::after,
+.hic-spot:focus-visible::after,
+.hic-spot.is-lit::after {
+  opacity: 1;
+}
+
+a.hic-spot,
+.hic-spot {
+  position: relative;
+  display: block;
+  height: 190px;
+  border-radius: 22px;
+  overflow: hidden;
+  color: #fff;
+  text-decoration: none;
+  background: #1c2742;
+}
+
+.hic-spot img,
+.hic-spot__fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.45s ease;
+}
+
+.hic-spot:hover img {
+  transform: scale(1.06);
+}
+
+.hic-spot__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5, 16, 54, 0.05), rgba(5, 16, 54, 0.78));
+}
+
+.hic-spot__label {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hic-spot__label small {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.hic-spot__label strong {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.hic-spot__more {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 62px;
+  z-index: 2;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  opacity: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hic-spot:hover .hic-spot__more,
+.hic-spot:focus-visible .hic-spot__more,
+.hic-spot.is-lit .hic-spot__more {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .hic-deals > .hic-deal {
+    flex-basis: min(300px, 82vw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hic-tilt,
+  .hic-stay,
+  .hic-stay__media img,
+  .hic-flip__inner,
+  .hic-spot img {
+    transition: none;
+  }
+}

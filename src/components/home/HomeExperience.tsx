@@ -1,16 +1,17 @@
+import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
-import { theme } from "@/config/theme";
+import { HomeInvite, HomePromises } from "@/components/home/HomeClose";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
 import { formatMoney } from "@/lib/format";
 import { defaultHomePageContent, type HomePageContent } from "@/lib/home-page";
-import { HomeAssistSection } from "@/components/home/HomeAssistSection";
 import {
+  busDeal,
   busHomeFallback,
-  busHomeImage,
   type HomeBus,
 } from "@/components/home/HomeBusSection";
+import { HomeDealList, HomeFlipGrid, HomeStayGrid } from "@/components/home/HomeInteractive";
 import { HomeHeroSearch } from "@/components/home/HomeHeroSearch";
 import {
   bikeHomeFallback,
@@ -18,15 +19,17 @@ import {
   HomeRidePromoCard,
   type HomeRide,
 } from "@/components/home/HomeFleetSection";
-import { HomeVisaSection } from "@/components/home/HomeVisaSection";
+import { hasServicePart, HomeServicesSection } from "@/components/home/HomeServicesSection";
 import type { TourListLocation } from "@/components/tour-list/types";
 import "@/styles/home-experience.css";
 
 export type HomeDestination = {
   slug: string;
   name: string;
+  region?: string;
   imageUrl: string;
   meta: string;
+  hoverText?: string;
 };
 
 export type HomeTour = {
@@ -39,6 +42,8 @@ export type HomeTour = {
   currency: string;
   image: string;
   badge?: string;
+  summary?: string;
+  chips?: string[];
 };
 
 export type HomeHotel = {
@@ -49,6 +54,9 @@ export type HomeHotel = {
   priceFrom: number;
   currency: string;
   image: string;
+  images?: string[];
+  summary?: string;
+  stars?: number;
 };
 
 export type HomeCar = HomeRide;
@@ -252,55 +260,61 @@ export function HomeExperience({
     ) : null
   );
 
-  const tourRail = tours.length > 0 ? (
+  const servicesOn = content.sections.some((section) => section.id === "services" && section.enabled);
+  const tourGuides =
+    servicesOn && hasServicePart(content.services, "tours") ? (
+      <HomeServicesSection part="tours" embedded services={content.services} />
+    ) : null;
+  const stayGuides =
+    servicesOn && hasServicePart(content.services, "stays") ? (
+      <HomeServicesSection part="stays" embedded services={content.services} />
+    ) : null;
+  const rideGuides =
+    servicesOn && hasServicePart(content.services, "rides") ? (
+      <HomeServicesSection part="rides" embedded services={content.services} />
+    ) : null;
+  const firstFleet = content.sections.find((section) => {
+    if (!section.enabled) return false;
+    if (section.id === "cars") return showCars;
+    if (section.id === "bikes") return showBikes;
+    if (section.id === "buses") return showBuses;
+    return false;
+  })?.id;
+
+  const tourRail = tours.length > 0 || tourGuides ? (
     <section key="tours" className="home-x__rail" aria-labelledby="home-tours">
+      {tourGuides}
       <RailHead
         title={content.tours.title}
         subtitle={content.tours.subtitle}
         href="/tours"
         linkLabel={content.tours.linkLabel}
+        headingId="home-tours"
       />
-      <div className="home-x__scroller" id="home-tours">
-        {tours.map((tour) => (
-          <article key={tour.slug} className="home-x__card">
-            <div className="home-x__card-media">
-              <Link prefetch={false} href={`/tours/${tour.slug}`} className="home-x__card-shot" aria-label={tour.title}>
-                <Image
-                  src={tour.image}
-                  alt=""
-                  fill
-                  sizes="280px"
-                  style={{ objectFit: "cover" }}
-                />
-              </Link>
-              {tour.badge ? <span className="home-x__badge">{tour.badge}</span> : null}
-              <CardFavorite
-                kind="tour"
-                id={tour.id}
-                title={tour.title}
-                savedIds={savedIds}
-                signedIn={signedIn}
-              />
-            </div>
-            <Link prefetch={false} href={`/tours/${tour.slug}`} className="home-x__card-body">
-              <h3>{tour.title}</h3>
-              <p className="home-x__meta">
-                {[tour.place, tour.duration].filter(Boolean).join(" · ")}
-              </p>
-              {tour.priceFrom > 0 ? (
-                <p className="home-x__price">
-                  {formatMoney(tour.priceFrom, tour.currency)}{" "}
-                  <small>/ start</small>
-                </p>
-              ) : null}
-            </Link>
-          </article>
-        ))}
-      </div>
+      <HomeFlipGrid
+        headingId="home-flip-mobile"
+        tours={tours.slice(0, 4).map((tour) => ({
+          id: tour.id,
+          title: tour.title,
+          place: tour.place,
+          days: tour.duration,
+          price: tour.priceFrom > 0 ? formatMoney(tour.priceFrom, tour.currency) : "",
+          image: tour.image,
+          points: tour.chips?.length
+            ? tour.chips
+            : [tour.badge, tour.place, tour.duration].filter((item): item is string => Boolean(item)),
+          href: `/tours/${tour.slug}`,
+          saved: savedIds.includes(tour.id),
+          signedIn,
+        }))}
+      />
     </section>
   ) : null;
 
-  const hotelRail = hotels.length > 0 ? (
+  const hotelRail = hotels.length > 0 || stayGuides ? (
+    <Fragment key="hotels">
+    {stayGuides}
+    {hotels.length > 0 ? (
     <section key="hotels" className="home-x__rail" aria-labelledby="home-hotels">
       <RailHead
         title={content.hotels.title}
@@ -308,41 +322,26 @@ export function HomeExperience({
         href="/hotels"
         linkLabel={content.hotels.linkLabel}
       />
-      <div className="home-x__scroller" id="home-hotels">
-        {hotels.map((hotel) => (
-          <article key={hotel.slug} className="home-x__card">
-            <div className="home-x__card-media">
-              <Link prefetch={false} href={`/hotels/${hotel.slug}`} className="home-x__card-shot" aria-label={hotel.name}>
-                <Image
-                  src={hotel.image}
-                  alt=""
-                  fill
-                  sizes="280px"
-                  style={{ objectFit: "cover" }}
-                />
-              </Link>
-              <CardFavorite
-                kind="hotel"
-                id={hotel.id}
-                title={hotel.name}
-                savedIds={savedIds}
-                signedIn={signedIn}
-              />
-            </div>
-            <Link prefetch={false} href={`/hotels/${hotel.slug}`} className="home-x__card-body">
-              <h3>{hotel.name}</h3>
-              <p className="home-x__meta">{hotel.place}</p>
-              {hotel.priceFrom > 0 ? (
-                <p className="home-x__price">
-                  {formatMoney(hotel.priceFrom, hotel.currency)}{" "}
-                  <small>/ night from</small>
-                </p>
-              ) : null}
-            </Link>
-          </article>
-        ))}
+      <div id="home-hotels">
+        <HomeStayGrid
+          stays={hotels.map((hotel) => ({
+            id: hotel.id,
+            name: hotel.name,
+            place: hotel.place,
+            detail: hotel.summary || "",
+            stars: hotel.stars || 0,
+            priceFrom: hotel.priceFrom,
+            currency: hotel.currency,
+            images: hotel.images?.length ? hotel.images : [hotel.image],
+            href: `/hotels/${hotel.slug}`,
+            saved: savedIds.includes(hotel.id),
+            signedIn,
+          }))}
+        />
       </div>
     </section>
+    ) : null}
+    </Fragment>
   ) : null;
 
   return (
@@ -375,8 +374,9 @@ export function HomeExperience({
         if (section.id === "hotels") return hotelRail;
         if (section.id === "cars" && showCars) {
           return (
+            <Fragment key="cars">
+            {firstFleet === "cars" ? rideGuides : null}
             <RideRail
-              key="cars"
               id="home-cars"
               title={content.cars.title}
               subtitle={content.cars.subtitle}
@@ -389,12 +389,14 @@ export function HomeExperience({
               savedIds={savedIds}
               signedIn={signedIn}
             />
+            </Fragment>
           );
         }
         if (section.id === "bikes" && showBikes) {
           return (
+            <Fragment key="bikes">
+            {firstFleet === "bikes" ? rideGuides : null}
             <RideRail
-              key="bikes"
               id="home-bikes"
               title={content.bikes.title}
               subtitle={content.bikes.subtitle}
@@ -407,11 +409,14 @@ export function HomeExperience({
               savedIds={savedIds}
               signedIn={signedIn}
             />
+            </Fragment>
           );
         }
         if (section.id === "buses" && showBuses) {
           return (
-            <section key="buses" className="home-x__rail" aria-labelledby="home-buses">
+            <Fragment key="buses">
+            {firstFleet === "buses" ? rideGuides : null}
+            <section className="home-x__rail" aria-labelledby="home-buses">
               <RailHead
                 title={content.buses.title}
                 subtitle={content.buses.subtitle}
@@ -420,96 +425,42 @@ export function HomeExperience({
                 headingId="home-buses"
               />
               {buses.length > 0 ? (
-                <div className="home-x__scroller">
-                  {buses.map((bus) => {
-                    const route = [bus.fromCity, bus.toCity].filter(Boolean).join(" to ");
-                    const when = [bus.departTime, bus.duration].filter(Boolean).join(" · ");
-                    return (
-                      <article key={bus.id} className="home-x__card">
-                        <div className="home-x__card-media">
-                          <Link prefetch={false} href={`/buses/${bus.slug}`} className="home-x__card-shot" aria-label={bus.name}>
-                            {/* Plain img: listed coaches can use hosts outside the Next image allowlist. */}
-                            <img
-                              src={bus.image || busHomeImage}
-                              alt=""
-                              style={{ objectFit: "cover", width: "100%", height: "100%" }}
-                            />
-                          </Link>
-                          <span className="home-x__badge">{bus.coach || "Bus"}</span>
-                        </div>
-                        <Link prefetch={false} href={`/buses/${bus.slug}`} className="home-x__card-body">
-                          <h3>{bus.name}</h3>
-                          <p className="home-x__meta">{[route, when, bus.operator].filter(Boolean).join(" · ")}</p>
-                          <p className="home-x__price">
-                            {bus.fareFrom > 0 ? (
-                              <>
-                                {formatMoney(bus.fareFrom)} <small>fare</small>
-                              </>
-                            ) : (
-                              "Fare on request"
-                            )}
-                          </p>
-                        </Link>
-                      </article>
-                    );
-                  })}
-                </div>
+                <HomeDealList items={buses.map(busDeal)} />
               ) : (
                 <HomeRidePromoCard promo={busHomeFallback} />
               )}
             </section>
+            </Fragment>
           );
         }
         if (section.id === "why") {
           return (
-            <div key="why" className="home-x__trust">
-              {content.why.items.map((item) => (
-                <div key={item.id} className="home-x__trust-item">
-                  <strong>{item.title}</strong>
-                  <span>
-                    {item.id === "reply" && contactPhone
-                      ? item.text.replace(theme.contact.phone, contactPhone)
-                      : item.text}
-                  </span>
-                </div>
-              ))}
-            </div>
-          );
-        }
-        if (section.id === "visa") {
-          return (
-            <HomeVisaSection
-              key="visa"
-              headingId="home-visa-app"
-              title={content.visa.title}
-              subtitle={content.visa.subtitle}
-              meta={content.visa.meta}
-              moreLabel={content.visa.moreLabel}
-              ctaLabel={content.visa.ctaLabel}
+            <HomePromises
+              key="why"
+              items={content.why.items}
+              contactPhone={contactPhone}
+              headingId="home-promises-mobile"
             />
           );
         }
-        if (section.id === "assist") {
+        if (section.id === "services") {
           return (
-            <HomeAssistSection
-              key="assist"
-              headingId="home-assist-app"
-              title={content.assist.title}
-              subtitle={content.assist.subtitle}
-              moreLabel={content.assist.moreLabel}
-              ctaLabel={content.assist.ctaLabel}
+            <HomeServicesSection
+              key="services"
+              headingId="home-services-app"
+              services={content.services}
+              part="overview"
             />
           );
         }
         if (section.id === "cta") {
           return (
-            <div key="cta" className="home-x__cta">
-              <div>
-                <h2>{content.cta.title}</h2>
-                <p>{content.cta.subtitle}</p>
-              </div>
-              <Link prefetch={false} href="/contact">{content.cta.buttonLabel}</Link>
-            </div>
+            <HomeInvite
+              key="cta"
+              cta={content.cta}
+              contactPhone={contactPhone}
+              headingId="home-invite-mobile"
+            />
           );
         }
         return null;

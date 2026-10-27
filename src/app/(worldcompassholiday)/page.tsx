@@ -16,7 +16,7 @@ import { favoriteIds } from "@/lib/favorites";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getHomePageContent, orderByIds, type HomeRailConfig } from "@/lib/home-page";
 import { getPublicNav } from "@/lib/navigation";
-import { graphLd, organizationNode, pageMetadata, websiteNode } from "@/lib/seo";
+import { clipText, graphLd, organizationNode, pageMetadata, plainText, websiteNode } from "@/lib/seo";
 import { cached } from "@/lib/ttl-cache";
 
 function popularHoverText(
@@ -50,6 +50,52 @@ function destinationMeta(counts: {
       : null,
   ].filter((part): part is string => Boolean(part));
   return parts.length > 0 ? parts.join(" · ") : "Explore";
+}
+
+function label(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+function tourPlanCopy(
+  tour: {
+    summary: string;
+    category: string;
+    difficulty: string;
+    destination: { name: string } | null;
+  },
+  duration: string,
+) {
+  const place = tour.destination?.name || "";
+  const summary =
+    plainText(tour.summary).trim() ||
+    `A ${duration} plan${place ? ` through ${place}` : ""}.`;
+  const chips = [label(tour.category), label(tour.difficulty), place].filter(
+    (item, index, all) => Boolean(item) && all.indexOf(item) === index,
+  );
+  return { summary, chips: chips.slice(0, 4) };
+}
+
+function stayImages(featured: string, image: string, galleryJson: string) {
+  const extra: string[] = [];
+  try {
+    const parsed = JSON.parse(galleryJson || "[]") as unknown;
+    if (Array.isArray(parsed)) {
+      for (const item of parsed) {
+        const url =
+          typeof item === "string"
+            ? item
+            : item && typeof item === "object" && "url" in item
+              ? String((item as { url?: unknown }).url || "")
+              : "";
+        if (url.trim()) extra.push(url.trim());
+      }
+    }
+  } catch {
+    /* a bad gallery still leaves the cover photo */
+  }
+  return [...new Set([featured, image, ...extra].map((url) => url.trim()).filter(Boolean))].slice(0, 4);
 }
 
 function tourDurationLabel(tour: {
@@ -210,6 +256,8 @@ export default async function Page() {
             durationDays: true,
             durationUnit: true,
             durationLabel: true,
+            summary: true,
+            difficulty: true,
             priceFrom: true,
             currency: true,
             imageUrl: true,
@@ -236,6 +284,9 @@ export default async function Page() {
             currency: true,
             imageUrl: true,
             featuredImageUrl: true,
+            summary: true,
+            starRating: true,
+            galleryJson: true,
             destination: { select: { name: true } },
           },
         }).then((rows) =>
@@ -366,6 +417,7 @@ export default async function Page() {
     id: destination.id,
     slug: destination.slug,
     name: destination.name,
+    region: destination.region,
     imageUrl: destination.imageUrl,
     hoverText: popularHoverText(
       {
@@ -400,12 +452,15 @@ export default async function Page() {
           contactPhone={brand.phone}
           tourCatalog={tourCatalog}
           destinations={mappedDestinations}
-          tours={featuredTours.map((tour) => ({
+          tours={featuredTours.map((tour) => {
+            const duration = tourDurationLabel(tour);
+            const plan = tourPlanCopy(tour, duration);
+            return {
             id: tour.id,
             slug: tour.slug,
             title: tour.title,
             place: tour.destination?.name || "",
-            duration: tourDurationLabel(tour),
+            duration,
             priceFrom: tour.priceFrom,
             currency: tour.currency || "INR",
             image:
@@ -415,7 +470,10 @@ export default async function Page() {
               : tour.category.trim()
                 ? tour.category.trim()
                 : undefined,
-          }))}
+            summary: plan.summary,
+            chips: plan.chips,
+          };
+          })}
           hotels={featuredHotels.map((hotel) => ({
             id: hotel.id,
             slug: hotel.slug,
@@ -425,6 +483,13 @@ export default async function Page() {
             currency: hotel.currency || "INR",
             image:
               hotel.featuredImageUrl || hotel.imageUrl || "/img/stays/1/1.png",
+            images: stayImages(
+              hotel.featuredImageUrl,
+              hotel.imageUrl,
+              hotel.galleryJson,
+            ),
+            summary: clipText(hotel.summary || "", 110),
+            stars: hotel.starRating || 0,
           }))}
           cars={featuredCars.map((car) => toRide(car, "/img/cars/1.png"))}
           bikes={featuredBikes.map((bike) => toRide(bike, "/img/bikes/bike-rental-banner.jpg"))}
@@ -444,15 +509,22 @@ export default async function Page() {
           content={home}
           coverUrl={coverUrl}
           destinations={mappedDestinations}
-          tours={featuredTours.map((tour) => ({
+          tours={featuredTours.map((tour) => {
+            const duration = tourDurationLabel(tour);
+            const plan = tourPlanCopy(tour, duration);
+            return {
             id: tour.id,
             slug: tour.slug,
             title: tour.title,
             destinationName: tour.destination?.name,
+            duration,
             priceFrom: tour.priceFrom,
             currency: tour.currency || "INR",
             image: tour.featuredImageUrl || tour.imageUrl || "/img/tours/header-bg.jpg",
-          }))}
+            summary: plan.summary,
+            chips: plan.chips,
+          };
+          })}
           hotels={featuredHotels.map((hotel) => ({
             id: hotel.id,
             slug: hotel.slug,
@@ -461,6 +533,13 @@ export default async function Page() {
             priceFrom: hotel.priceFrom,
             currency: hotel.currency || "INR",
             image: hotel.featuredImageUrl || hotel.imageUrl || "/img/stays/1/1.png",
+            images: stayImages(
+              hotel.featuredImageUrl,
+              hotel.imageUrl,
+              hotel.galleryJson,
+            ),
+            summary: clipText(hotel.summary || "", 110),
+            stars: hotel.starRating || 0,
           }))}
           cars={featuredCars.map((car) => toRide(car, "/img/cars/1.png"))}
           bikes={featuredBikes.map((bike) => toRide(bike, "/img/bikes/bike-rental-banner.jpg"))}
