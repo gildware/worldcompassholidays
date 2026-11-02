@@ -8,6 +8,7 @@ import {
   CategoryPills,
   HotelCards,
   NearbyDestinations,
+  TopSights,
   TourCards,
 } from "@/components/destinations/single/widgets";
 import { MapEmbed } from "@/components/site/MapEmbed";
@@ -20,6 +21,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import {
   absoluteUrl,
   breadcrumbNode,
+  clipText,
   graphLd,
   organizationNode,
   pageMetadata,
@@ -27,6 +29,7 @@ import {
   privateMetadata,
 } from "@/lib/seo";
 import { parseJsonArray, type GalleryItem } from "@/lib/tours/json";
+import "@/styles/destination-page.css";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -40,11 +43,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
   if (!destination?.published) return privateMetadata("Destination");
   const place = [destination.region, destination.country].filter(Boolean).join(", ");
+  const description =
+    clipText(destination.summary, 158) ||
+    `Tours, hotels, and rentals in ${destination.name}${place ? `, ${place}` : ""}.`;
   return pageMetadata({
     title: `${destination.name} tours and stays`,
-    description:
-      destination.summary ||
-      `Tours, hotels, and rentals in ${destination.name}${place ? `, ${place}` : ""}.`,
+    description,
     path: `/destinations/${slug}`,
     image: destination.imageUrl,
     imageAlt: destination.name,
@@ -182,7 +186,7 @@ export default async function DestinationPage({ params }: Props) {
   const placeLine = [destination.region, destination.country].filter(Boolean).join(", ");
 
   return (
-    <div className="worldcompassholiday-page">
+    <div className="worldcompassholiday-page destination-page">
       <JsonLd
         data={graphLd([
           organizationNode(),
@@ -204,7 +208,7 @@ export default async function DestinationPage({ params }: Props) {
           },
         ])}
       />
-      <section data-aos="fade" className="d-flex items-center py-15 border-top-light">
+      <section data-aos="fade" className="destination-page__crumb d-flex items-center py-15 border-top-light">
         <div className="container">
           <div className="row y-gap-10 items-center justify-between">
             <div className="col-auto">
@@ -221,81 +225,84 @@ export default async function DestinationPage({ params }: Props) {
                 ))}
               </nav>
             </div>
-            <div className="col-auto">
+            <div className="col-auto destination-page__crumb-place">
               <div className="text-14 text-light-1">{placeLine || destination.name}</div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="layout-pb-md">
+      <section className="destination-page__main layout-pb-md">
         <div className="container">
           <div className="row">
             <div className="col-12">
-              <div className="relative d-flex">
-                <img
-                  src={destination.imageUrl}
-                  alt={destination.name}
-                  className="col-12 rounded-4"
-                  style={{
-                    width: "100%",
-                    minHeight: "300px",
-                    aspectRatio: "1291 / 510",
-                    objectFit: "cover",
-                    objectPosition: "center",
-                  }}
-                />
-                <div className="absolute z-2 px-50 py-60 md:py-20 md:px-30">
-                  <h1 className="text-50 fw-600 text-white lg:text-40 md:text-30">
-                    Explore {destination.name}
-                  </h1>
-                  <div className="text-white">
-                    {destination.summary || `Tours, hotels, and rentals in ${destination.name}.`}
+              <div className="destination-page__hero">
+                <div className="destination-page__hero-media">
+                  <img
+                    src={destination.imageUrl}
+                    alt={destination.name}
+                  />
+                  <div className="destination-page__hero-scrim" aria-hidden="true" />
+                  <div className="destination-page__hero-copy">
+                    <h1>Explore {destination.name}</h1>
+                    <p>
+                      {clipText(destination.summary, 180) ||
+                        `Tours, hotels, and rentals in ${destination.name}.`}
+                    </p>
                   </div>
-                </div>
-                <div className="absolute d-flex justify-end items-end col-12 h-full z-1 px-10 py-10">
-                  <span className="button -md -blue-1 bg-white text-dark-1 text-14 fw-500">
-                    See All Photos
-                  </span>
+                  <div className="destination-page__photos">
+                    <span className="button -md -blue-1 bg-white text-dark-1 text-14 fw-500">
+                      See All Photos
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {categories.length > 0 ? (
-            <div className="row x-gap-20 y-gap-20 items-center pt-20 item_gap-x10">
+            <div className="destination-page__chips">
               <CategoryPills items={categories} />
             </div>
           ) : null}
 
-          <div className="row y-gap-20 pt-40">
+          <div className="destination-page__intro row y-gap-20 pt-40">
             <div className="col-auto">
               <h2>What to know before visiting {destination.name}</h2>
             </div>
             <div className={mapPoint && apiKey ? "col-xl-8" : "col-12"}>
-              <p className="text-15 text-dark-1">{destination.summary}</p>
+              {destination.summary ? (
+                <div
+                  className="destination-page__prose text-15 text-dark-1"
+                  dangerouslySetInnerHTML={{ __html: destination.summary }}
+                />
+              ) : (
+                <p className="text-15 text-dark-1">
+                  Tours, hotels, and rentals in {destination.name}.
+                </p>
+              )}
               <p className="text-15 text-light-1 mt-10">{placeLabel}</p>
             </div>
             {mapPoint && apiKey ? (
               <div className="col-xl-4">
-                <div className="relative d-flex ml-35 xl:ml-0">
+                <div className="destination-page__intro-map relative d-flex ml-35 xl:ml-0">
                   <MapEmbed
                     apiKey={apiKey}
                     lat={destination.mapLat}
                     lng={destination.mapLng}
                     zoom={destination.mapZoom}
                     title={`Map of ${destination.name}`}
-                    className="col-12 rounded-4"
+                    className="destination-page__map-frame col-12 rounded-4"
                     style={{ minHeight: 300, width: "100%", border: 0, display: "block" }}
                   />
                   {tours.length > 0 ? (
-                    <div className="absolute d-flex justify-center items-end col-12 h-full z-1 px-35 py-20">
+                    <div className="destination-page__map-cta">
                       <Link
                         href="#tours"
                         className="button h-50 px-25 -blue-1 bg-white text-dark-1 text-14 fw-500 col-12"
                       >
                         <i className="icon-eye text-18 mr-10" />
-                        See popular activities on the map
+                        See popular tours
                       </Link>
                     </div>
                   ) : null}
@@ -422,7 +429,10 @@ export default async function DestinationPage({ params }: Props) {
           <div className="row y-gap-30">
             {destination.busRoutes.map((route) => (
               <div className="col-lg-4 col-md-6" key={route.id}>
-                <Link href={`/buses/${route.slug}`} className="rounded-4 border-light px-30 py-30 d-block">
+                <Link
+                  href={`/buses/${route.slug}`}
+                  className="destination-page__bus-card rounded-4 border-light px-30 py-30 d-block"
+                >
                   <h3 className="text-18 fw-500">{route.name}</h3>
                   <p className="text-15 text-light-1 mt-10">
                     {route.fromCity} to {route.toCity}
@@ -450,39 +460,8 @@ export default async function DestinationPage({ params }: Props) {
                 </div>
               </div>
             </div>
-            <div className="row y-gap-30 pt-40">
-              {destination.children.map((place) => (
-                <div className="col-lg-6" key={place.id}>
-                  <div className="rounded-4 border-light">
-                    <div className="d-flex flex-wrap y-gap-30">
-                      <div className="col-auto">
-                        <div className="ratio ratio-1:1 w-200">
-                          <Image
-                            width={200}
-                            height={200}
-                            src={place.imageUrl}
-                            alt={place.name}
-                            className="img-ratio"
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          />
-                        </div>
-                      </div>
-                      <div className="col">
-                        <div className="d-flex flex-column justify-center h-full px-30 py-20">
-                          <h3 className="text-18 fw-500">{place.name}</h3>
-                          <p className="text-15 mt-5">{place.summary}</p>
-                          <Link
-                            href={`/destinations/${place.slug}`}
-                            className="d-block text-14 text-blue-1 fw-500 underline mt-5"
-                          >
-                            See More
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="destination-page__listing-row pt-40">
+              <TopSights places={destination.children} />
             </div>
           </div>
         </section>
@@ -529,7 +508,7 @@ function ListingSection({
   return (
     <section id={id} className="layout-pt-md layout-pb-md">
       <div className="container">
-        <div className="row y-gap-20 justify-between items-end">
+        <div className="destination-page__listing-head row y-gap-20 justify-between items-end">
           <div className="col-auto">
             <div className="sectionTitle -md">
               <h2 className="sectionTitle__title">{title}</h2>
@@ -537,12 +516,14 @@ function ListingSection({
             </div>
           </div>
           <div className="col-auto">
-            <Link href={moreHref} className="button -md -blue-1 bg-blue-1-05 text-blue-1">
-              More <div className="icon-arrow-top-right ml-15" />
+            <Link href={moreHref} className="destination-page__more button -blue-1 bg-blue-1-05 text-blue-1">
+              More <i className="icon-arrow-top-right" aria-hidden="true" />
             </Link>
           </div>
         </div>
-        <div className="row y-gap-30 pt-40 sm:pt-20 item_gap-x30">{children}</div>
+        <div className="destination-page__listing-row pt-24 sm:pt-16">
+          {children}
+        </div>
       </div>
     </section>
   );

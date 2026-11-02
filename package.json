@@ -17,6 +17,10 @@
     "db:seed-admin": "node prisma/seed-admin.mjs",
     "db:seed-fresh-bookings": "node scripts/seed-fresh-bookings.mjs",
     "db:seed-demo": "tsx scripts/seed-demo-catalog.ts",
+    "db:seed-kashmir-destinations": "tsx scripts/seed-kashmir-destinations.ts",
+    "db:seed-kashmir-hotels": "tsx scripts/seed-kashmir-hotels.ts",
+    "db:seed-kashmir-bikes": "tsx scripts/seed-kashmir-bikes.ts",
+    "db:seed-kashmir-cars": "tsx scripts/seed-kashmir-cars.ts",
     "db:studio": "prisma studio"
   },
   "prisma": {

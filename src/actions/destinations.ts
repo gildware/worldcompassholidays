@@ -24,7 +24,11 @@ const destinationSchema = z.object({
     .trim()
     .min(2, "Choose a country")
     .refine(isKnownCountry, "Choose a country from the list"),
-  summary: z.string().trim().min(10, "Add a short summary").max(280),
+  summary: z
+    .string()
+    .trim()
+    .min(10, "Add destination content")
+    .max(50000, "Content is too long"),
   published: z.boolean(),
   popular: z.boolean(),
   parentId: z.string().trim(),

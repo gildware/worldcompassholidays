@@ -157,7 +157,7 @@ function RideRail({
       {items.length > 0 ? (
         <div className="home-x__scroller">
           {items.map((ride) => (
-            <article key={ride.slug} className="home-x__card">
+            <article key={ride.slug} className="home-x__card home-x__card--ride">
               <div className="home-x__card-media">
                 <Link prefetch={false} href={`/rentals/${ride.slug}`} className="home-x__card-shot" aria-label={ride.name}>
                   <Image
@@ -177,19 +177,31 @@ function RideRail({
                   signedIn={signedIn}
                 />
               </div>
-              <Link prefetch={false} href={`/rentals/${ride.slug}`} className="home-x__card-body">
-                <h3>{ride.name}</h3>
+              <div className="home-x__card-body">
+                {ride.detail ? <p className="home-x__ride-kicker">{ride.detail}</p> : null}
+                <h3>
+                  <Link prefetch={false} href={`/rentals/${ride.slug}`}>
+                    {ride.name}
+                  </Link>
+                </h3>
                 <p className="home-x__meta">
-                  {[ride.place, ride.detail, ride.seats ? `${ride.seats} seats` : ""]
-                    .filter(Boolean)
-                    .join(" · ")}
+                  {[ride.place, ride.seats ? `${ride.seats} seats` : ""].filter(Boolean).join(" · ")}
                 </p>
-                {ride.pricePerDay > 0 ? (
-                  <p className="home-x__price">
-                    {formatMoney(ride.pricePerDay, ride.currency)} <small>/ day</small>
-                  </p>
-                ) : null}
-              </Link>
+                <div className="home-x__ride-foot">
+                  {ride.pricePerDay > 0 ? (
+                    <p className="home-x__price">
+                      <strong>{formatMoney(ride.pricePerDay, ride.currency)}</strong> <small>/ day</small>
+                    </p>
+                  ) : (
+                    <p className="home-x__price">
+                      <strong>Price on request</strong>
+                    </p>
+                  )}
+                  <Link prefetch={false} href={`/rentals/${ride.slug}`} className="home-x__ride-btn">
+                    View
+                  </Link>
+                </div>
+              </div>
             </article>
           ))}
         </div>
@@ -293,7 +305,7 @@ export function HomeExperience({
       />
       <HomeFlipGrid
         headingId="home-flip-mobile"
-        tours={tours.slice(0, 4).map((tour) => ({
+        tours={tours.map((tour) => ({
           id: tour.id,
           title: tour.title,
           place: tour.place,

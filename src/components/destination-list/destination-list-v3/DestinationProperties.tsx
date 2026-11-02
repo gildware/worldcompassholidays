@@ -17,10 +17,12 @@ export function DestinationProperties({
   destinations,
   selectedId,
   onSelect,
+  grid = false,
 }: {
   destinations: DestinationListCard[];
   selectedId: string;
   onSelect: (id: string) => void;
+  grid?: boolean;
 }) {
   if (destinations.length === 0) {
     return (
@@ -28,6 +30,46 @@ export function DestinationProperties({
         <h3 className="text-18 lh-16 fw-500">No destinations match these filters</h3>
         <p className="text-15 text-light-1 mt-10">Try another place, country, or region.</p>
       </div>
+    );
+  }
+
+  if (grid) {
+    return (
+      <>
+        {destinations.map((item) => {
+          const listings = listingLine(item);
+          return (
+            <div className="col-xl-3 col-lg-4 col-6" key={item.id} id={`destination-${item.id}`}>
+              <Link href={item.href} className="destination-tile d-block">
+                <div className="cardImage ratio ratio-3:2">
+                  <div className="cardImage__content">
+                    {item.imageUrl ? (
+                      <Image
+                        width={300}
+                        height={300}
+                        className="rounded-4 col-12"
+                        src={item.imageUrl}
+                        alt={item.name}
+                      />
+                    ) : (
+                      <div className="rounded-4 bg-light-2 w-100 h-100" />
+                    )}
+                  </div>
+                </div>
+                <div className="mt-10">
+                  <p className="text-13 text-light-1 lh-14 mb-5">
+                    {[item.region, item.country].filter(Boolean).join(", ")}
+                  </p>
+                  <h3 className="text-16 lh-14 fw-500 text-dark-1">{item.name}</h3>
+                  {listings.length > 0 ? (
+                    <p className="text-13 text-light-1 lh-14 mt-5">{listings.join(" · ")}</p>
+                  ) : null}
+                </div>
+              </Link>
+            </div>
+          );
+        })}
+      </>
     );
   }
 
@@ -109,10 +151,12 @@ export function DestinationProperties({
                     {item.parentName ? `In ${item.parentName}` : item.summary}
                   </p>
                   {item.parentName && item.summary ? (
-                    <div className="text-14 lh-15 fw-500 mt-20">{item.summary}</div>
+                    <div className="destination-card__more text-14 lh-15 fw-500 mt-20">
+                      {item.summary}
+                    </div>
                   ) : null}
                   {item.placeNames.length > 0 ? (
-                    <div className="text-14 text-green-2 fw-500 lh-15 mt-5">
+                    <div className="destination-card__more text-14 text-green-2 fw-500 lh-15 mt-5">
                       Places: {item.placeNames.join(", ")}
                     </div>
                   ) : item.popular ? (
@@ -121,11 +165,13 @@ export function DestinationProperties({
                 </div>
 
                 <div className="col-md-auto text-right md:text-left">
-                  {listings.map((line) => (
-                    <div className="text-14 lh-14 text-light-1 mt-5" key={line}>
-                      {line}
-                    </div>
-                  ))}
+                  <div>
+                    {listings.map((line) => (
+                      <div className="text-14 lh-14 text-light-1 mt-5" key={line}>
+                        {line}
+                      </div>
+                    ))}
+                  </div>
                   <Link
                     href={item.href}
                     className="button py-10 px-24 -dark-1 bg-blue-1 text-white mt-15"

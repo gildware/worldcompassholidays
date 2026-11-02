@@ -16,6 +16,7 @@ import { favoriteIds } from "@/lib/favorites";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getHomePageContent, orderByIds, type HomeRailConfig } from "@/lib/home-page";
 import { getPublicNav } from "@/lib/navigation";
+import { resolveRideCover, stayImageList } from "@/lib/catalog-media";
 import { clipText, graphLd, organizationNode, pageMetadata, plainText, websiteNode } from "@/lib/seo";
 import { cached } from "@/lib/ttl-cache";
 
@@ -77,7 +78,13 @@ function tourPlanCopy(
   return { summary, chips: chips.slice(0, 4) };
 }
 
-function stayImages(featured: string, image: string, galleryJson: string) {
+function stayImages(
+  featured: string,
+  image: string,
+  galleryJson: string,
+  place = "",
+  slug = "",
+) {
   const extra: string[] = [];
   try {
     const parsed = JSON.parse(galleryJson || "[]") as unknown;
@@ -95,7 +102,11 @@ function stayImages(featured: string, image: string, galleryJson: string) {
   } catch {
     /* a bad gallery still leaves the cover photo */
   }
-  return [...new Set([featured, image, ...extra].map((url) => url.trim()).filter(Boolean))].slice(0, 4);
+  return stayImageList({
+    images: [featured, image, ...extra],
+    place,
+    slug,
+  });
 }
 
 function tourDurationLabel(tour: {
@@ -116,6 +127,7 @@ function toRide(
     seats: number;
     pricePerDay: number;
     currency: string;
+    kind?: string;
     destination: { name: string } | null;
     vehicleType: { name: string } | null;
     transmission: { name: string } | null;
@@ -123,6 +135,7 @@ function toRide(
   },
   fallback: string,
 ): HomeRide {
+  const kind = vehicle.kind === "bike" ? "bike" : "car";
   return {
     id: vehicle.id,
     slug: vehicle.slug,
@@ -132,7 +145,12 @@ function toRide(
     detail: [vehicle.vehicleType?.name, vehicle.transmission?.name].filter(Boolean).join(" · "),
     pricePerDay: vehicle.pricePerDay,
     currency: vehicle.currency || "INR",
-    image: vehicle.images[0]?.url || fallback,
+    image: resolveRideCover({
+      url: vehicle.images[0]?.url,
+      slug: vehicle.slug,
+      kind,
+      fallback,
+    }),
   };
 }
 
@@ -474,25 +492,30 @@ export default async function Page() {
             chips: plan.chips,
           };
           })}
-          hotels={featuredHotels.map((hotel) => ({
-            id: hotel.id,
-            slug: hotel.slug,
-            name: hotel.name,
-            place: hotel.destination?.name || "",
-            priceFrom: hotel.priceFrom,
-            currency: hotel.currency || "INR",
-            image:
-              hotel.featuredImageUrl || hotel.imageUrl || "/img/stays/1/1.png",
-            images: stayImages(
+          hotels={featuredHotels.map((hotel) => {
+            const place = hotel.destination?.name || "";
+            const images = stayImages(
               hotel.featuredImageUrl,
               hotel.imageUrl,
               hotel.galleryJson,
-            ),
+              place,
+              hotel.slug,
+            );
+            return {
+            id: hotel.id,
+            slug: hotel.slug,
+            name: hotel.name,
+            place,
+            priceFrom: hotel.priceFrom,
+            currency: hotel.currency || "INR",
+            image: images[0] || "/img/company/service-hotels.jpg",
+            images,
             summary: clipText(hotel.summary || "", 110),
             stars: hotel.starRating || 0,
-          }))}
-          cars={featuredCars.map((car) => toRide(car, "/img/cars/1.png"))}
-          bikes={featuredBikes.map((bike) => toRide(bike, "/img/bikes/bike-rental-banner.jpg"))}
+          };
+          })}
+          cars={featuredCars.map((car) => toRide({ ...car, kind: "car" }, "/img/cars/car-rental-banner.jpg"))}
+          bikes={featuredBikes.map((bike) => toRide({ ...bike, kind: "bike" }, "/img/bikes/bike-rental-banner.jpg"))}
           buses={mappedBuses}
           showCars={modules.cars}
           showBikes={modules.bikes}
@@ -525,24 +548,30 @@ export default async function Page() {
             chips: plan.chips,
           };
           })}
-          hotels={featuredHotels.map((hotel) => ({
-            id: hotel.id,
-            slug: hotel.slug,
-            name: hotel.name,
-            destinationName: hotel.destination?.name,
-            priceFrom: hotel.priceFrom,
-            currency: hotel.currency || "INR",
-            image: hotel.featuredImageUrl || hotel.imageUrl || "/img/stays/1/1.png",
-            images: stayImages(
+          hotels={featuredHotels.map((hotel) => {
+            const place = hotel.destination?.name || "";
+            const images = stayImages(
               hotel.featuredImageUrl,
               hotel.imageUrl,
               hotel.galleryJson,
-            ),
+              place,
+              hotel.slug,
+            );
+            return {
+            id: hotel.id,
+            slug: hotel.slug,
+            name: hotel.name,
+            destinationName: place,
+            priceFrom: hotel.priceFrom,
+            currency: hotel.currency || "INR",
+            image: images[0] || "/img/company/service-hotels.jpg",
+            images,
             summary: clipText(hotel.summary || "", 110),
             stars: hotel.starRating || 0,
-          }))}
-          cars={featuredCars.map((car) => toRide(car, "/img/cars/1.png"))}
-          bikes={featuredBikes.map((bike) => toRide(bike, "/img/bikes/bike-rental-banner.jpg"))}
+          };
+          })}
+          cars={featuredCars.map((car) => toRide({ ...car, kind: "car" }, "/img/cars/car-rental-banner.jpg"))}
+          bikes={featuredBikes.map((bike) => toRide({ ...bike, kind: "bike" }, "/img/bikes/bike-rental-banner.jpg"))}
           buses={mappedBuses}
           showCars={modules.cars}
           showBikes={modules.bikes}

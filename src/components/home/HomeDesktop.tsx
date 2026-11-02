@@ -166,7 +166,7 @@ export function HomeDesktop({
                 </div>
                 <HomeFlipGrid
                   headingId="home-flip-desktop"
-                  tours={tours.slice(0, 4).map((tour) => ({
+                  tours={tours.map((tour) => ({
                     id: tour.id,
                     title: tour.title,
                     place: tour.destinationName || "",

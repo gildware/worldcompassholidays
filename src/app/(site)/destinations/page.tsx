@@ -4,7 +4,7 @@ import type { DestinationListCard, DestinationListLocation } from "@/components/
 import { prisma } from "@/lib/db";
 import { mapApiKey } from "@/lib/map-key";
 import { parseMapPoint } from "@/lib/maps";
-import { pageMetadata } from "@/lib/seo";
+import { clipText, pageMetadata } from "@/lib/seo";
 import { cached } from "@/lib/ttl-cache";
 
 export const metadata: Metadata = pageMetadata({
@@ -54,7 +54,7 @@ export default async function DestinationsPage({
       name: destination.name,
       region: destination.region,
       country: destination.country,
-      summary: destination.summary,
+      summary: clipText(destination.summary, 140),
       imageUrl: destination.imageUrl,
       parentName: destination.parent?.name ?? "",
       placeNames: destination.children.map((child) => child.name),

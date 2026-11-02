@@ -3,8 +3,11 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { bikeCatalog, type BikeSeed } from "@/lib/rentals/bike-catalog";
 import { carCatalog, type CarSeed } from "@/lib/rentals/car-catalog";
+import { demoDestinations } from "@/lib/demo/north-india-catalog";
 import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/slug";
+
+const activeDestinationSlugs = new Set(demoDestinations.map((destination) => destination.slug));
 
 const configs: Array<{
   kind: string;
@@ -359,7 +362,7 @@ async function fillLocationPins() {
 async function seedDemoFleet() {
   const [destinations, types, fuels, gears, locations] = await Promise.all([
     prisma.destination.findMany({
-      where: { slug: { in: ["kashmir", "goa", "ladakh"] } },
+      where: { slug: { in: [...activeDestinationSlugs] } },
       select: { id: true, slug: true },
     }),
     prisma.rentalConfig.findMany({ where: { kind: "vehicle_type" } }),
@@ -369,7 +372,7 @@ async function seedDemoFleet() {
   ]);
   const destinationBySlug = new Map(destinations.map((item) => [item.slug, item.id]));
 
-  for (const item of demoFleet) {
+  for (const item of demoFleet.filter((vehicle) => activeDestinationSlugs.has(vehicle.destination))) {
     const existing = await prisma.vehicle.findUnique({ where: { slug: item.slug } });
     if (existing) {
       if (!existing.registrationNumber || existing.registrationNumber.startsWith("REG")) {
@@ -706,7 +709,7 @@ async function seedCarCatalog() {
   };
   let serial = 5100;
 
-  for (const item of carCatalog) {
+  for (const item of carCatalog.filter((vehicle) => activeDestinationSlugs.has(vehicle.destination))) {
     const destination = await prisma.destination.findUnique({
       where: { slug: item.destination },
       select: { id: true },
@@ -872,7 +875,7 @@ async function seedBikeCatalog() {
   };
   let serial = 3200;
 
-  for (const item of bikeCatalog) {
+  for (const item of bikeCatalog.filter((vehicle) => activeDestinationSlugs.has(vehicle.destination))) {
     const destination = await prisma.destination.findUnique({
       where: { slug: item.destination },
       select: { id: true },

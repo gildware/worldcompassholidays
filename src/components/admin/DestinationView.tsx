@@ -8,6 +8,7 @@ import { MapEmbed } from "@/components/site/MapEmbed";
 import { modules } from "@/config/modules";
 import { formatMoney } from "@/lib/format";
 import { parseMapPoint } from "@/lib/maps";
+import { clipText } from "@/lib/seo";
 
 type Place = {
   id: string;
@@ -192,7 +193,15 @@ export function DestinationView({
             {popularError ? (
               <p className="mt-2 text-xs text-red-700">{popularError}</p>
             ) : null}
-            <p className="mt-1 line-clamp-1 text-sm text-muted">{destination.summary}</p>
+            <p className="mt-1 line-clamp-2 text-sm text-muted">
+              {clipText(destination.summary, 180)}
+            </p>
+            {destination.summary.includes("<") ? (
+              <div
+                className="prose prose-sm mt-4 max-w-none border-t border-line pt-4 text-sm"
+                dangerouslySetInnerHTML={{ __html: destination.summary }}
+              />
+            ) : null}
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line pt-3 sm:grid-cols-3 lg:grid-cols-6">
               <Fact
                 label="Parent"

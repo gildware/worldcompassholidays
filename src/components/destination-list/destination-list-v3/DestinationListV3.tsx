@@ -3,18 +3,20 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
-import { Pagination } from "@/components/hotel-list/common/Pagination";
+import { ListFilterDrawer } from "@/components/listing/ListFilterDrawer";
 import { DestinationProperties } from "@/components/destination-list/destination-list-v3/DestinationProperties";
 import { DropdownSelectBar } from "@/components/destination-list/destination-list-v3/DropdownSelectBar";
 import { MainFilterSearchBox } from "@/components/destination-list/destination-list-v3/MainFilterSearchBox";
 import { TopHeaderFilter } from "@/components/destination-list/destination-list-v3/TopHeaderFilter";
+import { useLazySlice } from "@/hooks/useLazySlice";
 import type {
   DestinationListCard,
   DestinationListLocation,
   DestinationSort,
 } from "@/components/destination-list/types";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE_MAP = 5;
+const PAGE_SIZE_GRID = 12;
 
 const DestinationMap = dynamic(
   () => import("@/components/destination-list/destination-list-v3/DestinationMap"),
@@ -48,8 +50,10 @@ export function DestinationListV3({
   const [region, setRegion] = useState("");
   const [popular, setPopular] = useState(false);
   const [sort, setSort] = useState<DestinationSort>("recommended");
-  const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [view, setView] = useState<"list" | "map">("list");
+  const batch = view === "list" ? PAGE_SIZE_GRID : PAGE_SIZE_MAP;
 
   const countries = useMemo(
     () => unique(destinations.map((item) => item.country)),
@@ -86,9 +90,11 @@ export function DestinationListV3({
     return next;
   }, [country, destinations, location, popular, region, sort]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const windowKey = [location, country, region, String(popular), sort, view].join("|");
+  const { visible, sentinelRef } = useLazySlice(filtered, windowKey, batch);
+  const selectedIndex = selectedId ? filtered.findIndex((item) => item.id === selectedId) : -1;
+  const shown =
+    selectedIndex >= visible.length ? filtered.slice(0, selectedIndex + 1) : visible;
   const pins = useMemo(
     () =>
       filtered.flatMap((item) =>
@@ -119,14 +125,10 @@ export function DestinationListV3({
   const changeCountry = (value: string) => {
     setCountry(value);
     setRegion("");
-    setPage(1);
   };
 
   const selectDestination = (id: string) => {
     setSelectedId(id);
-    if (!id) return;
-    const index = filtered.findIndex((item) => item.id === id);
-    if (index >= 0) setPage(Math.floor(index / PAGE_SIZE) + 1);
   };
 
   useEffect(() => {
@@ -138,96 +140,92 @@ export function DestinationListV3({
   useEffect(() => {
     if (!selectedId) return;
     document.getElementById(`destination-${selectedId}`)?.scrollIntoView({ block: "nearest" });
-  }, [selectedId, currentPage]);
+  }, [selectedId, shown.length]);
+
+  const filtersActive = Boolean(location.trim() || country || region || popular);
+  const filterControls = (
+    <>
+      <MainFilterSearchBox
+        locations={locations}
+        location={location}
+        onLocation={setLocation}
+        countries={countries}
+        country={country}
+        onCountry={changeCountry}
+        regions={regions}
+        region={region}
+        onRegion={setRegion}
+      />
+      <div className="row x-gap-10 y-gap-10 pt-20">
+        <DropdownSelectBar
+          countries={countries}
+          country={country}
+          onCountry={changeCountry}
+          regions={regions}
+          region={region}
+          onRegion={setRegion}
+          popular={popular}
+          onPopular={setPopular}
+        />
+      </div>
+    </>
+  );
 
   return (
     <WorldCompassHolidayFrame>
-      <section className="halfMap destination-list-v3">
+      <section className="tour-workspace__mast destination-mast">
+        <h1 className="tour-workspace__title">
+          {placeLabel ? `Destinations in ${placeLabel}` : "Travel destinations"}
+        </h1>
+        <div className="list-filters-inline destination-mast__filters">{filterControls}</div>
+      </section>
+      <ListFilterDrawer open={filtersOpen} title="Filters" onClose={() => setFiltersOpen(false)}>
+        {filterControls}
+      </ListFilterDrawer>
+
+      <section className={`halfMap destination-list-v3 ${view === "map" ? "is-map-view" : "is-list-view"}`}>
         <div className="halfMap__content">
-          <div className="pt-20">
-            <h1 className="text-30 fw-600">
-              {placeLabel ? `Destinations in ${placeLabel}` : "Travel destinations"}
-            </h1>
-            <p className="text-15 text-light-1 mt-5">
-              Tours, hotels, and car and bike rentals in the places we plan trips for.
-            </p>
-          </div>
-          <MainFilterSearchBox
-            locations={locations}
-            location={location}
-            onLocation={(value) => {
-              setLocation(value);
-              setPage(1);
-            }}
-            countries={countries}
-            country={country}
-            onCountry={changeCountry}
-            regions={regions}
-            region={region}
-            onRegion={(value) => {
-              setRegion(value);
-              setPage(1);
-            }}
-          />
-
-          <div className="row x-gap-10 y-gap-10 pt-20">
-            <DropdownSelectBar
-              countries={countries}
-              country={country}
-              onCountry={changeCountry}
-              regions={regions}
-              region={region}
-              onRegion={(value) => {
-                setRegion(value);
-                setPage(1);
-              }}
-              popular={popular}
-              onPopular={(value) => {
-                setPopular(value);
-                setPage(1);
-              }}
-            />
-          </div>
-
-          <div className="row y-gap-10 justify-between items-center pt-20">
+          <div className="tour-workspace__toolbar">
             <TopHeaderFilter
               count={filtered.length}
               place={placeLabel}
+              search={location}
+              onSearch={setLocation}
               sort={sort}
-              onSort={(next) => {
-                setSort(next);
-                setPage(1);
-              }}
+              onSort={setSort}
+              filtersActive={filtersActive}
+              onOpenFilters={() => setFiltersOpen(true)}
+              view={view}
+              onView={setView}
             />
           </div>
 
           <div className="row y-gap-20 pt-20">
             <DestinationProperties
-              destinations={visible}
+              destinations={shown}
               selectedId={selectedId}
               onSelect={selectDestination}
+              grid={view === "list"}
             />
           </div>
 
-          <Pagination
-            page={currentPage}
-            pageSize={PAGE_SIZE}
-            total={filtered.length}
-            onPage={setPage}
-            itemLabel="destinations"
-          />
+          {shown.length < filtered.length ? (
+            <div ref={sentinelRef} className="tour-workspace__more" aria-hidden="true" />
+          ) : null}
         </div>
 
-        <div className="halfMap__map">
-          <div className="map">
-            <DestinationMap
-              pins={pins}
-              selectedId={selectedId}
-              onSelect={selectDestination}
-              apiKey={mapApiKey}
-            />
+        {view === "map" ? (
+          <div className="halfMap__map">
+            <div className="map">
+              <DestinationMap
+                pins={pins}
+                selectedId={selectedId}
+                onSelect={selectDestination}
+                apiKey={mapApiKey}
+              />
+            </div>
           </div>
-        </div>
+        ) : null}
       </section>
     </WorldCompassHolidayFrame>
   );

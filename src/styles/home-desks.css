@@ -362,16 +362,187 @@ a.hx-desk__more {
 
 .home-fleet-scroll {
   display: flex;
-  gap: 20px;
+  gap: 18px;
   overflow-x: auto;
-  padding-bottom: 8px;
+  padding-bottom: 10px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .home-fleet-scroll__item {
-  flex: 0 0 260px;
+  flex: 0 0 276px;
   scroll-snap-align: start;
+}
+
+.home-fleet-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  border: 1px solid #e4e7ef;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(5, 16, 54, 0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.home-fleet-card:hover {
+  transform: translateY(-4px);
+  border-color: #c9d2e6;
+  box-shadow: 0 18px 36px rgba(5, 16, 54, 0.12);
+}
+
+.home-fleet-card__media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 40%),
+    linear-gradient(160deg, #8aa4c4 0%, #3554d1 48%, #051036 100%);
+  overflow: hidden;
+}
+
+.home-fleet-card__media::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 40%;
+  background: linear-gradient(180deg, transparent, rgba(5, 16, 54, 0.22));
+  pointer-events: none;
+  z-index: 1;
+}
+
+.home-fleet-card__shot {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.home-fleet-card__shot img {
+  object-fit: cover;
+  transition: transform 0.45s ease;
+}
+
+.home-fleet-card:hover .home-fleet-card__shot img {
+  transform: scale(1.05);
+}
+
+.home-fleet-card__badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #051036;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 12px rgba(5, 16, 54, 0.12);
+}
+
+.home-fleet-card__media .fav-btn--float {
+  z-index: 4;
+}
+
+.home-fleet-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  padding: 14px 16px 16px;
+}
+
+.home-fleet-card__kicker {
+  margin: 0;
+  color: #3554d1;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.home-fleet-card__body h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  color: #051036;
+}
+
+.home-fleet-card__body h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.home-fleet-card__body h3 a:hover {
+  color: #3554d1;
+}
+
+.home-fleet-card__meta {
+  margin: 0;
+  color: #697488;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.home-fleet-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.home-fleet-card__price {
+  margin: 0;
+  min-width: 0;
+  color: #051036;
+}
+
+.home-fleet-card__price strong {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.home-fleet-card__price small {
+  color: #697488;
+  font-weight: 500;
+}
+
+.home-fleet-card__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #3554d1;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.home-fleet-card__btn:hover,
+.home-fleet-card__btn:focus-visible {
+  background: #2a46b8;
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-fleet-card,
+  .home-fleet-card__shot img {
+    transition: none;
+  }
+
+  .home-fleet-card:hover {
+    transform: none;
+  }
 }
 
 /* Phone PWA — visa swipes, meet stays a short list. Desktop layout is unchanged. */

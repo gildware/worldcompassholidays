@@ -197,6 +197,7 @@ export function HomeStayGrid({ stays }: { stays: HomeStayCard[] }) {
   const calm = useCalm();
   const [photos, setPhotos] = useState<Record<string, number>>({});
   const [nights, setNights] = useState<Record<string, number>>({});
+  const [broken, setBroken] = useState<Record<string, boolean>>({});
   if (!stays.length) return null;
 
   function stepPhoto(id: string, total: number, direction: number) {
@@ -216,6 +217,7 @@ export function HomeStayGrid({ stays }: { stays: HomeStayCard[] }) {
           const many = shots.length > 1 && Boolean(shots[0]);
           const count = nights[stay.id] ?? 1;
           const word = starWord(stay.stars);
+          const src = broken[stay.id] ? "" : shots[index];
           return (
             <article key={stay.id} className="hic-stay">
               <div
@@ -228,7 +230,15 @@ export function HomeStayGrid({ stays }: { stays: HomeStayCard[] }) {
                   stepPhoto(stay.id, shots.length, back ? -1 : 1);
                 }}
               >
-                {shots[index] ? <img src={shots[index]} alt="" /> : null}
+                {src ? (
+                  <img
+                    src={src}
+                    alt=""
+                    onError={() => setBroken((current) => ({ ...current, [stay.id]: true }))}
+                  />
+                ) : (
+                  <span className="hic-stay__ph" aria-hidden />
+                )}
                 <Save
                   kind="hotel"
                   id={stay.id}
@@ -276,7 +286,7 @@ export function HomeStayGrid({ stays }: { stays: HomeStayCard[] }) {
               <div className="hic-stay__body">
                 {stay.place ? <p className="hic-kicker">{stay.place}</p> : null}
                 <h3>{stay.name}</h3>
-                {stay.detail ? <p className="hic-note">{stay.detail}</p> : null}
+                {stay.detail ? <p className="hic-note hic-note--clamp">{stay.detail}</p> : null}
                 {stay.priceFrom > 0 ? (
                   <div className="hic-stepper">
                     <button
@@ -303,12 +313,19 @@ export function HomeStayGrid({ stays }: { stays: HomeStayCard[] }) {
                 <div className="hic-stay__foot">
                   <p className="hic-price">
                     {stay.priceFrom > 0 ? (
-                      <>
-                        <strong>{formatMoney(stay.priceFrom * count, stay.currency || "INR")}</strong>{" "}
-                        <small>
-                          · {formatMoney(stay.priceFrom, stay.currency || "INR")} / night
-                        </small>
-                      </>
+                      count === 1 ? (
+                        <>
+                          <strong>{formatMoney(stay.priceFrom, stay.currency || "INR")}</strong>{" "}
+                          <small>/ night</small>
+                        </>
+                      ) : (
+                        <>
+                          <strong>{formatMoney(stay.priceFrom * count, stay.currency || "INR")}</strong>{" "}
+                          <small>
+                            total · {formatMoney(stay.priceFrom, stay.currency || "INR")} / night
+                          </small>
+                        </>
+                      )
                     ) : (
                       <strong>Price on request</strong>
                     )}
@@ -358,7 +375,7 @@ export function HomeFlipGrid({
           <h2 id={headingId}>Tap a tour to read the plan</h2>
         </div>
       </div>
-      <div className="hic-grid">
+      <div className="hic-row">
         {tours.map((tour) => {
           const open = Boolean(flipped[tour.id]);
           return (

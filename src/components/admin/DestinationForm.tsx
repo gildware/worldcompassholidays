@@ -5,6 +5,7 @@ import {
   createDestination,
   updateDestination,
 } from "@/actions/destinations";
+import { HtmlEditor } from "@/components/admin/HtmlEditor";
 import { Field } from "@/components/forms/Field";
 import { FormMessage } from "@/components/forms/FormMessage";
 import { SubmitButton } from "@/components/forms/SubmitButton";
@@ -190,15 +191,14 @@ export function DestinationForm({
         />
 
         <div className="sm:col-span-2">
-          <Field label="Summary" hint="Shown on the website cards. Keep it short.">
-            <textarea
-              name="summary"
-              value={summary}
-              onChange={(event) => setSummary(event.target.value)}
-              required
-              rows={3}
-              className="!min-h-0 w-full resize-y"
-            />
+          <Field
+            label="Summary"
+            hint="Rich story shown on the destination page. Cards and SEO use a plain-text excerpt."
+          >
+            <input type="hidden" name="summary" value={summary} />
+            <div className="overflow-hidden rounded-lg border border-line bg-white">
+              <HtmlEditor value={summary} onChange={setSummary} />
+            </div>
           </Field>
         </div>
 

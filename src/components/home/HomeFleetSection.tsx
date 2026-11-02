@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
@@ -62,6 +65,80 @@ export function HomeRidePromoCard({ promo }: { promo: HomeRidePromo }) {
   );
 }
 
+function RideCard({
+  ride,
+  kind,
+  kindLabel,
+  saved,
+  signedIn,
+  eager,
+}: {
+  ride: HomeRide;
+  kind: FavoriteKind;
+  kindLabel: string;
+  saved: boolean;
+  signedIn: boolean;
+  eager: boolean;
+}) {
+  const [broken, setBroken] = useState(false);
+  const href = `/rentals/${ride.slug}`;
+  const fallback = kind === "bike" ? "/img/bikes/bike-rental-banner.jpg" : "/img/cars/car-rental-banner.jpg";
+  const image = broken || !ride.image ? fallback : ride.image;
+
+  return (
+    <article className="home-fleet-card">
+      <div className="home-fleet-card__media">
+        <Link prefetch={false} href={href} className="home-fleet-card__shot" aria-label={ride.name}>
+          <Image
+            src={image}
+            alt=""
+            fill
+            sizes="280px"
+            className="object-cover"
+            loading={eager ? "eager" : "lazy"}
+            onError={() => setBroken(true)}
+          />
+        </Link>
+        <span className="home-fleet-card__badge">{kindLabel}</span>
+        <FavoriteButton
+          kind={kind}
+          itemId={ride.id}
+          initialSaved={saved}
+          signedIn={signedIn}
+          title={ride.name}
+          variant="icon"
+          className="fav-btn--float"
+        />
+      </div>
+      <div className="home-fleet-card__body">
+        {ride.detail ? <p className="home-fleet-card__kicker">{ride.detail}</p> : null}
+        <h3>
+          <Link prefetch={false} href={href}>
+            {ride.name}
+          </Link>
+        </h3>
+        <p className="home-fleet-card__meta">
+          {[ride.place, ride.seats ? `${ride.seats} seats` : ""].filter(Boolean).join(" · ")}
+        </p>
+        <div className="home-fleet-card__foot">
+          {ride.pricePerDay > 0 ? (
+            <p className="home-fleet-card__price">
+              <strong>{formatMoney(ride.pricePerDay, ride.currency)}</strong> <small>/ day</small>
+            </p>
+          ) : (
+            <p className="home-fleet-card__price">
+              <strong>Price on request</strong>
+            </p>
+          )}
+          <Link prefetch={false} href={href} className="home-fleet-card__btn">
+            View
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export function HomeFleetSection({
   title,
   subtitle,
@@ -108,46 +185,14 @@ export function HomeFleetSection({
           <div className="home-fleet-scroll pt-20">
             {items.map((ride, index) => (
               <div className="home-fleet-scroll__item" key={ride.slug}>
-                <div className="home-fav-photo">
-                  <Link prefetch={false} href={`/rentals/${ride.slug}`} className="d-block">
-                    <div className="ratio ratio-16:9 rounded-4 overflow-hidden">
-                      <Image
-                        src={ride.image}
-                        alt={ride.name}
-                        width={400}
-                        height={400}
-                        className="img-ratio object-cover"
-                        loading={index < 4 ? "eager" : "lazy"}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    </div>
-                  </Link>
-                  <FavoriteButton
-                    kind={kind}
-                    itemId={ride.id}
-                    initialSaved={savedIds.includes(ride.id)}
-                    signedIn={signedIn}
-                    title={ride.name}
-                    variant="icon"
-                    className="fav-btn--float"
-                  />
-                </div>
-                <Link prefetch={false} href={`/rentals/${ride.slug}`} className="d-block">
-                  <p className="text-14 fw-500 text-blue-1 mt-15">
-                    {[kindLabel, ride.detail].filter(Boolean).join(" · ")}
-                  </p>
-                  <h3 className="text-18 fw-500 text-dark-1 mt-5">{ride.name}</h3>
-                  <p className="text-15 text-light-1 mt-5">
-                    {[ride.place, ride.seats ? `${ride.seats} seats` : ""]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                  {ride.pricePerDay > 0 ? (
-                    <p className="text-15 fw-500 mt-5">
-                      {formatMoney(ride.pricePerDay, ride.currency)} / day
-                    </p>
-                  ) : null}
-                </Link>
+                <RideCard
+                  ride={ride}
+                  kind={kind}
+                  kindLabel={kindLabel}
+                  saved={savedIds.includes(ride.id)}
+                  signedIn={signedIn}
+                  eager={index < 4}
+                />
               </div>
             ))}
           </div>

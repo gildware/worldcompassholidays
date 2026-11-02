@@ -31,18 +31,20 @@ function asset(rel: string, optional = false) {
   return null;
 }
 
-const parentOf: Record<string, string | undefined> = {
-  katra: "jammu",
-  gulmarg: "kashmir",
-  pahalgam: "kashmir",
-  sonamarg: "kashmir",
-  shimla: "himachal",
-  nubra: "ladakh",
-};
+const destinationSlugs = new Set(demoDestinations.map((destination) => destination.slug));
+const activeTours = demoTours.filter((tour) => destinationSlugs.has(tour.destinationSlug));
+const activeHotels = demoHotels.filter((hotel) => destinationSlugs.has(hotel.destinationSlug));
+const activeCars = demoCars.filter((car) => destinationSlugs.has(car.destination));
+const activeBikes = demoBikes.filter((bike) => destinationSlugs.has(bike.destination));
 
 async function seedDestinations() {
   for (const dest of demoDestinations) {
     const img = asset(`destinations/${dest.slug}.jpg`);
+    const existing = await prisma.destination.findUnique({
+      where: { slug: dest.slug },
+      select: { imageUrl: true, imageKey: true, imageDriver: true },
+    });
+    const fallbackImage = "/uploads/destinations/seed-kashmir.svg";
     const data = {
       name: dest.name,
       region: dest.region,
@@ -52,10 +54,11 @@ async function seedDestinations() {
       mapLng: dest.mapLng,
       mapZoom: dest.mapZoom,
       published: true,
-      popular: ["kashmir", "gulmarg", "pahalgam", "ladakh", "himachal"].includes(dest.slug),
-      imageUrl: img?.url ?? "",
-      imageKey: img?.key ?? "",
-      imageDriver: img?.driver ?? "local",
+      popular: Boolean(dest.popular),
+      imageUrl: img?.url ?? existing?.imageUrl ?? fallbackImage,
+      imageKey: img?.key ?? existing?.imageKey ?? "destinations/seed-kashmir.svg",
+      imageDriver: img?.driver ?? existing?.imageDriver ?? "local",
+      parentId: null as string | null,
     };
     await prisma.destination.upsert({
       where: { slug: dest.slug },
@@ -64,12 +67,12 @@ async function seedDestinations() {
     });
   }
 
-  for (const [child, parentSlug] of Object.entries(parentOf)) {
-    if (!parentSlug) continue;
-    const parent = await prisma.destination.findUnique({ where: { slug: parentSlug } });
+  for (const dest of demoDestinations) {
+    if (!dest.parentSlug) continue;
+    const parent = await prisma.destination.findUnique({ where: { slug: dest.parentSlug } });
     if (!parent) continue;
     await prisma.destination.update({
-      where: { slug: child },
+      where: { slug: dest.slug },
       data: { parentId: parent.id },
     });
   }
@@ -77,14 +80,14 @@ async function seedDestinations() {
   // Hide out-of-scope destinations from the demo.
   await prisma.destination.updateMany({
     where: {
-      slug: { notIn: demoDestinations.map((d) => d.slug) },
+      slug: { notIn: [...destinationSlugs] },
     },
     data: { published: false },
   });
 }
 
 async function seedTours() {
-  for (const tour of demoTours) {
+  for (const tour of activeTours) {
     const destination = await prisma.destination.findUnique({
       where: { slug: tour.destinationSlug },
     });
@@ -144,13 +147,13 @@ async function seedTours() {
   }
 
   await prisma.tour.updateMany({
-    where: { slug: { notIn: demoTours.map((t) => t.slug) } },
+    where: { slug: { notIn: activeTours.map((t) => t.slug) } },
     data: { published: false, isFeatured: false },
   });
 }
 
 async function seedHotels() {
-  for (const hotel of demoHotels) {
+  for (const hotel of activeHotels) {
     const destination = await prisma.destination.findUnique({
       where: { slug: hotel.destinationSlug },
     });
@@ -226,13 +229,13 @@ async function seedHotels() {
   }
 
   await prisma.hotel.updateMany({
-    where: { slug: { notIn: demoHotels.map((h) => h.slug) } },
+    where: { slug: { notIn: activeHotels.map((h) => h.slug) } },
     data: { published: false, isFeatured: false },
   });
 }
 
 async function syncVehicles() {
-  const keep = new Set([...demoCars.map((c) => c.slug), ...demoBikes.map((b) => b.slug)]);
+  const keep = new Set([...activeCars.map((c) => c.slug), ...activeBikes.map((b) => b.slug)]);
 
   await prisma.vehicle.updateMany({
     where: { slug: { notIn: [...keep] } },
@@ -240,8 +243,8 @@ async function syncVehicles() {
   });
 
   const fleet = [
-    ...demoCars.map((c) => ({ ...c, kind: "car" as const })),
-    ...demoBikes.map((b) => ({
+    ...activeCars.map((c) => ({ ...c, kind: "car" as const })),
+    ...activeBikes.map((b) => ({
       ...b,
       kind: "bike" as const,
       seats: 2,

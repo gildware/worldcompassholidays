@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { clipText } from "@/lib/seo";
 
 type DestinationCard = {
   slug: string;
@@ -55,7 +56,7 @@ export function DestinationGrid({
                   : destination.region}
               </span>
               <span className="mt-2 text-sm leading-6 text-navy/80">
-                {destination.summary}
+                {clipText(destination.summary, 140)}
               </span>
               {destination.children && destination.children.length > 0 ? (
                 <span className="mt-2 text-sm text-muted">
