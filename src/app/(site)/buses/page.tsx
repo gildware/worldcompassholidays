@@ -34,16 +34,15 @@ export default async function BusesPage({
 
   // No published runs yet — send people straight to the quote form.
   if (routes.length === 0) {
-    redirect(
-      requestBusHref({
-        from: initial.from,
-        to: initial.to,
-        date: initial.date,
-        passengers: initial.passengers || 1,
-        coach: initial.coach.length === 1 ? initial.coach[0] : undefined,
-        time: initial.time.length === 1 ? initial.time[0] : undefined,
-      }),
-    );
+    const href = requestBusHref({
+      from: initial.from,
+      to: initial.to,
+      date: initial.date,
+      passengers: initial.passengers || 1,
+      coach: initial.coach.length === 1 ? initial.coach[0] : undefined,
+      time: initial.time.length === 1 ? initial.time[0] : undefined,
+    });
+    redirect(href.includes("passengers=") ? href : "/buses/request?passengers=1");
   }
 
   return (
