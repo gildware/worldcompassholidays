@@ -91,6 +91,8 @@ function Chevron({ direction }: { direction: "left" | "right" }) {
   );
 }
 
+const BIKE_PHOTO_FALLBACK = "/img/bikes/bike-rental-banner.jpg";
+
 function CardPhotos({
   images,
   href,
@@ -109,9 +111,13 @@ function CardPhotos({
   save?: ReactNode;
 }) {
   const [index, setIndex] = useState(0);
+  const [broken, setBroken] = useState<Record<string, true>>({});
   const startX = useRef(0);
   const dragged = useRef(false);
-  const count = images.length;
+  const slides = images.length
+    ? images.map((src) => (broken[src] ? BIKE_PHOTO_FALLBACK : src))
+    : [];
+  const count = slides.length;
   const current = Math.min(index, Math.max(count - 1, 0));
 
   const step = (delta: number) => {
@@ -148,17 +154,22 @@ function CardPhotos({
           }}
         >
           <span className="bike-card__track" style={{ transform: `translateX(-${current * 100}%)` }}>
-            {images.map((src, slide) => (
+            {slides.map((src, slide) => (
               <span
                 className={`bike-card__frame${src.includes(".svg") ? " is-drawing" : " is-photo"}`}
-                key={`${src}-${slide}`}
+                key={`${images[slide] || src}-${slide}`}
               >
                 <Image
                   src={src}
                   alt={slide === 0 ? name : ""}
                   fill
                   loading={eager && slide === 0 ? "eager" : "lazy"}
-                  sizes="(max-width: 575px) 50vw, (max-width: 1199px) 33vw, 20vw"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1199px) 45vw, 280px"
+                  onError={() => {
+                    const original = images[slide];
+                    if (!original || broken[original] || original === BIKE_PHOTO_FALLBACK) return;
+                    setBroken((prev) => ({ ...prev, [original]: true }));
+                  }}
                 />
               </span>
             ))}
@@ -186,10 +197,10 @@ function CardPhotos({
             <Chevron direction="right" />
           </button>
           <div className="bike-card__dots" role="tablist" aria-label={`${name} photos`}>
-            {images.map((src, slide) => (
+            {slides.map((src, slide) => (
               <button
                 type="button"
-                key={`${src}-dot-${slide}`}
+                key={`${images[slide] || src}-dot-${slide}`}
                 className={slide === current ? "is-on" : ""}
                 role="tab"
                 aria-selected={slide === current}

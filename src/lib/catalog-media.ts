@@ -77,6 +77,19 @@ const BIKE_FALLBACKS = [
   "/img/cars/3.png",
 ];
 
+/** Trim letterbox borders and fit fleet photos so the whole vehicle shows in cards. */
+export function fleetPhotoUrl(url?: string | null) {
+  const value = url?.trim() || "";
+  if (!value.startsWith("https://res.cloudinary.com/") || !value.includes("/image/upload/")) {
+    return value;
+  }
+  if (/\/upload\/(?:[^/]*e_trim|e_trim)/.test(value)) return value;
+  return value.replace(
+    "/image/upload/",
+    "/image/upload/e_trim:50,c_fit,w_1200,h_750,b_auto/",
+  );
+}
+
 export function resolveRideCover(opts: {
   url?: string | null;
   slug?: string | null;
@@ -91,7 +104,7 @@ export function resolveRideCover(opts: {
   // Prefer stored Cloudinary/CDN URLs. Never invent /uploads paths — those files are
   // gitignored and missing from the production container, so they 404 on live.
   if (url && !isCatalogPlaceholder(url) && !url.startsWith("/uploads/")) {
-    return url;
+    return fleetPhotoUrl(url);
   }
 
   return fallback;

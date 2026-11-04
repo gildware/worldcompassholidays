@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { favoriteIds } from "@/lib/favorites";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
-import { resolveRideCover } from "@/lib/catalog-media";
+import { fleetPhotoUrl, resolveRideCover } from "@/lib/catalog-media";
 import { fleetKinds } from "@/lib/rentals/labels";
 import { cached } from "@/lib/ttl-cache";
 
@@ -143,7 +143,7 @@ export async function RentalListing({
       specs,
       images: (() => {
         const live = vehicle.images
-          .map((image) => image.url.trim())
+          .map((image) => fleetPhotoUrl(image.url.trim()))
           .filter((url) => url && !url.startsWith("/uploads/"));
         if (live.length > 0) return live;
         const fallback = resolveRideCover({
