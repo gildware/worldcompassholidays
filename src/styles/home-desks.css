@@ -419,12 +419,15 @@ a.hx-desk__more {
 }
 
 .home-fleet-card__shot img {
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  padding: 10px;
+  background: #eef1f6;
   transition: transform 0.45s ease;
 }
 
 .home-fleet-card:hover .home-fleet-card__shot img {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 .home-fleet-card__badge {
@@ -513,7 +516,8 @@ a.hx-desk__more {
   font-weight: 500;
 }
 
-.home-fleet-card__btn {
+.worldcompassholiday-page a.home-fleet-card__btn,
+a.home-fleet-card__btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -528,8 +532,10 @@ a.hx-desk__more {
   flex-shrink: 0;
 }
 
-.home-fleet-card__btn:hover,
-.home-fleet-card__btn:focus-visible {
+.worldcompassholiday-page a.home-fleet-card__btn:hover,
+.worldcompassholiday-page a.home-fleet-card__btn:focus-visible,
+a.home-fleet-card__btn:hover,
+a.home-fleet-card__btn:focus-visible {
   background: #2a46b8;
   color: #fff;
 }
