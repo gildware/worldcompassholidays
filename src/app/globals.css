@@ -4447,15 +4447,15 @@ a.bike-card__body {
   }
 
   .bike-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    border-radius: 14px;
+    border-radius: 12px;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__media {
@@ -4463,7 +4463,7 @@ a.bike-card__body {
     width: 100%;
     min-height: 0;
     height: auto;
-    border-radius: 14px 14px 0 0;
+    border-radius: 12px 12px 0 0;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__frame.is-photo img {
@@ -4475,9 +4475,9 @@ a.bike-card__body {
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__body {
-    gap: 5px;
+    gap: 3px;
     min-width: 0;
-    padding: 12px 12px 12px;
+    padding: 8px 10px 10px;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__topline {
@@ -4494,17 +4494,17 @@ a.bike-card__body {
 
   :is(.bike-fleet, .car-fleet) .bike-card__kicker,
   :is(.bike-fleet, .car-fleet) .bike-card__place {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__title {
-    font-size: 15px !important;
+    font-size: 13px !important;
     -webkit-line-clamp: 2;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__specs {
-    gap: 6px 10px;
-    font-size: 12px;
+    gap: 4px 8px;
+    font-size: 11px;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__specs span:nth-child(n + 3) {
@@ -4514,7 +4514,7 @@ a.bike-card__body {
   :is(.bike-fleet, .car-fleet) .bike-card__price {
     align-items: baseline;
     justify-content: flex-start;
-    gap: 6px;
+    gap: 4px;
     margin-top: auto;
     padding-top: 6px;
     padding-right: 0;
@@ -4522,11 +4522,11 @@ a.bike-card__body {
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__price strong {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__price span {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__book {
