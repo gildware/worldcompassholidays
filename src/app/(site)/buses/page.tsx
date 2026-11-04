@@ -4,7 +4,7 @@ import { BusCatalog } from "@/components/bus/BusCatalog";
 import { readBusQuery } from "@/components/bus/query";
 import { modules } from "@/config/modules";
 import { loadBusFacilities } from "@/lib/bus-catalog";
-import { busAmenityLabels } from "@/lib/buses";
+import { busAmenityLabels, requestBusHref } from "@/lib/buses";
 import { prisma } from "@/lib/db";
 import { pageMetadata } from "@/lib/seo";
 
@@ -22,6 +22,7 @@ export default async function BusesPage({
 }) {
   if (!modules.buses) notFound();
   const params = await searchParams;
+  const initial = readBusQuery(params);
   const [routes, facilities] = await Promise.all([
     prisma.busRoute.findMany({
       where: { published: true },
@@ -31,11 +32,23 @@ export default async function BusesPage({
     loadBusFacilities(),
   ]);
 
-  if (routes.length === 0) redirect("/buses/request");
+  // No published runs yet — send people straight to the quote form.
+  if (routes.length === 0) {
+    redirect(
+      requestBusHref({
+        from: initial.from,
+        to: initial.to,
+        date: initial.date,
+        passengers: initial.passengers || 1,
+        coach: initial.coach.length === 1 ? initial.coach[0] : undefined,
+        time: initial.time.length === 1 ? initial.time[0] : undefined,
+      }),
+    );
+  }
 
   return (
     <BusCatalog
-      initial={readBusQuery(params)}
+      initial={initial}
       routes={routes.map((route) => {
         const coach = route.bus;
         return {
