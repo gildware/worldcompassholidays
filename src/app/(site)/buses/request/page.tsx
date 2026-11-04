@@ -4,6 +4,7 @@ import { BusRequestForm, type BusRequestDefaults } from "@/components/bus/BusReq
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { modules } from "@/config/modules";
 import { getCurrentUser } from "@/lib/auth/session";
+import { ensureBusCatalog, loadBusLocations } from "@/lib/bus-catalog";
 import { busCoachTypes, busTimeWindows, requestBusHref } from "@/lib/buses";
 import { prisma } from "@/lib/db";
 import { pageMetadata } from "@/lib/seo";
@@ -45,7 +46,13 @@ export default async function BusRequestPage({
   }>;
 }) {
   if (!modules.buses) notFound();
-  const [params, user] = await Promise.all([searchParams, getCurrentUser()]);
+  await ensureBusCatalog();
+  const [params, user, locations] = await Promise.all([
+    searchParams,
+    getCurrentUser(),
+    loadBusLocations(),
+  ]);
+  const cities = locations.map((location) => location.title);
   const customer = user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null;
   const reference = params.ref && /^BK-[A-Z0-9]+$/.test(params.ref) ? params.ref : "";
   const slug = (params.slug ?? "").slice(0, 80);
@@ -116,6 +123,7 @@ export default async function BusRequestPage({
               reference={reference}
               customer={customer}
               defaults={defaults}
+              cities={cities}
               loginHref={loginHref}
             />
           </aside>

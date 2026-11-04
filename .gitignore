@@ -43,13 +43,17 @@ yarn-error.log*
 /prisma/*.db
 /prisma/*.db-journal
 
-# uploaded images (seed placeholders are kept)
+# uploaded images (seed placeholders + vehicle studio photos are kept)
 /public/uploads/**
 !/public/uploads/.gitkeep
 !/public/uploads/destinations/
 !/public/uploads/destinations/seed-*
 !/public/uploads/tours/
 !/public/uploads/tours/seed-*
+!/public/uploads/vehicles/
+!/public/uploads/vehicles/**
+!/public/uploads/hotels/
+!/public/uploads/hotels/seed-*
 
 # vercel
 .vercel

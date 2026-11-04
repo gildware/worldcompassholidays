@@ -91,8 +91,6 @@ function Chevron({ direction }: { direction: "left" | "right" }) {
   );
 }
 
-const BIKE_PHOTO_FALLBACK = "/img/bikes/bike-rental-banner.jpg";
-
 function CardPhotos({
   images,
   href,
@@ -114,9 +112,7 @@ function CardPhotos({
   const [broken, setBroken] = useState<Record<string, true>>({});
   const startX = useRef(0);
   const dragged = useRef(false);
-  const slides = images.length
-    ? images.map((src) => (broken[src] ? BIKE_PHOTO_FALLBACK : src))
-    : [];
+  const slides = images.filter((src) => src && !broken[src]);
   const count = slides.length;
   const current = Math.min(index, Math.max(count - 1, 0));
 
@@ -157,7 +153,7 @@ function CardPhotos({
             {slides.map((src, slide) => (
               <span
                 className={`bike-card__frame${src.includes(".svg") ? " is-drawing" : " is-photo"}`}
-                key={`${images[slide] || src}-${slide}`}
+                key={`${src}-${slide}`}
               >
                 <Image
                   src={src}
@@ -166,9 +162,8 @@ function CardPhotos({
                   loading={eager && slide === 0 ? "eager" : "lazy"}
                   sizes="(max-width: 640px) 100vw, (max-width: 1199px) 45vw, 280px"
                   onError={() => {
-                    const original = images[slide];
-                    if (!original || broken[original] || original === BIKE_PHOTO_FALLBACK) return;
-                    setBroken((prev) => ({ ...prev, [original]: true }));
+                    if (!src || broken[src]) return;
+                    setBroken((prev) => ({ ...prev, [src]: true }));
                   }}
                 />
               </span>
@@ -200,7 +195,7 @@ function CardPhotos({
             {slides.map((src, slide) => (
               <button
                 type="button"
-                key={`${images[slide] || src}-dot-${slide}`}
+                key={`${src}-dot-${slide}`}
                 className={slide === current ? "is-on" : ""}
                 role="tab"
                 aria-selected={slide === current}

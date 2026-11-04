@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BusCatalog } from "@/components/bus/BusCatalog";
 import { readBusQuery } from "@/components/bus/query";
 import { modules } from "@/config/modules";
@@ -30,6 +30,8 @@ export default async function BusesPage({
     }),
     loadBusFacilities(),
   ]);
+
+  if (routes.length === 0) redirect("/buses/request");
 
   return (
     <BusCatalog

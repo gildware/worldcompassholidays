@@ -46,12 +46,14 @@ export function BusRequestForm({
   reference,
   customer,
   defaults,
+  cities,
   loginHref,
 }: {
   sent: boolean;
   reference: string;
   customer: { name: string; email: string; phone: string } | null;
   defaults: BusRequestDefaults;
+  cities: string[];
   loginHref: string;
 }) {
   const router = useRouter();
@@ -62,10 +64,15 @@ export function BusRequestForm({
   const view = whatsappState ?? state;
   const saved = view.values ?? {};
   const busy = pending || whatsappPending;
+  const [fromCity, setFromCity] = useState(saved.fromCity || defaults.fromCity || "");
+  const [toCity, setToCity] = useState(saved.toCity || defaults.toCity || "");
   const [coach, setCoach] = useState(saved.coach || defaults.coach || "any");
   const [timeWindow, setTimeWindow] = useState(saved.timeWindow || defaults.timeWindow || "any");
   const [passengers, setPassengers] = useState(clampCount(saved.passengers, defaults.passengers, 1, 20));
   const [note, setNote] = useState(saved.message || defaults.message || "");
+  const cityOptions = Array.from(
+    new Set([...cities, fromCity, toCity].map((city) => city.trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b, "en"));
 
   useEffect(() => {
     setMounted(true);
@@ -192,8 +199,22 @@ export function BusRequestForm({
             wide
           />
         ) : null}
-        <Field label="From" name="fromCity" error={view.fields?.fromCity} defaultValue={saved.fromCity || defaults.fromCity} />
-        <Field label="To" name="toCity" error={view.fields?.toCity} defaultValue={saved.toCity || defaults.toCity} />
+        <CityField
+          label="From"
+          name="fromCity"
+          value={fromCity}
+          cities={cityOptions}
+          error={view.fields?.fromCity}
+          onChange={setFromCity}
+        />
+        <CityField
+          label="To"
+          name="toCity"
+          value={toCity}
+          cities={cityOptions}
+          error={view.fields?.toCity}
+          onChange={setToCity}
+        />
         <Field
           label="Travel date"
           name="travelDate"
@@ -259,6 +280,45 @@ export function BusRequestForm({
         </div>
       </form>
       {mounted && successModal ? createPortal(successModal, document.body) : null}
+    </div>
+  );
+}
+
+function CityField({
+  label,
+  name,
+  value,
+  cities,
+  error,
+  onChange,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  cities: string[];
+  error?: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="hotel-request-cell">
+      <label htmlFor={name}>{label}</label>
+      <div className={`hotel-request-control mt-5${error ? " is-invalid" : ""}`}>
+        <select
+          id={name}
+          name={name}
+          value={value}
+          onChange={(event) => onChange(event.currentTarget.value)}
+          aria-invalid={error ? true : undefined}
+        >
+          <option value="">Choose city</option>
+          {cities.map((city) => (
+            <option key={city} value={city}>
+              {city}
+            </option>
+          ))}
+        </select>
+      </div>
+      {error ? <p className="hotel-request-error">{error}</p> : null}
     </div>
   );
 }

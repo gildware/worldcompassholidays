@@ -3776,8 +3776,9 @@ a.bike-card__book:hover {
   width: 100% !important;
   height: 100% !important;
   max-width: none;
-  padding: 0 !important;
+  padding: 10px 12px !important;
   margin: 0 !important;
+  box-sizing: border-box;
   object-fit: contain !important;
   object-position: center;
   background: var(--fleet-wash);
@@ -3808,8 +3809,9 @@ a.bike-card__book:hover {
 .bike-card__frame.is-photo img {
   object-fit: contain !important;
   object-position: center;
-  padding: 0 !important;
+  padding: 10px 12px !important;
   margin: 0 !important;
+  box-sizing: border-box;
   transform: none;
   background: var(--fleet-wash);
 }
@@ -4089,12 +4091,12 @@ a.bike-card__body {
 }
 
 .car-fleet .bike-card__frame.is-photo img {
-  object-fit: cover !important;
-  object-position: center 60%;
-  padding: 0 !important;
+  object-fit: contain !important;
+  object-position: center;
+  padding: 10px 12px !important;
   margin: 0 !important;
-  transform: scale(1.22);
-  transform-origin: center 55%;
+  box-sizing: border-box;
+  transform: none;
   background: var(--fleet-wash);
 }
 
@@ -4476,10 +4478,11 @@ a.bike-card__body {
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__frame.is-photo img {
-    padding: 0 !important;
+    padding: 8px 10px !important;
     transform: none;
     object-fit: contain !important;
     object-position: center;
+    box-sizing: border-box;
   }
 
   .car-fleet .bike-card__media {
@@ -4507,11 +4510,11 @@ a.bike-card__body {
 
   :is(.bike-fleet, .car-fleet) .bike-card__frame.is-photo img,
   :is(.bike-fleet, .car-fleet) .bike-card__media img {
-    object-fit: cover !important;
-    object-position: center 60%;
-    padding: 0 !important;
-    transform: scale(1.22);
-    transform-origin: center 55%;
+    object-fit: contain !important;
+    object-position: center;
+    padding: 8px 10px !important;
+    box-sizing: border-box;
+    transform: none;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__kicker,

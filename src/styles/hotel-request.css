@@ -41,6 +41,7 @@
 }
 
 .worldcompassholiday-page .hotel-request-control input,
+.worldcompassholiday-page .hotel-request-control select,
 .worldcompassholiday-page .hotel-request-control textarea {
   width: 100%;
   min-height: 48px;
@@ -53,12 +54,23 @@
   box-shadow: none;
 }
 
+.worldcompassholiday-page .hotel-request-control select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23051036' d='M1.4 0.6L6 5.2 10.6.6 12 2 6 8 0 2z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px 8px;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
 .worldcompassholiday-page .hotel-request-control textarea {
   min-height: 72px;
   padding: 10px 12px;
 }
 
 .worldcompassholiday-page .hotel-request-control.is-invalid input,
+.worldcompassholiday-page .hotel-request-control.is-invalid select,
 .worldcompassholiday-page .hotel-request-control.is-invalid textarea {
   border-color: #e11d48 !important;
 }
@@ -1051,10 +1063,15 @@
   }
 
   .worldcompassholiday-page .hotel-brief-side .hotel-request-control input,
+  .worldcompassholiday-page .hotel-brief-side .hotel-request-control select,
   .worldcompassholiday-page .hotel-brief-side .hotel-request-control textarea {
     min-height: 42px;
     padding: 0 12px;
     font-size: 14px;
+  }
+
+  .worldcompassholiday-page .hotel-brief-side .hotel-request-control select {
+    padding-right: 34px;
   }
 
   .worldcompassholiday-page .hotel-brief-side .hotel-request-control textarea {
@@ -1160,6 +1177,7 @@
   }
 
   .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-control input,
+  .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-control select,
   .worldcompassholiday-page .hotel-brief.is-bus-request .hotel-request-stepper {
     min-height: 40px;
   }

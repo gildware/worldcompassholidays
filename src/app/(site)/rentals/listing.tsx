@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { favoriteIds } from "@/lib/favorites";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
-import { fleetPhotoUrl, resolveRideCover } from "@/lib/catalog-media";
+import { fleetPhotoUrl, isCatalogPlaceholder, resolveRideCover } from "@/lib/catalog-media";
 import { fleetKinds } from "@/lib/rentals/labels";
 import { cached } from "@/lib/ttl-cache";
 
@@ -142,16 +142,26 @@ export async function RentalListing({
       tags: linked.filter((feature) => feature.kind === "tag").map((feature) => feature.name),
       specs,
       images: (() => {
-        const live = vehicle.images
-          .map((image) => fleetPhotoUrl(image.url.trim()))
-          .filter((url) => url && !url.startsWith("/uploads/"));
+        const live = [
+          ...new Set(
+            vehicle.images
+              .map((image) => fleetPhotoUrl(image.url.trim()))
+              .filter((url) => {
+                if (!url || isCatalogPlaceholder(url)) return false;
+                if (url.endsWith(".svg") || url.includes("/seed-")) return false;
+                // Local seed drawings 404 in Docker; real studio photos under /vehicles/photos are fine locally.
+                if (url.startsWith("/uploads/") && !url.includes("/vehicles/photos/")) return false;
+                return true;
+              }),
+          ),
+        ];
         if (live.length > 0) return live;
         const fallback = resolveRideCover({
           url: vehicle.images[0]?.url,
           slug: vehicle.slug,
           kind: vehicle.kind,
         });
-        return fallback ? [fallback] : [];
+        return fallback && !isCatalogPlaceholder(fallback) ? [fallback] : [];
       })(),
       price: vehicle.pricePerDay,
       currency: vehicle.currency || "INR",

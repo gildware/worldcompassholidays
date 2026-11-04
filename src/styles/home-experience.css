@@ -415,7 +415,9 @@
   padding-top: 4px;
 }
 
-.home-x__ride-btn {
+.worldcompassholiday-page a.home-x__ride-btn,
+.home-x a.home-x__ride-btn,
+a.home-x__ride-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -430,8 +432,12 @@
   flex-shrink: 0;
 }
 
-.home-x__ride-btn:hover,
-.home-x__ride-btn:focus-visible {
+.worldcompassholiday-page a.home-x__ride-btn:hover,
+.worldcompassholiday-page a.home-x__ride-btn:focus-visible,
+.home-x a.home-x__ride-btn:hover,
+.home-x a.home-x__ride-btn:focus-visible,
+a.home-x__ride-btn:hover,
+a.home-x__ride-btn:focus-visible {
   background: #2a46b8;
   color: #fff;
 }

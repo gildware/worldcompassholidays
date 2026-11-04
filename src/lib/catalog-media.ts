@@ -85,10 +85,10 @@ const CAR_FALLBACKS = [
 
 const BIKE_FALLBACKS = ["/img/bikes/bike-rental-banner.jpg"];
 
-/* Pad to card ratio so the full bike/car stays in frame — no trim/fill clipping. */
-const FLEET_PHOTO_TRANSFORM = "c_pad,b_rgb:f4f4f5,w_1200,h_750";
+/* Limit size only — no trim/fill crop. Card CSS uses object-fit: contain. */
+const FLEET_PHOTO_TRANSFORM = "c_limit,w_1600";
 
-/** Fit the vehicle in the card frame without cropping wheels or handlebars. */
+/** Serve fleet photos without cropping wheels or handlebars. */
 export function fleetPhotoUrl(url?: string | null) {
   const value = url?.trim() || "";
   if (!value.startsWith("https://res.cloudinary.com/") || !value.includes("/image/upload/")) {
