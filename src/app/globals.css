@@ -3765,6 +3765,7 @@ a.bike-card__book:hover {
   position: relative;
   aspect-ratio: 16 / 10;
   overflow: hidden;
+  line-height: 0;
   background: var(--fleet-wash);
 }
 
@@ -3776,7 +3777,8 @@ a.bike-card__book:hover {
   height: 100% !important;
   max-width: none;
   padding: 0 !important;
-  object-fit: cover;
+  margin: 0 !important;
+  object-fit: cover !important;
   object-position: center;
   background: var(--fleet-wash);
 }
@@ -3799,12 +3801,14 @@ a.bike-card__book:hover {
   position: relative;
   flex: 0 0 100%;
   height: 100%;
+  line-height: 0;
 }
 
 .bike-card__frame.is-photo img {
-  object-fit: cover;
+  object-fit: cover !important;
   object-position: center;
   padding: 0 !important;
+  margin: 0 !important;
   background: var(--fleet-wash);
 }
 
@@ -4083,9 +4087,10 @@ a.bike-card__body {
 }
 
 .car-fleet .bike-card__frame.is-photo img {
-  object-fit: cover;
+  object-fit: cover !important;
   object-position: center;
   padding: 0 !important;
+  margin: 0 !important;
   background: var(--fleet-wash);
 }
 
@@ -4481,16 +4486,22 @@ a.bike-card__body {
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__topline {
-    flex-direction: row;
+    flex-direction: row !important;
     align-items: center;
     justify-content: space-between;
     gap: 6px;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__topline .bike-card__place {
-    margin-left: auto;
+    margin-left: auto !important;
     max-width: 52%;
-    text-align: right;
+    text-align: right !important;
+  }
+
+  :is(.bike-fleet, .car-fleet) .bike-card__frame.is-photo img,
+  :is(.bike-fleet, .car-fleet) .bike-card__media img {
+    object-fit: cover !important;
+    padding: 0 !important;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__kicker,

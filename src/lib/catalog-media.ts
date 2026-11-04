@@ -77,17 +77,26 @@ const BIKE_FALLBACKS = [
   "/img/cars/3.png",
 ];
 
-/** Trim letterbox borders and fit fleet photos so the whole vehicle shows in cards. */
+const FLEET_PHOTO_TRANSFORM = "e_trim:50,c_fill,g_auto,w_1200,h_750";
+
+/** Trim letterbox borders and fill the card — cover crop, no empty band above the vehicle. */
 export function fleetPhotoUrl(url?: string | null) {
   const value = url?.trim() || "";
   if (!value.startsWith("https://res.cloudinary.com/") || !value.includes("/image/upload/")) {
     return value;
   }
-  if (/\/upload\/(?:[^/]*e_trim|e_trim)/.test(value)) return value;
-  return value.replace(
-    "/image/upload/",
-    "/image/upload/e_trim:50,c_fill,g_auto,w_1200,h_750/",
-  );
+  const marker = "/image/upload/";
+  const at = value.indexOf(marker);
+  if (at < 0) return value;
+  const rest = value.slice(at + marker.length);
+  const slash = rest.indexOf("/");
+  const first = slash >= 0 ? rest.slice(0, slash) : rest;
+  // Drop any existing transform segment (e_trim / c_fit / b_auto, etc.) so we never
+  // keep transforms that next/image rejects (c_fit+b_auto → 400).
+  const hasTransform = /[,]|^(?:e_|c_|w_|h_|g_|b_|f_|q_|fl_)/.test(first);
+  const path = hasTransform ? rest.slice(slash + 1) : rest;
+  if (!path) return value;
+  return `${value.slice(0, at + marker.length)}${FLEET_PHOTO_TRANSFORM}/${path}`;
 }
 
 export function resolveRideCover(opts: {
