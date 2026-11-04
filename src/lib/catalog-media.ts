@@ -3,6 +3,19 @@ const PLACEHOLDER_MARKERS = [
   "seed-kashmir.svg",
   "seed-kashmir-trek.svg",
   "/uploads/destinations/seed-",
+  "/uploads/vehicles/seed-",
+  "vehicles/seed-",
+  "seed-ampere",
+  "seed-aprilia",
+  "seed-ather",
+  "seed-bajaj",
+  "seed-hero",
+  "seed-honda",
+  "seed-royal",
+  "seed-tvs",
+  "seed-yamaha",
+  "seed-bmw",
+  "seed-harley",
 ];
 
 /** Packaged /img assets only — /uploads is gitignored and missing from the live Docker image. */
@@ -70,16 +83,12 @@ const CAR_FALLBACKS = [
   "/img/cars/car-rental-banner.jpg",
 ];
 
-const BIKE_FALLBACKS = [
-  "/img/bikes/bike-rental-banner.jpg",
-  "/img/cars/1.png",
-  "/img/cars/2.png",
-  "/img/cars/3.png",
-];
+const BIKE_FALLBACKS = ["/img/bikes/bike-rental-banner.jpg"];
 
-const FLEET_PHOTO_TRANSFORM = "e_trim:50,c_fill,g_auto,w_1200,h_750";
+/* Pad to card ratio so the full bike/car stays in frame — no trim/fill clipping. */
+const FLEET_PHOTO_TRANSFORM = "c_pad,b_rgb:f4f4f5,w_1200,h_750";
 
-/** Trim letterbox borders and fill the card — cover crop, no empty band above the vehicle. */
+/** Fit the vehicle in the card frame without cropping wheels or handlebars. */
 export function fleetPhotoUrl(url?: string | null) {
   const value = url?.trim() || "";
   if (!value.startsWith("https://res.cloudinary.com/") || !value.includes("/image/upload/")) {

@@ -3763,7 +3763,7 @@ a.bike-card__book:hover {
 
 .bike-card__media {
   position: relative;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   line-height: 0;
   background: var(--fleet-wash);
@@ -3778,7 +3778,7 @@ a.bike-card__book:hover {
   max-width: none;
   padding: 0 !important;
   margin: 0 !important;
-  object-fit: cover !important;
+  object-fit: contain !important;
   object-position: center;
   background: var(--fleet-wash);
 }
@@ -3802,13 +3802,15 @@ a.bike-card__book:hover {
   flex: 0 0 100%;
   height: 100%;
   line-height: 0;
+  overflow: hidden;
 }
 
 .bike-card__frame.is-photo img {
-  object-fit: cover !important;
+  object-fit: contain !important;
   object-position: center;
   padding: 0 !important;
   margin: 0 !important;
+  transform: none;
   background: var(--fleet-wash);
 }
 
@@ -4083,14 +4085,16 @@ a.bike-card__body {
 }
 
 .car-fleet .bike-card__media {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
 }
 
 .car-fleet .bike-card__frame.is-photo img {
   object-fit: cover !important;
-  object-position: center;
+  object-position: center 60%;
   padding: 0 !important;
   margin: 0 !important;
+  transform: scale(1.22);
+  transform-origin: center 55%;
   background: var(--fleet-wash);
 }
 
@@ -4364,11 +4368,11 @@ a.bike-card__body {
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__media {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
   }
 
   .car-fleet .bike-card__media {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__nav {
@@ -4464,7 +4468,7 @@ a.bike-card__body {
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__media {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
     width: 100%;
     min-height: 0;
     height: auto;
@@ -4473,10 +4477,13 @@ a.bike-card__body {
 
   :is(.bike-fleet, .car-fleet) .bike-card__frame.is-photo img {
     padding: 0 !important;
+    transform: none;
+    object-fit: contain !important;
+    object-position: center;
   }
 
   .car-fleet .bike-card__media {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__body {
@@ -4501,7 +4508,10 @@ a.bike-card__body {
   :is(.bike-fleet, .car-fleet) .bike-card__frame.is-photo img,
   :is(.bike-fleet, .car-fleet) .bike-card__media img {
     object-fit: cover !important;
+    object-position: center 60%;
     padding: 0 !important;
+    transform: scale(1.22);
+    transform-origin: center 55%;
   }
 
   :is(.bike-fleet, .car-fleet) .bike-card__kicker,
