@@ -260,7 +260,8 @@ export const defaultHomePageContent: HomePageContent = {
             title: "Religious tours",
             description: "Shrine and yatra routes, with the days and the stay named in the plan.",
             href: "/tours?q=religious",
-            imageUrl: "/uploads/tours/vaishno-devi-yatra-cover.jpg",
+            imageUrl:
+              "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907181/worldcompass/tours/vaishno-devi-yatra/cover.jpg",
             image: null,
           },
           {
@@ -268,7 +269,8 @@ export const defaultHomePageContent: HomePageContent = {
             title: "Honeymoon tours",
             description: "A quieter plan for two, with the hotels and the transfers in one quote.",
             href: "/tours?q=honeymoon",
-            imageUrl: "/uploads/tours/honeymoon-tours-cover.jpg",
+            imageUrl:
+              "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907163/worldcompass/tours/dal-lake-mughal-gardens/cover.jpg",
             image: null,
           },
           {
@@ -276,7 +278,8 @@ export const defaultHomePageContent: HomePageContent = {
             title: "Family tours",
             description: "A pace that suits children and elders, with the rooms counted before you leave.",
             href: "/tours?q=family",
-            imageUrl: "/uploads/tours/gulmarg-pahalgam-family-cover.jpg",
+            imageUrl:
+              "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907165/worldcompass/tours/gulmarg-pahalgam-family/cover.jpg",
             image: null,
           },
           {
@@ -284,7 +287,8 @@ export const defaultHomePageContent: HomePageContent = {
             title: "Camping",
             description: "Nights in camp, with the tents, meals, and the road written down first.",
             href: "/tours?q=camping",
-            imageUrl: "/uploads/tours/hampta-pass-trek-g1.jpg",
+            imageUrl:
+              "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907166/worldcompass/tours/hampta-pass-trek/gallery-1.jpg",
             image: null,
           },
         ],
@@ -413,11 +417,8 @@ function asHref(value: unknown, fallback: string) {
 
 function asStockImage(value: unknown, fallback: string) {
   const raw = asString(value, fallback).trim().slice(0, 400);
-  if (
-    raw.startsWith("/img/") ||
-    raw.startsWith("/uploads/") ||
-    raw.startsWith("https://")
-  ) {
+  // /uploads is gitignored and missing from the live Docker image — never keep those paths.
+  if (raw.startsWith("/img/") || raw.startsWith("https://")) {
     return raw;
   }
   return fallback;
