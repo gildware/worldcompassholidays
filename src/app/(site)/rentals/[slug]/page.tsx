@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { RentalDetailView } from "@/components/rentals/RentalDetailView";
 import { modules } from "@/config/modules";
+import { fleetPhotoUrl, isCatalogPlaceholder } from "@/lib/catalog-media";
 import { prisma } from "@/lib/db";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -25,6 +26,18 @@ import {
   plainText,
   privateMetadata,
 } from "@/lib/seo";
+
+function liveGalleryImages(images: { id: string; url: string }[]) {
+  return images
+    .map((image) => ({ id: image.id, url: fleetPhotoUrl(image.url.trim()) }))
+    .filter((image) => {
+      const url = image.url;
+      if (!url || isCatalogPlaceholder(url)) return false;
+      if (url.endsWith(".svg") || url.includes("/seed-") || url.includes("/seed.")) return false;
+      if (url.startsWith("/uploads/") && !url.includes("/vehicles/photos/")) return false;
+      return true;
+    });
+}
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -253,6 +266,7 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
     vehicle.summary.trim() ||
     plainText(vehicle.description) ||
     `${vehicle.name} for rent in ${vehicle.destination.name}.`;
+  const gallery = liveGalleryImages(vehicle.images);
 
   return (
     <>
@@ -269,7 +283,7 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
             name: vehicle.name,
             description,
             url: absoluteUrl(path),
-            ...(vehicle.images[0]?.url ? { image: absoluteUrl(vehicle.images[0].url) } : {}),
+            ...(gallery[0]?.url ? { image: absoluteUrl(gallery[0].url) } : {}),
             ...(vehicle.brand ? { brand: { "@type": "Brand", name: vehicle.brand } } : {}),
             vehicleSeatingCapacity: vehicle.seats,
             offers: offerNode({
@@ -289,7 +303,7 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
         kindLabel={[vehicle.brand, vehicle.vehicleType?.name || fleetLabel(vehicle.kind)].filter(Boolean).join(" · ")}
         vehicleFacts={vehicleFacts}
         specFacts={specFacts}
-        images={vehicle.images.map((image) => ({ id: image.id, url: image.url }))}
+        images={gallery}
         included={features.map((feature) => ({ id: feature.id, name: feature.name }))}
         excluded={excluded.map((feature) => ({ id: feature.id, name: feature.name }))}
         prices={prices}

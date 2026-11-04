@@ -66,8 +66,9 @@ function publicIdFor(rel: string) {
   if (destination) return `worldcompass/destinations/${destination[1]}`;
   const photo = noExt.match(/^vehicles\/photos\/(.+)$/);
   if (photo) return `worldcompass/vehicles/${photo[1]}/cover`;
+  // Keep seed drawings off the photo public_id — same slug used to overwrite real covers with blue SVGs.
   const seeded = noExt.match(/^vehicles\/seed-(.+)$/);
-  if (seeded) return `worldcompass/vehicles/${seeded[1]}/cover`;
+  if (seeded) return `worldcompass/vehicles/${seeded[1]}/seed`;
   const hotel = noExt.match(/^hotels\/(.+)$/);
   if (hotel) return `worldcompass/hotels/${hotel[1]}/cover`;
   const tour = noExt.match(/^tours\/(.+)$/);
