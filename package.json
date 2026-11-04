@@ -21,6 +21,7 @@
     "db:seed-kashmir-hotels": "tsx scripts/seed-kashmir-hotels.ts",
     "db:seed-kashmir-bikes": "tsx scripts/seed-kashmir-bikes.ts",
     "db:seed-kashmir-cars": "tsx scripts/seed-kashmir-cars.ts",
+    "db:seed-kashmir-tours": "tsx scripts/seed-kashmir-tours.ts",
     "db:studio": "prisma studio"
   },
   "prisma": {

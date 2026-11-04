@@ -215,7 +215,7 @@ export default async function VisaPage({
             </div>
             <div className="col-lg-6">
               <div className="visa-hero">
-                <img src="/img/visa/visa-hero.jpg?v=3" alt="Traveler with a passport at an airport window" />
+                <img src="/img/visa/visa-hero.jpg?v=4" alt="Open passport and travel documents ready for a visa application" />
                 <div className="visa-hero-shade">
                   {stats.map((item) => (
                     <article className="visa-stat" key={item.label}>

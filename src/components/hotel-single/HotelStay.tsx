@@ -6,6 +6,7 @@ import { submitHotelRequest } from "@/actions/hotel-request";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import type { HotelSingleData } from "@/components/hotel-single/types";
 import { StayMark } from "@/components/hotel-single/StayMark";
+import { useSectionTabs } from "@/hooks/useSectionTabs";
 import { initialFormState } from "@/lib/forms";
 import { formatMoney } from "@/lib/format";
 import { plainText } from "@/lib/seo";
@@ -119,25 +120,17 @@ export function HotelStay({
     }
   }, []);
 
-  useEffect(() => {
-    const links = [...document.querySelectorAll<HTMLAnchorElement>(".stay-links a")];
-    const sections = links
-      .map((link) => document.querySelector(link.getAttribute("href") || ""))
-      .filter((section): section is Element => Boolean(section));
-    if (!("IntersectionObserver" in window)) return;
-    const watcher = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          const id = `#${entry.target.id}`;
-          links.forEach((link) => link.classList.toggle("is-on", link.getAttribute("href") === id));
-        });
-      },
-      { rootMargin: "-40% 0px -50% 0px" },
-    );
-    sections.forEach((section) => watcher.observe(section));
-    return () => watcher.disconnect();
-  }, [hotel.slug]);
+  const { isActive, selectHref } = useSectionTabs(".stay-links a", [hotel.slug]);
+  const tab = (href: string, label: string) => (
+    <a
+      href={href}
+      className={isActive(href) ? "is-on" : undefined}
+      aria-current={isActive(href) ? "true" : undefined}
+      onClick={() => selectHref(href)}
+    >
+      {label}
+    </a>
+  );
 
   const today = startOfDay(new Date());
   let arrival = parseISO(checkIn);
@@ -307,13 +300,13 @@ export function HotelStay({
 
       <nav className="stay-subnav" aria-label="On this page">
         <div className="stay-wrap stay-subnav-in">
-          <div className="stay-links">
-            <a href="#overview">Overview</a>
-            <a href="#rooms">Rooms</a>
-            {hotel.amenities.length > 0 ? <a href="#amenities">Amenities</a> : null}
-            <a href="#location">Location</a>
-            {hotel.stars > 0 ? <a href="#reviews">Rating</a> : null}
-            <a href="#policies">Policies</a>
+          <div className="stay-links" data-section-tabs>
+            {tab("#overview", "Overview")}
+            {tab("#rooms", "Rooms")}
+            {hotel.amenities.length > 0 ? tab("#amenities", "Amenities") : null}
+            {tab("#location", "Location")}
+            {hotel.stars > 0 ? tab("#reviews", "Rating") : null}
+            {tab("#policies", "Policies")}
           </div>
           <div className="stay-subnav-cta">
             <span className="stay-subnav-total">{money(stayTotal, currency)}</span>

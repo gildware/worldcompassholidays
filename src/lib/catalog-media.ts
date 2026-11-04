@@ -27,12 +27,12 @@ const STAY_ROTATION = [
 ];
 
 const RIDE_LOCAL_ALIASES: Record<string, string> = {
-  "tvs-ntorq": "tvs-ntorq-125",
-  "royal-enfield-himalayan-450": "re-himalayan-450",
-  "royal-enfield-himalayan-411": "re-himalayan-450",
-  "royal-enfield-hunter-350": "re-meteor-350",
-  "re-himalayan-411": "re-himalayan-450",
-  "toyota-innova": "toyota-innova-crysta",
+  "tvs-ntorq-125": "tvs-ntorq",
+  "re-himalayan-450": "royal-enfield-himalayan-450",
+  "re-himalayan-411": "royal-enfield-himalayan-411",
+  "re-meteor-350": "royal-enfield-hunter-350",
+  "re-bullet-350": "royal-enfield-classic-350",
+  "maruti-dzire": "sedan",
 };
 
 const RIDE_LOCAL_SLUGS = new Set([
@@ -48,6 +48,7 @@ const RIDE_LOCAL_SLUGS = new Set([
   "bmw-3-series",
   "bmw-g310-gs",
   "byd-atto-3",
+  "force-urbania",
   "hero-splendor-plus",
   "hero-vida-v2",
   "hero-xpulse-200",
@@ -76,13 +77,20 @@ const RIDE_LOCAL_SLUGS = new Set([
   "re-himalayan-450",
   "re-meteor-350",
   "royal-enfield-classic-350",
+  "royal-enfield-himalayan-411",
+  "royal-enfield-himalayan-450",
+  "royal-enfield-hunter-350",
+  "sedan",
   "suzuki-access-125",
+  "tempo-traveller",
   "tork-kratos",
   "toyota-fortuner",
+  "toyota-innova",
   "toyota-innova-crysta",
   "triumph-scrambler-400x",
   "tvs-iqube",
   "tvs-jupiter",
+  "tvs-ntorq",
   "tvs-ntorq-125",
   "tvs-scooty-pep",
   "ultraviolette-f77",
@@ -133,7 +141,7 @@ const BIKE_FALLBACKS = [
   "/img/bikes/bike-rental-banner.jpg",
   "/uploads/vehicles/photos/royal-enfield-classic-350.jpg",
   "/uploads/vehicles/photos/honda-activa.jpg",
-  "/uploads/vehicles/photos/tvs-ntorq-125.jpg",
+  "/uploads/vehicles/photos/tvs-ntorq.jpg",
 ];
 
 export function resolveRideCover(opts: {

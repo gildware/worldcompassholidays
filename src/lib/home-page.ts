@@ -221,7 +221,7 @@ export const defaultHomePageContent: HomePageContent = {
             title: "Houseboats",
             description: "A night on the water, quoted with the meals and the boat named before you pay.",
             href: "/hotels?q=houseboat",
-            imageUrl: "/img/company/service-holidays.jpg",
+            imageUrl: "/img/stays/houseboats.jpg",
             image: null,
           },
           {
@@ -229,7 +229,7 @@ export const defaultHomePageContent: HomePageContent = {
             title: "Villas",
             description: "A whole house for the family, with the rooms and the price written down first.",
             href: "/hotels?types=Villa",
-            imageUrl: "/img/tours/header-bg.jpg",
+            imageUrl: "/img/stays/villas.jpg",
             image: null,
           },
           {
@@ -237,7 +237,7 @@ export const defaultHomePageContent: HomePageContent = {
             title: "Homestays",
             description: "A room in a home, with breakfast and the house rules in the quote.",
             href: "/hotels?types=Homestay",
-            imageUrl: "/img/company/service-sightseeing.jpg",
+            imageUrl: "/img/stays/homestays.jpg",
             image: null,
           },
           {
@@ -245,7 +245,7 @@ export const defaultHomePageContent: HomePageContent = {
             title: "Hotels",
             description: "City and hill hotels, with the nightly rate on the stay page.",
             href: "/hotels?types=Hotel",
-            imageUrl: "/img/company/service-hotels.jpg",
+            imageUrl: "/img/stays/hotels.jpg",
             image: null,
           },
         ],
@@ -260,7 +260,7 @@ export const defaultHomePageContent: HomePageContent = {
             title: "Religious tours",
             description: "Shrine and yatra routes, with the days and the stay named in the plan.",
             href: "/tours?q=religious",
-            imageUrl: "/img/company/service-sightseeing.jpg",
+            imageUrl: "/uploads/tours/vaishno-devi-yatra-cover.jpg",
             image: null,
           },
           {
@@ -268,7 +268,7 @@ export const defaultHomePageContent: HomePageContent = {
             title: "Honeymoon tours",
             description: "A quieter plan for two, with the hotels and the transfers in one quote.",
             href: "/tours?q=honeymoon",
-            imageUrl: "/img/company/service-holidays.jpg",
+            imageUrl: "/uploads/tours/honeymoon-tours-cover.jpg",
             image: null,
           },
           {
@@ -276,7 +276,7 @@ export const defaultHomePageContent: HomePageContent = {
             title: "Family tours",
             description: "A pace that suits children and elders, with the rooms counted before you leave.",
             href: "/tours?q=family",
-            imageUrl: "/img/company/service-packages.jpg",
+            imageUrl: "/uploads/tours/gulmarg-pahalgam-family-cover.jpg",
             image: null,
           },
           {
@@ -284,7 +284,7 @@ export const defaultHomePageContent: HomePageContent = {
             title: "Camping",
             description: "Nights in camp, with the tents, meals, and the road written down first.",
             href: "/tours?q=camping",
-            imageUrl: "/img/tours/header-bg.jpg",
+            imageUrl: "/uploads/tours/hampta-pass-trek-g1.jpg",
             image: null,
           },
         ],

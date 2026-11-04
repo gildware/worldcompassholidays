@@ -20,6 +20,7 @@ model Destination {
   imageUrl    String
   imageKey    String
   imageDriver String   @default("local")
+  galleryJson String   @default("[]")
   published   Boolean  @default(true)
   popular     Boolean  @default(false)
   parentId    String?

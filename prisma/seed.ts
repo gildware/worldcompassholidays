@@ -202,48 +202,52 @@ async function seedDestinations() {
 }
 
 async function seedTours() {
-  const kashmir = await prisma.destination.findUnique({ where: { slug: "kashmir" } });
-  const ladakh = await prisma.destination.findUnique({ where: { slug: "ladakh" } });
-  if (!kashmir || !ladakh) return;
+  const { kashmirTours } = await import("../src/lib/demo/kashmir-tours");
+  const destinations = await prisma.destination.findMany({
+    select: { id: true, slug: true },
+  });
+  const destinationBySlug = new Map(destinations.map((row) => [row.slug, row.id]));
 
-  const tours = [
-    {
-      slug: "kashmir-valley-trek",
-      title: "Kashmir Valley trek",
-      summary: "Meadows, alpine lakes, and village stays above Srinagar.",
-      description: "A guided trek through the Kashmir valley with camping nights and local support.",
-      durationDays: 6,
-      difficulty: "moderate",
-      maxGroupSize: 12,
-      priceFrom: 28500,
-      imageUrl: "/uploads/tours/seed-kashmir-trek.svg",
-      imageKey: "tours/seed-kashmir-trek.svg",
+  for (const tour of kashmirTours.slice(0, 4)) {
+    const destinationId = destinationBySlug.get(tour.destinationSlug);
+    if (!destinationId) continue;
+
+    const data = {
+      title: tour.title,
+      summary: tour.summary,
+      description: tour.description,
+      category: tour.category,
+      durationDays: tour.durationDays,
+      durationUnit: "days",
+      durationLabel: tour.durationLabel,
+      difficulty: tour.difficulty,
+      maxGroupSize: tour.maxGroupSize,
+      priceFrom: tour.priceFrom,
+      imageUrl: "/uploads/destinations/seed-kashmir.svg",
+      imageKey: "destinations/seed-kashmir.svg",
       imageDriver: "local",
       published: true,
-      destinationId: kashmir.id,
-    },
-    {
-      slug: "ladakh-monastery-ride",
-      title: "Ladakh monastery ride",
-      summary: "High passes, monasteries, and desert valleys around Leh.",
-      description: "A paced road trip covering Leh, Hemis, and Pangong with acclimatization days.",
-      durationDays: 8,
-      difficulty: "challenging",
-      maxGroupSize: 10,
-      priceFrom: 42000,
-      imageUrl: "/uploads/tours/seed-ladakh-ride.svg",
-      imageKey: "tours/seed-ladakh-ride.svg",
-      imageDriver: "local",
-      published: true,
-      destinationId: ladakh.id,
-    },
-  ];
+      isFeatured: Boolean(tour.isFeatured),
+      destinationId,
+      includesJson: JSON.stringify(tour.includes),
+      excludesJson: JSON.stringify(tour.excludes),
+    };
 
-  for (const tour of tours) {
-    await prisma.tour.upsert({
+    const saved = await prisma.tour.upsert({
       where: { slug: tour.slug },
-      update: tour,
-      create: tour,
+      update: data,
+      create: { slug: tour.slug, ...data },
+      select: { id: true },
+    });
+
+    await prisma.itineraryDay.deleteMany({ where: { tourId: saved.id } });
+    await prisma.itineraryDay.createMany({
+      data: tour.days.map((day) => ({
+        tourId: saved.id,
+        dayNumber: day.dayNumber,
+        title: day.title,
+        description: day.description,
+      })),
     });
   }
 }

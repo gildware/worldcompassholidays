@@ -6,6 +6,7 @@ import CallToActions from "@/components/common/CallToActions";
 import {
   CarCards,
   CategoryPills,
+  DestinationHeroGallery,
   HotelCards,
   NearbyDestinations,
   TopSights,
@@ -153,6 +154,11 @@ export default async function DestinationPage({ params }: Props) {
   const cars = destination.vehicles.filter((vehicle) => vehicle.kind === "car");
   const bikes = destination.vehicles.filter((vehicle) => vehicle.kind === "bike");
   const placeLabel = [destination.region, destination.country].filter(Boolean).join(", ");
+  const galleryItems = parseJsonArray<GalleryItem>(destination.galleryJson);
+  const destinationPhotos = slideImages(
+    destination.imageUrl,
+    galleryItems,
+  );
 
   const categories = [
     modules.hotels && destination.hotels.length
@@ -201,7 +207,7 @@ export default async function DestinationPage({ params }: Props) {
             name: destination.name,
             description: plainText(destination.summary) || `Tours, hotels, and rentals in ${destination.name}.`,
             url: absoluteUrl(`/destinations/${destination.slug}`),
-            image: destination.imageUrl ? absoluteUrl(destination.imageUrl) : undefined,
+            image: destinationPhotos.map((url) => absoluteUrl(url)),
             ...(placeLine
               ? { containedInPlace: { "@type": "Place", name: placeLine } }
               : {}),
@@ -236,27 +242,14 @@ export default async function DestinationPage({ params }: Props) {
         <div className="container">
           <div className="row">
             <div className="col-12">
-              <div className="destination-page__hero">
-                <div className="destination-page__hero-media">
-                  <img
-                    src={destination.imageUrl}
-                    alt={destination.name}
-                  />
-                  <div className="destination-page__hero-scrim" aria-hidden="true" />
-                  <div className="destination-page__hero-copy">
-                    <h1>Explore {destination.name}</h1>
-                    <p>
-                      {clipText(destination.summary, 180) ||
-                        `Tours, hotels, and rentals in ${destination.name}.`}
-                    </p>
-                  </div>
-                  <div className="destination-page__photos">
-                    <span className="button -md -blue-1 bg-white text-dark-1 text-14 fw-500">
-                      See All Photos
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <DestinationHeroGallery
+                name={destination.name}
+                images={destinationPhotos}
+                summary={
+                  clipText(destination.summary, 180) ||
+                  `Tours, hotels, and rentals in ${destination.name}.`
+                }
+              />
             </div>
           </div>
 
@@ -480,7 +473,7 @@ export default async function DestinationPage({ params }: Props) {
                 </div>
               </div>
             </div>
-            <div className="pt-40 relative">
+            <div className="pt-24 sm:pt-16">
               <NearbyDestinations destinations={nearby} />
             </div>
           </div>

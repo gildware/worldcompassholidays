@@ -132,19 +132,21 @@ a.road-btn:hover { background: var(--blue-dark); color: #fff; }
 .road-stop strong { display: block; margin-top: 6px; font-family: var(--sans); font-weight: 650; letter-spacing: 0; font-size: 15.5px; }
 
 .road-sub {
-  position: sticky; top: calc(var(--road-topbar-h) + 90px); z-index: 30;
+  position: sticky; top: calc(var(--road-topbar-h) + 90px); z-index: 40;
   display: flex; gap: 18px; align-items: center;
   margin-top: 18px;
-  background: rgba(246, 243, 237, 0.92);
+  background: rgba(246, 243, 237, 0.96);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
   overflow-x: auto;
+  scroll-padding-inline: 12px; overscroll-behavior-x: contain;
 }
 .road-sub a {
   flex: 0 0 auto; text-decoration: none; color: var(--muted); font-size: 14.5px; font-weight: 600;
   padding: 14px 0 12px; border-bottom: 2px solid transparent;
+  scroll-margin-inline: 12px;
 }
-.road-sub a.is-on { color: var(--ink); border-bottom-color: var(--ink); }
+.road-sub a.is-on { color: var(--ink); border-bottom-color: var(--blue); }
 .road-sub-total {
   margin-left: auto; border: 0; background: transparent; padding: 8px 0 8px 16px;
   font-size: 26px; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums;

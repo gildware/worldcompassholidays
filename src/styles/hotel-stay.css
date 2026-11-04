@@ -126,18 +126,22 @@
 }
 
 .stay-subnav {
-  position: sticky; top: calc(var(--stay-topbar-h) + 90px); z-index: 20; margin-top: 22px;
-  background: rgba(246, 243, 237, 0.92); backdrop-filter: blur(16px);
+  position: sticky; top: calc(var(--stay-topbar-h) + 90px); z-index: 40; margin-top: 22px;
+  background: rgba(246, 243, 237, 0.96); backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--line);
 }
 .stay-subnav-in { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 58px; }
-.stay-links { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.stay-links {
+  display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  scroll-padding-inline: 12px; overscroll-behavior-x: contain;
+}
 .stay-links::-webkit-scrollbar { display: none; }
 .stay-links a {
   text-decoration: none; color: var(--muted); font-weight: 600; font-size: 14.5px;
   padding: 8px 10px; border-bottom: 2px solid transparent; white-space: nowrap;
+  scroll-margin-inline: 12px;
 }
-.stay-links a.is-on { color: var(--ink); border-color: var(--ink); }
+.stay-links a.is-on { color: var(--ink); border-color: var(--blue); }
 .stay-subnav-cta { display: flex; align-items: center; gap: 12px; }
 .stay-subnav-total { font-size: 22px; }
 

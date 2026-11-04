@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { submitTourRequest } from "@/actions/tour-request";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
+import { useSectionTabs } from "@/hooks/useSectionTabs";
 import { formatPhone } from "@/lib/auth/phone";
 import { initialFormState } from "@/lib/forms";
 import { formatMoney } from "@/lib/format";
@@ -238,24 +239,17 @@ export function TourStay({
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  useEffect(() => {
-    const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(".road-sub a"));
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const id = entry.target.id;
-          for (const link of links) link.classList.toggle("is-on", link.getAttribute("href") === `#${id}`);
-        }
-      },
-      { rootMargin: "-40% 0px -50% 0px" },
-    );
-    for (const link of links) {
-      const node = document.querySelector(link.getAttribute("href") || "");
-      if (node) observer.observe(node);
-    }
-    return () => observer.disconnect();
-  }, []);
+  const { isActive, selectHref } = useSectionTabs(".road-sub a", [tour.slug, tour.days.length]);
+  const tab = (href: string, label: string) => (
+    <a
+      href={href}
+      className={isActive(href) ? "is-on" : undefined}
+      aria-current={isActive(href) ? "true" : undefined}
+      onClick={() => selectHref(href)}
+    >
+      {label}
+    </a>
+  );
 
   function openBook() {
     if (window.matchMedia("(max-width: 980px)").matches) {
@@ -397,14 +391,14 @@ export function TourStay({
           </div>
         ) : null}
 
-        <nav className="road-sub" aria-label="On this page">
-          <a href="#overview">Overview</a>
-          <a href="#departures">Departures</a>
-          {tour.days.length > 0 ? <a href="#itinerary">Itinerary</a> : null}
-          <a href="#included">Included</a>
-          <a href="#trip">The trip</a>
-          <a href="#meeting">Meeting</a>
-          <a href="#before">Before you go</a>
+        <nav className="road-sub" aria-label="On this page" data-section-tabs>
+          {tab("#overview", "Overview")}
+          {tab("#departures", "Departures")}
+          {tour.days.length > 0 ? tab("#itinerary", "Itinerary") : null}
+          {tab("#included", "Included")}
+          {tab("#trip", "The trip")}
+          {tab("#meeting", "Meeting")}
+          {tab("#before", "Before you go")}
           <button className="road-sub-total" type="button" onClick={openBook}>
             {money(quote.total, currency)}
           </button>
