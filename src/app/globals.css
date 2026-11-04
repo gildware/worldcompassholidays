@@ -4465,6 +4465,10 @@ a.bike-card__body {
     border-radius: 14px 0 0 14px;
   }
 
+  :is(.bike-fleet, .car-fleet) .bike-card__frame.is-photo img {
+    padding: 6px;
+  }
+
   .car-fleet .bike-card__media {
     aspect-ratio: auto;
   }
