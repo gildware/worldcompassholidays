@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { favoriteIds } from "@/lib/favorites";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
+import { resolveRideCover } from "@/lib/catalog-media";
 import { fleetKinds } from "@/lib/rentals/labels";
 import { cached } from "@/lib/ttl-cache";
 
@@ -140,7 +141,18 @@ export async function RentalListing({
       fuel: vehicle.fuelType?.name ?? "",
       tags: linked.filter((feature) => feature.kind === "tag").map((feature) => feature.name),
       specs,
-      images: vehicle.images.map((image) => image.url).filter(Boolean),
+      images: (() => {
+        const live = vehicle.images
+          .map((image) => image.url.trim())
+          .filter((url) => url && !url.startsWith("/uploads/"));
+        if (live.length > 0) return live;
+        const fallback = resolveRideCover({
+          url: vehicle.images[0]?.url,
+          slug: vehicle.slug,
+          kind: vehicle.kind,
+        });
+        return fallback ? [fallback] : [];
+      })(),
       price: vehicle.pricePerDay,
       currency: vehicle.currency || "INR",
       deposit: vehicle.securityDeposit,
