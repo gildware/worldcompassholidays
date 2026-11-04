@@ -86,7 +86,7 @@ export function fleetPhotoUrl(url?: string | null) {
   if (/\/upload\/(?:[^/]*e_trim|e_trim)/.test(value)) return value;
   return value.replace(
     "/image/upload/",
-    "/image/upload/e_trim:50,c_fit,w_1200,h_750,b_auto/",
+    "/image/upload/e_trim:50,c_fill,g_auto,w_1200,h_750/",
   );
 }
 
