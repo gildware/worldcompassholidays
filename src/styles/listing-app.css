@@ -729,15 +729,24 @@
     -webkit-backdrop-filter: none;
     padding: 12px var(--list-pad) 10px;
     border-bottom: 1px solid var(--line);
+    overflow: clip;
   }
 
   .stay-list .sl-top__row {
-    grid-template-columns: 1fr;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 8px;
+    align-items: stretch;
+    box-sizing: border-box;
   }
 
+  /* Desktop action pills collide with m-bar if cascade order flips */
   .stay-list .sl-actions {
-    display: none;
+    display: none !important;
   }
 
   .stay-list .sl-summary {
@@ -745,21 +754,32 @@
   }
 
   .stay-list .sl-search-wrap {
-    display: none;
+    display: none !important;
+  }
+
+  .stay-list .m-bar.app-chrome-mobile {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   .stay-list .sl-top.is-searching .m-bar {
-    display: none;
+    display: none !important;
   }
 
   .stay-list .sl-top.is-searching .sl-search-wrap {
-    display: block;
+    display: block !important;
     position: relative;
     left: auto;
     right: auto;
     top: auto;
     padding: 0;
     background: transparent;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   .stay-list .sl-where,
@@ -790,6 +810,8 @@
   .stay-list .sl-page {
     grid-template-columns: 1fr;
     gap: 0;
+    padding: 14px 0 24px;
+    overflow: hidden;
   }
 
   .stay-list .sl-filters {
@@ -814,23 +836,12 @@
     display: none;
   }
 
-  .stay-list .sl-request {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    margin: 2px 0 12px;
-    padding: 12px;
-    border-radius: 14px;
+  .stay-list .sl-head {
+    min-width: 0;
   }
 
-  .stay-list .sl-request span {
-    font-size: 0.8rem;
-  }
-
-  .stay-list .sl-request strong {
-    width: 100%;
-    min-height: 40px;
-    font-size: 0.9rem;
+  .stay-list .m-bar__trip {
+    justify-content: space-between;
   }
 
   .stay-list .sl-list {
@@ -858,6 +869,7 @@
     overflow: hidden;
     box-shadow: none;
     height: 100%;
+    min-width: 0;
   }
 
   .stay-list .sl-list .sl-photos {
@@ -929,13 +941,16 @@
   .stay-list .sl-side {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: flex-end;
     gap: 2px;
-    text-align: right;
+    text-align: left;
     border-top: 0 !important;
     margin-top: auto;
-    padding: 6px 10px 10px;
+    padding: 6px 8px 10px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .stay-list .sl-side .sl-btn {
@@ -945,12 +960,21 @@
   .stay-list .sl-price,
   .stay-list .sl-total {
     font-family: var(--sans) !important;
-    font-size: 1rem !important;
+    font-size: 0.95rem !important;
     font-weight: 700 !important;
     letter-spacing: -0.02em;
-    text-align: right;
+    text-align: left;
     width: 100%;
+    max-width: 100%;
     margin: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .stay-list .sl-total::before {
+    display: block;
+    margin-bottom: 1px;
   }
 
   .stay-list .sl-warn {
@@ -1367,12 +1391,23 @@
   }
 
   .stay-list .sl-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
   }
 
   .stay-list .sl-list .sl-photos {
-    height: 160px;
-    min-height: 160px;
+    height: 148px;
+    min-height: 148px;
+  }
+
+  .stay-list .sl-side {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .stay-list .sl-price,
+  .stay-list .sl-total {
+    text-align: right;
   }
 }
 

@@ -47,9 +47,9 @@ import {
   whoLabel,
 } from "@/components/tour-list/catalog/logic";
 import type { CatalogGuest, CatalogQuery, CatalogSort, CatalogTour } from "@/components/tour-list/catalog/types";
+import { AskRequestLink } from "@/components/common/AskRequestLink";
 import { FavoriteHeart, useFavoriteList } from "@/components/favorites/FavoriteButton";
 import "@/components/tour-list/catalog/tour-catalog.css";
-import "@/styles/ask-request.css";
 import "@/styles/listing-app.css";
 
 const SORT_LABEL: Record<CatalogSort, string> = {
@@ -349,7 +349,7 @@ export function TourCatalog({
 
   function jumpDate(iso: string) {
     setPreviewId(null);
-    setQuery((current) => ({ ...current, date: iso, showOff: false, showSold: false, page: 1 }));
+    setQuery((current) => ({ ...current, date: iso, page: 1 }));
   }
 
   function onPrice(which: "min" | "max", value: number) {
@@ -976,7 +976,7 @@ export function TourCatalog({
                 </div>
               </div>
             </div>
-            {insight ? (
+            {insight && (!query.showOff || !query.showSold) ? (
               <div className="insight">
                 <p>
                   {insight} on {prettyDate(query.date)}. They are hidden so the list stays bookable.
@@ -986,10 +986,23 @@ export function TourCatalog({
                 </button>
               </div>
             ) : null}
-            <Link prefetch={false} className="ask-request" href={tourRequestHref(query)}>
-              <span>Not on this list? Ask us to find a tour.</span>
-              <strong>Request tour</strong>
-            </Link>
+            <AskRequestLink
+              href={tourRequestHref(query)}
+              title="Need a different tour?"
+              text="Not listed? Share the dates and places."
+              cta="Request tour"
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M12 21s6.2-4.8 6.2-10.2a6.2 6.2 0 1 0-12.4 0C5.8 16.2 12 21 12 21Z"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinejoin="round"
+                  />
+                  <circle cx="12" cy="10.8" r="2.2" stroke="currentColor" strokeWidth="1.8" />
+                </svg>
+              }
+            />
             {rows.length ? (
               <div className={`list${query.view === "grid" ? " is-grid" : ""}`}>
                 {slice.map((tour, index) => (
@@ -1782,8 +1795,6 @@ function namedChips(query: CatalogQuery) {
   if (query.cancel) chips.push({ key: "cancel", value: "", label: "Free cancellation" });
   if (query.pickup) chips.push({ key: "pickup", value: "", label: "Hotel pickup" });
   if (query.savedOnly) chips.push({ key: "savedOnly", value: "", label: "Favorites" });
-  if (query.showOff) chips.push({ key: "showOff", value: "", label: "Including closed days" });
-  if (query.showSold) chips.push({ key: "showSold", value: "", label: "Including sold out" });
   return chips;
 }
 

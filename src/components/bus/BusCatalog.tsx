@@ -9,8 +9,8 @@ import { useLazySlice } from "@/hooks/useLazySlice";
 import { arrivesNextDay, busCoachTypes, busTimeWindows, coachLabel, inTimeWindow, requestBusHref } from "@/lib/buses";
 import type { BusListItem, BusQuery, BusSort } from "@/components/bus/query";
 import { formatMoney } from "@/lib/format";
+import { AskRequestLink } from "@/components/common/AskRequestLink";
 import "@/components/tour-list/catalog/tour-catalog.css";
-import "@/styles/ask-request.css";
 import "@/styles/listing-app.css";
 import "@/styles/bus-desk.css";
 
@@ -415,10 +415,23 @@ export function BusCatalog({ routes, initial }: { routes: BusListItem[]; initial
               <span className="head__title">{mobileTitle}</span>
             </h1>
           </div>
-          <Link prefetch={false} className="ask-request" href={requestHref}>
-            <span>Need a coach that is not listed? Send the cities and date.</span>
-            <strong>Request a bus</strong>
-          </Link>
+          <AskRequestLink
+            href={requestHref}
+            title="Need a different coach?"
+            text="Not listed? Send the cities and date."
+            cta="Request a bus"
+            icon={
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M6.5 4.5h11A2.5 2.5 0 0 1 20 7v8.5a2 2 0 0 1-2 2h-.4a1.6 1.6 0 1 1-3.2 0H9.6a1.6 1.6 0 1 1-3.2 0H6a2 2 0 0 1-2-2V7a2.5 2.5 0 0 1 2.5-2.5Z"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinejoin="round"
+                />
+                <path d="M4.5 10.5h15" stroke="currentColor" strokeWidth="1.8" />
+              </svg>
+            }
+          />
         </div>
 
         <aside className={`filters${filtersOpen ? " is-open" : ""}`} aria-label="Filters">

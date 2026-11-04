@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { DateObject } from "react-multi-date-picker";
 import "rc-slider/assets/index.css";
@@ -15,13 +14,13 @@ import { MainFilterSearchBox } from "@/components/car-list/car-list-v1/MainFilte
 import { Sidebar, type CarListFilters } from "@/components/car-list/car-list-v1/Sidebar";
 import { TopHeaderFilter } from "@/components/car-list/car-list-v1/TopHeaderFilter";
 import type { CarListCard, CarListLocation, CarSort } from "@/components/car-list/types";
+import { AskRequestLink } from "@/components/common/AskRequestLink";
 import CallToActions from "@/components/common/CallToActions";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import type { GuestCounts } from "@/components/hotel-list/common/GuestSearch";
 import { Pagination } from "@/components/hotel-list/common/Pagination";
 import { replaceOwnedQuery } from "@/lib/list-url";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import "@/styles/ask-request.css";
 import {
   formatRentalDate,
   readRentalQuery,
@@ -582,10 +581,44 @@ export function CarListV1({
                   />
                 )}
                 {isBoard ? null : <div className="mt-30" />}
-                <Link prefetch={false} className="ask-request" href={fleetRequestHref(fleet, pickup, pickupAt, returnAt)}>
-                  <span>{isCar ? "Not on this list? Ask us to find a car." : "Not on this list? Ask us to find a bike."}</span>
-                  <strong>{isCar ? "Request car" : "Request bike"}</strong>
-                </Link>
+                <AskRequestLink
+                  href={fleetRequestHref(fleet, pickup, pickupAt, returnAt)}
+                  title={isCar ? "Need a different car?" : "Need a different bike?"}
+                  text={isCar ? "Not listed? Tell us what you need." : "Not listed? Tell us what you need."}
+                  cta={isCar ? "Request car" : "Request bike"}
+                  icon={
+                    isCar ? (
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                        <path
+                          d="M4.2 14.2 6.1 8.8A2.2 2.2 0 0 1 8.2 7.4h7.6c.9 0 1.7.5 2.1 1.4l1.9 5.4"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M3.5 14.2h17M6.2 17.2a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2Zm11.6 0a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2Z"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                        <circle cx="6.5" cy="16" r="2.7" stroke="currentColor" strokeWidth="1.8" />
+                        <circle cx="17.5" cy="16" r="2.7" stroke="currentColor" strokeWidth="1.8" />
+                        <path
+                          d="M6.5 16 10 8.5h4.2L17.5 16M10 8.5l1.4 3.2h3.4"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )
+                  }
+                />
                 {isBoard ? (
                   <div className="bike-grid">
                     <BikeCards

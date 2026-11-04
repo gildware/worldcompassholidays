@@ -319,8 +319,6 @@ export function activeCount(query: CatalogQuery) {
   if (query.pickup) count += 1;
   if (query.rating) count += 1;
   if (query.savedOnly) count += 1;
-  if (query.showOff) count += 1;
-  if (query.showSold) count += 1;
   return count;
 }
 
@@ -389,8 +387,8 @@ export function readCatalogQuery(
     sort: SORTS.includes(sort) ? sort : "match",
     view: one(params.view) === "list" ? "list" : "grid",
     page: page >= 1 && page <= 20 ? page : 1,
-    showOff: one(params.off) === "1",
-    showSold: one(params.sold) === "1",
+    showOff: one(params.off) !== "0",
+    showSold: one(params.sold) !== "0",
     savedOnly: one(params.saved) === "1",
     compare: take(one(params.cmp), new Set(tours.map((tour) => tour.id))).slice(0, 3),
   };
@@ -420,8 +418,8 @@ export function catalogSearch(query: CatalogQuery) {
   if (query.sort !== "match") params.set("sort", query.sort);
   if (query.view === "list") params.set("view", "list");
   if (query.page > 1) params.set("page", String(query.page));
-  if (query.showOff) params.set("off", "1");
-  if (query.showSold) params.set("sold", "1");
+  if (!query.showOff) params.set("off", "0");
+  if (!query.showSold) params.set("sold", "0");
   if (query.savedOnly) params.set("saved", "1");
   if (query.compare.length) params.set("cmp", query.compare.join(","));
   return params.toString();
@@ -492,8 +490,8 @@ export function clearQuery(query: CatalogQuery): CatalogQuery {
     pickup: false,
     rating: 0,
     savedOnly: false,
-    showOff: false,
-    showSold: false,
+    showOff: true,
+    showSold: true,
     page: 1,
   };
 }

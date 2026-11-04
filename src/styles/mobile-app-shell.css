@@ -507,18 +507,22 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 3px;
     width: 100%;
     min-width: 0;
     color: var(--muted);
     text-decoration: none;
     font-size: 0.58rem;
     font-weight: 500;
-    padding: 4px 0;
+    padding: 4px 1px;
     background: none;
     border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    outline: none;
     font-family: inherit;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .mobile-tabbar a.is-active,
@@ -529,10 +533,12 @@
 
   .mobile-tabbar__label {
     max-width: 100%;
-    padding: 0 2px;
-    line-height: 1.05;
+    padding: 0 1px;
+    line-height: 1.1;
     text-align: center;
-    white-space: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .mobile-tabbar__more {
