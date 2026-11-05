@@ -36,7 +36,7 @@ const parentOf: Record<string, string | undefined> = {
   pahalgam: "kashmir",
   sonamarg: "kashmir",
 };
-const destinationSlugs = new Set(demoDestinations.map((destination) => destination.slug));
+const destinationSlugs = new Set<string>(demoDestinations.map((destination) => destination.slug));
 const activeTours = demoTours.filter((tour) => destinationSlugs.has(tour.destinationSlug));
 const activeHotels = demoHotels.filter((hotel) => destinationSlugs.has(hotel.destinationSlug));
 const activeCars = demoCars.filter((car) => destinationSlugs.has(car.destination));

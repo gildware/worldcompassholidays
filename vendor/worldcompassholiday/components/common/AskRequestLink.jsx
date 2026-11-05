@@ -20,7 +20,7 @@ function DefaultMark() {
   );
 }
 
-export function AskRequestLink({ href, title, text, cta, className, icon }) {
+export function AskRequestLink({ href, title, text, cta, className = "", icon }) {
   return (
     <Link prefetch={false} className={className ? `ask-request ${className}` : "ask-request"} href={href}>
       <span className="ask-request__mark" aria-hidden>

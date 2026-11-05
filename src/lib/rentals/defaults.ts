@@ -7,7 +7,7 @@ import { demoDestinations } from "@/lib/demo/north-india-catalog";
 import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 
-const activeDestinationSlugs = new Set(demoDestinations.map((destination) => destination.slug));
+const activeDestinationSlugs = new Set<string>(demoDestinations.map((destination) => destination.slug));
 
 const configs: Array<{
   kind: string;

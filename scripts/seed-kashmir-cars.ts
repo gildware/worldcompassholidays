@@ -117,7 +117,7 @@ async function main() {
   }
 
   const destinationSlugs = [
-    ...new Set(demoCars.flatMap((car) => [car.destination, ...car.availability])),
+    ...new Set(demoCars.flatMap((car) => [car.destination, ...(car.availability ?? [])])),
   ];
   const destinations = await prisma.destination.findMany({
     where: { slug: { in: destinationSlugs } },
@@ -201,7 +201,7 @@ async function main() {
     const fuelTypeId = fuels.find((row) => row.name === car.fuel)?.id;
     const transmissionId = gears.find((row) => row.name === car.transmission)?.id;
     const primaryDestinationId = destinationBySlug.get(car.destination)!;
-    const availabilityIds = car.availability
+    const availabilityIds = (car.availability ?? [])
       .map((slug) => destinationBySlug.get(slug))
       .filter((id): id is string => Boolean(id));
 
@@ -210,12 +210,12 @@ async function main() {
         slug: car.slug,
         kind: "car",
         name: car.name,
-        registrationNumber: car.registrationNumber,
+        registrationNumber: car.registrationNumber ?? `DEMO-CAR-${car.slug.toUpperCase()}`,
         brand: car.brand,
         modelName: car.modelName,
         year: car.year,
         summary: car.summary,
-        description: car.description,
+        description: car.description ?? car.summary,
         seats: car.seats,
         doors: car.doors,
         luggage: car.luggage,

@@ -106,7 +106,7 @@ async function main() {
   }
 
   const destinationSlugs = [
-    ...new Set(demoBikes.flatMap((bike) => [bike.destination, ...bike.availability])),
+    ...new Set(demoBikes.flatMap((bike) => [bike.destination, ...(bike.availability ?? [])])),
   ];
   const destinations = await prisma.destination.findMany({
     where: { slug: { in: destinationSlugs } },
@@ -221,7 +221,7 @@ async function main() {
     const fuelTypeId = fuels.find((row) => row.name === bike.fuel)?.id;
     const transmissionId = gears.find((row) => row.name === bike.transmission)?.id;
     const primaryDestinationId = destinationBySlug.get(bike.destination)!;
-    const availabilityIds = bike.availability
+    const availabilityIds = (bike.availability ?? [])
       .map((slug) => destinationBySlug.get(slug))
       .filter((id): id is string => Boolean(id));
 
@@ -230,12 +230,12 @@ async function main() {
         slug: bike.slug,
         kind: "bike",
         name: bike.name,
-        registrationNumber: bike.registrationNumber,
+        registrationNumber: bike.registrationNumber ?? `DEMO-BIKE-${bike.slug.toUpperCase()}`,
         brand: bike.brand,
         modelName: bike.modelName,
         year: bike.year,
         summary: bike.summary,
-        description: bike.description,
+        description: bike.description ?? bike.summary,
         seats: 2,
         doors: null,
         luggage: bike.type === "Adventure" || bike.type === "Cruiser" ? 1 : 0,

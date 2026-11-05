@@ -1142,7 +1142,35 @@ export const demoHotels: DemoHotel[] = [
   },
 ];
 
-export const demoCars = [
+type DemoRentalVehicle = {
+  slug: string;
+  name: string;
+  brand: string;
+  modelName: string;
+  year: number;
+  fuel: "Petrol" | "Diesel" | "Electric" | "CNG";
+  transmission: "Manual" | "Automatic";
+  pricePerDay: number;
+  destination: string;
+  summary: string;
+  prompt: string;
+  availability?: string[];
+  registrationNumber?: string;
+  description?: string;
+};
+
+type DemoCar = DemoRentalVehicle & {
+  type: "Hatchback" | "Sedan" | "SUV" | "MUV" | "Luxury" | "EV";
+  seats: number;
+  doors: number;
+  luggage: number;
+};
+
+type DemoBike = DemoRentalVehicle & {
+  type: "Scooter" | "Motorcycle" | "Cruiser" | "Adventure";
+};
+
+export const demoCars: DemoCar[] = [
   {
     slug: "maruti-swift",
     name: "Maruti Swift",
@@ -1325,7 +1353,7 @@ export const demoCars = [
   },
 ];
 
-export const demoBikes = [
+export const demoBikes: DemoBike[] = [
   {
     slug: "honda-activa",
     name: "Honda Activa",
