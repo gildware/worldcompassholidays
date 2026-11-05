@@ -10,7 +10,7 @@ const fallback: Record<EnquiryModule, string> = {
   bus: "/img/company/service-holidays.jpg",
 };
 
-const placeFacts = new Set(["City", "From", "To", "Pickup", "Area", "Places", "Drop-off", "Hotel", "Tour", "Model", "Bus"]);
+const placeFacts = new Set(["City", "From", "To", "Pickup city", "Starting from", "Area", "Places", "Drop-off", "Hotel", "Tour", "Model", "Bus"]);
 
 function cover(...urls: Array<string | null | undefined>) {
   return urls.map((url) => url?.trim() ?? "").find(Boolean) ?? "";

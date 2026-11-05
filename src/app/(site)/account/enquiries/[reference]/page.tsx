@@ -6,7 +6,6 @@ import { requireCustomer } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import { withEnquiryImages } from "@/lib/enquiry-images";
 import { toEnquiryView } from "@/lib/enquiries";
-import { formatDate } from "@/lib/format";
 import { privateMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
@@ -33,13 +32,15 @@ export default async function AccountEnquiryPage({
   if (!enquiry) notFound();
 
   return (
-    <div className="grid max-w-3xl gap-4">
+    <div className="grid max-w-4xl gap-4">
       <Link href="/account/enquiries" className="text-sm font-medium text-brand">
         Enquiries
       </Link>
-      <div className="rounded-lg border border-line bg-white p-4">
-        <EnquiryFacts enquiry={enquiry} />
-        <p className="mt-3 text-xs text-muted">Received {formatDate(enquiry.createdAt)}. Nothing is booked until you accept a price.</p>
+      <div>
+        <EnquiryFacts
+          enquiry={enquiry}
+          footer={<p className="px-1 text-xs text-muted">Nothing is booked until you accept a price.</p>}
+        />
       </div>
     </div>
   );

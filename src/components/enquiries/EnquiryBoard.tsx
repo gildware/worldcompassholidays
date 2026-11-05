@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { enquiryFilters, enquiryStatusLabel, enquiryStatusTone, type EnquiryView } from "@/lib/enquiries";
-import { formatDate } from "@/lib/format";
+import { enquiryFactGroups, enquiryFilters, enquiryStatusLabel, enquiryStatusTone, type EnquiryView } from "@/lib/enquiries";
+import { formatDate, formatDateTime } from "@/lib/format";
 
 const toneClass: Record<string, string> = {
   ok: "bg-emerald-50 text-emerald-800",
@@ -90,36 +90,77 @@ export function EnquiryBoard({
   );
 }
 
-export function EnquiryFacts({ enquiry }: { enquiry: EnquiryView }) {
+export function EnquiryFacts({ enquiry, footer }: { enquiry: EnquiryView; footer?: React.ReactNode }) {
+  const groups = enquiryFactGroups
+    .map((group) => ({ group, facts: enquiry.facts.filter((fact) => fact.group === group) }))
+    .filter((section) => section.facts.length > 0);
   return (
     <div className="grid gap-3">
-      {enquiry.image ? (
-        <img src={enquiry.image} alt="" className="h-36 w-full rounded-md object-cover" />
-      ) : null}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className={`inline-flex h-5 items-center rounded px-1.5 text-[10px] font-semibold uppercase tracking-wide ${kindClass[enquiry.module]}`}>
-          {enquiry.kindLabel}
-        </span>
-        <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${toneClass[enquiryStatusTone(enquiry.status)]}`}>
-          {enquiryStatusLabel(enquiry.status)}
-        </span>
-        <span className="text-xs text-muted">{enquiry.reference}</span>
-      </div>
-      <h1 className="text-lg font-semibold leading-tight text-navy">{enquiry.title}</h1>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 sm:grid-cols-3">
-        {enquiry.facts.map((fact) => (
-          <div key={fact.label} className="min-w-0">
-            <dt className="text-[11px] font-medium uppercase tracking-wide text-muted">{fact.label}</dt>
-            <dd className="truncate text-sm text-navy">{fact.value}</dd>
+      <div className="flex flex-col gap-4 rounded-xl border border-line bg-white p-4 shadow-sm sm:flex-row">
+        {enquiry.image ? (
+          <img src={enquiry.image} alt="" className="h-32 w-full shrink-0 rounded-lg object-cover sm:h-28 sm:w-40" />
+        ) : null}
+        <div className="grid min-w-0 content-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`inline-flex h-5 items-center rounded px-1.5 text-[10px] font-semibold uppercase tracking-wide ${kindClass[enquiry.module]}`}>
+              {enquiry.kindLabel}
+            </span>
+            <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${toneClass[enquiryStatusTone(enquiry.status)]}`}>
+              {enquiryStatusLabel(enquiry.status)}
+            </span>
           </div>
-        ))}
-      </dl>
+          <h1 className="text-xl font-semibold leading-tight text-navy">{enquiry.title}</h1>
+          <p className="text-xs text-muted">
+            Reference <span className="font-mono font-medium text-navy">{enquiry.reference}</span> · Received {formatDateTime(enquiry.createdAt)}
+          </p>
+        </div>
+      </div>
+      {groups.map(({ group, facts }) => (
+        <FactSection key={group} title={group === "Travellers" ? "Travellers & logistics" : group}>
+          {facts.map((fact) => (
+            <Fact key={fact.label} label={fact.label} value={fact.value} wide={fact.wide} />
+          ))}
+        </FactSection>
+      ))}
       {enquiry.note ? (
-        <p className="rounded-md bg-surface px-3 py-2 text-sm text-navy">
-          <span className="font-medium">Note. </span>
-          {enquiry.note}
-        </p>
+        <section className="rounded-xl border border-line bg-white p-4 shadow-sm">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-navy">Customer note</h2>
+          <p className="whitespace-pre-line break-words rounded-lg bg-surface px-3 py-2.5 text-sm leading-relaxed text-navy">{enquiry.note}</p>
+        </section>
       ) : null}
+      <FactSection title="Contact">
+        <Fact label="Name" value={enquiry.contactName || "—"} />
+        <Fact label="Phone" value={enquiry.contactPhone || "—"} href={enquiry.contactPhone ? `tel:${enquiry.contactPhone.replace(/[^\d+]/g, "")}` : undefined} />
+        <Fact label="Email" value={enquiry.contactEmail || "—"} href={enquiry.contactEmail ? `mailto:${enquiry.contactEmail}` : undefined} />
+        {enquiry.channel ? <Fact label="Sent via" value={enquiry.channel === "whatsapp" ? "WhatsApp" : "Website form"} /> : null}
+      </FactSection>
+      {footer}
+    </div>
+  );
+}
+
+function FactSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-xl border border-line bg-white p-4 shadow-sm">
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-navy">{title}</h2>
+      <dl className="grid grid-cols-2 gap-2.5 lg:grid-cols-3">{children}</dl>
+    </section>
+  );
+}
+
+function Fact({ label, value, wide, href }: { label: string; value: string; wide?: boolean; href?: string }) {
+  return (
+    <div className={`min-w-0 rounded-lg bg-surface px-3 py-2.5 ${wide ? "col-span-2 lg:col-span-3" : ""}`}>
+      <dt className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</dt>
+      <dd className="mt-0.5 break-words text-sm font-semibold text-navy">
+        {href ? (
+          <a href={href} className="text-brand hover:underline">
+            {value}
+          </a>
+        ) : (
+          value
+        )}
+      </dd>
     </div>
   );
 }

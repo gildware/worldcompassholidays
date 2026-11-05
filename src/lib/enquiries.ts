@@ -7,13 +7,20 @@ import {
   carTypes,
   driveOptions,
   allHotelBudgetBands,
+  hotelAdditionalPreferences,
   hotelMeals,
   hotelRoomTypes,
+  hotelStayPreferences,
   legacyHotelRoomTypes,
   optionLabel,
   tourBudgetBands,
+  tourCarPreferences,
+  tourDietaryPreferences,
+  tourFoodPreferences,
+  tourHotelPreferences,
   tourLengths,
   tourStyles,
+  tourTypes,
   transmissionOptions,
 } from "@/lib/custom-request";
 import { formatDate } from "@/lib/format";
@@ -94,7 +101,9 @@ export function enquiryModule(kind: string): EnquiryModule | null {
   return null;
 }
 
-export type EnquiryFact = { label: string; value: string };
+export const enquiryFactGroups = ["Trip", "Travellers", "Preferences", "Budget"] as const;
+
+export type EnquiryFact = { group: (typeof enquiryFactGroups)[number]; label: string; value: string; wide: boolean };
 
 export type EnquiryView = {
   id: string;
@@ -111,6 +120,7 @@ export type EnquiryView = {
   facts: EnquiryFact[];
   note: string;
   image: string;
+  channel: string;
 };
 
 function text(details: Record<string, unknown>, key: string) {
@@ -136,103 +146,142 @@ function budgetLabel(module: EnquiryModule, details: Record<string, unknown>) {
   return budgetNote(bikeBudgetBands, value, "per day");
 }
 
-function push(facts: EnquiryFact[], label: string, value: string) {
-  if (value) facts.push({ label, value });
+function push(facts: EnquiryFact[], group: EnquiryFact["group"], label: string, value: string, wide = false) {
+  if (value) facts.push({ group, label, value, wide });
+}
+
+function plural(count: string, one: string, many: string) {
+  return `${count} ${count === "1" ? one : many}`;
+}
+
+function party(details: Record<string, unknown>) {
+  const adults = text(details, "adults");
+  if (!adults) return "";
+  const children = text(details, "children") || "0";
+  const rooms = text(details, "rooms");
+  return [plural(adults, "adult", "adults"), plural(children, "child", "children"), rooms ? plural(rooms, "room", "rooms") : ""]
+    .filter(Boolean)
+    .join(", ");
+}
+
+function labels(value: unknown, options: readonly { value: string; label: string }[]) {
+  if (!Array.isArray(value)) return "";
+  return value
+    .filter((item): item is string => typeof item === "string" && item !== "any")
+    .map((item) => optionLabel(options, item))
+    .join(", ");
+}
+
+function money(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? `INR ${value.toLocaleString("en-IN")}` : "";
 }
 
 function factsFor(module: EnquiryModule, details: Record<string, unknown>) {
   const facts: EnquiryFact[] = [];
   if (module === "tour") {
-    push(facts, "From", text(details, "startCity") || text(details, "destination"));
-    push(facts, "Places", text(details, "places"));
-    push(facts, "Tour", text(details, "itemName"));
-    push(facts, "Date", showDate(text(details, "start")));
+    push(facts, "Trip", "Tour", text(details, "itemName") || text(details, "tourSlug").replace(/-/g, " "), true);
+    push(facts, "Trip", "Starting from", text(details, "startCity") || text(details, "destination"));
+    push(facts, "Trip", "Places", text(details, "places"), true);
+    push(facts, "Trip", "Start date", showDate(text(details, "start") || text(details, "startDate")));
+    push(facts, "Trip", "End date", showDate(text(details, "endDate")));
     const length = text(details, "length");
-    if (length) push(facts, "Length", optionLabel(tourLengths, length));
+    if (length) push(facts, "Trip", "Length", optionLabel(tourLengths, length));
     const style = text(details, "style");
-    if (style) push(facts, "Style", optionLabel(tourStyles, style));
-    const adults = text(details, "adults");
-    const children = text(details, "children");
-    if (adults) push(facts, "Party", `${adults} adult${adults === "1" ? "" : "s"}, ${children || "0"} child${children === "1" ? "" : "ren"}`);
-    if (text(details, "hotelPickup") === "yes") push(facts, "Pickup", text(details, "pickupHotel"));
-    if (details.datesFlexible === true) push(facts, "Dates", "Can move");
+    if (style) push(facts, "Trip", "Style", optionLabel(tourStyles, style));
+    const type = text(details, "tourType");
+    if (type && type !== "any") push(facts, "Trip", "Tour type", optionLabel(tourTypes, type));
+    const mode = text(details, "mode");
+    if (mode) push(facts, "Trip", "Travel mode", mode === "group" ? "Group departure" : "Private");
+    if (typeof details.datesFlexible === "boolean") push(facts, "Trip", "Dates can move", details.datesFlexible ? "Yes" : "No");
+    push(facts, "Travellers", "Party", party(details), true);
+    if (typeof details.ownRoom === "boolean") push(facts, "Travellers", "Rooms", details.ownRoom ? "Own room for every adult" : "Twin share");
+    if (text(details, "hotelPickup") === "yes") push(facts, "Travellers", "Pickup hotel", text(details, "pickupHotel"));
+    if (typeof details.needFood === "boolean") {
+      push(facts, "Preferences", "Food", details.needFood ? labels(details.foodPreferences, tourFoodPreferences) || "Needed" : "Not needed");
+      push(facts, "Preferences", "Diet", labels(details.dietaryPreferences, tourDietaryPreferences));
+    }
+    if (typeof details.needCar === "boolean") {
+      push(facts, "Preferences", "Car", details.needCar ? optionLabel(tourCarPreferences, text(details, "carPreference") || "any") : "Not needed");
+    }
+    if (typeof details.needHotel === "boolean") {
+      push(facts, "Preferences", "Hotel", details.needHotel ? labels(details.hotelPreferences, tourHotelPreferences) || "Needed" : "Not needed", true);
+    }
+    push(facts, "Budget", "Season", text(details, "season"));
+    push(facts, "Budget", "Quoted total", money(details.total));
   } else if (module === "hotel") {
-    push(facts, "City", text(details, "destination"));
-    push(facts, "Area", text(details, "area"));
-    push(facts, "Hotel", text(details, "hotelName"));
+    push(facts, "Trip", "City", text(details, "destination"));
+    push(facts, "Trip", "Area", text(details, "area"));
+    push(facts, "Trip", "Hotel", text(details, "hotelName"), true);
     const checkIn = text(details, "checkIn");
     const checkOut = text(details, "checkOut");
-    if (checkIn && checkOut) push(facts, "Stay", `${showDate(checkIn)} – ${showDate(checkOut)}`);
-    const adults = text(details, "adults");
-    const children = text(details, "children");
-    const rooms = text(details, "rooms");
-    if (adults) {
-      push(facts, "Party", `${adults} adult${adults === "1" ? "" : "s"}, ${children || "0"} child${children === "1" ? "" : "ren"}, ${rooms || "1"} room${rooms === "1" ? "" : "s"}`);
+    push(facts, "Trip", "Check-in", showDate(checkIn));
+    push(facts, "Trip", "Check-out", showDate(checkOut));
+    if (checkIn && checkOut) {
+      const nights = Math.round((Date.parse(checkOut) - Date.parse(checkIn)) / 86_400_000);
+      if (nights > 0) push(facts, "Trip", "Nights", String(nights));
     }
+    push(facts, "Travellers", "Party", party(details), true);
     const ages = Array.isArray(details.childAges) ? details.childAges.filter((age) => typeof age === "number") : [];
-    if (ages.length) push(facts, "Ages", ages.join(", "));
+    if (ages.length) push(facts, "Travellers", "Child ages", ages.join(", "));
     const stars = text(details, "stars");
-    if (stars && stars !== "any") push(facts, "Stars", `${stars}+`);
+    if (stars && stars !== "any") push(facts, "Preferences", "Stars", `${stars}+`);
+    const stay = text(details, "stayPreference");
+    if (stay && stay !== "any") push(facts, "Preferences", "Stay style", optionLabel(hotelStayPreferences, stay));
     const room = text(details, "roomType");
-    if (room && room !== "any") push(facts, "Room", optionLabel([...hotelRoomTypes, ...legacyHotelRoomTypes], room));
+    if (room && room !== "any") push(facts, "Preferences", "Room", optionLabel([...hotelRoomTypes, ...legacyHotelRoomTypes], room));
     const meals = text(details, "meals");
-    if (meals && meals !== "any") push(facts, "Meals", optionLabel(hotelMeals, meals));
+    if (meals && meals !== "any") push(facts, "Preferences", "Meals", optionLabel(hotelMeals, meals));
+    push(facts, "Preferences", "Extras", labels(details.preferences, hotelAdditionalPreferences), true);
   } else if (module === "car") {
-    push(facts, "Pickup", text(details, "destination"));
-    push(facts, "Point", text(details, "pickupPoint"));
-    push(facts, "Drop-off", text(details, "dropoffCity") || "Same city");
-    push(facts, "Model", text(details, "itemName"));
-    const when = [showDate(text(details, "start")), text(details, "pickupTime")].filter(Boolean).join(", ");
-    push(facts, "When", when);
-    push(facts, "Return", showDate(text(details, "end")));
-    const type = text(details, "vehicleType");
-    if (type && type !== "any") push(facts, "Type", optionLabel(carTypes, type));
-    push(facts, "Passengers", text(details, "passengers"));
-    const drive = text(details, "drive");
-    if (drive) push(facts, "Driver", optionLabel(driveOptions, drive));
-    const transmission = text(details, "transmission");
-    if (transmission && transmission !== "either") push(facts, "Transmission", optionLabel(transmissionOptions, transmission));
+    push(facts, "Trip", "Pickup city", text(details, "destination"));
+    push(facts, "Trip", "Pickup point", text(details, "pickupPoint"), true);
+    push(facts, "Trip", "Drop-off", text(details, "dropoffCity") || "Same city");
+    push(facts, "Trip", "Model", text(details, "itemName"));
+    push(facts, "Trip", "Pickup date", showDate(text(details, "start")));
+    push(facts, "Trip", "Pickup time", text(details, "pickupTime"));
+    push(facts, "Trip", "Return date", showDate(text(details, "end")));
+    push(facts, "Travellers", "Passengers", text(details, "passengers"));
     const seats = text(details, "childSeats");
-    if (seats && seats !== "0") push(facts, "Child seats", seats);
+    if (seats && seats !== "0") push(facts, "Travellers", "Child seats", seats);
+    const type = text(details, "vehicleType");
+    if (type && type !== "any") push(facts, "Preferences", "Type", optionLabel(carTypes, type));
+    const drive = text(details, "drive");
+    if (drive) push(facts, "Preferences", "Driver", optionLabel(driveOptions, drive));
+    const transmission = text(details, "transmission");
+    if (transmission && transmission !== "either") push(facts, "Preferences", "Transmission", optionLabel(transmissionOptions, transmission));
   } else if (module === "bus") {
-    push(facts, "From", text(details, "fromCity"));
-    push(facts, "To", text(details, "toCity"));
-    push(facts, "Bus", text(details, "itemName"));
-    push(facts, "Date", showDate(text(details, "start")));
-    const coach = text(details, "coach");
-    if (coach && coach !== "any") push(facts, "Coach", coachLabel(coach) || optionLabel(busCoachTypes, coach));
+    push(facts, "Trip", "From", text(details, "fromCity"));
+    push(facts, "Trip", "To", text(details, "toCity"));
+    push(facts, "Trip", "Bus", text(details, "itemName"), true);
+    push(facts, "Trip", "Travel date", showDate(text(details, "start")));
     const window = text(details, "timeWindow");
-    if (window && window !== "any") push(facts, "Time", timeWindowLabel(window) || optionLabel(busTimeWindows, window));
-    push(facts, "Adults", text(details, "adults"));
-    push(facts, "Children", text(details, "children"));
-    push(facts, "Passengers", text(details, "passengers"));
+    if (window && window !== "any") push(facts, "Trip", "Time", timeWindowLabel(window) || optionLabel(busTimeWindows, window));
+    push(facts, "Travellers", "Adults", text(details, "adults"));
+    push(facts, "Travellers", "Children", text(details, "children"));
+    push(facts, "Travellers", "Passengers", text(details, "passengers"));
     const luggageQuantity = text(details, "luggageQuantity");
     const luggageWeight = text(details, "luggageWeight");
     if (luggageQuantity || luggageWeight) {
-      const pieces = Number(luggageQuantity);
-      push(
-        facts,
-        "Luggage",
-        `${luggageQuantity || "0"} piece${pieces === 1 ? "" : "s"}, ${luggageWeight || "0"} kg total`,
-      );
+      push(facts, "Travellers", "Luggage", `${plural(luggageQuantity || "0", "piece", "pieces")}, ${luggageWeight || "0"} kg total`);
     }
+    const coach = text(details, "coach");
+    if (coach && coach !== "any") push(facts, "Preferences", "Coach", coachLabel(coach) || optionLabel(busCoachTypes, coach));
   } else {
-    push(facts, "Pickup", text(details, "destination"));
-    push(facts, "Point", text(details, "pickupPoint"));
-    push(facts, "Drop-off", text(details, "dropoffCity") || "Same city");
-    push(facts, "Model", text(details, "itemName"));
-    const start = text(details, "start");
-    const end = text(details, "end");
-    if (start && end) push(facts, "Dates", `${showDate(start)} – ${showDate(end)}`);
+    push(facts, "Trip", "Pickup city", text(details, "destination"));
+    push(facts, "Trip", "Pickup point", text(details, "pickupPoint"), true);
+    push(facts, "Trip", "Drop-off", text(details, "dropoffCity") || "Same city");
+    push(facts, "Trip", "Model", text(details, "itemName"));
+    push(facts, "Trip", "Pickup date", showDate(text(details, "start")));
+    push(facts, "Trip", "Return date", showDate(text(details, "end")));
     const type = text(details, "bikeType");
-    if (type && type !== "any") push(facts, "Type", optionLabel(bikeTypes, type));
-    if (typeof details.needDriver === "boolean") push(facts, "Driver", details.needDriver ? "Needed" : "Not needed");
+    if (type && type !== "any") push(facts, "Preferences", "Type", optionLabel(bikeTypes, type));
+    if (typeof details.needDriver === "boolean") push(facts, "Travellers", "Driver", details.needDriver ? "Needed" : "Not needed");
     const riders = text(details, "riders");
-    if (details.needDriver !== true && riders) push(facts, "Riders", riders === "2" ? "With a pillion" : "Solo");
-    if (details.needDriver !== true && text(details, "licence")) push(facts, "Licence", text(details, "licence") === "yes" ? "Yes" : "No");
-    push(facts, "Helmets", text(details, "helmets"));
+    if (details.needDriver !== true && riders) push(facts, "Travellers", "Riders", riders === "2" ? "With a pillion" : "Solo");
+    if (details.needDriver !== true && text(details, "licence")) push(facts, "Travellers", "Valid licence", text(details, "licence") === "yes" ? "Yes" : "No");
+    push(facts, "Travellers", "Helmets", text(details, "helmets"));
   }
-  push(facts, "Budget", budgetLabel(module, details).replace(/^not set$/, ""));
+  push(facts, "Budget", "Budget", budgetLabel(module, details).replace(/^not set$/, ""));
   return facts;
 }
 
@@ -284,7 +333,8 @@ export function toEnquiryView(booking: {
     contactEmail: booking.contactEmail,
     createdAt: booking.createdAt,
     facts,
-    note: text(parsed, "message"),
+    note: text(parsed, "message") || text(parsed, "note"),
     image: "",
+    channel: text(parsed, "channel"),
   };
 }
