@@ -859,9 +859,12 @@ export function TourStay({
               {state.values?.name || customer?.name || "Your request"} for {sentence} is {money(quote.total, currency)}. Reference {state.reference}. Nothing is charged and no seat is held.
             </p>
             <div className="road-form-actions">
-              <button className="road-btn" type="button" onClick={() => document.querySelector<HTMLDialogElement>("#road-reserve")?.close()}>
-                Close
-              </button>
+              <a className="road-btn" href="/tours">
+                Explore more
+              </a>
+              <a className="road-btn" href={`/account/enquiries/${state.reference}`}>
+                View request
+              </a>
             </div>
           </div>
         ) : (

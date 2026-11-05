@@ -47,6 +47,18 @@ const requestSchema = z
     fromCity: z.string().trim().min(2, "Enter the boarding city").max(80, "That city name is too long"),
     toCity: z.string().trim().min(2, "Enter the arrival city").max(80, "That city name is too long"),
     travelDate: z.string().regex(datePattern, "Choose a travel date"),
+    adults: z
+      .string()
+      .trim()
+      .regex(/^\d+$/, "Enter the number of adults")
+      .transform(Number)
+      .pipe(z.number().min(1, "At least one adult is required").max(20, "Enter up to 20 adults")),
+    children: z
+      .string()
+      .trim()
+      .regex(/^\d+$/, "Enter the number of children")
+      .transform(Number)
+      .pipe(z.number().min(0, "Children cannot be negative").max(20, "Enter up to 20 children")),
     passengers: z
       .string()
       .trim()
@@ -84,6 +96,12 @@ const requestSchema = z
     if (!timeValues.includes(data.timeWindow as (typeof timeValues)[number])) {
       ctx.addIssue({ code: "custom", path: ["timeWindow"], message: "Choose a time window" });
     }
+    if (data.adults + data.children > 20) {
+      ctx.addIssue({ code: "custom", path: ["children"], message: "Enter up to 20 passengers total" });
+    }
+    if (data.adults + data.children !== data.passengers) {
+      ctx.addIssue({ code: "custom", path: ["passengers"], message: "Passenger total does not match adults and children" });
+    }
   });
 
 function fieldErrors(error: z.ZodError) {
@@ -101,7 +119,9 @@ function requestNotes(input: z.infer<typeof requestSchema>) {
     `Route: ${input.fromCity} to ${input.toCity}`,
     input.busName ? `Bus they asked for: ${input.busName}` : "",
     `Travel: ${prettyDate(input.travelDate)}`,
-    `Passengers: ${input.passengers}`,
+    `Adults: ${input.adults}`,
+    `Children: ${input.children}`,
+    `Passengers total: ${input.passengers}`,
     `Luggage: ${input.luggageQuantity} piece${input.luggageQuantity === 1 ? "" : "s"}, ${input.luggageWeight} kg total`,
     input.coach !== "any" ? `Coach: ${coachLabel(input.coach)}` : "",
     input.timeWindow !== "any" ? `Time: ${timeWindowLabel(input.timeWindow)}` : "",
@@ -122,6 +142,9 @@ export async function submitBusRequest(_previous: FormState, formData: FormData)
   const customer = user?.scope === "customer" ? user : null;
   const typedPhone = text(formData.get("phone")).trim();
   const phone = typedPhone || customer?.phone || "";
+  const submittedPassengers = text(formData.get("passengers"));
+  const adults = text(formData.get("adults")) || submittedPassengers || "1";
+  const children = text(formData.get("children")) || "0";
   const values = {
     name: customer?.name ?? text(formData.get("name")),
     email: customer?.email ?? text(formData.get("email")),
@@ -129,7 +152,9 @@ export async function submitBusRequest(_previous: FormState, formData: FormData)
     fromCity: text(formData.get("fromCity")),
     toCity: text(formData.get("toCity")),
     travelDate: text(formData.get("travelDate")),
-    passengers: text(formData.get("passengers")),
+    adults,
+    children,
+    passengers: submittedPassengers || String(Number(adults) + Number(children)),
     coach: text(formData.get("coach")) || "any",
     timeWindow: text(formData.get("timeWindow")) || "any",
     luggageQuantity: text(formData.get("luggageQuantity")) || "0",
@@ -180,6 +205,8 @@ export async function submitBusRequest(_previous: FormState, formData: FormData)
         itemName: data.busName,
         slug: data.slug,
         start: data.travelDate,
+        adults: data.adults,
+        children: data.children,
         passengers: data.passengers,
         coach: data.coach,
         timeWindow: data.timeWindow,

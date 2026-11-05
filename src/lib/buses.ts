@@ -166,6 +166,8 @@ export function requestBusHref(input: {
   to?: string;
   date?: string;
   passengers?: string | number;
+  adults?: string | number;
+  children?: string | number;
   coach?: string;
   time?: string;
   luggageQuantity?: string | number;
@@ -178,6 +180,8 @@ export function requestBusHref(input: {
   if (input.to) params.set("to", input.to);
   if (input.date) params.set("date", input.date);
   if (input.passengers) params.set("passengers", String(input.passengers));
+  if (input.adults !== undefined) params.set("adults", String(input.adults));
+  if (input.children !== undefined) params.set("children", String(input.children));
   if (input.coach && input.coach !== "any") params.set("coach", input.coach);
   if (input.time && input.time !== "any") params.set("time", input.time);
   if (input.luggageQuantity !== undefined) params.set("luggageQuantity", String(input.luggageQuantity));

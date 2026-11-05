@@ -700,9 +700,12 @@ export function HotelStay({
               {state.values?.name || customer?.name || "Your request"} for {sentence} is {money(stayTotal, currency)}. Reference {state.reference}. Nothing is charged until you accept a stay.
             </p>
             <div className="stay-form-actions">
-              <button className="stay-btn" type="button" onClick={() => document.querySelector<HTMLDialogElement>("#stay-reserve")?.close()}>
-                Close
-              </button>
+              <a className="stay-btn" href="/hotels">
+                Explore more
+              </a>
+              <a className="stay-btn" href={`/account/enquiries/${state.reference}`}>
+                View request
+              </a>
             </div>
           </div>
         ) : (

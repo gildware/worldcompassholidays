@@ -1145,17 +1145,14 @@ export function SuccessModal({
   reference,
   exploreHref,
   detail,
-  onClose,
 }: {
   reference: string;
   exploreHref: string;
   detail: string;
-  onClose?: () => void;
 }) {
   return (
     <div className="hotel-request-modal" role="dialog" aria-modal="true" aria-labelledby="hotel-request-success-title">
       <div className="hotel-request-modal-card">
-        {onClose ? <button type="button" className="hotel-request-modal-close" aria-label="Close confirmation and continue editing" onClick={onClose}>×</button> : null}
         <div className="hotel-request-modal-mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none">
             <path d="M6.5 12.5 10.2 16.2 17.5 8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />

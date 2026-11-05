@@ -2,10 +2,9 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { useFormStatus } from "react-dom";
+import { createPortal, useFormStatus } from "react-dom";
 import { submitBusRequest } from "@/actions/bus-request";
 import { SuccessModal } from "@/components/hotel-request/HotelRequestForm";
-import { createPortal } from "react-dom";
 import { initialFormState } from "@/lib/forms";
 
 function todayIso() {
@@ -37,15 +36,14 @@ export function BusBookPanel({
   const [passengers, setPassengers] = useState(1);
   const [date, setDate] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [submittedInThisVisit, setSubmittedInThisVisit] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const frame = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
-  const success =
-    !pending && state.reference && !state.error
-      ? state.reference
-      : "";
+  const success = submittedInThisVisit && !pending && state.reference && !state.error ? state.reference : "";
 
   return (
     <aside className="bus-quote" id="bus-book" aria-label="Book this bus">
@@ -54,7 +52,7 @@ export function BusBookPanel({
       <p className="bus-quote__route">
         {fromCity} → {toCity}
       </p>
-      <form action={action} className="bus-quote__form" noValidate>
+      <form action={action} className="bus-quote__form" noValidate onSubmit={() => setSubmittedInThisVisit(true)}>
         <input type="hidden" name="fromCity" value={fromCity} />
         <input type="hidden" name="toCity" value={toCity} />
         <input type="hidden" name="coach" value={coach} />

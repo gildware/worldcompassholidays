@@ -216,6 +216,7 @@ export function ServiceRequestForm({
   const [state, action, pending] = useActionState(submitServiceRequest, initialFormState);
   const saved = state.values ?? {};
   const [mounted, setMounted] = useState(false);
+  const [submittedInThisVisit, setSubmittedInThisVisit] = useState(false);
   const [step, setStep] = useState<StepIndex>(0);
   const [touched, setTouched] = useState<[boolean, boolean, boolean]>([false, false, false]);
   const [phoneTouched, setPhoneTouched] = useState(false);
@@ -358,10 +359,12 @@ export function ServiceRequestForm({
     if (!customer.phone && phone.replace(/\D/g, "").length < 8) {
       event.preventDefault();
       setPhoneTouched(true);
+      return;
     }
+    setSubmittedInThisVisit(true);
   }
 
-  const successModal = !pending && state.reference && !state.error ? (
+  const successModal = submittedInThisVisit && !pending && state.reference && !state.error ? (
     <SuccessModal reference={state.reference} exploreHref={text.backHref} detail={text.detail} />
   ) : null;
 

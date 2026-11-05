@@ -42,12 +42,12 @@ export default async function BusRequestPage({
   searchParams,
 }: {
   searchParams: Promise<{
-    sent?: string;
-    ref?: string;
     from?: string;
     to?: string;
     date?: string;
     passengers?: string;
+    adults?: string;
+    children?: string;
     coach?: string;
     time?: string;
     luggageQuantity?: string;
@@ -66,7 +66,6 @@ export default async function BusRequestPage({
   ]);
   const cities = locations.map((location) => location.title);
   const customer = user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null;
-  const reference = params.ref && /^BK-[A-Z0-9]+$/.test(params.ref) ? params.ref : "";
   const slug = (params.slug ?? "").slice(0, 80);
   const namedBus = await (slug
     ? prisma.busRoute.findFirst({
@@ -79,7 +78,8 @@ export default async function BusRequestPage({
     fromCity: (params.from ?? namedBus?.fromCity ?? "").slice(0, 80),
     toCity: (params.to ?? namedBus?.toCity ?? "").slice(0, 80),
     travelDate: dateParam(params.date),
-    passengers: countParam(params.passengers, "1"),
+    adults: countParam(params.adults ?? params.passengers, "1"),
+    children: countParam(params.children, "0"),
     coach: busCoachTypes.some((option) => option.value === params.coach)
       ? params.coach || "any"
       : namedBus?.coachType || "any",
@@ -96,7 +96,9 @@ export default async function BusRequestPage({
     from: defaults.fromCity,
     to: defaults.toCity,
     date: defaults.travelDate,
-    passengers: defaults.passengers,
+    passengers: Number(defaults.adults) + Number(defaults.children),
+    adults: defaults.adults,
+    children: defaults.children,
     coach: defaults.coach,
     time: defaults.timeWindow,
     luggageQuantity: defaults.luggageQuantity,
@@ -112,8 +114,6 @@ export default async function BusRequestPage({
       <div className="hotel-brief">
         <div className="container hotel-brief-layout is-solo">
           <BusRequestForm
-            sent={params.sent === "1"}
-            reference={reference}
             customer={customer}
             defaults={defaults}
             cities={cities}

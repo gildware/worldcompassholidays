@@ -203,6 +203,8 @@ function factsFor(module: EnquiryModule, details: Record<string, unknown>) {
     if (coach && coach !== "any") push(facts, "Coach", coachLabel(coach) || optionLabel(busCoachTypes, coach));
     const window = text(details, "timeWindow");
     if (window && window !== "any") push(facts, "Time", timeWindowLabel(window) || optionLabel(busTimeWindows, window));
+    push(facts, "Adults", text(details, "adults"));
+    push(facts, "Children", text(details, "children"));
     push(facts, "Passengers", text(details, "passengers"));
     const luggageQuantity = text(details, "luggageQuantity");
     const luggageWeight = text(details, "luggageWeight");
