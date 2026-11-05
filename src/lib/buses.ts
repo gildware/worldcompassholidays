@@ -168,7 +168,10 @@ export function requestBusHref(input: {
   passengers?: string | number;
   coach?: string;
   time?: string;
+  luggageQuantity?: string | number;
+  luggageWeight?: string | number;
   busName?: string;
+  message?: string;
 }) {
   const params = new URLSearchParams();
   if (input.from) params.set("from", input.from);
@@ -177,8 +180,11 @@ export function requestBusHref(input: {
   if (input.passengers) params.set("passengers", String(input.passengers));
   if (input.coach && input.coach !== "any") params.set("coach", input.coach);
   if (input.time && input.time !== "any") params.set("time", input.time);
+  if (input.luggageQuantity !== undefined) params.set("luggageQuantity", String(input.luggageQuantity));
+  if (input.luggageWeight !== undefined) params.set("luggageWeight", String(input.luggageWeight));
   if (input.busName) params.set("busName", input.busName);
   if (input.slug) params.set("slug", input.slug);
+  if (input.message) params.set("message", input.message);
   const query = params.toString();
   return query ? `/buses/request?${query}` : "/buses/request";
 }

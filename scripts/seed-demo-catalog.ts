@@ -12,10 +12,7 @@ import {
   demoHotels,
   demoTours,
 } from "../src/lib/demo/north-india-catalog";
-import { kashmirTours } from "../src/lib/demo/kashmir-tours";
 import { readCloudinaryManifest, type CloudAsset } from "../src/lib/storage/manifest";
-
-const tourDetailsBySlug = new Map(kashmirTours.map((tour) => [tour.slug, tour]));
 
 const prisma = new PrismaClient();
 const uploads = path.join(process.cwd(), "public", "uploads");
@@ -34,6 +31,11 @@ function asset(rel: string, optional = false) {
   return null;
 }
 
+const parentOf: Record<string, string | undefined> = {
+  gulmarg: "kashmir",
+  pahalgam: "kashmir",
+  sonamarg: "kashmir",
+};
 const destinationSlugs = new Set(demoDestinations.map((destination) => destination.slug));
 const activeTours = demoTours.filter((tour) => destinationSlugs.has(tour.destinationSlug));
 const activeHotels = demoHotels.filter((hotel) => destinationSlugs.has(hotel.destinationSlug));
@@ -57,11 +59,10 @@ async function seedDestinations() {
       mapLng: dest.mapLng,
       mapZoom: dest.mapZoom,
       published: true,
-      popular: Boolean(dest.popular),
+      popular: ["kashmir", "gulmarg", "pahalgam", "sonamarg", "gurez", "doodhpathri"].includes(dest.slug),
       imageUrl: img?.url ?? existing?.imageUrl ?? fallbackImage,
       imageKey: img?.key ?? existing?.imageKey ?? "destinations/seed-kashmir.svg",
       imageDriver: img?.driver ?? existing?.imageDriver ?? "local",
-      parentId: null as string | null,
     };
     await prisma.destination.upsert({
       where: { slug: dest.slug },
@@ -70,12 +71,12 @@ async function seedDestinations() {
     });
   }
 
-  for (const dest of demoDestinations) {
-    if (!dest.parentSlug) continue;
-    const parent = await prisma.destination.findUnique({ where: { slug: dest.parentSlug } });
+  for (const [child, parentSlug] of Object.entries(parentOf)) {
+    if (!parentSlug) continue;
+    const parent = await prisma.destination.findUnique({ where: { slug: parentSlug } });
     if (!parent) continue;
     await prisma.destination.update({
-      where: { slug: dest.slug },
+      where: { slug: child },
       data: { parentId: parent.id },
     });
   }
@@ -90,15 +91,11 @@ async function seedDestinations() {
 }
 
 async function seedTours() {
-  const destinationRows = await prisma.destination.findMany({
-    select: { id: true, slug: true },
-  });
-  const destinationBySlug = new Map(destinationRows.map((row) => [row.slug, row.id]));
-
   for (const tour of activeTours) {
-    const details = tourDetailsBySlug.get(tour.slug);
-    const destinationId = destinationBySlug.get(tour.destinationSlug);
-    if (!destinationId) {
+    const destination = await prisma.destination.findUnique({
+      where: { slug: tour.destinationSlug },
+    });
+    if (!destination) {
       console.warn(`Skip tour ${tour.slug}: missing destination ${tour.destinationSlug}`);
       continue;
     }
@@ -109,14 +106,6 @@ async function seedTours() {
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
       .map((item) => ({ url: item.url, key: item.key, driver: item.driver }));
 
-    const linkIds = [
-      ...new Set(
-        (details?.destinationSlugs ?? [tour.destinationSlug])
-          .map((slug) => destinationBySlug.get(slug))
-          .filter((id): id is string => Boolean(id)),
-      ),
-    ];
-
     const data = {
       title: tour.title,
       summary: tour.summary,
@@ -124,19 +113,15 @@ async function seedTours() {
       category: tour.category,
       durationDays: tour.durationDays,
       durationUnit: "days",
-      durationLabel: details?.durationLabel ?? `${tour.durationDays} days`,
+      durationLabel: `${tour.durationDays} days`,
       difficulty: tour.difficulty,
       maxGroupSize: tour.maxGroupSize,
-      minPeople: tour.category === "Honeymoon" ? 2 : 1,
+      minPeople: 1,
       priceFrom: tour.priceFrom,
       currency: "INR",
       published: true,
       isFeatured: Boolean(tour.isFeatured),
-      destinationId,
-      destinationIdsJson: JSON.stringify(linkIds),
-      mapLat: details?.mapLat ?? "",
-      mapLng: details?.mapLng ?? "",
-      mapZoom: 9,
+      destinationId: destination.id,
       imageUrl: cover?.url ?? "",
       imageKey: cover?.key ?? "",
       imageDriver: cover?.driver ?? "local",
@@ -144,53 +129,25 @@ async function seedTours() {
       featuredImageKey: cover?.key ?? "",
       featuredImageDriver: cover?.driver ?? "local",
       galleryJson: JSON.stringify(galleryItems),
-      includesJson: JSON.stringify(
-        details?.includes ?? [
-          "Accommodation as per itinerary",
-          "Local guide support",
-          "Airport / station transfers where listed",
-        ],
-      ),
-      excludesJson: JSON.stringify(
-        details?.excludes ?? ["Flights", "Personal expenses", "Travel insurance"],
-      ),
-      faqsJson: JSON.stringify(
-        (details?.faqs ?? []).map((item) => ({
-          local: true,
-          title: item.title,
-          content: item.content,
-        })),
-      ),
-      seoTitle: `${tour.title} | Kashmir tour packages`,
+      includesJson: JSON.stringify([
+        "Accommodation as per itinerary",
+        "Local guide support",
+        "Airport / station transfers where listed",
+      ]),
+      excludesJson: JSON.stringify([
+        "Flights",
+        "Personal expenses",
+        "Travel insurance",
+      ]),
+      seoTitle: tour.title,
       seoDescription: tour.summary,
     };
 
-    const saved = await prisma.tour.upsert({
+    await prisma.tour.upsert({
       where: { slug: tour.slug },
       update: data,
       create: { slug: tour.slug, ...data },
-      select: { id: true },
     });
-
-    await prisma.itineraryDay.deleteMany({ where: { tourId: saved.id } });
-    if (details?.days.length) {
-      await prisma.itineraryDay.createMany({
-        data: details.days.map((day) => ({
-          tourId: saved.id,
-          dayNumber: day.dayNumber,
-          title: day.title,
-          description: day.description,
-        })),
-      });
-    }
-
-    await prisma.tourDestination.deleteMany({ where: { tourId: saved.id } });
-    if (linkIds.length) {
-      await prisma.tourDestination.createMany({
-        data: linkIds.map((id) => ({ tourId: saved.id, destinationId: id })),
-        skipDuplicates: true,
-      });
-    }
   }
 
   await prisma.tour.updateMany({

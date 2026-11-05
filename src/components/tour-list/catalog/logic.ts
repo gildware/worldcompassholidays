@@ -114,9 +114,12 @@ export function weekday(iso: string) {
 }
 
 export function runsOn(tour: CatalogTour, iso: string) {
+  if (tour.defaultState === "always") return true;
+  if (tour.availabilityFrom && tour.availabilityTo) {
+    return iso >= tour.availabilityFrom && iso <= tour.availabilityTo;
+  }
   if (tour.weekdays && !tour.weekdays.includes(weekday(iso))) return false;
-  if (tour.departures.length > 0 && !departureOn(tour, iso)) return false;
-  return true;
+  return tour.departures.length > 0 && Boolean(departureOn(tour, iso));
 }
 
 export function seatsLeft(tour: CatalogTour, iso: string) {

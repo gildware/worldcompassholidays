@@ -44,6 +44,8 @@ type TourRecord = {
   mapZoom: number;
   isFeatured: boolean;
   defaultState: string;
+  availabilityFrom: Date | null;
+  availabilityTo: Date | null;
   travelStylesJson: string;
   facilitiesJson: string;
   icalImportUrl: string;
@@ -133,6 +135,8 @@ export function mapTourToFormValues(tour: TourRecord): TourFormValues {
     mapZoom: tour.mapZoom,
     isFeatured: tour.isFeatured,
     defaultState: tour.defaultState,
+    availabilityFrom: tour.availabilityFrom?.toISOString().slice(0, 10) ?? "",
+    availabilityTo: tour.availabilityTo?.toISOString().slice(0, 10) ?? "",
     travelStyles: parseJsonArray<string>(tour.travelStylesJson),
     facilities: parseJsonArray<string>(tour.facilitiesJson),
     icalImportUrl: tour.icalImportUrl,

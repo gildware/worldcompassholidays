@@ -6,9 +6,10 @@ import {
   carBudgetBands,
   carTypes,
   driveOptions,
-  hotelBudgetBands,
+  allHotelBudgetBands,
   hotelMeals,
   hotelRoomTypes,
+  legacyHotelRoomTypes,
   optionLabel,
   tourBudgetBands,
   tourLengths,
@@ -129,7 +130,7 @@ function budgetLabel(module: EnquiryModule, details: Record<string, unknown>) {
   const value = band || amount;
   if (!value) return "";
   if (module === "tour") return budgetNote(tourBudgetBands, value, "per person");
-  if (module === "hotel") return budgetNote(hotelBudgetBands, value, "per night");
+  if (module === "hotel") return budgetNote(allHotelBudgetBands, value, "per night");
   if (module === "car") return budgetNote(carBudgetBands, value, "per day");
   if (module === "bus") return "";
   return budgetNote(bikeBudgetBands, value, "per day");
@@ -173,7 +174,7 @@ function factsFor(module: EnquiryModule, details: Record<string, unknown>) {
     const stars = text(details, "stars");
     if (stars && stars !== "any") push(facts, "Stars", `${stars}+`);
     const room = text(details, "roomType");
-    if (room && room !== "any") push(facts, "Room", optionLabel(hotelRoomTypes, room));
+    if (room && room !== "any") push(facts, "Room", optionLabel([...hotelRoomTypes, ...legacyHotelRoomTypes], room));
     const meals = text(details, "meals");
     if (meals && meals !== "any") push(facts, "Meals", optionLabel(hotelMeals, meals));
   } else if (module === "car") {
@@ -203,6 +204,16 @@ function factsFor(module: EnquiryModule, details: Record<string, unknown>) {
     const window = text(details, "timeWindow");
     if (window && window !== "any") push(facts, "Time", timeWindowLabel(window) || optionLabel(busTimeWindows, window));
     push(facts, "Passengers", text(details, "passengers"));
+    const luggageQuantity = text(details, "luggageQuantity");
+    const luggageWeight = text(details, "luggageWeight");
+    if (luggageQuantity || luggageWeight) {
+      const pieces = Number(luggageQuantity);
+      push(
+        facts,
+        "Luggage",
+        `${luggageQuantity || "0"} piece${pieces === 1 ? "" : "s"}, ${luggageWeight || "0"} kg total`,
+      );
+    }
   } else {
     push(facts, "Pickup", text(details, "destination"));
     push(facts, "Point", text(details, "pickupPoint"));
@@ -213,9 +224,10 @@ function factsFor(module: EnquiryModule, details: Record<string, unknown>) {
     if (start && end) push(facts, "Dates", `${showDate(start)} – ${showDate(end)}`);
     const type = text(details, "bikeType");
     if (type && type !== "any") push(facts, "Type", optionLabel(bikeTypes, type));
+    if (typeof details.needDriver === "boolean") push(facts, "Driver", details.needDriver ? "Needed" : "Not needed");
     const riders = text(details, "riders");
-    if (riders) push(facts, "Riders", riders === "2" ? "With a pillion" : "Solo");
-    if (text(details, "licence")) push(facts, "Licence", text(details, "licence") === "yes" ? "Yes" : "No");
+    if (details.needDriver !== true && riders) push(facts, "Riders", riders === "2" ? "With a pillion" : "Solo");
+    if (details.needDriver !== true && text(details, "licence")) push(facts, "Licence", text(details, "licence") === "yes" ? "Yes" : "No");
     push(facts, "Helmets", text(details, "helmets"));
   }
   push(facts, "Budget", budgetLabel(module, details).replace(/^not set$/, ""));

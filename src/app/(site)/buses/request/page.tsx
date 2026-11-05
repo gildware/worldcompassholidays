@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BusRequestForm, type BusRequestDefaults } from "@/components/bus/BusRequestForm";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { modules } from "@/config/modules";
@@ -28,6 +28,16 @@ function countParam(value: string | undefined, fallback: string) {
   return value && /^\d{1,2}$/.test(value) ? value : fallback;
 }
 
+function luggageQuantityParam(value: string | undefined) {
+  if (!value || !/^\d{1,2}$/.test(value) || Number(value) > 50) return "0";
+  return value;
+}
+
+function weightParam(value: string | undefined) {
+  if (!value || !/^\d{1,3}(?:\.\d{1,2})?$/.test(value) || Number(value) > 500) return "0";
+  return value;
+}
+
 export default async function BusRequestPage({
   searchParams,
 }: {
@@ -40,6 +50,8 @@ export default async function BusRequestPage({
     passengers?: string;
     coach?: string;
     time?: string;
+    luggageQuantity?: string;
+    luggageWeight?: string;
     busName?: string;
     slug?: string;
     message?: string;
@@ -62,10 +74,6 @@ export default async function BusRequestPage({
         select: { name: true, fromCity: true, toCity: true, coachType: true },
       })
     : Promise.resolve(null));
-  const artSrc = "/img/buses/bus-request-illustration.jpg";
-  const artAlt = namedBus
-    ? `${namedBus.name} from ${namedBus.fromCity} to ${namedBus.toCity}`
-    : "A coach on a mountain road";
 
   const defaults: BusRequestDefaults = {
     fromCity: (params.from ?? namedBus?.fromCity ?? "").slice(0, 80),
@@ -76,6 +84,8 @@ export default async function BusRequestPage({
       ? params.coach || "any"
       : namedBus?.coachType || "any",
     timeWindow: busTimeWindows.some((option) => option.value === params.time) ? params.time || "any" : "any",
+    luggageQuantity: luggageQuantityParam(params.luggageQuantity),
+    luggageWeight: weightParam(params.luggageWeight),
     busName: (params.busName ?? namedBus?.name ?? "").slice(0, 120),
     slug,
     message: (params.message ?? "").slice(0, 500),
@@ -89,44 +99,26 @@ export default async function BusRequestPage({
     passengers: defaults.passengers,
     coach: defaults.coach,
     time: defaults.timeWindow,
+    luggageQuantity: defaults.luggageQuantity,
+    luggageWeight: defaults.luggageWeight,
     busName: defaults.busName,
+    message: defaults.message,
   });
   const loginHref = `/login?next=${encodeURIComponent(returnPath)}`;
+  if (!customer) redirect(loginHref);
 
   return (
-    <WorldCompassHolidayFrame>
-      <div className="hotel-brief is-bus-request">
-        <header className="hotel-brief-top">
-          <div className="container">
-            <p className="hotel-brief-crumb">
-              <a href="/buses">Buses</a>
-              <span aria-hidden="true">/</span>
-              Request
-            </p>
-          </div>
-        </header>
-        <div className="container hotel-brief-layout is-art">
-          <figure className="hotel-brief-art">
-            <img src={artSrc} alt={artAlt} />
-            <figcaption>
-              <strong>{namedBus ? namedBus.name : "Request a listed coach"}</strong>
-              <span>
-                {namedBus
-                  ? `${namedBus.fromCity} to ${namedBus.toCity}. Send the date and passenger count.`
-                  : "Send the cities and date. We quote before anything is booked."}
-              </span>
-            </figcaption>
-          </figure>
-          <aside className="hotel-brief-side">
-            <BusRequestForm
-              sent={params.sent === "1"}
-              reference={reference}
-              customer={customer}
-              defaults={defaults}
-              cities={cities}
-              loginHref={loginHref}
-            />
-          </aside>
+    <WorldCompassHolidayFrame className="is-hotel-request">
+      <div className="hotel-brief">
+        <div className="container hotel-brief-layout is-solo">
+          <BusRequestForm
+            sent={params.sent === "1"}
+            reference={reference}
+            customer={customer}
+            defaults={defaults}
+            cities={cities}
+            loginHref={loginHref}
+          />
         </div>
       </div>
     </WorldCompassHolidayFrame>

@@ -48,6 +48,9 @@ type TourRow = {
   excludesJson: string;
   address: string;
   isFeatured: boolean;
+  defaultState: string;
+  availabilityFrom: Date | null;
+  availabilityTo: Date | null;
   minDayBeforeBooking: number | null;
   destination: { name: string; region: string; country: string } | null;
   days: { dayNumber: number; title: string; description: string }[];
@@ -131,6 +134,9 @@ export function toCatalogTour(
         ? "Demanding. The desk confirms the pace before you go."
         : "",
     featured: tour.isFeatured,
+    defaultState: tour.defaultState === "dates" ? "dates" : "always",
+    availabilityFrom: tour.availabilityFrom ? catalogIso(tour.availabilityFrom) : null,
+    availabilityTo: tour.availabilityTo ? catalogIso(tour.availabilityTo) : null,
     departures: tour.departures.map((item) => ({
       id: item.id,
       iso: catalogIso(item.startDate),

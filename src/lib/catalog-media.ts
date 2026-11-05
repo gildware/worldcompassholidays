@@ -85,7 +85,7 @@ const CAR_FALLBACKS = [
 
 const BIKE_FALLBACKS = ["/img/bikes/bike-rental-banner.jpg"];
 
-/* Limit size only — no trim/fill crop. Card CSS uses object-fit: contain. */
+/* Limit size only — CSS crops the image to fill fleet card and detail frames. */
 const FLEET_PHOTO_TRANSFORM = "c_limit,w_1600";
 
 /** Serve fleet photos without cropping wheels or handlebars. */

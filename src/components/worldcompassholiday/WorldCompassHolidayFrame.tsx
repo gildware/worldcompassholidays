@@ -6,7 +6,13 @@ import { Provider } from "react-redux";
 import ScrollTop from "@/components/common/ScrollTop";
 import { store } from "@/store/store";
 
-export function WorldCompassHolidayFrame({ children }: { children: React.ReactNode }) {
+export function WorldCompassHolidayFrame({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   useEffect(() => {
     Aos.init({ duration: 1200, once: true });
     void import("bootstrap/dist/js/bootstrap.bundle.min.js");
@@ -16,7 +22,7 @@ export function WorldCompassHolidayFrame({ children }: { children: React.ReactNo
 
   return (
     <Provider store={store}>
-      <div className="worldcompassholiday-page">
+      <div className={["worldcompassholiday-page", className].filter(Boolean).join(" ")}>
         <main>
           {children}
           <ScrollTop />

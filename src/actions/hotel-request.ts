@@ -7,15 +7,39 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
-import { budgetNote, hotelBudgetBands, hotelMeals, hotelRoomTypes, isBudgetValue, optionLabel } from "@/lib/custom-request";
+import {
+  allHotelBudgetBands,
+  budgetNote,
+  hotelAdditionalPreferences,
+  hotelMeals,
+  hotelRoomTypes,
+  hotelStayPreferences,
+  isBudgetValue,
+  legacyHotelRoomTypes,
+  optionLabel,
+} from "@/lib/custom-request";
 import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
 import { emailField } from "@/lib/validation";
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const stars = ["any", "3", "4", "5"] as const;
-const roomValues = hotelRoomTypes.map((option) => option.value);
+const allHotelRoomTypes = [...hotelRoomTypes, ...legacyHotelRoomTypes];
+const roomValues = allHotelRoomTypes.map((option) => option.value);
 const mealValues = hotelMeals.map((option) => option.value);
+const stayPreferenceValues = hotelStayPreferences.map((option) => option.value);
+const additionalPreferenceValues = hotelAdditionalPreferences.map((option) => option.value);
+
+function parsePreferences(value: string) {
+  try {
+    const parsed: unknown = JSON.parse(value || "[]");
+    if (!Array.isArray(parsed)) return null;
+    if (parsed.some((item) => typeof item !== "string" || !additionalPreferenceValues.includes(item as (typeof additionalPreferenceValues)[number]))) return null;
+    return [...new Set(parsed)] as string[];
+  } catch {
+    return null;
+  }
+}
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value : "";
@@ -62,13 +86,15 @@ const requestSchema = z
     area: z.string().trim().max(120, "That area name is too long").default(""),
     roomType: z.string().trim().default(""),
     meals: z.string().trim().default(""),
+    stayPreference: z.string().trim().default("any"),
+    preferences: z.string().max(800, "Remove a few preferences").default("[]"),
     childAges: z.string().trim().max(80).default(""),
     surface: z.string().default(""),
     budget: z
       .string()
       .trim()
       .default("")
-      .refine((value) => isBudgetValue(hotelBudgetBands, value), "Choose a nightly budget, or enter an amount from 100 to 500000"),
+      .refine((value) => isBudgetValue(allHotelBudgetBands, value), "Choose a nightly budget, or enter an amount from 100 to 500000"),
     message: z.string().trim().max(2000, "Keep the note under 2000 characters").default(""),
   })
   .superRefine((data, ctx) => {
@@ -94,6 +120,12 @@ const requestSchema = z
     }
     if (!mealValues.includes(meals as (typeof mealValues)[number])) {
       ctx.addIssue({ code: "custom", path: ["meals"], message: "Choose a meal plan" });
+    }
+    if (!stayPreferenceValues.includes(data.stayPreference as (typeof stayPreferenceValues)[number])) {
+      ctx.addIssue({ code: "custom", path: ["stayPreference"], message: "Choose a stay style" });
+    }
+    if (parsePreferences(data.preferences) === null) {
+      ctx.addIssue({ code: "custom", path: ["preferences"], message: "Choose valid stay preferences" });
     }
     if (data.surface !== "stay" && data.children > 0 && !parseChildAges(data.childAges, data.children)) {
       ctx.addIssue({ code: "custom", path: ["childAges"], message: "Enter an age from 0 to 17 for each child" });
@@ -146,6 +178,8 @@ function requestNotes(input: z.infer<typeof requestSchema>) {
   const roomType = input.roomType || "any";
   const meals = input.meals || "any";
   const ages = parseChildAges(input.childAges, input.children);
+  const stayPreference = hotelStayPreferences.find((option) => option.value === input.stayPreference)?.label ?? "No preference";
+  const preferences = parsePreferences(input.preferences) ?? [];
   const lines = [
     "Custom hotel request",
     `Place: ${input.destination}`,
@@ -155,9 +189,11 @@ function requestNotes(input: z.infer<typeof requestSchema>) {
     `Party: ${guests.join(", ")}`,
     ages && ages.length ? `Child ages: ${ages.join(", ")}` : "",
     `Stars: ${starLabel(input.stars)}`,
-    roomType !== "any" ? `Room: ${optionLabel(hotelRoomTypes, roomType)}` : "",
+    `Stay style: ${stayPreference}`,
+    roomType !== "any" ? `Room: ${optionLabel(allHotelRoomTypes, roomType)}` : "",
     meals !== "any" ? `Meals: ${optionLabel(hotelMeals, meals)}` : "",
-    `Budget: ${budgetNote(hotelBudgetBands, input.budget, "per night")}`,
+    preferences.length ? `Preferences: ${preferences.map((item) => hotelAdditionalPreferences.find((option) => option.value === item)?.label ?? item).join(", ")}` : "",
+    `Budget: ${budgetNote(allHotelBudgetBands, input.budget, "per night")}`,
     input.message ? `Note: ${input.message}` : "",
   ];
   return lines.filter(Boolean).join("\n");
@@ -189,6 +225,8 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
     area: text(formData.get("area")),
     roomType: text(formData.get("roomType")),
     meals: text(formData.get("meals")),
+    stayPreference: text(formData.get("stayPreference")) || "any",
+    preferences: text(formData.get("preferences")) || "[]",
     childAges: text(formData.get("childAges")),
     surface: text(formData.get("surface")),
     budget: text(formData.get("budget")),
@@ -242,8 +280,10 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
         area: data.area,
         roomType: data.roomType || "any",
         meals: data.meals || "any",
+        stayPreference: data.stayPreference,
+        preferences: parsePreferences(data.preferences) ?? [],
         budget: /^\d+$/.test(data.budget) ? Number(data.budget) : null,
-        budgetBand: hotelBudgetBands.some((band) => band.value === data.budget) ? data.budget : null,
+        budgetBand: allHotelBudgetBands.some((band) => band.value === data.budget) ? data.budget : null,
         message: data.message,
         channel,
       }),

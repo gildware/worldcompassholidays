@@ -20,6 +20,7 @@ export default async function LoginPage({
 }) {
   const { next } = await searchParams;
   const returnPath = customerReturnPath(next);
+  const isRequest = /^\/(?:hotels|buses|tours)\/request(?:\?|$)|^\/rentals\/(?:cars|bikes)\/request(?:\?|$)/.test(returnPath);
   const user = await getCurrentUser();
   if (user?.scope === "customer") redirect(returnPath);
 
@@ -28,7 +29,7 @@ export default async function LoginPage({
       <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand">Sign in</p>
       <h1 className="mt-2 text-3xl font-semibold">Use your mobile number</h1>
       <p className="mt-2 text-sm text-muted">
-        We text a 6-digit code to your mobile. New customers add their name after the code.
+        {isRequest ? "Sign in first to continue with your request. You’ll return to the request form after login." : "We text a 6-digit code to your mobile. New customers add their name after the code."}
       </p>
       <div className="mt-8">
         <PhoneLogin

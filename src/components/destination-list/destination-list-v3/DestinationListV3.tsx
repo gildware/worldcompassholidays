@@ -4,11 +4,11 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { ListFilterDrawer } from "@/components/listing/ListFilterDrawer";
+import { Pagination } from "@/components/hotel-list/common/Pagination";
 import { DestinationProperties } from "@/components/destination-list/destination-list-v3/DestinationProperties";
 import { DropdownSelectBar } from "@/components/destination-list/destination-list-v3/DropdownSelectBar";
 import { MainFilterSearchBox } from "@/components/destination-list/destination-list-v3/MainFilterSearchBox";
 import { TopHeaderFilter } from "@/components/destination-list/destination-list-v3/TopHeaderFilter";
-import { useLazySlice } from "@/hooks/useLazySlice";
 import type {
   DestinationListCard,
   DestinationListLocation,
@@ -19,18 +19,21 @@ const PAGE_SIZE_MAP = 5;
 const PAGE_SIZE_GRID = 12;
 
 const DestinationMap = dynamic(
-  () => import("@/components/destination-list/destination-list-v3/DestinationMap"),
+  () =>
+    import("@/components/destination-list/destination-list-v3/DestinationMap"),
   {
     ssr: false,
     loading: () => (
-      <div className="d-flex items-center justify-center h-full text-15 text-light-1">Loading map...</div>
+      <div className="d-flex items-center justify-center h-full text-15 text-light-1">
+        Loading map...
+      </div>
     ),
   },
 );
 
 function unique(values: string[]) {
-  return [...new Set(values.map((value) => value.trim()).filter(Boolean))].sort((a, b) =>
-    a.localeCompare(b),
+  return [...new Set(values.map((value) => value.trim()).filter(Boolean))].sort(
+    (a, b) => a.localeCompare(b),
   );
 }
 
@@ -50,10 +53,11 @@ export function DestinationListV3({
   const [region, setRegion] = useState("");
   const [popular, setPopular] = useState(false);
   const [sort, setSort] = useState<DestinationSort>("recommended");
+  const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [view, setView] = useState<"list" | "map">("list");
-  const batch = view === "list" ? PAGE_SIZE_GRID : PAGE_SIZE_MAP;
+  const PAGE_SIZE = view === "list" ? PAGE_SIZE_GRID : PAGE_SIZE_MAP;
 
   const countries = useMemo(
     () => unique(destinations.map((item) => item.country)),
@@ -69,7 +73,8 @@ export function DestinationListV3({
   const filtered = useMemo(() => {
     const place = location.trim().toLowerCase();
     const matched = destinations.filter((item) => {
-      const haystack = `${item.name} ${item.region} ${item.country} ${item.parentName} ${item.placeNames.join(" ")}`.toLowerCase();
+      const haystack =
+        `${item.name} ${item.region} ${item.country} ${item.parentName} ${item.placeNames.join(" ")}`.toLowerCase();
       if (place && !haystack.includes(place)) return false;
       if (country && item.country !== country) return false;
       if (region && item.region !== region) return false;
@@ -80,21 +85,26 @@ export function DestinationListV3({
     const next = [...matched];
     if (sort === "name") next.sort((a, b) => a.name.localeCompare(b.name));
     if (sort === "country") {
-      next.sort((a, b) => a.country.localeCompare(b.country) || a.name.localeCompare(b.name));
+      next.sort(
+        (a, b) =>
+          a.country.localeCompare(b.country) || a.name.localeCompare(b.name),
+      );
     }
     if (sort === "recommended") {
       next.sort(
-        (a, b) => Number(b.popular) - Number(a.popular) || a.name.localeCompare(b.name),
+        (a, b) =>
+          Number(b.popular) - Number(a.popular) || a.name.localeCompare(b.name),
       );
     }
     return next;
   }, [country, destinations, location, popular, region, sort]);
 
-  const windowKey = [location, country, region, String(popular), sort, view].join("|");
-  const { visible, sentinelRef } = useLazySlice(filtered, windowKey, batch);
-  const selectedIndex = selectedId ? filtered.findIndex((item) => item.id === selectedId) : -1;
-  const shown =
-    selectedIndex >= visible.length ? filtered.slice(0, selectedIndex + 1) : visible;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const visible = filtered.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
   const pins = useMemo(
     () =>
       filtered.flatMap((item) =>
@@ -125,10 +135,14 @@ export function DestinationListV3({
   const changeCountry = (value: string) => {
     setCountry(value);
     setRegion("");
+    setPage(1);
   };
 
   const selectDestination = (id: string) => {
     setSelectedId(id);
+    if (!id) return;
+    const index = filtered.findIndex((item) => item.id === id);
+    if (index >= 0) setPage(Math.floor(index / PAGE_SIZE) + 1);
   };
 
   useEffect(() => {
@@ -139,22 +153,32 @@ export function DestinationListV3({
 
   useEffect(() => {
     if (!selectedId) return;
-    document.getElementById(`destination-${selectedId}`)?.scrollIntoView({ block: "nearest" });
-  }, [selectedId, shown.length]);
+    document
+      .getElementById(`destination-${selectedId}`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [selectedId, currentPage]);
 
-  const filtersActive = Boolean(location.trim() || country || region || popular);
+  const filtersActive = Boolean(
+    location.trim() || country || region || popular,
+  );
   const filterControls = (
     <>
       <MainFilterSearchBox
         locations={locations}
         location={location}
-        onLocation={setLocation}
+        onLocation={(value) => {
+          setLocation(value);
+          setPage(1);
+        }}
         countries={countries}
         country={country}
         onCountry={changeCountry}
         regions={regions}
         region={region}
-        onRegion={setRegion}
+        onRegion={(value) => {
+          setRegion(value);
+          setPage(1);
+        }}
       />
       <div className="row x-gap-10 y-gap-10 pt-20">
         <DropdownSelectBar
@@ -163,9 +187,15 @@ export function DestinationListV3({
           onCountry={changeCountry}
           regions={regions}
           region={region}
-          onRegion={setRegion}
+          onRegion={(value) => {
+            setRegion(value);
+            setPage(1);
+          }}
           popular={popular}
-          onPopular={setPopular}
+          onPopular={(value) => {
+            setPopular(value);
+            setPage(1);
+          }}
         />
       </div>
     </>
@@ -177,22 +207,36 @@ export function DestinationListV3({
         <h1 className="tour-workspace__title">
           {placeLabel ? `Destinations in ${placeLabel}` : "Travel destinations"}
         </h1>
-        <div className="list-filters-inline destination-mast__filters">{filterControls}</div>
+        <div className="list-filters-inline destination-mast__filters">
+          {filterControls}
+        </div>
       </section>
-      <ListFilterDrawer open={filtersOpen} title="Filters" onClose={() => setFiltersOpen(false)}>
+      <ListFilterDrawer
+        open={filtersOpen}
+        title="Filters"
+        onClose={() => setFiltersOpen(false)}
+      >
         {filterControls}
       </ListFilterDrawer>
 
-      <section className={`halfMap destination-list-v3 ${view === "map" ? "is-map-view" : "is-list-view"}`}>
+      <section
+        className={`halfMap destination-list-v3 ${view === "map" ? "is-map-view" : "is-list-view"}`}
+      >
         <div className="halfMap__content">
           <div className="tour-workspace__toolbar">
             <TopHeaderFilter
               count={filtered.length}
               place={placeLabel}
               search={location}
-              onSearch={setLocation}
+              onSearch={(value) => {
+                setLocation(value);
+                setPage(1);
+              }}
               sort={sort}
-              onSort={setSort}
+              onSort={(next) => {
+                setSort(next);
+                setPage(1);
+              }}
               filtersActive={filtersActive}
               onOpenFilters={() => setFiltersOpen(true)}
               view={view}
@@ -202,16 +246,20 @@ export function DestinationListV3({
 
           <div className="row y-gap-20 pt-20">
             <DestinationProperties
-              destinations={shown}
+              destinations={visible}
               selectedId={selectedId}
               onSelect={selectDestination}
               grid={view === "list"}
             />
           </div>
 
-          {shown.length < filtered.length ? (
-            <div ref={sentinelRef} className="tour-workspace__more" aria-hidden="true" />
-          ) : null}
+          <Pagination
+            page={currentPage}
+            pageSize={PAGE_SIZE}
+            total={filtered.length}
+            onPage={setPage}
+            itemLabel="destinations"
+          />
         </div>
 
         {view === "map" ? (

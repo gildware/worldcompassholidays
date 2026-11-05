@@ -54,32 +54,11 @@ export function TopHeaderFilter({
 
       <FilterIconButton active={filtersActive} onClick={onOpenFilters} />
 
-      <div className="dropdown tour-toolbar-sort">
-        <button
-          type="button"
-          className="button -blue-1 h-40 px-20 rounded-100 bg-blue-1-05 text-15 text-blue-1"
-          data-bs-toggle="dropdown"
-          aria-label="Sort"
-        >
-          <i className="icon-up-down text-14" />
-          <span className="tour-toolbar-sort-label">Sort</span>
-        </button>
-        <ul className="dropdown-menu dropdown-menu-end">
-          {sortOptions.map((option) => (
-            <li key={option.value}>
-              <button
-                type="button"
-                className={`dropdown-item text-15 ${sort === option.value ? "fw-500" : ""}`}
-                onClick={() => onSort(option.value)}
-              >
-                {option.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="destination-view-toggle" role="group" aria-label="Change view">
+      <div
+        className="destination-view-toggle"
+        role="group"
+        aria-label="Change view"
+      >
         <button
           type="button"
           className={view === "list" ? "is-active" : ""}
@@ -96,6 +75,31 @@ export function TopHeaderFilter({
         >
           Map
         </button>
+      </div>
+
+      <div className="dropdown tour-toolbar-sort">
+        <button
+          type="button"
+          className="button -blue-1 h-40 px-20 rounded-100 bg-blue-1-05 text-15 text-blue-1"
+          data-bs-toggle="dropdown"
+          aria-label="Sort"
+        >
+          <i className="icon-up-down text-14 mr-10" />
+          <span className="tour-toolbar-sort-label">Sort</span>
+        </button>
+        <ul className="dropdown-menu dropdown-menu-end">
+          {sortOptions.map((option) => (
+            <li key={option.value}>
+              <button
+                type="button"
+                className={`dropdown-item text-15 ${sort === option.value ? "fw-500" : ""}`}
+                onClick={() => onSort(option.value)}
+              >
+                {option.label}
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

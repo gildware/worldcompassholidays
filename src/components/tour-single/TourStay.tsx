@@ -43,6 +43,9 @@ export type TourStayData = {
   priceFrom: number;
   currency: string;
   cancelDays: number;
+  defaultState: "always" | "dates";
+  availabilityFrom: string | null;
+  availabilityTo: string | null;
   images: string[];
   summary: string;
   description: string;
@@ -135,9 +138,27 @@ export function TourStay({
   const signedIn = Boolean(customer);
   const loginHref = `/login?next=${encodeURIComponent(`/tours/${tour.slug}`)}`;
   const [mode, setMode] = useState<"group" | "private">("group");
-  const [departureId, setDepartureId] = useState(tour.departures[0]?.id ?? "");
-  const [groupDate, setGroupDate] = useState(addDays(todayIso(), 21));
-  const [privateDate, setPrivateDate] = useState(tour.departures[0]?.iso || addDays(todayIso(), 28));
+  const [departureId, setDepartureId] = useState(
+    tour.defaultState === "dates" && !tour.availabilityFrom
+      ? (tour.departures[0]?.id ?? "")
+      : "",
+  );
+  const [groupDate, setGroupDate] = useState(
+    tour.availabilityFrom
+      ? tour.availabilityFrom > todayIso()
+        ? tour.availabilityFrom
+        : todayIso()
+      : tour.defaultState === "dates" && tour.departures[0]?.iso
+        ? tour.departures[0].iso
+        : addDays(todayIso(), 21),
+  );
+  const [privateDate, setPrivateDate] = useState(
+    tour.availabilityFrom
+      ? tour.availabilityFrom > todayIso()
+        ? tour.availabilityFrom
+        : todayIso()
+      : tour.departures[0]?.iso || addDays(todayIso(), 28),
+  );
   const [adults, setAdults] = useState(Math.max(2, tour.minPeople || 1));
   const [children, setChildren] = useState(0);
   const [ownRoom, setOwnRoom] = useState(false);
@@ -149,7 +170,10 @@ export function TourStay({
   const [packed, setPacked] = useState<boolean[]>(() => PACK.map(() => false));
   const [state, action, pending] = useActionState(submitTourRequest, initialFormState);
 
-  const departure = tour.departures.find((item) => item.id === departureId) ?? tour.departures[0] ?? null;
+  const departure =
+    tour.departures.find((item) => item.id === departureId) ??
+    tour.departures.find((item) => item.iso === groupDate) ??
+    null;
   const startIso = mode === "group" ? (departure ? departure.iso : groupDate) : privateDate;
   const quote = useMemo(
     () =>
@@ -164,8 +188,15 @@ export function TourStay({
       }),
     [adults, children, departure, mode, ownRoom, startIso, tour.priceFrom],
   );
-  const block = startIso
-    ? partyBlock({
+  const outOfRange =
+    tour.defaultState === "dates" &&
+    (tour.availabilityFrom && tour.availabilityTo
+      ? startIso < tour.availabilityFrom || startIso > tour.availabilityTo
+      : !(mode === "group" && departure && departure.iso === startIso));
+  const block = outOfRange
+    ? "Choose a start date within the availability range."
+    : startIso
+      ? partyBlock({
         mode,
         adults,
         children,
@@ -173,7 +204,7 @@ export function TourStay({
         maxGroupSize: tour.maxGroupSize,
         seats: mode === "group" && departure ? departure.seats : null,
       })
-    : "Choose a start date.";
+      : "Choose a start date.";
   const people = adults + children;
   const nextDate = tour.departures.find((item) => item.id !== departure?.id && item.seats >= people && item.iso >= todayIso());
   const childWarn = !block && children > adults ? "More children than adults. The desk will confirm this is alright." : "";
@@ -446,9 +477,11 @@ export function TourStay({
                   <p>
                     {mode === "private"
                       ? "A private departure is your own vehicle and guide, priced from the listed rate."
-                      : departure
+                      : tour.defaultState === "dates" && departure && !tour.availabilityFrom
                         ? "Group dates use the price stored for that departure."
-                        : "No fixed departure is listed. Pick a start date and the desk confirms the group."}
+                        : tour.defaultState === "dates" && tour.availabilityFrom && tour.availabilityTo
+                          ? `Requests are accepted ${longDate(tour.availabilityFrom)} through ${longDate(tour.availabilityTo)}.`
+                          : "Any start date can be requested. The desk confirms the group."}
                   </p>
                 </article>
                 <article>
@@ -461,11 +494,13 @@ export function TourStay({
             <section className="road-section" id="departures">
               <h2>Departures</h2>
               <p className="road-lede">
-                {tour.departures.length > 0
+                {tour.defaultState === "dates" && tour.departures.length > 0 && !tour.availabilityFrom
                   ? "Group dates are the open departures. Private uses your own start date."
-                  : "This tour has no fixed departure listed. Choose group or private, then a start date. The desk confirms it is open before anything is held."}
+                  : tour.defaultState === "dates" && tour.availabilityFrom && tour.availabilityTo
+                    ? `Available for start dates from ${longDate(tour.availabilityFrom)} through ${longDate(tour.availabilityTo)}.`
+                  : "Choose any start date for a group or private request. The desk confirms availability before anything is held."}
               </p>
-              {mode === "group" && tour.departures.length > 0 ? (
+              {mode === "group" && tour.defaultState === "dates" && tour.departures.length > 0 && !tour.availabilityFrom ? (
                 <div className="road-dates">
                   {tour.departures.map((item) => {
                     const shown = Math.round(item.price / 10) * 10;
@@ -637,14 +672,17 @@ export function TourStay({
                 Private
               </button>
             </div>
-            {mode === "group" && departure ? (
+            {mode === "group" && tour.defaultState === "dates" && departure && !tour.availabilityFrom ? (
               <p className="road-kicker">Starts {departure.label}. {departure.seats > 0 ? `${departure.seats} seats on this departure.` : "The desk confirms seats."}</p>
             ) : (
               <label className="road-field">
                 {mode === "private" ? "Private start date" : "Start date"}
                 <input
                   type="date"
-                  min={todayIso()}
+                  min={tour.defaultState === "dates" && tour.availabilityFrom
+                    ? (tour.availabilityFrom > todayIso() ? tour.availabilityFrom : todayIso())
+                    : todayIso()}
+                  max={tour.defaultState === "dates" ? tour.availabilityTo ?? undefined : undefined}
                   value={mode === "private" ? privateDate : groupDate}
                   onChange={(event) => (mode === "private" ? setPrivateDate(event.target.value) : setGroupDate(event.target.value))}
                 />

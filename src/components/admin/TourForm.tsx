@@ -46,6 +46,8 @@ export type TourFormValues = {
   mapZoom: number;
   isFeatured: boolean;
   defaultState: string;
+  availabilityFrom: string;
+  availabilityTo: string;
   travelStyles: string[];
   facilities: string[];
   icalImportUrl: string;

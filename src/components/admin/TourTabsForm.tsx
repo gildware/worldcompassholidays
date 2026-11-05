@@ -29,6 +29,7 @@ import {
   type CatalogOption,
 } from "@/lib/catalog";
 import type { TourCatalog } from "@/lib/catalog-query";
+import { defaultStateOptions } from "@/lib/data/tour-options";
 import { initialFormState } from "@/lib/forms";
 import {
   formatTourDuration,
@@ -242,6 +243,8 @@ function buildDraft(tour: TourFormValues | undefined, catalog: TourCatalog): Dra
       mapZoom: 8,
       isFeatured: false,
       defaultState: "always",
+      availabilityFrom: "",
+      availabilityTo: "",
       travelStyles: [],
       facilities: [],
       icalImportUrl: "",
@@ -292,6 +295,8 @@ function buildDraft(tour: TourFormValues | undefined, catalog: TourCatalog): Dra
     mapZoom: tour.mapZoom,
     isFeatured: tour.isFeatured,
     defaultState: tour.defaultState,
+    availabilityFrom: tour.availabilityFrom ?? "",
+    availabilityTo: tour.availabilityTo ?? "",
     travelStyles: resolveCatalogIds(tour.travelStyles, catalog.styles),
     facilities: resolveCatalogIds(tour.facilities, catalog.facilities),
     icalImportUrl: tour.icalImportUrl,
@@ -619,6 +624,17 @@ export function TourTabsForm({
       ) {
         errors.maxGroupSize = "Max people must be at least the minimum.";
       }
+      if (draft.defaultState === "dates") {
+        if (!draft.availabilityFrom) errors.availabilityFrom = "Choose the first available date.";
+        if (!draft.availabilityTo) errors.availabilityTo = "Choose the last available date.";
+        if (
+          draft.availabilityFrom &&
+          draft.availabilityTo &&
+          draft.availabilityFrom > draft.availabilityTo
+        ) {
+          errors.availabilityTo = "The end date must be on or after the start date.";
+        }
+      }
     }
 
     if (id === "images") {
@@ -758,6 +774,8 @@ export function TourTabsForm({
     formData.set("mapLng", draft.mapLng.trim());
     formData.set("mapZoom", String(draft.mapZoom));
     formData.set("defaultState", draft.defaultState);
+    formData.set("availabilityFrom", draft.availabilityFrom);
+    formData.set("availabilityTo", draft.availabilityTo);
     formData.set("icalImportUrl", draft.icalImportUrl.trim());
     formData.set("seoTitle", draft.seoTitle.trim());
     formData.set("seoDescription", draft.seoDescription.trim());
@@ -1003,6 +1021,65 @@ export function TourTabsForm({
                   />
                 )}
               </Field>
+              <Field
+                label="Availability"
+                hint="Always available accepts requests any time. Specific dates lets you set an inclusive availability range."
+              >
+                <SearchableSelect
+                  value={draft.defaultState}
+                  onChange={(value) =>
+                    patch("defaultState", value === "dates" ? "dates" : "always")
+                  }
+                  options={defaultStateOptions}
+                  className="!h-10"
+                  ariaLabel="Tour availability"
+                />
+              </Field>
+              {draft.defaultState === "dates" ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field
+                    label="Available from"
+                    name="availabilityFrom"
+                    required
+                    error={fieldErrors.availabilityFrom}
+                  >
+                    <input
+                      type="date"
+                      required
+                      value={draft.availabilityFrom ?? ""}
+                      max={draft.availabilityTo || undefined}
+                      onChange={(event) => {
+                        patch("availabilityFrom", event.target.value);
+                        clearFieldError("availabilityFrom");
+                      }}
+                      aria-invalid={Boolean(fieldErrors.availabilityFrom)}
+                      className="!h-10"
+                    />
+                  </Field>
+                  <Field
+                    label="Available through"
+                    name="availabilityTo"
+                    required
+                    error={fieldErrors.availabilityTo}
+                  >
+                    <input
+                      type="date"
+                      required
+                      value={draft.availabilityTo ?? ""}
+                      min={draft.availabilityFrom || undefined}
+                      onChange={(event) => {
+                        patch("availabilityTo", event.target.value);
+                        clearFieldError("availabilityTo");
+                      }}
+                      aria-invalid={Boolean(fieldErrors.availabilityTo)}
+                      className="!h-10"
+                    />
+                  </Field>
+                  <p className="text-xs font-normal text-muted sm:col-span-2">
+                    The tour can be requested for any start date within this inclusive range.
+                  </p>
+                </div>
+              ) : null}
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                 <Field

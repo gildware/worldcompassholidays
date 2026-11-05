@@ -40,6 +40,9 @@ export type CatalogTour = {
   href: string;
   levelNote: string;
   featured: boolean;
+  defaultState: "always" | "dates";
+  availabilityFrom: string | null;
+  availabilityTo: string | null;
   departures: CatalogDeparture[];
 };
 

@@ -55,6 +55,18 @@ const requestSchema = z
       .pipe(z.number().min(1, "Enter how many passengers, from 1 to 20").max(20, "Enter how many passengers, from 1 to 20")),
     coach: z.string().trim().default("any"),
     timeWindow: z.string().trim().default("any"),
+    luggageQuantity: z
+      .string()
+      .trim()
+      .regex(/^\d+$/, "Enter luggage quantity as a whole number")
+      .transform(Number)
+      .pipe(z.number().min(0, "Luggage quantity cannot be negative").max(50, "Enter up to 50 luggage pieces")),
+    luggageWeight: z
+      .string()
+      .trim()
+      .regex(/^\d+(?:\.\d{1,2})?$/, "Enter total luggage weight in kg")
+      .transform(Number)
+      .pipe(z.number().min(0, "Luggage weight cannot be negative").max(500, "Enter up to 500 kg of luggage")),
     busName: z.string().trim().max(120, "That bus name is too long").default(""),
     slug: z.string().trim().max(80).default(""),
     message: z.string().trim().max(2000, "Keep the note under 2000 characters").default(""),
@@ -90,6 +102,7 @@ function requestNotes(input: z.infer<typeof requestSchema>) {
     input.busName ? `Bus they asked for: ${input.busName}` : "",
     `Travel: ${prettyDate(input.travelDate)}`,
     `Passengers: ${input.passengers}`,
+    `Luggage: ${input.luggageQuantity} piece${input.luggageQuantity === 1 ? "" : "s"}, ${input.luggageWeight} kg total`,
     input.coach !== "any" ? `Coach: ${coachLabel(input.coach)}` : "",
     input.timeWindow !== "any" ? `Time: ${timeWindowLabel(input.timeWindow)}` : "",
     input.message ? `Note: ${input.message}` : "",
@@ -119,6 +132,8 @@ export async function submitBusRequest(_previous: FormState, formData: FormData)
     passengers: text(formData.get("passengers")),
     coach: text(formData.get("coach")) || "any",
     timeWindow: text(formData.get("timeWindow")) || "any",
+    luggageQuantity: text(formData.get("luggageQuantity")) || "0",
+    luggageWeight: text(formData.get("luggageWeight")) || "0",
     busName: text(formData.get("busName")),
     slug: text(formData.get("slug")),
     message: text(formData.get("message")),
@@ -168,6 +183,8 @@ export async function submitBusRequest(_previous: FormState, formData: FormData)
         passengers: data.passengers,
         coach: data.coach,
         timeWindow: data.timeWindow,
+        luggageQuantity: data.luggageQuantity,
+        luggageWeight: data.luggageWeight,
         message: data.message,
         channel,
       }),

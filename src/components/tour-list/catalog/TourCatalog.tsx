@@ -599,7 +599,7 @@ export function TourCatalog({
                 <span className="k">Date</span>
                 <strong>{prettyDate(query.date)}</strong>
               </button>
-              {searchOpen && menu === "date" ? (
+              {menu === "date" ? (
                 <DateMenu
                   label="Travel date"
                   value={query.date}

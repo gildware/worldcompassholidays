@@ -77,6 +77,8 @@ model Tour {
   mapZoom             Int             @default(8)
   isFeatured          Boolean         @default(false)
   defaultState        String          @default("always")
+  availabilityFrom    DateTime?
+  availabilityTo      DateTime?
   travelStylesJson    String          @default("[]")
   facilitiesJson      String          @default("[]")
   icalImportUrl       String          @default("")

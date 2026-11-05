@@ -10,6 +10,8 @@ export type SelectOption = {
   /** Extra search text, such as a country code or a common short name. */
   keywords?: string;
   icon?: ReactNode;
+  /** Rendered last, centered and highlighted, and kept visible while searching. */
+  action?: boolean;
 };
 
 type SearchableSelectProps = {
@@ -18,7 +20,7 @@ type SearchableSelectProps = {
   id?: string;
   value?: string;
   defaultValue?: string;
-  onChange?: (value: string) => void;
+  onChange?: (value: string, query?: string) => void;
   placeholder?: string;
   searchPlaceholder?: string;
   required?: boolean;
@@ -26,6 +28,7 @@ type SearchableSelectProps = {
   /** Show a red border when the field failed validation. */
   invalid?: boolean;
   className?: string;
+  menuClassName?: string;
   wrapperClassName?: string;
   /** Accessible name when the visible text is only the current choice. */
   ariaLabel?: string;
@@ -87,6 +90,7 @@ export function SearchableSelect({
   disabled = false,
   invalid = false,
   className,
+  menuClassName,
   wrapperClassName,
   ariaLabel,
   emptyLabel,
@@ -111,7 +115,10 @@ export function SearchableSelect({
     items.push({ value: "", label: emptyLabel });
   }
   for (const option of options) {
-    if (matches(query, option.label, option.value, option.keywords)) items.push(option);
+    if (!option.action && matches(query, option.label, option.value, option.keywords)) items.push(option);
+  }
+  for (const option of options) {
+    if (option.action) items.push(option);
   }
 
   const safeIndex =
@@ -181,7 +188,7 @@ export function SearchableSelect({
 
   function commit(next: string) {
     if (!isControlled) setUncontrolled(next);
-    onChange?.(next);
+    onChange?.(next, query.trim());
     setOpen(false);
     setQuery("");
     triggerRef.current?.focus();
@@ -233,7 +240,10 @@ export function SearchableSelect({
       ? createPortal(
           <div
             ref={menuRef}
-            className="app-select-menu fixed z-[80] overflow-hidden rounded-lg border border-line bg-white shadow-lg"
+            className={[
+              "app-select-menu fixed z-[80] overflow-hidden rounded-lg border border-line bg-white shadow-lg",
+              menuClassName,
+            ].filter(Boolean).join(" ")}
             style={{
               position: "fixed",
               zIndex: menuZIndex,
@@ -277,7 +287,7 @@ export function SearchableSelect({
                   const active = index === safeIndex;
                   const chosen = option.value === selected;
                   return (
-                    <li key={`${option.value}-${option.label}`} role="presentation">
+                    <li key={`${option.value}-${option.label}`} role="presentation" className={option.action ? "mt-1 border-t border-line pt-1" : undefined}>
                       <button
                         type="button"
                         id={`${listId}-option-${index}`}
@@ -285,9 +295,12 @@ export function SearchableSelect({
                         aria-selected={chosen}
                         data-index={index}
                         className={[
-                          "flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm",
+                          "flex w-full items-center gap-3 px-3 py-2 text-sm",
+                          option.action
+                            ? "justify-center text-center font-semibold text-[#3554d1]"
+                            : "justify-between text-left",
                           active ? "bg-brand-soft" : "hover:bg-surface",
-                          chosen ? "font-medium text-navy" : "text-foreground",
+                          option.action ? "" : chosen ? "font-medium text-navy" : "text-foreground",
                         ].join(" ")}
                         onMouseEnter={() => setActiveIndex(index)}
                         onMouseDown={(event) => event.preventDefault()}
@@ -705,7 +718,13 @@ export function NamedMultiSelect({
 }
 
 function OptionIcon({ option, small = false }: { option: SelectOption; small?: boolean }) {
-  if (option.icon) return <>{option.icon}</>;
+  if (option.icon) {
+    return (
+      <span className={`app-select-icon${small ? " is-small" : ""}`} aria-hidden="true">
+        {option.icon}
+      </span>
+    );
+  }
   const size = small ? "size-4" : "size-6";
   if (option.iconUrl) {
     return (

@@ -125,6 +125,26 @@ export async function submitTourRequest(_previous: FormState, formData: FormData
   if (data.mode === "group" && departure && isoDay(departure.startDate) !== data.startDate) {
     return { error: "Choose an open departure", fields: { startDate: "Choose an open departure" }, values };
   }
+  if (tour.defaultState === "dates") {
+    const from = tour.availabilityFrom?.toISOString().slice(0, 10);
+    const to = tour.availabilityTo?.toISOString().slice(0, 10);
+    const inRange = Boolean(from && to && data.startDate >= from && data.startDate <= to);
+    const legacyDeparture = Boolean(
+      !from &&
+        !to &&
+        data.mode === "group" &&
+        departure &&
+        departure.status !== "closed" &&
+        isoDay(departure.startDate) === data.startDate,
+    );
+    if (!inRange && !legacyDeparture) {
+      return {
+        error: "Choose a start date within the tour availability range",
+        fields: { startDate: "Choose a date within the availability range" },
+        values,
+      };
+    }
+  }
 
   const listedPrice = data.mode === "group" && departure ? (departure.price > 0 ? departure.price : tour.priceFrom) : null;
   const block = partyBlock({

@@ -6,9 +6,15 @@ import type { DestinationListCard } from "@/components/destination-list/types";
 
 function listingLine(item: DestinationListCard) {
   const parts = [
-    item.tourCount > 0 ? `${item.tourCount} tour${item.tourCount === 1 ? "" : "s"}` : "",
-    item.hotelCount > 0 ? `${item.hotelCount} stay${item.hotelCount === 1 ? "" : "s"}` : "",
-    item.rentalCount > 0 ? `${item.rentalCount} rental${item.rentalCount === 1 ? "" : "s"}` : "",
+    item.tourCount > 0
+      ? `${item.tourCount} tour${item.tourCount === 1 ? "" : "s"}`
+      : "",
+    item.hotelCount > 0
+      ? `${item.hotelCount} stay${item.hotelCount === 1 ? "" : "s"}`
+      : "",
+    item.rentalCount > 0
+      ? `${item.rentalCount} rental${item.rentalCount === 1 ? "" : "s"}`
+      : "",
   ].filter(Boolean);
   return parts;
 }
@@ -27,8 +33,12 @@ export function DestinationProperties({
   if (destinations.length === 0) {
     return (
       <div className="col-12">
-        <h3 className="text-18 lh-16 fw-500">No destinations match these filters</h3>
-        <p className="text-15 text-light-1 mt-10">Try another place, country, or region.</p>
+        <h3 className="text-18 lh-16 fw-500">
+          No destinations match these filters
+        </h3>
+        <p className="text-15 text-light-1 mt-10">
+          Try another place, country, or region.
+        </p>
       </div>
     );
   }
@@ -39,7 +49,11 @@ export function DestinationProperties({
         {destinations.map((item) => {
           const listings = listingLine(item);
           return (
-            <div className="col-xl-3 col-lg-4 col-6" key={item.id} id={`destination-${item.id}`}>
+            <div
+              className="col-xl-3 col-lg-4 col-6"
+              key={item.id}
+              id={`destination-${item.id}`}
+            >
               <Link href={item.href} className="destination-tile d-block">
                 <div className="cardImage ratio ratio-3:2">
                   <div className="cardImage__content">
@@ -60,9 +74,13 @@ export function DestinationProperties({
                   <p className="text-13 text-light-1 lh-14 mb-5">
                     {[item.region, item.country].filter(Boolean).join(", ")}
                   </p>
-                  <h3 className="text-16 lh-14 fw-500 text-dark-1">{item.name}</h3>
+                  <h3 className="text-16 lh-14 fw-500 text-dark-1">
+                    {item.name}
+                  </h3>
                   {listings.length > 0 ? (
-                    <p className="text-13 text-light-1 lh-14 mt-5">{listings.join(" · ")}</p>
+                    <p className="text-13 text-light-1 lh-14 mt-5">
+                      {listings.join(" · ")}
+                    </p>
                   ) : null}
                 </div>
               </Link>
@@ -160,14 +178,19 @@ export function DestinationProperties({
                       Places: {item.placeNames.join(", ")}
                     </div>
                   ) : item.popular ? (
-                    <div className="text-14 text-green-2 fw-500 lh-15 mt-5">Popular destination</div>
+                    <div className="text-14 text-green-2 fw-500 lh-15 mt-5">
+                      Popular destination
+                    </div>
                   ) : null}
                 </div>
 
                 <div className="col-md-auto text-right md:text-left">
                   <div>
                     {listings.map((line) => (
-                      <div className="text-14 lh-14 text-light-1 mt-5" key={line}>
+                      <div
+                        className="text-14 lh-14 text-light-1 mt-5"
+                        key={line}
+                      >
                         {line}
                       </div>
                     ))}

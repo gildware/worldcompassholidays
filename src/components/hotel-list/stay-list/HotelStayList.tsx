@@ -662,7 +662,7 @@ export function HotelStayList({
                   <span className="sl-k">Check-in</span>
                   <strong>{prettyStayDate(state.checkin)}</strong>
                 </button>
-                {searching && menu === "in" ? (
+                {menu === "in" ? (
                   <DateMenu
                     label="Check-in"
                     value={state.checkin}
@@ -680,7 +680,7 @@ export function HotelStayList({
                   <span className="sl-k">Check-out</span>
                   <strong>{prettyStayDate(state.checkout)}</strong>
                 </button>
-                {searching && menu === "out" ? (
+                {menu === "out" ? (
                   <DateMenu
                     label="Check-out"
                     value={state.checkout}
@@ -1306,7 +1306,7 @@ function StayCard({
   );
 }
 
-function prettyStayDate(iso: string) {
+export function prettyStayDate(iso: string) {
   return parseISO(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
@@ -1461,7 +1461,7 @@ function StayTripSheet({
   return createPortal(panel, document.body);
 }
 
-function DateMenu({
+export function DateMenu({
   value,
   min,
   onPick,

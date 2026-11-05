@@ -23,6 +23,7 @@ import {
 
 const difficultyEnum = z.enum(["easy", "moderate", "challenging"]);
 const durationUnitEnum = z.enum(["hours", "days", "weeks"]);
+const availabilityDate = z.union([z.iso.date(), z.literal("")]).default("");
 
 const discountSchema = z.object({
   kind: z.enum(["single", "group"]),
@@ -56,6 +57,8 @@ const draftTourSchema = z.object({
   mapLng: z.string().trim().max(40).default(""),
   mapZoom: z.coerce.number().int().min(1).max(20).default(8),
   defaultState: z.enum(["always", "dates"]).default("always"),
+  availabilityFrom: availabilityDate,
+  availabilityTo: availabilityDate,
   icalImportUrl: z.string().trim().max(500).default(""),
   seoTitle: z.string().trim().max(160).default(""),
   seoDescription: z.string().trim().max(400).default(""),
@@ -161,6 +164,8 @@ function readTourRaw(formData: FormData) {
     mapLng: formData.get("mapLng") ?? "",
     mapZoom: formData.get("mapZoom") || 8,
     defaultState: formData.get("defaultState") || "always",
+    availabilityFrom: formData.get("availabilityFrom") ?? "",
+    availabilityTo: formData.get("availabilityTo") ?? "",
     icalImportUrl: formData.get("icalImportUrl") ?? "",
     seoTitle: formData.get("seoTitle") ?? "",
     seoDescription: formData.get("seoDescription") ?? "",
@@ -390,6 +395,12 @@ function tourPayload(
       mapLng: parsed.mapLng,
       mapZoom: parsed.mapZoom,
       defaultState: parsed.defaultState,
+      availabilityFrom: parsed.availabilityFrom
+        ? new Date(`${parsed.availabilityFrom}T00:00:00.000Z`)
+        : null,
+      availabilityTo: parsed.availabilityTo
+        ? new Date(`${parsed.availabilityTo}T00:00:00.000Z`)
+        : null,
       icalImportUrl: parsed.icalImportUrl,
       seoTitle: parsed.seoTitle,
       seoDescription: parsed.seoDescription,
@@ -431,6 +442,14 @@ export async function createTour(
 
   const parsed = readTour(formData);
   if (!parsed.success) return { error: firstIssue(parsed.error) };
+  if (
+    parsed.data.defaultState === "dates" &&
+    (!parsed.data.availabilityFrom ||
+      !parsed.data.availabilityTo ||
+      parsed.data.availabilityFrom > parsed.data.availabilityTo)
+  ) {
+    return { error: "Enter a valid availability date range." };
+  }
 
   const publishing = parsed.data.published;
   const links = await prepareLinks(
@@ -516,6 +535,14 @@ export async function updateTour(
   const tourId = String(formData.get("tourId") ?? "");
   const parsed = readTour(formData);
   if (!parsed.success) return { error: firstIssue(parsed.error) };
+  if (
+    parsed.data.defaultState === "dates" &&
+    (!parsed.data.availabilityFrom ||
+      !parsed.data.availabilityTo ||
+      parsed.data.availabilityFrom > parsed.data.availabilityTo)
+  ) {
+    return { error: "Enter a valid availability date range." };
+  }
 
   const existing = await prisma.tour.findUnique({
     where: { id: tourId },

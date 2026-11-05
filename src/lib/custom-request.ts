@@ -9,8 +9,54 @@ export const tourLengths = [
 ] as const;
 
 export const tourStyles = [
+  { value: "any", label: "Any" },
   { value: "group", label: "Shared group" },
   { value: "private", label: "Private" },
+] as const;
+
+export const tourTypes = [
+  { value: "any", label: "Any" },
+  { value: "religious", label: "Religious / pilgrimage" },
+  { value: "honeymoon", label: "Honeymoon" },
+  { value: "adventure", label: "Adventure" },
+  { value: "family", label: "Family" },
+  { value: "culture", label: "Culture & heritage" },
+  { value: "nature", label: "Nature & wildlife" },
+  { value: "leisure", label: "Leisure & sightseeing" },
+] as const;
+
+export const tourFoodPreferences = [
+  { value: "breakfast", label: "Breakfast" },
+  { value: "lunch", label: "Lunch" },
+  { value: "dinner", label: "Dinner" },
+] as const;
+
+export const tourDietaryPreferences = [
+  { value: "any", label: "Any" },
+  { value: "vegetarian", label: "Vegetarian" },
+  { value: "non-vegetarian", label: "Non-vegetarian" },
+  { value: "jain", label: "Jain" },
+  { value: "halal", label: "Halal" },
+] as const;
+
+export const tourCarPreferences = [
+  { value: "any", label: "Any" },
+  { value: "sedan", label: "Sedan" },
+  { value: "suv", label: "SUV" },
+  { value: "muv", label: "MUV / Tempo Traveller" },
+  { value: "luxury", label: "Luxury" },
+  { value: "none", label: "No car needed" },
+] as const;
+
+export const tourHotelPreferences = [
+  { value: "any", label: "Any" },
+  { value: "budget", label: "Budget" },
+  { value: "comfortable", label: "Comfortable" },
+  { value: "3-star", label: "3-star" },
+  { value: "4-star", label: "4-star" },
+  { value: "5-star", label: "5-star" },
+  { value: "luxury", label: "Luxury" },
+  { value: "houseboat", label: "Houseboat" },
 ] as const;
 
 export const carTypes = [
@@ -59,10 +105,17 @@ export const yesNoOptions = [
 
 export const hotelRoomTypes = [
   { value: "any", label: "Any" },
+  { value: "standard", label: "Standard" },
+  { value: "deluxe", label: "Deluxe" },
+  { value: "super-deluxe", label: "Super Deluxe" },
+  { value: "suite", label: "Suite" },
+  { value: "family", label: "Family Room" },
+  { value: "connecting", label: "Connecting Rooms" },
+] as const;
+
+export const legacyHotelRoomTypes = [
   { value: "double", label: "Double" },
   { value: "twin", label: "Twin" },
-  { value: "family", label: "Family" },
-  { value: "suite", label: "Suite" },
 ] as const;
 
 export const hotelMeals = [
@@ -70,6 +123,7 @@ export const hotelMeals = [
   { value: "room", label: "Room only" },
   { value: "breakfast", label: "Breakfast" },
   { value: "half", label: "Breakfast and dinner" },
+  { value: "full", label: "All meals" },
 ] as const;
 
 export const tourBudgetBands: readonly BudgetBand[] = [
@@ -97,12 +151,48 @@ export const bikeBudgetBands: readonly BudgetBand[] = [
 ];
 
 export const hotelBudgetBands: readonly BudgetBand[] = [
+  { value: "under-2000", label: "Under ₹2,000", note: "Under INR 2,000 per night" },
+  { value: "2000-4000", label: "₹2,000–₹4,000", note: "INR 2,000 to 4,000 per night" },
+  { value: "4000-7000", label: "₹4,000–₹7,000", note: "INR 4,000 to 7,000 per night" },
+  { value: "7000-10000", label: "₹7,000–₹10,000", note: "INR 7,000 to 10,000 per night" },
+  { value: "10000-15000", label: "₹10,000–₹15,000", note: "INR 10,000 to 15,000 per night" },
+  { value: "above-15000", label: "₹15,000+", note: "INR 15,000 or more per night" },
+];
+
+export const legacyHotelBudgetBands: readonly BudgetBand[] = [
   { value: "upto-3000", label: "Up to 3,000", note: "Up to INR 3,000 per night" },
   { value: "3000-6000", label: "3,000 – 6,000", note: "INR 3,000 to 6,000 per night" },
   { value: "6000-10000", label: "6,000 – 10,000", note: "INR 6,000 to 10,000 per night" },
   { value: "10000-20000", label: "10,000 – 20,000", note: "INR 10,000 to 20,000 per night" },
   { value: "above-20000", label: "Above 20,000", note: "Above INR 20,000 per night" },
 ];
+
+export const allHotelBudgetBands: readonly BudgetBand[] = [
+  ...hotelBudgetBands,
+  ...legacyHotelBudgetBands,
+];
+
+export const hotelStayPreferences = [
+  { value: "luxury", label: "Luxury stay", text: "A special, elevated stay" },
+  { value: "comfortable", label: "Comfortable stay", text: "A relaxed, reliable base" },
+  { value: "family", label: "Family friendly", text: "Room for everyone" },
+  { value: "budget", label: "Budget friendly", text: "Great value matters most" },
+  { value: "any", label: "No preference", text: "Find the best fit" },
+] as const;
+
+export const hotelAdditionalPreferences = [
+  { value: "lake-view", label: "Lake view" },
+  { value: "mountain-view", label: "Mountain view" },
+  { value: "city-view", label: "City view" },
+  { value: "near-market", label: "Near market" },
+  { value: "pool", label: "Swimming pool" },
+  { value: "parking", label: "Parking" },
+  { value: "wifi", label: "Free Wi-Fi" },
+  { value: "airport-transfer", label: "Airport transfers" },
+  { value: "pet-friendly", label: "Pet friendly" },
+  { value: "family-friendly", label: "Family friendly" },
+  { value: "accessible", label: "Accessible rooms" },
+] as const;
 
 export function budgetChoices(bands: readonly BudgetBand[]): RequestOption[] {
   return [{ value: "", label: "Any" }, ...bands.map(({ value, label }) => ({ value, label })), { value: "other", label: "Other" }];

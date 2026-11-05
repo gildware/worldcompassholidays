@@ -13,13 +13,17 @@ import {
   carBudgetBands,
   carTypes,
   driveOptions,
-  helmetOptions,
   isBudgetValue,
   optionLabel,
   riderOptions,
+  tourCarPreferences,
   tourBudgetBands,
+  tourDietaryPreferences,
+  tourFoodPreferences,
+  tourHotelPreferences,
   tourLengths,
   tourStyles,
+  tourTypes,
   transmissionOptions,
   yesNoOptions,
 } from "@/lib/custom-request";
@@ -58,6 +62,20 @@ function valuesOf(options: readonly { value: string }[]) {
   return options.map((option) => option.value);
 }
 
+function selectedOptions(value: string, options: readonly { value: string }[]) {
+  const allowed = new Set(valuesOf(options));
+  try {
+    const parsed: unknown = JSON.parse(value || "[]");
+    if (Array.isArray(parsed)) {
+      const selected = [...new Set(parsed.filter((item): item is string => typeof item === "string" && allowed.has(item)))];
+      return selected.includes("any") ? ["any"] : selected;
+    }
+  } catch {
+    if (allowed.has(value)) return [value];
+  }
+  return [];
+}
+
 const requestSchema = z
   .object({
     kind: z.enum(kinds),
@@ -81,6 +99,14 @@ const requestSchema = z
     pickupTime: z.string().default(""),
     length: z.string().default(""),
     style: z.string().default(""),
+    tourType: z.string().default("any"),
+    needFood: z.string().default("no"),
+    foodPreference: z.string().default("any"),
+    dietaryPreferences: z.string().default('["any"]'),
+    needCar: z.string().default("no"),
+    carPreference: z.string().default("any"),
+    needHotel: z.string().default("no"),
+    hotelPreference: z.string().default("any"),
     adults: z.string().default(""),
     children: z.string().default(""),
     hotelPickup: z.string().default(""),
@@ -93,8 +119,8 @@ const requestSchema = z
     childSeats: z.string().default("0"),
     bikeType: z.string().default("any"),
     riders: z.string().default(""),
+    needDriver: z.string().default(""),
     licence: z.string().default(""),
-    helmets: z.string().default(""),
     budget: z.string().trim().default(""),
     message: z.string().trim().max(2000, "Keep the note under 2000 characters").default(""),
   })
@@ -108,15 +134,21 @@ const requestSchema = z
       if (!datePattern.test(data.start)) issue("start", "Choose a start date");
       else if (data.start < localToday()) issue("start", "Choose a date from today onward");
       if (!valuesOf(tourLengths).includes(data.length)) issue("length", "Choose how long the tour should be");
-      if (!valuesOf(tourStyles).includes(data.style)) issue("style", "Choose a shared group or a private tour");
+      if (!valuesOf(tourStyles).includes(data.style)) issue("style", "Choose a tour style");
+      if (!valuesOf(tourTypes).includes(data.tourType)) issue("tourType", "Choose a tour type");
+      if (!valuesOf(yesNoOptions).includes(data.needFood)) issue("needFood", "Choose whether you need food arranged");
+      if (data.needFood === "yes" && selectedOptions(data.foodPreference, tourFoodPreferences).length === 0) issue("foodPreference", "Choose at least one meal");
+      if (data.needFood === "yes" && selectedOptions(data.dietaryPreferences, tourDietaryPreferences).length === 0) issue("dietaryPreferences", "Choose a dietary preference");
+      if (!valuesOf(yesNoOptions).includes(data.needCar)) issue("needCar", "Choose whether you need a car");
+      if (!valuesOf(tourCarPreferences).includes(data.carPreference)) issue("carPreference", "Choose a car preference");
+      if (!valuesOf(yesNoOptions).includes(data.needHotel)) issue("needHotel", "Choose whether you need a hotel");
+      if (data.needHotel === "yes" && selectedOptions(data.hotelPreference, tourHotelPreferences).length === 0) issue("hotelPreference", "Choose at least one hotel preference");
       if (!/^\d+$/.test(data.adults) || Number(data.adults) < 1 || Number(data.adults) > 20) {
         issue("adults", "Enter how many adults, from 1 to 20");
       }
       if (!/^\d+$/.test(data.children) || Number(data.children) < 0 || Number(data.children) > 12) {
         issue("children", "Enter how many children, from 0 to 12");
       }
-      if (!valuesOf(yesNoOptions).includes(data.hotelPickup)) issue("hotelPickup", "Say whether you want hotel pickup");
-      if (data.hotelPickup === "yes" && data.pickupHotel.trim().length < 2) issue("pickupHotel", "Enter the hotel name");
       if (!valuesOf(yesNoOptions).includes(data.datesFlexible)) issue("datesFlexible", "Say whether the dates can move");
       if (!isBudgetValue(tourBudgetBands, data.budget)) issue("budget", "Choose a budget, or enter an amount from 100 to 500000");
       return;
@@ -147,9 +179,11 @@ const requestSchema = z
     }
 
     if (!valuesOf(bikeTypes).includes(data.bikeType)) issue("bikeType", "Choose a bike type");
-    if (!valuesOf(riderOptions).includes(data.riders)) issue("riders", "Choose solo or with a pillion");
-    if (!valuesOf(yesNoOptions).includes(data.licence)) issue("licence", "Say whether you have a valid two-wheeler licence");
-    if (!valuesOf(helmetOptions).includes(data.helmets)) issue("helmets", "Choose how many helmets");
+    if (!valuesOf(yesNoOptions).includes(data.needDriver)) issue("needDriver", "Say whether you need a driver");
+    if (data.needDriver === "no") {
+      if (!valuesOf(yesNoOptions).includes(data.licence)) issue("licence", "Say whether you have a valid two-wheeler licence");
+      if (!valuesOf(riderOptions).includes(data.riders)) issue("riders", "Choose solo or with a pillion");
+    }
     if (!isBudgetValue(bikeBudgetBands, data.budget)) issue("budget", "Choose a budget, or enter an amount from 100 to 500000");
   });
 
@@ -175,8 +209,12 @@ function requestNotes(input: RequestInput) {
       `Date: ${prettyDate(input.start)}`,
       `Length: ${optionLabel(tourLengths, input.length)}`,
       `Style: ${optionLabel(tourStyles, input.style)}`,
+      `Tour type: ${optionLabel(tourTypes, input.tourType)}`,
       `Party: ${input.adults} ${input.adults === "1" ? "adult" : "adults"}, ${input.children} ${input.children === "1" ? "child" : "children"}`,
-      input.hotelPickup === "yes" ? `Hotel pickup: ${input.pickupHotel}` : "Hotel pickup: No",
+      input.needFood === "yes" ? `Meals needed: ${selectedOptions(input.foodPreference, tourFoodPreferences).map((value) => optionLabel(tourFoodPreferences, value)).join(", ")}` : "Food needed: No",
+      input.needFood === "yes" ? `Dietary preference: ${selectedOptions(input.dietaryPreferences, tourDietaryPreferences).map((value) => optionLabel(tourDietaryPreferences, value)).join(", ")}` : "",
+      input.needCar === "yes" ? `Car needed: Yes · ${optionLabel(tourCarPreferences, input.carPreference)}` : "Car needed: No",
+      input.needHotel === "yes" ? `Hotel preferences: ${selectedOptions(input.hotelPreference, tourHotelPreferences).map((value) => optionLabel(tourHotelPreferences, value)).join(", ")}` : "Hotel needed: No",
       `Dates can move: ${input.datesFlexible === "yes" ? "Yes" : "No"}`,
       `Budget: ${budgetNote(tourBudgetBands, input.budget, "per person")}`,
     );
@@ -205,9 +243,9 @@ function requestNotes(input: RequestInput) {
       input.itemName ? `Model: ${input.itemName}` : "",
       `Dates: ${prettyDate(input.start)} to ${prettyDate(input.end)}`,
       `Type: ${optionLabel(bikeTypes, input.bikeType)}`,
-      `Riders: ${optionLabel(riderOptions, input.riders)}`,
-      `Licence: ${input.licence === "yes" ? "Yes" : "No"}`,
-      `Helmets: ${input.helmets}`,
+      `Driver needed: ${input.needDriver === "yes" ? "Yes" : "No"}`,
+      input.needDriver === "no" ? `Riders: ${optionLabel(riderOptions, input.riders)}` : "",
+      input.needDriver === "no" ? `Licence: ${input.licence === "yes" ? "Yes" : "No"}` : "",
       `Budget: ${budgetNote(bikeBudgetBands, input.budget, "per day")}`,
     );
   }
@@ -228,7 +266,7 @@ function requestTitle(input: RequestInput) {
 function guestCount(input: RequestInput) {
   if (input.kind === "tour") return Number(input.adults) + Number(input.children);
   if (input.kind === "car") return Number(input.passengers);
-  return Number(input.riders);
+  return Number(input.riders) || 1;
 }
 
 export async function submitServiceRequest(_previous: FormState, formData: FormData): Promise<FormState> {
@@ -254,6 +292,14 @@ export async function submitServiceRequest(_previous: FormState, formData: FormD
     pickupTime: normalizeTime(text(formData.get("pickupTime"))),
     length: text(formData.get("length")),
     style: text(formData.get("style")),
+    tourType: text(formData.get("tourType")) || "any",
+    needFood: text(formData.get("needFood")) || "no",
+    foodPreference: text(formData.get("foodPreference")) || "any",
+    dietaryPreferences: text(formData.get("dietaryPreferences")) || '["any"]',
+    needCar: text(formData.get("needCar")) || "no",
+    carPreference: text(formData.get("carPreference")) || "any",
+    needHotel: text(formData.get("needHotel")) || "no",
+    hotelPreference: text(formData.get("hotelPreference")) || "any",
     adults: text(formData.get("adults")),
     children: text(formData.get("children")),
     hotelPickup: text(formData.get("hotelPickup")),
@@ -266,8 +312,8 @@ export async function submitServiceRequest(_previous: FormState, formData: FormD
     childSeats: text(formData.get("childSeats")) || "0",
     bikeType: text(formData.get("bikeType")) || "any",
     riders: text(formData.get("riders")),
+    needDriver: text(formData.get("needDriver")),
     licence: text(formData.get("licence")),
-    helmets: text(formData.get("helmets")),
     budget: text(formData.get("budget")),
     message: text(formData.get("message")),
   };
@@ -309,8 +355,14 @@ export async function submitServiceRequest(_previous: FormState, formData: FormD
         style: data.style,
         adults: data.kind === "tour" ? Number(data.adults) : null,
         children: data.kind === "tour" ? Number(data.children) : null,
-        hotelPickup: data.hotelPickup,
-        pickupHotel: data.pickupHotel,
+        tourType: data.tourType,
+        needFood: data.needFood === "yes",
+        foodPreferences: data.needFood === "yes" ? selectedOptions(data.foodPreference, tourFoodPreferences) : [],
+        dietaryPreferences: data.needFood === "yes" ? selectedOptions(data.dietaryPreferences, tourDietaryPreferences) : [],
+        needCar: data.needCar === "yes",
+        carPreference: data.needCar === "yes" ? data.carPreference : "",
+        needHotel: data.needHotel === "yes",
+        hotelPreferences: data.needHotel === "yes" ? selectedOptions(data.hotelPreference, tourHotelPreferences) : [],
         datesFlexible: data.datesFlexible === "yes",
         vehicleType: data.vehicleType,
         passengers: data.kind === "car" ? Number(data.passengers) : null,
@@ -318,9 +370,9 @@ export async function submitServiceRequest(_previous: FormState, formData: FormD
         transmission: data.transmission,
         childSeats: data.kind === "car" ? Number(data.childSeats) : null,
         bikeType: data.bikeType,
-        riders: data.kind === "bike" ? Number(data.riders) : null,
-        licence: data.licence,
-        helmets: data.kind === "bike" ? Number(data.helmets) : null,
+        riders: data.kind === "bike" && data.needDriver === "no" ? Number(data.riders) : null,
+        needDriver: data.kind === "bike" && data.needDriver === "yes",
+        licence: data.kind === "bike" && data.needDriver === "no" ? data.licence : "",
         budget: /^\d+$/.test(data.budget) ? Number(data.budget) : null,
         budgetBand: /^\d+$/.test(data.budget) || !data.budget ? null : data.budget,
         message: data.message,

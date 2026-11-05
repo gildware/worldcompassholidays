@@ -1,33 +1,36 @@
 "use client";
 
-import { useActionState, useEffect, useState, type MouseEvent } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { useFormStatus } from "react-dom";
 import { submitBusRequest } from "@/actions/bus-request";
-import { BackIcon, SuccessModal } from "@/components/hotel-request/HotelRequestForm";
-import { WhatsAppIcon } from "@/components/visa/VisaIcons";
-import { formatPhone } from "@/lib/auth/phone";
+import { SuccessModal } from "@/components/hotel-request/HotelRequestForm";
+import {
+  focusGuideField,
+  GuideActions,
+  GuideChips,
+  GuideCityField,
+  GuideContact,
+  GuideCounter,
+  GuideDateField,
+  GuideNote,
+  GuideProgress,
+  GuideTextField,
+  FieldMessage,
+  StepTitle,
+  clampCount,
+  todayIso,
+} from "@/components/service-request/guide-ui";
 import { busCoachTypes, busTimeWindows } from "@/lib/buses";
+import { optionLabel } from "@/lib/custom-request";
 import { initialFormState, type FormState } from "@/lib/forms";
 
-const fieldOrder = ["phone", "fromCity", "toCity", "travelDate", "passengers", "coach", "timeWindow", "busName", "message"];
+type StepIndex = 0 | 1;
 
-function focusErrorField(fields?: Record<string, string>) {
-  const key = fieldOrder.find((name) => fields?.[name]);
-  const input = key ? document.getElementById(key) : null;
-  const visibleInput = input instanceof HTMLInputElement && input.type === "hidden" ? null : input;
-  const target = visibleInput || (key ? document.getElementById(`${key}-field`) : null) || document.querySelector(".hotel-request-banner-alert");
-  if (!(target instanceof HTMLElement)) return;
-  target.scrollIntoView({ behavior: "smooth", block: "center" });
-  if (visibleInput instanceof HTMLElement) visibleInput.focus({ preventScroll: true });
-}
-
-function clampCount(value: string | undefined, fallback: string, min: number, max: number) {
-  const parsed = Number(value && /^\d+$/.test(value) ? value : fallback);
-  if (!Number.isFinite(parsed)) return min;
-  return Math.min(max, Math.max(min, Math.round(parsed)));
-}
+const stepFields = [
+  ["fromCity", "toCity", "travelDate", "busName"],
+  ["passengers", "coach", "timeWindow", "luggageQuantity", "luggageWeight", "message", "phone"],
+] as const;
 
 export type BusRequestDefaults = {
   fromCity: string;
@@ -36,6 +39,8 @@ export type BusRequestDefaults = {
   passengers: string;
   coach: string;
   timeWindow: string;
+  luggageQuantity: string;
+  luggageWeight: string;
   busName: string;
   slug: string;
   message: string;
@@ -60,31 +65,77 @@ export function BusRequestForm({
   const [state, action, pending] = useActionState(submitBusRequest, initialFormState);
   const [whatsappState, setWhatsappState] = useState<FormState | null>(null);
   const [whatsappPending, setWhatsappPending] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const view = whatsappState ?? state;
-  const saved = view.values ?? {};
+  const saved = state.values ?? {};
   const busy = pending || whatsappPending;
-  const [fromCity, setFromCity] = useState(saved.fromCity || defaults.fromCity || "");
-  const [toCity, setToCity] = useState(saved.toCity || defaults.toCity || "");
+  const formRef = useRef<HTMLFormElement>(null);
+  const firstStep = useRef(true);
+  const [mounted, setMounted] = useState(false);
+  const [step, setStep] = useState<StepIndex>(0);
+  const [successDismissed, setSuccessDismissed] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const today = todayIso();
+
+  const [fromCity, setFromCity] = useState(saved.fromCity || defaults.fromCity);
+  const [toCity, setToCity] = useState(saved.toCity || defaults.toCity);
+  const [travelDate, setTravelDate] = useState(saved.travelDate || defaults.travelDate);
+  const [busName, setBusName] = useState(saved.busName || defaults.busName);
+  const [passengers, setPassengers] = useState(clampCount(saved.passengers, defaults.passengers, 1, 20));
   const [coach, setCoach] = useState(saved.coach || defaults.coach || "any");
   const [timeWindow, setTimeWindow] = useState(saved.timeWindow || defaults.timeWindow || "any");
-  const [passengers, setPassengers] = useState(clampCount(saved.passengers, defaults.passengers, 1, 20));
-  const [note, setNote] = useState(saved.message || defaults.message || "");
-  const cityOptions = Array.from(
-    new Set([...cities, fromCity, toCity].map((city) => city.trim()).filter(Boolean)),
-  ).sort((a, b) => a.localeCompare(b, "en"));
+  const [luggageQuantity, setLuggageQuantity] = useState(saved.luggageQuantity || defaults.luggageQuantity || "0");
+  const [luggageWeight, setLuggageWeight] = useState(saved.luggageWeight || defaults.luggageWeight || "0");
+  const [message, setMessage] = useState(saved.message || defaults.message);
+  const [phone, setPhone] = useState(saved.phone || "");
+  const cityOptions = useMemo(
+    () => Array.from(new Set(cities.map((city) => city.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, "en")),
+    [cities],
+  );
+
+  const tripErrors = useMemo(() => {
+    const errors: Record<string, string> = {};
+    if (fromCity.trim().length < 2) errors.fromCity = "Enter the boarding city.";
+    if (toCity.trim().length < 2) errors.toCity = "Enter the arrival city.";
+    else if (fromCity.trim() && fromCity.trim().toLowerCase() === toCity.trim().toLowerCase()) errors.toCity = "Choose a different arrival city.";
+    if (!travelDate) errors.travelDate = "Choose your travel date.";
+    else if (travelDate < today) errors.travelDate = "Choose today or a future date.";
+    return errors;
+  }, [fromCity, toCity, today, travelDate]);
+  const messageError = message.length > 2000 ? "Keep the note under 2000 characters." : undefined;
+  const phoneError = customer && !customer.phone && phoneTouched && phone.replace(/\D/g, "").length < 8
+    ? "Enter a phone number with country code."
+    : undefined;
 
   useEffect(() => {
-    setMounted(true);
+    const frame = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
     if (!view.error) return;
-    focusErrorField(view.fields);
+    const fields = view.fields ?? {};
+    const invalidStep = stepFields.findIndex((names) => names.some((name) => fields[name]));
+    const frame = window.requestAnimationFrame(() => {
+      if (invalidStep >= 0) setStep(invalidStep as StepIndex);
+      focusGuideField(stepFields.flat(), fields);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [view]);
 
-  const successReference =
-    !busy && state.reference && !state.error
+  useEffect(() => {
+    if (firstStep.current) {
+      firstStep.current = false;
+      return;
+    }
+    const card = document.getElementById("bus-request-pass");
+    if (!card) return;
+    window.scrollTo({ top: Math.max(0, card.getBoundingClientRect().top + window.scrollY - 80), behavior: "smooth" });
+  }, [step]);
+
+  const successReference = successDismissed
+    ? ""
+    : !busy && state.reference && !state.error
       ? state.reference
       : !busy && whatsappState?.reference && !whatsappState.error
         ? whatsappState.reference
@@ -92,38 +143,81 @@ export function BusRequestForm({
           ? reference
           : "";
 
-  function loginWithBrief(form: HTMLFormElement | null) {
-    const params = new URLSearchParams();
-    if (form) {
-      const data = new FormData(form);
-      for (const [from, to] of [
-        ["fromCity", "from"],
-        ["toCity", "to"],
-        ["travelDate", "date"],
-        ["passengers", "passengers"],
-        ["coach", "coach"],
-        ["timeWindow", "time"],
-        ["busName", "busName"],
-        ["slug", "slug"],
-        ["message", "message"],
-      ] as const) {
-        const value = String(data.get(from) || "").trim();
-        if (value && value !== "any") params.set(to, value);
-      }
+  function errorFor(name: string, clientError?: string, show = false) {
+    return view.fields?.[name] || (show ? clientError : undefined);
+  }
+
+  function continueTo(next: 1) {
+    if (step === 0) {
+      setTouched(true);
+      if (Object.keys(tripErrors).length) return;
     }
-    if (!params.size) {
-      window.location.assign(loginHref);
+    setStep(next);
+  }
+
+  function loginWithBrief(form: HTMLFormElement) {
+    const data = new FormData(form);
+    const params = new URLSearchParams();
+    for (const [from, to] of [
+      ["fromCity", "from"],
+      ["toCity", "to"],
+      ["travelDate", "date"],
+      ["passengers", "passengers"],
+      ["coach", "coach"],
+      ["timeWindow", "time"],
+      ["luggageQuantity", "luggageQuantity"],
+      ["luggageWeight", "luggageWeight"],
+      ["busName", "busName"],
+      ["slug", "slug"],
+      ["message", "message"],
+    ] as const) {
+      const value = String(data.get(from) || "").trim();
+      if (value && value !== "any") params.set(to, value);
+    }
+    router.push(params.size ? `/login?next=${encodeURIComponent(`/buses/request?${params}`)}` : loginHref);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    setWhatsappState(null);
+    if (step < 1 || busy) {
+      event.preventDefault();
       return;
     }
-    window.location.assign(`/login?next=${encodeURIComponent(`/buses/request?${params}`)}`);
+    if (Object.keys(tripErrors).length) {
+      event.preventDefault();
+      setStep(0);
+      setTouched(true);
+      return;
+    }
+    if (messageError) {
+      event.preventDefault();
+      setStep(1);
+      return;
+    }
+    if (!customer) {
+      event.preventDefault();
+      loginWithBrief(event.currentTarget);
+      return;
+    }
+    if (!customer.phone && phone.replace(/\D/g, "").length < 8) {
+      event.preventDefault();
+      setPhoneTouched(true);
+      return;
+    }
+    setSuccessDismissed(false);
   }
 
   async function sendOnWhatsApp(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
-    const form = event.currentTarget.form;
+    const form = formRef.current;
     if (!form || busy) return;
+    if (!customer?.phone && phone.replace(/\D/g, "").length < 8) {
+      setPhoneTouched(true);
+      return;
+    }
     const data = new FormData(form);
     data.set("channel", "whatsapp");
+    setSuccessDismissed(false);
     setWhatsappPending(true);
     const result = await submitBusRequest(initialFormState, data);
     setWhatsappState(result);
@@ -132,301 +226,85 @@ export function BusRequestForm({
   }
 
   const successModal = successReference ? (
-    <SuccessModal reference={successReference} exploreHref="/buses" detail="Nothing is booked until you accept a quote." />
+    <SuccessModal reference={successReference} exploreHref="/buses" detail="Nothing is booked until you accept a quote." onClose={() => setSuccessDismissed(true)} />
   ) : null;
 
   return (
-    <div className="hotel-request-card" id="hotel-request-pass">
-      <button
-        type="button"
-        className="hotel-request-back"
-        onClick={() => (window.history.length > 1 ? router.back() : router.push("/buses"))}
-      >
-        <BackIcon />
+    <div className="hotel-request-card hotel-guide-card tour-guide-card" id="bus-request-pass">
+      <button type="button" className="hotel-request-back" onClick={() => (window.history.length > 1 ? router.back() : router.push("/buses"))}>
         Back
       </button>
-      <h2>Request a bus</h2>
-      <p className="hotel-request-lede">Send the cities and date. We quote before anything is booked.</p>
-      <form
-        action={action}
-        noValidate
-        className="hotel-request-form"
-        onSubmit={(event) => {
-          setWhatsappState(null);
-          if (!customer) {
-            event.preventDefault();
-            loginWithBrief(event.currentTarget);
-          }
-        }}
-      >
-        {view.error ? (
-          <div className="hotel-request-span">
-            <p className="hotel-request-banner-alert" role="alert">
-              {view.fields ? "Check the highlighted fields." : view.error}
-            </p>
-          </div>
-        ) : null}
-        {customer ? (
-          <div className="hotel-request-span hotel-request-account">
-            <strong>{customer.name}</strong>
-            <span>{customer.phone ? formatPhone(customer.phone) || customer.phone : customer.email}</span>
-          </div>
-        ) : (
-          <div className="hotel-request-span">
-            <p className="hotel-request-lede">Log in to send this. The request uses the name and phone on your account.</p>
-          </div>
-        )}
-        {customer?.phone ? (
-          <Field
-            label="Alternative phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            placeholder="Optional"
-            error={view.fields?.phone}
-            defaultValue={saved.phone && saved.phone !== customer.phone ? saved.phone : ""}
-            wide
-          />
-        ) : customer ? (
-          <Field
-            label="Phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            placeholder="+91 98765 43210"
-            error={view.fields?.phone}
-            defaultValue={saved.phone}
-            wide
-          />
-        ) : null}
-        <CityField
-          label="From"
-          name="fromCity"
-          value={fromCity}
-          cities={cityOptions}
-          error={view.fields?.fromCity}
-          onChange={setFromCity}
-        />
-        <CityField
-          label="To"
-          name="toCity"
-          value={toCity}
-          cities={cityOptions}
-          error={view.fields?.toCity}
-          onChange={setToCity}
-        />
-        <Field
-          label="Travel date"
-          name="travelDate"
-          type="date"
-          error={view.fields?.travelDate}
-          defaultValue={saved.travelDate || defaults.travelDate}
-        />
-        <div className="hotel-request-cell" id="passengers-field">
-          <label id="passengers-label">Passengers</label>
-          <div className={`hotel-request-stepper${view.fields?.passengers ? " is-invalid" : ""}`}>
-            <button type="button" aria-label="Fewer passengers" disabled={passengers <= 1} onClick={() => setPassengers(passengers - 1)}>
-              −
-            </button>
-            <output aria-labelledby="passengers-label">{passengers}</output>
-            <button type="button" aria-label="More passengers" disabled={passengers >= 20} onClick={() => setPassengers(passengers + 1)}>
-              +
-            </button>
-          </div>
-          <input type="hidden" name="passengers" value={passengers} />
-          {view.fields?.passengers ? <p className="hotel-request-error">{view.fields.passengers}</p> : null}
-        </div>
-        <ChoiceRow label="Coach" name="coach" value={coach} options={busCoachTypes} error={view.fields?.coach} onChange={setCoach} />
-        <ChoiceRow
-          label="Time"
-          name="timeWindow"
-          value={timeWindow}
-          options={busTimeWindows}
-          error={view.fields?.timeWindow}
-          onChange={setTimeWindow}
-        />
-        <Field
-          label="Bus name"
-          name="busName"
-          placeholder="Optional"
-          error={view.fields?.busName}
-          defaultValue={saved.busName || defaults.busName}
-          wide
-        />
+      <div className="hotel-guide-heading">
+        <p className="hotel-guide-kicker">PERSONAL BUS CONCIERGE</p>
+        <h1>Find the right coach for your journey.</h1>
+        <p>Share a few details and our local team will find the right options for you.</p>
+      </div>
+      <GuideProgress label="Bus" labels={["Route & date", "Bus details"]} step={step} onSelect={(next) => next < step && setStep(next as StepIndex)} />
+      <form ref={formRef} id="bus-request-form" action={action} noValidate className="hotel-request-form hotel-guide-form" onSubmit={handleSubmit}>
+        <input type="hidden" name="fromCity" value={fromCity} />
+        <input type="hidden" name="toCity" value={toCity} />
+        <input type="hidden" name="travelDate" value={travelDate} />
+        <input type="hidden" name="busName" value={busName} />
         <input type="hidden" name="slug" value={saved.slug || defaults.slug} />
-        <Field
-          label="What should we look for?"
-          name="message"
-          multiline
-          placeholder="Pickup point, evening departure, travelling with family"
-          error={view.fields?.message}
-          value={note}
-          onChange={setNote}
-        />
-        <div className="hotel-request-span hotel-request-actions">
-          {customer ? (
-            <>
-              <Submit busy={busy} />
-              <button type="button" className="hotel-request-whatsapp" disabled={busy} onClick={sendOnWhatsApp}>
-                <WhatsAppIcon />
-                {whatsappPending ? "Saving…" : "Send on WhatsApp"}
-              </button>
-            </>
-          ) : (
-            <button type="button" className="hotel-request-submit" onClick={(event) => loginWithBrief(event.currentTarget.form)}>
-              Log in to request
-            </button>
-          )}
-        </div>
+        <input type="hidden" name="passengers" value={passengers} />
+        <input type="hidden" name="coach" value={coach} />
+        <input type="hidden" name="timeWindow" value={timeWindow} />
+        <input type="hidden" name="luggageQuantity" value={luggageQuantity} />
+        <input type="hidden" name="luggageWeight" value={luggageWeight} />
+        <input type="hidden" name="message" value={message} />
+        <input type="hidden" name="phone" value={phone} />
+        {view.error ? <p className="hotel-request-banner-alert hotel-guide-alert" role="alert">{view.fields ? "Please check the highlighted details." : view.error}</p> : null}
+
+        {step === 0 ? (
+          <section className="hotel-guide-panel" aria-labelledby="bus-step-one-title">
+            <StepTitle number="01" id="bus-step-one-title" title="Where and when are you travelling?" text="Choose your boarding and arrival cities, travel date, and an operator if you have one in mind." />
+            <div className="hotel-guide-grid">
+              <GuideCityField name="fromCity" label="From" value={fromCity} cities={cityOptions} emptyLabel="Choose a boarding city" customLabel="+ Enter another city" customPlaceholder="Enter a city or location" error={errorFor("fromCity", tripErrors.fromCity, touched)} onChange={setFromCity} />
+              <GuideCityField name="toCity" label="To" icon="route" value={toCity} cities={cityOptions} emptyLabel="Choose an arrival city" customLabel="+ Enter another city" customPlaceholder="Enter a city or location" error={errorFor("toCity", tripErrors.toCity, touched)} onChange={setToCity} />
+              <GuideDateField name="travelDate" label="Travel date" icon="calendar" value={travelDate} min={today} error={errorFor("travelDate", tripErrors.travelDate, touched)} onPick={setTravelDate} />
+              <GuideTextField name="busName" label="Bus name (optional)" icon="bus" placeholder="A bus or operator you have in mind" value={busName} onChange={setBusName} error={view.fields?.busName} />
+            </div>
+          </section>
+        ) : null}
+
+        {step === 1 ? (
+          <section className="hotel-guide-panel" aria-labelledby="bus-step-two-title">
+            <StepTitle number="02" id="bus-step-two-title" title="What should we arrange for the trip?" text="Tell us the passenger count, coach and departure preferences, luggage, and any extra details." />
+            <div className="tour-guide-stack">
+            <div className="hotel-guide-travellers tour-guide-travellers">
+              <GuideCounter id="passengers" label="Passengers" icon="adults" hint="Everyone travelling" value={passengers} min={1} max={20} error={view.fields?.passengers} onChange={setPassengers} />
+            </div>
+            <GuideChips id="coach" label="Which coach would you like?" labelIcon="bus" options={busCoachTypes} value={coach} onChange={setCoach} error={view.fields?.coach} withIcons />
+            <GuideChips id="timeWindow" label="When would you like to leave?" labelIcon="clock" options={busTimeWindows} value={timeWindow} onChange={setTimeWindow} error={view.fields?.timeWindow} withIcons />
+            <div className="hotel-guide-grid">
+              <div className="hotel-guide-field" id="luggageQuantity-field">
+                <label htmlFor="guide-luggageQuantity">Luggage quantity (pieces)</label>
+                <div className={`hotel-request-control mt-5${view.fields?.luggageQuantity ? " is-invalid" : ""}`}>
+                  <input id="guide-luggageQuantity" type="number" min="0" max="50" step="1" inputMode="numeric" value={luggageQuantity} onChange={(event) => setLuggageQuantity(event.target.value)} aria-invalid={view.fields?.luggageQuantity ? true : undefined} />
+                </div>
+                <FieldMessage message={view.fields?.luggageQuantity} />
+              </div>
+              <div className="hotel-guide-field" id="luggageWeight-field">
+                <label htmlFor="guide-luggageWeight">Total luggage weight (kg)</label>
+                <div className={`hotel-request-control mt-5${view.fields?.luggageWeight ? " is-invalid" : ""}`}>
+                  <input id="guide-luggageWeight" type="number" min="0" max="500" step="0.1" inputMode="decimal" value={luggageWeight} onChange={(event) => setLuggageWeight(event.target.value)} aria-invalid={view.fields?.luggageWeight ? true : undefined} />
+                </div>
+                <FieldMessage message={view.fields?.luggageWeight} />
+              </div>
+            </div>
+            <p className="hotel-guide-reassurance">Enter the total number of pieces and their combined weight. Use 0 if you have no luggage.</p>
+            <GuideNote label="Anything else we should know?" placeholder="Pickup point, evening departure, travelling with family" value={message} onChange={setMessage} />
+            <FieldMessage message={errorFor("message", messageError, true)} />
+            </div>
+            <p className="hotel-guide-reassurance">Our travel team will review your requirements and get back to you with suitable buses and a quote.</p>
+            <GuideContact customer={customer} phone={phone} error={phoneError} onPhone={setPhone} />
+          </section>
+        ) : null}
       </form>
+      <GuideActions step={step} last={1} formId="bus-request-form" busy={busy} submitLabel="Submit bus request" busyLabel="Sending request…" onBack={() => setStep(0)} onContinue={() => continueTo(1)}>
+        {customer ? <button type="button" className="hotel-guide-whatsapp" disabled={busy} onClick={sendOnWhatsApp}>{whatsappPending ? "Preparing…" : "Send via WhatsApp"}</button> : null}
+      </GuideActions>
       {mounted && successModal ? createPortal(successModal, document.body) : null}
     </div>
-  );
-}
-
-function CityField({
-  label,
-  name,
-  value,
-  cities,
-  error,
-  onChange,
-}: {
-  label: string;
-  name: string;
-  value: string;
-  cities: string[];
-  error?: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className="hotel-request-cell">
-      <label htmlFor={name}>{label}</label>
-      <div className={`hotel-request-control mt-5${error ? " is-invalid" : ""}`}>
-        <select
-          id={name}
-          name={name}
-          value={value}
-          onChange={(event) => onChange(event.currentTarget.value)}
-          aria-invalid={error ? true : undefined}
-        >
-          <option value="">Choose city</option>
-          {cities.map((city) => (
-            <option key={city} value={city}>
-              {city}
-            </option>
-          ))}
-        </select>
-      </div>
-      {error ? <p className="hotel-request-error">{error}</p> : null}
-    </div>
-  );
-}
-
-function ChoiceRow({
-  label,
-  name,
-  value,
-  options,
-  error,
-  onChange,
-}: {
-  label: string;
-  name: string;
-  value: string;
-  options: readonly { value: string; label: string }[];
-  error?: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className="hotel-request-span" id={`${name}-field`}>
-      <p className="hotel-request-label" id={`${name}-label`}>
-        {label}
-      </p>
-      <div className="hotel-request-budget" role="group" aria-labelledby={`${name}-label`}>
-        {options.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            className={value === option.value ? "is-on" : ""}
-            aria-pressed={value === option.value}
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-      <input type="hidden" name={name} value={value} />
-      {error ? <p className="hotel-request-error">{error}</p> : null}
-    </div>
-  );
-}
-
-function Field({
-  label,
-  name,
-  type = "text",
-  placeholder,
-  autoComplete,
-  defaultValue,
-  value,
-  onChange,
-  error,
-  multiline = false,
-  wide = false,
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  placeholder?: string;
-  autoComplete?: string;
-  defaultValue?: string;
-  value?: string;
-  onChange?: (next: string) => void;
-  error?: string;
-  multiline?: boolean;
-  wide?: boolean;
-}) {
-  const controlled = value !== undefined;
-  return (
-    <div className={multiline || wide ? "hotel-request-span" : "hotel-request-cell"}>
-      <label htmlFor={name}>{label}</label>
-      <div className={`hotel-request-control mt-5${error ? " is-invalid" : ""}`}>
-        {multiline ? (
-          <textarea
-            id={name}
-            name={name}
-            rows={2}
-            placeholder={placeholder}
-            defaultValue={controlled ? undefined : defaultValue}
-            value={controlled ? value : undefined}
-            onChange={onChange ? (event) => onChange(event.currentTarget.value) : undefined}
-            aria-invalid={error ? true : undefined}
-          />
-        ) : (
-          <input
-            id={name}
-            name={name}
-            type={type}
-            placeholder={placeholder}
-            autoComplete={autoComplete}
-            defaultValue={controlled ? undefined : defaultValue}
-            value={controlled ? value : undefined}
-            onChange={onChange ? (event) => onChange(event.currentTarget.value) : undefined}
-            aria-invalid={error ? true : undefined}
-          />
-        )}
-      </div>
-      {error ? <p className="hotel-request-error">{error}</p> : null}
-    </div>
-  );
-}
-
-function Submit({ busy }: { busy: boolean }) {
-  const { pending } = useFormStatus();
-  return (
-    <button type="submit" className="hotel-request-submit" disabled={pending || busy}>
-      {pending ? "Sending…" : "Request a bus"}
-    </button>
   );
 }

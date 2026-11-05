@@ -1,87 +1,130 @@
 "use client";
 
-import { useActionState, useEffect, useState, type MouseEvent } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { useFormStatus } from "react-dom";
 import { submitServiceRequest } from "@/actions/service-request";
-import { BackIcon, SuccessModal } from "@/components/hotel-request/HotelRequestForm";
-import { formatPhone } from "@/lib/auth/phone";
+import { SuccessModal } from "@/components/hotel-request/HotelRequestForm";
+import {
+  FieldMessage,
+  focusGuideField,
+  GuideActions,
+  GuideBudget,
+  GuideCards,
+  GuideChips,
+  GuideCityField,
+  GuideContact,
+  GuideCounter,
+  GuideDateField,
+  GuideNote,
+  GuideProgress,
+  GuideSelectField,
+  GuideTextField,
+  ReviewLine,
+  ReviewSection,
+  StepTitle,
+  budgetFromSaved,
+  budgetSummary,
+  clampCount,
+  nextDayIso,
+  plural,
+  prettyDate,
+  resolveBudget,
+  timeLabel,
+  timeOptions,
+  todayIso,
+} from "@/components/service-request/guide-ui";
 import {
   bikeBudgetBands,
   bikeTypes,
-  budgetChoices,
   carBudgetBands,
   carTypes,
   driveOptions,
-  helmetOptions,
+  optionLabel,
   riderOptions,
-  tourBudgetBands,
-  tourLengths,
-  tourStyles,
   transmissionOptions,
   yesNoOptions,
-  type BudgetBand,
-  type RequestOption,
 } from "@/lib/custom-request";
 import { initialFormState } from "@/lib/forms";
 
+export type ServiceKind = "tour" | "car" | "bike";
+type RentalKind = Exclude<ServiceKind, "tour">;
+type StepIndex = 0 | 1 | 2 | 3;
+
 const copy = {
-  tour: {
-    title: "Request a tour",
-    backHref: "/tours",
-    exploreHref: "/tours",
-    budgetLabel: "Budget per person (INR)",
-    budgetBands: tourBudgetBands,
-    note: "Pace, meals, travelling with family",
-    submit: "Request a tour",
-    detail: "Nothing is booked until you accept the trip.",
-  },
   car: {
-    title: "Request a car",
+    kicker: "PERSONAL CAR CONCIERGE",
+    heading: "Find the right car for your trip.",
+    lede: "Share a few details and our local team will find the right options for you.",
     backHref: "/rentals/cars",
-    exploreHref: "/rentals/cars",
-    budgetLabel: "Budget per day (INR)",
-    budgetBands: carBudgetBands,
-    note: "Airport arrival, luggage, a hill road",
-    submit: "Request a car",
+    labels: ["Trip details", "Car options", "Budget & notes", "Review"],
+    stepOneTitle: "Where and when do you need the car?",
+    stepOneText: "Set your pickup and return details, including the pickup point and time.",
+    stepTwoTitle: "Choose your car and driver options",
+    stepTwoText: "Tell us the car type, passenger count, child-seat needs, driver and transmission preference.",
+    stepThreeTitle: "What is your daily budget?",
+    stepThreeText: "Choose a per-day budget and share details that will help us find the right car.",
+    stepFourTitle: "Review your car request",
+    stepFourText: "Check your trip and car preferences before sending your request.",
+    nameLabel: "Car name (optional)",
+    namePlaceholder: "A model you have in mind",
+    budgetLabel: "Budget per day",
+    budgetUnit: "per day",
+    bands: carBudgetBands,
+    notePlaceholder: "Airport arrival, luggage, a hill road",
+    submit: "Submit car request",
     detail: "Nothing is booked until you accept the car.",
+    reassurance: "Our travel team will review your requirements and get back to you with suitable cars and a quote.",
   },
   bike: {
-    title: "Request a bike",
+    kicker: "PERSONAL BIKE CONCIERGE",
+    heading: "Find the right bike for your ride.",
+    lede: "Share a few details and our local team will find the right options for you.",
     backHref: "/rentals/bikes",
-    exploreHref: "/rentals/bikes",
-    budgetLabel: "Budget per day (INR)",
-    budgetBands: bikeBudgetBands,
-    note: "A hill ride, luggage, riding experience",
-    submit: "Request a bike",
+    labels: ["Trip details", "Bike options", "Budget & notes", "Review"],
+    stepOneTitle: "Where and when do you need the bike?",
+    stepOneText: "Choose your pickup city and point, rental dates, and where you’ll return the bike.",
+    stepTwoTitle: "Choose your bike and riding option",
+    stepTwoText: "Select a bike type and whether you need a driver. If not, we’ll ask about your licence and who is riding.",
+    stepThreeTitle: "What is your daily budget?",
+    stepThreeText: "Choose a per-day budget and share details that will help us find the right bike.",
+    stepFourTitle: "Review your bike request",
+    stepFourText: "Check your trip and bike preferences before sending your request.",
+    nameLabel: "Bike name (optional)",
+    namePlaceholder: "A model you have in mind",
+    budgetLabel: "Budget per day",
+    budgetUnit: "per day",
+    bands: bikeBudgetBands,
+    notePlaceholder: "A hill ride, luggage, riding experience",
+    submit: "Submit bike request",
     detail: "Nothing is booked until you accept the bike.",
+    reassurance: "Our travel team will review your requirements and get back to you with suitable bikes and a quote.",
   },
 } as const;
 
-const fieldOrder = {
-  tour: ["phone", "startCity", "places", "itemName", "start", "length", "style", "adults", "children", "hotelPickup", "pickupHotel", "datesFlexible", "budget", "message"],
-  car: ["phone", "destination", "pickupPoint", "dropoffCity", "itemName", "start", "end", "pickupTime", "vehicleType", "passengers", "drive", "transmission", "childSeats", "budget", "message"],
-  bike: ["phone", "destination", "pickupPoint", "dropoffCity", "itemName", "start", "end", "bikeType", "riders", "licence", "helmets", "budget", "message"],
-} as const;
+const fieldSteps: Record<RentalKind, readonly (readonly string[])[]> = {
+  car: [
+    ["destination", "pickupPoint", "dropoffCity", "itemName", "start", "end", "pickupTime"],
+    ["vehicleType", "passengers", "childSeats", "drive", "transmission"],
+    ["budget", "message"],
+    ["phone"],
+  ],
+  bike: [
+    ["destination", "pickupPoint", "dropoffCity", "itemName", "start", "end"],
+    ["needDriver", "licence", "riders", "bikeType"],
+    ["budget", "message"],
+    ["phone"],
+  ],
+};
 
 const loginKeys = [
   "destination",
-  "startCity",
-  "places",
-  "itemName",
   "pickupPoint",
   "dropoffCity",
+  "itemName",
   "start",
   "end",
   "pickupTime",
-  "length",
-  "style",
-  "adults",
-  "children",
-  "hotelPickup",
-  "pickupHotel",
-  "datesFlexible",
   "vehicleType",
   "passengers",
   "drive",
@@ -89,13 +132,11 @@ const loginKeys = [
   "childSeats",
   "bikeType",
   "riders",
+  "needDriver",
   "licence",
-  "helmets",
   "budget",
   "message",
 ];
-
-export type ServiceKind = keyof typeof copy;
 
 export type ServiceDefaults = {
   destination: string;
@@ -109,6 +150,14 @@ export type ServiceDefaults = {
   pickupTime: string;
   length: string;
   style: string;
+  tourType: string;
+  needFood: string;
+  foodPreference: string;
+  dietaryPreferences: string;
+  needCar: string;
+  carPreference: string;
+  needHotel: string;
+  hotelPreference: string;
   adults: string;
   children: string;
   hotelPickup: string;
@@ -121,34 +170,30 @@ export type ServiceDefaults = {
   childSeats: string;
   bikeType: string;
   riders: string;
+  needDriver: string;
   licence: string;
-  helmets: string;
   budget: string;
   message: string;
 };
 
-function clampCount(value: string | undefined, fallback: string, min: number, max: number) {
-  const parsed = Number(value && /^\d+$/.test(value) ? value : fallback);
-  if (!Number.isFinite(parsed)) return min;
-  return Math.min(max, Math.max(min, Math.round(parsed)));
-}
+const driveCards = [
+  { value: "self", title: "Self-drive", description: "You drive the car yourself", icon: "key" },
+  { value: "driver", title: "With driver", description: "A local driver takes you around", icon: "wheel" },
+] as const;
 
-function focusErrorField(kind: ServiceKind, fields?: Record<string, string>) {
-  const key = fieldOrder[kind].find((name) => fields?.[name]);
-  const input = key ? document.getElementById(key) : null;
-  const visibleInput = input instanceof HTMLInputElement && input.type === "hidden" ? null : input;
-  const target = visibleInput || (key ? document.getElementById(`${key}-field`) : null) || document.querySelector(".hotel-request-banner-alert");
-  if (!(target instanceof HTMLElement)) return;
-  target.scrollIntoView({ behavior: "smooth", block: "center" });
-  if (visibleInput instanceof HTMLElement) visibleInput.focus({ preventScroll: true });
-}
+const riderCards = [
+  { value: "1", title: "Solo", description: "Riding on your own", icon: "bike" },
+  { value: "2", title: "With a pillion", description: "The rider plus one passenger", icon: "users" },
+] as const;
 
-function budgetState(saved: string, bands: readonly BudgetBand[]) {
-  const choices = new Set(budgetChoices(bands).map((option) => option.value));
-  if (!saved) return { choice: "", other: "" };
-  if (choices.has(saved)) return { choice: saved, other: "" };
-  if (/^\d+$/.test(saved)) return { choice: "other", other: saved };
-  return { choice: "", other: "" };
+const dropOptions = [
+  { value: "same", label: "Same city" },
+  { value: "other", label: "Another city" },
+];
+
+function dayCount(start: string, end: string) {
+  if (!start || !end) return 0;
+  return Math.max(0, Math.round((new Date(`${end}T00:00:00`).getTime() - new Date(`${start}T00:00:00`).getTime()) / 86400000));
 }
 
 export function ServiceRequestForm({
@@ -156,357 +201,375 @@ export function ServiceRequestForm({
   customer,
   defaults,
   loginHref,
+  locations,
 }: {
-  kind: ServiceKind;
+  kind: RentalKind;
   customer: { name: string; email: string; phone: string } | null;
   defaults: ServiceDefaults;
   loginHref: string;
+  locations: string[];
 }) {
   const router = useRouter();
   const text = copy[kind];
+  const isCar = kind === "car";
+  const formId = `${kind}-request-form`;
   const [state, action, pending] = useActionState(submitServiceRequest, initialFormState);
-  const view = state;
-  const saved = view.values ?? {};
+  const saved = state.values ?? {};
   const [mounted, setMounted] = useState(false);
-  const initialBudget = budgetState(saved.budget || defaults.budget, text.budgetBands);
-  const [budgetChoice, setBudgetChoice] = useState(initialBudget.choice);
-  const [otherBudget, setOtherBudget] = useState(initialBudget.other);
-  const [note, setNote] = useState(saved.message || defaults.message);
+  const [step, setStep] = useState<StepIndex>(0);
+  const [touched, setTouched] = useState<[boolean, boolean, boolean]>([false, false, false]);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const firstStep = useRef(true);
+  const today = todayIso();
+
   const [destination, setDestination] = useState(saved.destination || defaults.destination);
-  const [startCity, setStartCity] = useState(saved.startCity || defaults.startCity);
-  const [places, setPlaces] = useState(saved.places || defaults.places);
-  const [dropoffCity, setDropoffCity] = useState(saved.dropoffCity || defaults.dropoffCity);
+  const [pickupPoint, setPickupPoint] = useState(saved.pickupPoint || defaults.pickupPoint);
+  const [itemName, setItemName] = useState(saved.itemName || defaults.itemName);
   const [dropMode, setDropMode] = useState(saved.dropoffCity || defaults.dropoffCity ? "other" : "same");
-  const [adults, setAdults] = useState(clampCount(saved.adults, defaults.adults, 1, 20));
-  const [children, setChildren] = useState(clampCount(saved.children, defaults.children, 0, 12));
-  const [passengers, setPassengers] = useState(clampCount(saved.passengers, defaults.passengers, 1, 12));
-  const initialSeats = clampCount(saved.childSeats, defaults.childSeats, 0, 4);
-  const [childSeatMode, setChildSeatMode] = useState(initialSeats > 0 ? "yes" : "no");
-  const [childSeats, setChildSeats] = useState(Math.max(1, initialSeats));
+  const [dropoffCity, setDropoffCity] = useState(saved.dropoffCity || defaults.dropoffCity);
+  const [start, setStart] = useState(saved.start || defaults.start);
+  const [end, setEnd] = useState(saved.end || defaults.end);
+  const [pickupTime, setPickupTime] = useState(saved.pickupTime || defaults.pickupTime);
   const [vehicleType, setVehicleType] = useState(saved.vehicleType || defaults.vehicleType || "any");
+  const [passengers, setPassengers] = useState(clampCount(saved.passengers, defaults.passengers, 1, 12));
+  const [childSeats, setChildSeats] = useState(clampCount(saved.childSeats, defaults.childSeats, 0, 4));
   const [drive, setDrive] = useState(saved.drive || defaults.drive);
   const [transmission, setTransmission] = useState(saved.transmission || defaults.transmission || "either");
   const [bikeType, setBikeType] = useState(saved.bikeType || defaults.bikeType || "any");
   const [riders, setRiders] = useState(saved.riders === "2" || defaults.riders === "2" ? "2" : "1");
-  const initialHelmets = saved.helmets || defaults.helmets;
-  const [helmets, setHelmets] = useState(initialHelmets === "1" || initialHelmets === "2" ? initialHelmets : riders === "2" ? "2" : "1");
+  const [needDriver, setNeedDriver] = useState(saved.needDriver || defaults.needDriver);
   const [licence, setLicence] = useState(saved.licence || defaults.licence);
-  const [length, setLength] = useState(saved.length || defaults.length);
-  const [style, setStyle] = useState(saved.style || defaults.style);
-  const [hotelPickup, setHotelPickup] = useState(saved.hotelPickup || defaults.hotelPickup);
-  const [datesFlexible, setDatesFlexible] = useState(saved.datesFlexible || defaults.datesFlexible || "no");
-  const budgetValue = budgetChoice === "other" ? otherBudget.replace(/\D/g, "") : budgetChoice;
+  const initialBudget = budgetFromSaved(text.bands, saved.budget || defaults.budget);
+  const [budgetChoice, setBudgetChoice] = useState(initialBudget.choice);
+  const [otherBudget, setOtherBudget] = useState(initialBudget.other);
+  const [message, setMessage] = useState(saved.message || defaults.message);
+  const [phone, setPhone] = useState(saved.phone || "");
+
+  const budget = resolveBudget(text.bands, budgetChoice, otherBudget);
+  const times = useMemo(() => timeOptions(pickupTime), [pickupTime]);
+
+  const stepErrors = useMemo(() => {
+    const trip: Record<string, string> = {};
+    if (destination.trim().length < 2) trip.destination = "Enter the pickup city.";
+    if (pickupPoint.trim().length < 2) trip.pickupPoint = "Enter the pickup point.";
+    if (dropMode === "other" && dropoffCity.trim().length < 2) trip.dropoffCity = "Enter the drop-off city.";
+    if (!start) trip.start = "Choose your pickup date.";
+    else if (start < today) trip.start = "Choose today or a future date.";
+    if (!end) trip.end = "Choose your return date.";
+    else if (start && end <= start) trip.end = "Return must be after the pickup date.";
+    if (isCar && !/^([01]\d|2[0-3]):[0-5]\d$/.test(pickupTime)) trip.pickupTime = "Choose a pickup time.";
+
+    const ride: Record<string, string> = {};
+    if (isCar) {
+      if (!carTypes.some((option) => option.value === vehicleType)) ride.vehicleType = "Choose a vehicle type.";
+      if (!driveOptions.some((option) => option.value === drive)) ride.drive = "Say whether you need a driver.";
+      if (!transmissionOptions.some((option) => option.value === transmission)) ride.transmission = "Choose a transmission.";
+    } else {
+      if (!yesNoOptions.some((option) => option.value === needDriver)) ride.needDriver = "Say whether you need a driver.";
+      if (needDriver === "no") {
+        if (!yesNoOptions.some((option) => option.value === licence)) ride.licence = "Say whether you have a valid two-wheeler licence.";
+        if (!riderOptions.some((option) => option.value === riders)) ride.riders = "Choose solo or with a pillion.";
+      }
+      if (!bikeTypes.some((option) => option.value === bikeType)) ride.bikeType = "Choose a bike type.";
+    }
+
+    const details: Record<string, string> = {};
+    if (budget.error) details.budget = budget.error;
+    if (message.length > 2000) details.message = "Keep the note under 2000 characters.";
+    return [trip, ride, details] as const;
+  }, [bikeType, budget.error, destination, drive, dropMode, dropoffCity, end, isCar, licence, message, needDriver, pickupPoint, pickupTime, start, today, transmission, vehicleType]);
+
+  const phoneError = customer && !customer.phone && phoneTouched && phone.replace(/\D/g, "").length < 8
+    ? "Enter a phone number with country code."
+    : undefined;
 
   useEffect(() => {
-    setMounted(true);
+    const frame = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
-    if (!view.error) return;
-    focusErrorField(kind, view.fields);
-  }, [kind, view]);
+    if (!state.error) return;
+    const fields = state.fields ?? {};
+    const invalidStep = fieldSteps[kind].findIndex((names) => names.some((name) => fields[name]));
+    const frame = window.requestAnimationFrame(() => {
+      if (invalidStep >= 0) setStep(invalidStep as StepIndex);
+      focusGuideField(fieldSteps[kind].flat(), fields);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [kind, state]);
 
-  function loginWithBrief(form: HTMLFormElement | null) {
-    const params = new URLSearchParams();
-    if (form) {
-      const data = new FormData(form);
-      for (const key of loginKeys) {
-        const value = String(data.get(key) || "").trim();
-        if (value) params.set(key, value);
-      }
+  useEffect(() => {
+    if (firstStep.current) {
+      firstStep.current = false;
+      return;
     }
-    const next = params.size ? `${text.backHref}/request?${params}` : `${text.backHref}/request`;
-    window.location.assign(params.size ? `/login?next=${encodeURIComponent(next)}` : loginHref);
+    const card = document.getElementById(`${kind}-request-pass`);
+    if (!card) return;
+    window.scrollTo({ top: Math.max(0, card.getBoundingClientRect().top + window.scrollY - 80), behavior: "smooth" });
+  }, [kind, step]);
+
+  function errorFor(name: string, clientError?: string, show = false) {
+    return state.fields?.[name] || (show ? clientError : undefined);
   }
 
-  const successReference = !pending && state.reference && !state.error ? state.reference : "";
-  const successModal = successReference ? (
-    <SuccessModal reference={successReference} exploreHref={text.exploreHref} detail={text.detail} />
+  function touchStep(index: 0 | 1 | 2) {
+    setTouched((current) => current.map((value, position) => (position === index ? true : value)) as [boolean, boolean, boolean]);
+  }
+
+  function continueTo(next: 1 | 2 | 3) {
+    if (step < 3) {
+      const index = step as 0 | 1 | 2;
+      touchStep(index);
+      if (Object.keys(stepErrors[index]).length) return;
+    }
+    setStep(next);
+  }
+
+  function loginWithBrief(form: HTMLFormElement) {
+    const data = new FormData(form);
+    const params = new URLSearchParams();
+    for (const key of loginKeys) {
+      const value = String(data.get(key) || "").trim();
+      if (value) params.set(key, value);
+    }
+    const next = params.size ? `${text.backHref}/request?${params}` : `${text.backHref}/request`;
+    router.push(params.size ? `/login?next=${encodeURIComponent(next)}` : loginHref);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (step < 3 || pending) {
+      event.preventDefault();
+      return;
+    }
+    for (const index of [0, 1, 2] as const) {
+      if (Object.keys(stepErrors[index]).length) {
+        event.preventDefault();
+        setStep(index);
+        touchStep(index);
+        return;
+      }
+    }
+    if (!customer) {
+      event.preventDefault();
+      loginWithBrief(event.currentTarget);
+      return;
+    }
+    if (!customer.phone && phone.replace(/\D/g, "").length < 8) {
+      event.preventDefault();
+      setPhoneTouched(true);
+    }
+  }
+
+  const successModal = !pending && state.reference && !state.error ? (
+    <SuccessModal reference={state.reference} exploreHref={text.backHref} detail={text.detail} />
   ) : null;
 
+  const [tripErrors, rideErrors, detailErrors] = stepErrors;
+  const [showTrip, showRide, showDetails] = touched;
+  const days = dayCount(start, end);
+
   return (
-    <div className="hotel-request-card" id="service-request-pass">
-      <button
-        type="button"
-        className="hotel-request-back"
-        onClick={() => (window.history.length > 1 ? router.back() : router.push(text.backHref))}
-      >
-        <BackIcon />
+    <div className="hotel-request-card hotel-guide-card tour-guide-card" id={`${kind}-request-pass`}>
+      <button type="button" className="hotel-request-back" onClick={() => (window.history.length > 1 ? router.back() : router.push(text.backHref))}>
         Back
       </button>
-      <h2>{text.title}</h2>
-      <form
-        action={action}
-        noValidate
-        className="hotel-request-form"
-        onSubmit={(event) => {
-          if (!customer) {
-            event.preventDefault();
-            loginWithBrief(event.currentTarget);
-          }
-        }}
-      >
+      <div className="hotel-guide-heading">
+        <p className="hotel-guide-kicker">{text.kicker}</p>
+        <h1>{text.heading}</h1>
+        <p>{text.lede}</p>
+      </div>
+      <GuideProgress label={isCar ? "Car" : "Bike"} labels={text.labels} step={step} onSelect={(next) => next < step && setStep(next as StepIndex)} />
+      <form id={formId} action={action} noValidate className="hotel-request-form hotel-guide-form" onSubmit={handleSubmit}>
         <input type="hidden" name="kind" value={kind} />
-        {view.error ? (
-          <div className="hotel-request-span">
-            <p className="hotel-request-banner-alert" role="alert">
-              {view.fields ? "Check the highlighted fields." : view.error}
-            </p>
-          </div>
-        ) : null}
-        {customer ? (
-          <div className="hotel-request-span hotel-request-account">
-            <strong>{customer.name}</strong>
-            <span>{customer.phone ? formatPhone(customer.phone) || customer.phone : customer.email}</span>
-          </div>
+        <input type="hidden" name="destination" value={destination} />
+        <input type="hidden" name="pickupPoint" value={pickupPoint} />
+        <input type="hidden" name="itemName" value={itemName} />
+        <input type="hidden" name="dropMode" value={dropMode} />
+        <input type="hidden" name="dropoffCity" value={dropMode === "other" ? dropoffCity : ""} />
+        <input type="hidden" name="start" value={start} />
+        <input type="hidden" name="end" value={end} />
+        {isCar ? (
+          <>
+            <input type="hidden" name="pickupTime" value={pickupTime} />
+            <input type="hidden" name="vehicleType" value={vehicleType} />
+            <input type="hidden" name="passengers" value={passengers} />
+            <input type="hidden" name="childSeats" value={childSeats} />
+            <input type="hidden" name="drive" value={drive} />
+            <input type="hidden" name="transmission" value={transmission} />
+          </>
         ) : (
-          <div className="hotel-request-span">
-            <p className="hotel-request-lede">Log in to send this. The request uses the name and phone on your account.</p>
-          </div>
+          <>
+            <input type="hidden" name="bikeType" value={bikeType} />
+            <input type="hidden" name="needDriver" value={needDriver} />
+            <input type="hidden" name="riders" value={needDriver === "no" ? riders : ""} />
+            <input type="hidden" name="licence" value={needDriver === "no" ? licence : ""} />
+          </>
         )}
-        {customer?.phone ? (
-          <Field label="Alternative phone" name="phone" type="tel" placeholder="Optional" error={view.fields?.phone} defaultValue={saved.phone && saved.phone !== customer.phone ? saved.phone : ""} wide />
-        ) : customer ? (
-          <Field label="Phone" name="phone" type="tel" placeholder="+91 98765 43210" error={view.fields?.phone} defaultValue={saved.phone} wide />
-        ) : null}
+        <input type="hidden" name="budget" value={budget.value} />
+        <input type="hidden" name="message" value={message} />
+        <input type="hidden" name="phone" value={phone} />
+        {state.error ? <p className="hotel-request-banner-alert hotel-guide-alert" role="alert">{state.fields ? "Please check the highlighted details." : state.error}</p> : null}
 
-        {kind === "tour" ? (
-          <>
-            <Field label="Starting from" name="startCity" placeholder="Srinagar, Manali, Delhi" error={view.fields?.startCity} value={startCity} onChange={setStartCity} />
-            <Field label="Places to cover" name="places" placeholder="Sonamarg, Gulmarg, Pahalgam" error={view.fields?.places} value={places} onChange={setPlaces} />
-            <Field label="Tour name" name="itemName" placeholder="Optional" error={view.fields?.itemName} defaultValue={saved.itemName || defaults.itemName} wide />
-            <Field label="Start date" name="start" type="date" error={view.fields?.start} defaultValue={saved.start || defaults.start} />
-            <Choices label="Length" name="length" value={length} options={tourLengths} error={view.fields?.length} onChange={setLength} />
-            <Choices label="Style" name="style" value={style} options={tourStyles} error={view.fields?.style} onChange={setStyle} />
-            <div className="hotel-request-span hotel-request-guests is-pair">
-              <Stepper label="Adults" name="adults" value={adults} min={1} max={20} error={view.fields?.adults} onChange={setAdults} />
-              <Stepper label="Children" name="children" value={children} min={0} max={12} error={view.fields?.children} onChange={setChildren} />
+        {step === 0 ? (
+          <section className="hotel-guide-panel" aria-labelledby={`${kind}-step-one-title`}>
+            <StepTitle number="01" id={`${kind}-step-one-title`} title={text.stepOneTitle} text={text.stepOneText} />
+            <div className="hotel-guide-grid">
+              <GuideCityField
+                name="destination"
+                label="Pickup city"
+                value={destination}
+                cities={locations}
+                emptyLabel="Choose a pickup city"
+                customLabel="+ Enter another city"
+                customPlaceholder="Enter a city or location"
+                error={errorFor("destination", tripErrors.destination, showTrip)}
+                onChange={setDestination}
+              />
+              <GuideTextField name="pickupPoint" label="Pickup point" icon="route" placeholder="Airport, hotel, or address" value={pickupPoint} onChange={setPickupPoint} error={errorFor("pickupPoint", tripErrors.pickupPoint, showTrip)} />
+              <GuideDateField
+                name="start"
+                label="Pickup date"
+                icon="cal-in"
+                value={start}
+                min={today}
+                error={errorFor("start", tripErrors.start, showTrip)}
+                onPick={(value) => {
+                  setStart(value);
+                  if (end && end <= value) setEnd("");
+                }}
+              />
+              <GuideDateField name="end" label="Return date" icon="cal-out" value={end} min={nextDayIso(start || today)} error={errorFor("end", tripErrors.end, showTrip)} onPick={setEnd} />
+              {isCar ? (
+                <>
+                  <GuideSelectField name="pickupTime" label="Pickup time" icon="clock" value={pickupTime} options={times} emptyLabel="Choose a time" searchPlaceholder="Search time" error={errorFor("pickupTime", tripErrors.pickupTime, showTrip)} onChange={setPickupTime} />
+                  <GuideTextField name="itemName" label={text.nameLabel} icon="car" placeholder={text.namePlaceholder} value={itemName} onChange={setItemName} error={state.fields?.itemName} />
+                </>
+              ) : (
+                <GuideTextField name="itemName" label={text.nameLabel} icon="bike" placeholder={text.namePlaceholder} value={itemName} onChange={setItemName} error={state.fields?.itemName} wide />
+              )}
             </div>
-            <Choices label="Hotel pickup" name="hotelPickup" value={hotelPickup} options={yesNoOptions} error={view.fields?.hotelPickup} onChange={setHotelPickup} />
-            {hotelPickup === "yes" ? (
-              <Field label="Hotel name" name="pickupHotel" placeholder="Where should we collect you?" error={view.fields?.pickupHotel} defaultValue={saved.pickupHotel || defaults.pickupHotel} wide />
-            ) : (
-              <input type="hidden" name="pickupHotel" value="" />
-            )}
-            <Choices label="Dates can move" name="datesFlexible" value={datesFlexible} options={yesNoOptions} error={view.fields?.datesFlexible} onChange={setDatesFlexible} />
-          </>
-        ) : null}
-
-        {kind === "car" || kind === "bike" ? (
-          <>
-            <Field label="Pickup city" name="destination" placeholder={kind === "bike" ? "Srinagar, Manali, Leh" : "Srinagar, Jammu, Leh"} error={view.fields?.destination} value={destination} onChange={setDestination} />
-            <Field label="Pickup point" name="pickupPoint" placeholder="Airport, hotel, or address" error={view.fields?.pickupPoint} defaultValue={saved.pickupPoint || defaults.pickupPoint} />
-            <Choices
-              label="Drop-off"
-              name="dropMode"
-              value={dropMode}
-              options={[
-                { value: "same", label: "Same city" },
-                { value: "other", label: "Another city" },
-              ]}
-              onChange={setDropMode}
-            />
-            {dropMode === "other" ? (
-              <Field label="Drop-off city" name="dropoffCity" placeholder="Leh, Manali, Jammu" error={view.fields?.dropoffCity} value={dropoffCity} onChange={setDropoffCity} wide />
-            ) : (
-              <input type="hidden" name="dropoffCity" value="" />
-            )}
-            <Field label={kind === "car" ? "Car name" : "Bike name"} name="itemName" placeholder="Optional" error={view.fields?.itemName} defaultValue={saved.itemName || defaults.itemName} />
-            <Field label="Pickup" name="start" type="date" error={view.fields?.start} defaultValue={saved.start || defaults.start} />
-            <Field label="Return" name="end" type="date" error={view.fields?.end} defaultValue={saved.end || defaults.end} />
-          </>
-        ) : null}
-
-        {kind === "car" ? (
-          <>
-            <Field label="Pickup time" name="pickupTime" type="time" step={60} error={view.fields?.pickupTime} defaultValue={saved.pickupTime || defaults.pickupTime} />
-            <Choices label="Vehicle type" name="vehicleType" value={vehicleType} options={carTypes} error={view.fields?.vehicleType} onChange={setVehicleType} />
-            <Stepper label="Passengers" name="passengers" value={passengers} min={1} max={12} error={view.fields?.passengers} onChange={setPassengers} />
-            <Choices label="Child seats" name="childSeatMode" value={childSeatMode} options={yesNoOptions} onChange={setChildSeatMode} />
-            <div className="hotel-request-span" hidden={childSeatMode !== "yes"}>
-              <Stepper label="How many child seats" name="childSeats" value={childSeatMode === "yes" ? childSeats : 0} min={1} max={4} error={view.fields?.childSeats} onChange={setChildSeats} />
+            <div className="tour-guide-drop">
+              <GuideChips id="dropMode" label="Where will you drop it off?" labelIcon="pin" options={dropOptions} value={dropMode} onChange={setDropMode} />
+              {dropMode === "other" ? (
+                <GuideCityField
+                  name="dropoffCity"
+                  label="Drop-off city"
+                  value={dropoffCity}
+                  cities={locations}
+                  emptyLabel="Choose a drop-off city"
+                  customLabel="+ Enter another city"
+                  customPlaceholder="Enter a city or location"
+                  error={errorFor("dropoffCity", tripErrors.dropoffCity, showTrip)}
+                  onChange={setDropoffCity}
+                />
+              ) : null}
             </div>
-            <Choices label="Driver" name="drive" value={drive} options={driveOptions} error={view.fields?.drive} onChange={setDrive} />
-            <Choices label="Transmission" name="transmission" value={transmission} options={transmissionOptions} error={view.fields?.transmission} onChange={setTransmission} />
-          </>
+          </section>
         ) : null}
 
-        {kind === "bike" ? (
-          <>
-            <Choices label="Type" name="bikeType" value={bikeType} options={bikeTypes} error={view.fields?.bikeType} onChange={setBikeType} />
-            <Choices
-              label="Riders"
-              name="riders"
-              value={riders}
-              options={riderOptions}
-              error={view.fields?.riders}
-              onChange={(value) => {
-                setRiders(value);
-                setHelmets(value === "2" ? "2" : "1");
-              }}
-            />
-            <Choices label="Valid two-wheeler licence" name="licence" value={licence} options={yesNoOptions} error={view.fields?.licence} onChange={setLicence} />
-            <Choices label="Helmets" name="helmets" value={helmets} options={helmetOptions} error={view.fields?.helmets} onChange={setHelmets} />
-          </>
+        {step === 1 && isCar ? (
+          <section className="hotel-guide-panel" aria-labelledby="car-step-two-title">
+            <StepTitle number="02" id="car-step-two-title" title={text.stepTwoTitle} text={text.stepTwoText} />
+            <div className="tour-guide-stack">
+            <div className="hotel-guide-travellers tour-guide-travellers">
+              <GuideCounter id="passengers" label="Passengers" icon="adults" hint="Including you" value={passengers} min={1} max={12} error={state.fields?.passengers} onChange={setPassengers} />
+              <GuideCounter id="childSeats" label="Child seats" icon="children" hint="If you need them" value={childSeats} min={0} max={4} error={state.fields?.childSeats} onChange={setChildSeats} />
+            </div>
+            <GuideChips id="vehicleType" label="What type of car are you looking for?" labelIcon="car" options={carTypes} value={vehicleType} onChange={setVehicleType} error={errorFor("vehicleType", rideErrors.vehicleType, showRide)} withIcons />
+            <GuideCards id="drive" label="Who will drive?" items={driveCards} value={drive} onChange={setDrive} error={errorFor("drive", rideErrors.drive, showRide)} />
+            <GuideChips id="transmission" label="Transmission" labelIcon="gear" options={transmissionOptions} value={transmission} onChange={setTransmission} error={errorFor("transmission", rideErrors.transmission, showRide)} withIcons />
+            </div>
+          </section>
         ) : null}
 
-        <BudgetField label={text.budgetLabel} bands={text.budgetBands} choice={budgetChoice} other={otherBudget} submitted={budgetValue} error={view.fields?.budget} onChoice={setBudgetChoice} onOther={setOtherBudget} />
-        <Field label="What should we look for?" name="message" multiline placeholder={text.note} error={view.fields?.message} value={note} onChange={setNote} />
-        <div className="hotel-request-span hotel-request-actions">
-          {customer ? (
-            <Submit label={text.submit} busy={pending} />
-          ) : (
-            <button type="button" className="hotel-request-submit" onClick={(event: MouseEvent<HTMLButtonElement>) => loginWithBrief(event.currentTarget.form)}>
-              Log in to request
-            </button>
-          )}
-        </div>
+        {step === 1 && !isCar ? (
+          <section className="hotel-guide-panel" aria-labelledby="bike-step-two-title">
+            <StepTitle number="02" id="bike-step-two-title" title={text.stepTwoTitle} text={text.stepTwoText} />
+            <div className="tour-guide-stack">
+            <GuideChips id="needDriver" label="Do you need a driver?" labelIcon="wheel" options={yesNoOptions} value={needDriver} onChange={setNeedDriver} error={errorFor("needDriver", rideErrors.needDriver, showRide)} />
+            {needDriver === "no" ? (
+              <>
+                <GuideChips id="licence" label="Do you hold a valid two-wheeler licence?" labelIcon="licence" options={yesNoOptions} value={licence} onChange={setLicence} error={errorFor("licence", rideErrors.licence, showRide)} />
+                <GuideCards
+                  id="riders"
+                  label="Who is riding?"
+                  items={riderCards}
+                  value={riders}
+                  onChange={setRiders}
+                  error={errorFor("riders", rideErrors.riders, showRide)}
+                />
+              </>
+            ) : null}
+            <GuideChips id="bikeType" label="What type of bike are you looking for?" labelIcon="bike" options={bikeTypes} value={bikeType} onChange={setBikeType} error={errorFor("bikeType", rideErrors.bikeType, showRide)} withIcons />
+            </div>
+          </section>
+        ) : null}
+
+        {step === 2 ? (
+          <section className="hotel-guide-panel" aria-labelledby={`${kind}-step-three-title`}>
+            <StepTitle number="03" id={`${kind}-step-three-title`} title={text.stepThreeTitle} text={text.stepThreeText} />
+            <div className="tour-guide-prefs">
+              <GuideBudget
+                label={text.budgetLabel}
+                unit={text.budgetUnit}
+                bands={text.bands}
+                choice={budgetChoice}
+                other={otherBudget}
+                error={errorFor("budget", budget.error, showDetails)}
+                onChoice={setBudgetChoice}
+                onOther={setOtherBudget}
+              />
+            </div>
+            <GuideNote label="What should we look for?" placeholder={text.notePlaceholder} value={message} onChange={setMessage} />
+            <FieldMessage message={errorFor("message", detailErrors.message, showDetails)} />
+          </section>
+        ) : null}
+
+        {step === 3 ? (
+          <section className="hotel-guide-panel" aria-labelledby={`${kind}-step-four-title`}>
+            <StepTitle number="04" id={`${kind}-step-four-title`} title={text.stepFourTitle} text={text.stepFourText} />
+            <div className="hotel-guide-review tour-guide-review">
+              <ReviewSection title="Trip details" icon="pin" onEdit={() => setStep(0)}>
+                <ReviewLine label="Pickup city" icon="pin" value={destination || "Not provided"} />
+                <ReviewLine label="Pickup point" icon="route" value={pickupPoint || "Not provided"} />
+                <ReviewLine label="Drop-off" icon="pin" value={dropMode === "other" && dropoffCity ? dropoffCity : "Same city"} />
+                <ReviewLine label="Dates" icon="calendar" value={`${prettyDate(start)} – ${prettyDate(end)}${days ? ` · ${plural(days, "day")}` : ""}`} />
+                {isCar ? <ReviewLine label="Pickup time" icon="clock" value={pickupTime ? timeLabel(pickupTime) : "Not selected"} /> : null}
+                {itemName ? <ReviewLine label={isCar ? "Car" : "Bike"} icon={isCar ? "car" : "bike"} value={itemName} /> : null}
+              </ReviewSection>
+              {isCar ? (
+                <ReviewSection title="Ride preferences" icon="car" onEdit={() => setStep(1)}>
+                  <ReviewLine label="Passengers" icon="adults" value={String(passengers)} />
+                  <ReviewLine label="Child seats" icon="children" value={childSeats ? String(childSeats) : "None"} />
+                  <ReviewLine label="Car type" icon="car" value={optionLabel(carTypes, vehicleType)} />
+                  <ReviewLine label="Driver" icon="wheel" value={optionLabel(driveOptions, drive) || "Not selected"} />
+                  <ReviewLine label="Transmission" icon="gear" value={optionLabel(transmissionOptions, transmission)} />
+                </ReviewSection>
+              ) : (
+                <ReviewSection title="Bike preferences" icon="bike" onEdit={() => setStep(1)}>
+                  <ReviewLine label="Driver" icon="wheel" value={needDriver === "yes" ? "Needed" : needDriver === "no" ? "Not needed" : "Not selected"} />
+                  {needDriver === "no" ? (
+                    <>
+                      <ReviewLine label="Licence" icon="licence" value={licence === "yes" ? "Valid two-wheeler licence" : "No licence"} />
+                      <ReviewLine label="Riders" icon="users" value={optionLabel(riderOptions, riders)} />
+                    </>
+                  ) : null}
+                  <ReviewLine label="Bike type" icon="bike" value={optionLabel(bikeTypes, bikeType)} />
+                </ReviewSection>
+              )}
+              <ReviewSection title="Budget & notes" icon="wallet" onEdit={() => setStep(2)}>
+                <ReviewLine label="Budget" icon="wallet" value={budgetSummary(text.bands, budget.value, text.budgetUnit)} />
+                <ReviewLine label="Note" icon="note" value={message || "None"} />
+              </ReviewSection>
+            </div>
+            <p className="hotel-guide-reassurance">{text.reassurance}</p>
+            <GuideContact customer={customer} phone={phone} error={phoneError} onPhone={setPhone} />
+          </section>
+        ) : null}
       </form>
+      <GuideActions step={step} last={3} formId={formId} busy={pending} submitLabel={text.submit} busyLabel="Sending request…" onBack={() => setStep((step - 1) as StepIndex)} onContinue={() => continueTo((step + 1) as 1 | 2 | 3)} />
       {mounted && successModal ? createPortal(successModal, document.body) : null}
     </div>
-  );
-}
-
-function Choices({
-  label,
-  name,
-  value,
-  options,
-  error,
-  onChange,
-}: {
-  label: string;
-  name: string;
-  value: string;
-  options: readonly RequestOption[];
-  error?: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className="hotel-request-span" id={`${name}-field`}>
-      <p className="hotel-request-label" id={`${name}-label`}>
-        {label}
-      </p>
-      <div className="hotel-request-budget" role="group" aria-labelledby={`${name}-label`}>
-        {options.map((option) => (
-          <button key={option.value} type="button" className={value === option.value ? "is-on" : ""} aria-pressed={value === option.value} onClick={() => onChange(option.value)}>
-            {option.label}
-          </button>
-        ))}
-      </div>
-      <input type="hidden" id={name} name={name} value={value} />
-      {error ? <p className="hotel-request-error">{error}</p> : null}
-    </div>
-  );
-}
-
-function BudgetField({
-  label,
-  bands,
-  choice,
-  other,
-  submitted,
-  error,
-  onChoice,
-  onOther,
-}: {
-  label: string;
-  bands: readonly BudgetBand[];
-  choice: string;
-  other: string;
-  submitted: string;
-  error?: string;
-  onChoice: (value: string) => void;
-  onOther: (value: string) => void;
-}) {
-  return (
-    <div className="hotel-request-span" id="budget-field">
-      <p className="hotel-request-label" id="service-budget-label">
-        {label}
-      </p>
-      <div className="hotel-request-budget" role="group" aria-labelledby="service-budget-label">
-        {budgetChoices(bands).map((option) => (
-          <button key={option.label} type="button" className={choice === option.value ? "is-on" : ""} aria-pressed={choice === option.value} onClick={() => onChoice(option.value)}>
-            {option.label}
-          </button>
-        ))}
-      </div>
-      {choice === "other" ? (
-        <div className={`hotel-request-control hotel-request-other${error ? " is-invalid" : ""}`}>
-          <input id="budget" inputMode="numeric" autoComplete="off" placeholder="Amount in rupees" value={other} onChange={(event) => onOther(event.target.value.replace(/[^\d]/g, ""))} aria-invalid={error ? true : undefined} />
-        </div>
-      ) : null}
-      <input type="hidden" name="budget" value={submitted} />
-      {error ? <p className="hotel-request-error">{error}</p> : null}
-    </div>
-  );
-}
-
-function Stepper({ label, name, value, min, max, error, onChange }: { label: string; name: string; value: number; min: number; max: number; error?: string; onChange: (value: number) => void }) {
-  return (
-    <div className="hotel-request-cell" id={`${name}-field`}>
-      <label id={`${name}-label`}>{label}</label>
-      <div className={`hotel-request-stepper${error ? " is-invalid" : ""}`}>
-        <button type="button" aria-label={`Fewer ${label.toLowerCase()}`} disabled={value <= min} onClick={() => onChange(value - 1)}>
-          −
-        </button>
-        <output aria-labelledby={`${name}-label`}>{value}</output>
-        <button type="button" aria-label={`More ${label.toLowerCase()}`} disabled={value >= max} onClick={() => onChange(value + 1)}>
-          +
-        </button>
-      </div>
-      <input type="hidden" name={name} value={value} />
-      {error ? <p className="hotel-request-error">{error}</p> : null}
-    </div>
-  );
-}
-
-function Field({
-  label,
-  name,
-  type = "text",
-  placeholder,
-  error,
-  defaultValue,
-  value,
-  onChange,
-  multiline = false,
-  wide = false,
-  step,
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  placeholder?: string;
-  error?: string;
-  defaultValue?: string;
-  value?: string;
-  onChange?: (value: string) => void;
-  multiline?: boolean;
-  wide?: boolean;
-  step?: number;
-}) {
-  const controlled = value !== undefined;
-  return (
-    <div className={multiline || wide ? "hotel-request-span" : "hotel-request-cell"} id={multiline || wide ? `${name}-field` : undefined}>
-      <label htmlFor={name}>{label}</label>
-      <div className={`hotel-request-control mt-5${error ? " is-invalid" : ""}`}>
-        {multiline ? (
-          <textarea id={name} name={name} rows={3} placeholder={placeholder} value={controlled ? value : undefined} defaultValue={controlled ? undefined : defaultValue} onChange={onChange ? (event) => onChange(event.target.value) : undefined} />
-        ) : (
-          <input id={name} name={name} type={type} step={step} placeholder={placeholder} value={controlled ? value : undefined} defaultValue={controlled ? undefined : defaultValue} onChange={onChange ? (event) => onChange(event.target.value) : undefined} />
-        )}
-      </div>
-      {error ? <p className="hotel-request-error">{error}</p> : null}
-    </div>
-  );
-}
-
-function Submit({ label, busy }: { label: string; busy: boolean }) {
-  const { pending } = useFormStatus();
-  return (
-    <button type="submit" className="hotel-request-submit" disabled={pending || busy}>
-      {pending ? "Sending…" : label}
-    </button>
   );
 }
