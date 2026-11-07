@@ -93,6 +93,7 @@ model Tour {
   twitterTitle        String          @default("")
   twitterDescription  String          @default("")
   published           Boolean         @default(false)
+  viewCount           Int             @default(0)
   destinationId       String?
   destination         Destination?    @relation(fields: [destinationId], references: [id], onDelete: SetNull)
   destinationLinks    TourDestination[]
@@ -102,6 +103,7 @@ model Tour {
   updatedAt           DateTime        @updatedAt
 
   @@index([destinationId])
+  @@index([viewCount])
 }
 
 model CatalogItem {
@@ -203,6 +205,7 @@ model Hotel {
   seoImageKey         String       @default("")
   seoImageDriver      String       @default("local")
   published           Boolean      @default(false)
+  viewCount           Int          @default(0)
   destinationId       String?
   destination         Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
   rooms               Room[]
@@ -210,6 +213,7 @@ model Hotel {
   updatedAt           DateTime     @updatedAt
 
   @@index([destinationId])
+  @@index([viewCount])
 }
 
 model Room {
@@ -850,4 +854,23 @@ model Page {
   destinationId String?
   destination   Destination? @relation(fields: [destinationId], references: [id])
   updatedAt     DateTime     @updatedAt
+}
+
+/// Customer search / filter activity shown in Admin → Searches.
+model SearchEvent {
+  id          String   @id @default(cuid())
+  /// Display text the customer typed or the place/route they picked.
+  query       String
+  /// Normalized query used to group top searches.
+  queryNorm   String
+  /// catalog | tours | hotels | cars | bikes | buses | destinations
+  source      String
+  results     Int      @default(0)
+  /// Optional structured filters (place, region, from/to, dates…).
+  filtersJson String   @default("{}")
+  createdAt   DateTime @default(now())
+
+  @@index([queryNorm, createdAt])
+  @@index([source, createdAt])
+  @@index([createdAt])
 }

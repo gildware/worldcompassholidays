@@ -38,6 +38,7 @@ export default async function AdminHotelViewPage({
       canManage={can(user, "hotels.manage")}
       hotel={{
         id: hotel.id,
+        slug: hotel.slug,
         name: hotel.name,
         summary: hotel.summary,
         descriptionHtml: hotel.description,

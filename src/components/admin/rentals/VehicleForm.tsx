@@ -324,17 +324,17 @@ export function VehicleForm({
 
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 overflow-hidden">
-      <ol className="grid w-full min-w-0 shrink-0 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-7">
+      <ol className="flex w-full min-w-0 shrink-0 gap-2 overflow-x-auto pb-0.5">
         {steps.map((item, index) => {
           const active = index === step;
           return (
-            <li key={item.id} className="min-w-0">
+            <li key={item.id} className="min-w-0 shrink-0">
               <button
                 type="button"
                 onClick={() => setStep(index)}
                 title={item.description}
                 className={[
-                  "flex w-full min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors",
+                  "flex min-w-[7.5rem] items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors sm:min-w-[8.5rem]",
                   active ? "border-brand bg-brand-soft" : "border-line bg-white hover:bg-surface",
                 ].join(" ")}
               >
@@ -382,7 +382,7 @@ export function VehicleForm({
           ) : null}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
           <div className={current.id === "vehicle" ? "grid gap-4 md:grid-cols-2" : "hidden"}>
             <Field label="Name" name="name" required error={fieldErrors.name}>
               <input name="name" defaultValue={values.name} className="!h-10" />
@@ -854,39 +854,39 @@ export function VehicleForm({
         </div>
       ) : null}
 
-      <div className="shrink-0 rounded-lg border border-line bg-white px-4 py-3 sm:px-5">
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="shrink-0 rounded-lg border border-line bg-white px-3 py-2.5 sm:px-5 sm:py-3">
+        <div className="flex items-center justify-between gap-2">
           <ButtonLink
             href={kind === "bike" ? "/admin/rentals/bikes" : "/admin/rentals/cars"}
             variant="secondary"
             size="sm"
-            className="w-full sm:w-auto"
+            className="shrink-0"
           >
             Cancel
           </ButtonLink>
-          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
             {step > 0 ? (
-              <Button type="button" variant="secondary" size="sm" className="w-full sm:w-auto" onClick={goBack} disabled={pending}>
+              <Button type="button" variant="secondary" size="sm" onClick={goBack} disabled={pending}>
                 Back
               </Button>
             ) : null}
             {dataStep && step < steps.length - 1 ? (
-              <Button type="button" size="sm" className="w-full sm:w-auto" onClick={() => submit("continue")} disabled={pending || uploading}>
+              <Button type="button" size="sm" onClick={() => submit("continue")} disabled={pending || uploading}>
                 {pending && saveMode === "continue" ? "Saving…" : "Save and continue"}
               </Button>
             ) : null}
             {!dataStep && step < steps.length - 1 ? (
-              <Button type="button" size="sm" className="w-full sm:w-auto" onClick={goNextExtra}>
+              <Button type="button" size="sm" onClick={goNextExtra}>
                 Continue
               </Button>
             ) : null}
             {isEdit && step === steps.length - 1 ? (
-              <Button type="button" variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => submit("draft")} disabled={pending || uploading}>
+              <Button type="button" variant="secondary" size="sm" onClick={() => submit("draft")} disabled={pending || uploading}>
                 {pending && saveMode === "draft" ? "Saving…" : "Save draft"}
               </Button>
             ) : null}
             {!isEdit && step === steps.length - 1 ? (
-              <Button type="button" size="sm" className="w-full sm:w-auto" onClick={() => submit("publish")} disabled={pending || uploading}>
+              <Button type="button" size="sm" onClick={() => submit("publish")} disabled={pending || uploading}>
                 {pending && saveMode === "publish" ? "Publishing…" : "Publish"}
               </Button>
             ) : null}

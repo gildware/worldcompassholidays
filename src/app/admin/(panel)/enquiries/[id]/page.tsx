@@ -29,26 +29,24 @@ export default async function AdminEnquiryPage({ params }: Props) {
   const canManage = can(user, "bookings.manage");
 
   return (
-    <div className="grid max-w-4xl gap-3">
+    <div className="grid max-w-3xl gap-3">
       <Link href="/admin/enquiries" className="text-sm font-medium text-brand">
         Enquiries
       </Link>
-      <div>
-        <EnquiryFacts
-          enquiry={enquiry}
-          footer={
-            canManage ? (
-              <section className="rounded-xl border border-line bg-white p-4 shadow-sm">
-                <BookingStatusForm
-                  bookingId={booking.id}
-                  status={enquiryStatusValue(booking.status)}
-                  options={enquiryStatuses.map((value) => ({ value, label: enquiryStatusLabels[value] }))}
-                />
-              </section>
-            ) : null
-          }
-        />
-      </div>
+      <EnquiryFacts
+        enquiry={enquiry}
+        footer={
+          canManage ? (
+            <section className="rounded-xl border border-line bg-white p-3 shadow-sm">
+              <BookingStatusForm
+                bookingId={booking.id}
+                status={enquiryStatusValue(booking.status)}
+                options={enquiryStatuses.map((value) => ({ value, label: enquiryStatusLabels[value] }))}
+              />
+            </section>
+          ) : null
+        }
+      />
     </div>
   );
 }

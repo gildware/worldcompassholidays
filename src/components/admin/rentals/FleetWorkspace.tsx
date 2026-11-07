@@ -429,7 +429,10 @@ export function FleetWorkspace({
                     )}
                   </td>
                   <td className="px-3 py-2">
-                    <Link href={`/admin/rentals/fleet/${vehicle.id}`} className="font-semibold text-navy hover:text-brand hover:underline">
+                    <Link
+                      href={`/admin/rentals/fleet/${vehicle.id}/view`}
+                      className="font-semibold text-navy hover:text-brand hover:underline"
+                    >
                       {vehicle.name}
                     </Link>
                     <p className="text-xs font-medium tracking-wide text-navy">{vehicle.registrationNumber}</p>
@@ -458,7 +461,11 @@ export function FleetWorkspace({
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex justify-end gap-1.5">
-                      <ActionPill label="View" tone="view" href={vehicle.published ? `/rentals/${vehicle.slug}` : `/admin/rentals/fleet/${vehicle.id}`}>
+                      <ActionPill
+                        label={vehicle.kind === "bike" ? "View bike" : "View car"}
+                        tone="view"
+                        href={`/admin/rentals/fleet/${vehicle.id}/view`}
+                      >
                         <EyeIcon />
                       </ActionPill>
                       {canManage ? (

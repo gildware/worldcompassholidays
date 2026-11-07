@@ -8,6 +8,7 @@ import { favoriteIds } from "@/lib/favorites";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
 import { fleetPhotoUrl, isCatalogPlaceholder, resolveRideCover } from "@/lib/catalog-media";
 import { fleetKinds } from "@/lib/rentals/labels";
+import { logListingSearch } from "@/lib/search/log";
 import { cached } from "@/lib/ttl-cache";
 
 type Search = Record<string, string | string[] | undefined>;
@@ -180,6 +181,9 @@ export async function RentalListing({
   }));
 
   const fleet = kind || (kinds.length === 1 ? kinds[0] : "mixed");
+  logListingSearch(kind === "bike" ? "bikes" : "cars", params, {
+    queryOverride: [one(params.q), one(params.name)].filter(Boolean).join(" · ") || undefined,
+  });
 
   return (
     <CarListV1

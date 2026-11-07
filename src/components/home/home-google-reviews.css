@@ -1,19 +1,12 @@
 .home-g-reviews {
   color: #051036;
   font-family: var(--font-jost), "Jost", sans-serif;
-  padding: 36px 0 8px;
+  padding: 36px 16px 8px;
 }
 
 .home-x .home-g-reviews {
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.home-x .home-g-reviews__head,
-.home-x .home-g-reviews__summary,
-.home-x .home-g-reviews__credit {
-  margin-left: var(--hx-pad);
-  margin-right: var(--hx-pad);
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 .home-g-reviews__head {
@@ -132,13 +125,7 @@
   width: max-content;
   min-width: 100%;
   margin: 0;
-  padding: 4px 16px 14px;
-}
-
-.home-x .home-g-reviews__list,
-.worldcompassholiday-page .home-x .home-g-reviews__list {
-  padding-left: var(--hx-pad);
-  padding-right: var(--hx-pad);
+  padding: 4px 0 14px;
 }
 
 .home-g-reviews__list li {

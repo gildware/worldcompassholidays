@@ -7,7 +7,7 @@ import { requireCustomer } from "@/lib/auth/guards";
 import { visibleAccountSections } from "@/lib/account-sections";
 import { prisma } from "@/lib/db";
 import { listFavoriteCards } from "@/lib/favorites";
-import { isCustomEnquiry } from "@/lib/enquiries";
+import { isDeskEnquiry } from "@/lib/enquiries";
 import { parseBookingDetails } from "@/lib/bookings";
 import { privateMetadata } from "@/lib/seo";
 
@@ -30,8 +30,8 @@ export default async function AccountPage() {
     listFavoriteCards(user.id),
   ]);
 
-  const confirmed = bookings.filter((booking) => !isCustomEnquiry(parseBookingDetails(booking.details)));
-  const enquiries = bookings.filter((booking) => isCustomEnquiry(parseBookingDetails(booking.details)));
+  const confirmed = bookings.filter((booking) => !isDeskEnquiry(parseBookingDetails(booking.details), booking.title));
+  const enquiries = bookings.filter((booking) => isDeskEnquiry(parseBookingDetails(booking.details), booking.title));
   const knownModules = new Set(sections.map((section) => section.module));
   const otherBookings = confirmed.filter((booking) => !knownModules.has(booking.module));
   const stats = sections.map((section) => {

@@ -3,12 +3,16 @@ import { EnquiryBoard } from "@/components/enquiries/EnquiryBoard";
 import { requireCustomer } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import { withEnquiryImages } from "@/lib/enquiry-images";
-import { customEnquiryWhere, toEnquiryView } from "@/lib/enquiries";
+import {
+  customEnquiryWhere,
+  toEnquiryView,
+  websiteEnquiryWhere,
+} from "@/lib/enquiries";
 import { privateMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = privateMetadata("Enquiries", "Tour, hotel, car, bike, and bus requests on your account.");
+export const metadata: Metadata = privateMetadata("Enquiries", "Contact form and tour, hotel, car, bike, and bus requests on your account.");
 
-const types = new Set(["tour", "hotel", "car", "bike", "bus"]);
+const types = new Set(["contact", "tour", "hotel", "car", "bike", "bus"]);
 
 export default async function AccountEnquiriesPage({
   searchParams,
@@ -21,8 +25,14 @@ export default async function AccountEnquiriesPage({
   const bookings = await prisma.booking.findMany({
     where: {
       userId: user.id,
-      ...(active === "all" ? {} : { module: active }),
-      ...customEnquiryWhere(),
+      ...(active === "all"
+        ? customEnquiryWhere()
+        : active === "contact"
+          ? websiteEnquiryWhere()
+          : {
+              module: active,
+              details: { contains: `"kind":"custom_${active}"` },
+            }),
     },
     orderBy: { createdAt: "desc" },
   });
@@ -48,7 +58,13 @@ export default async function AccountEnquiriesPage({
         active={active}
         basePath="/account/enquiries"
         detailPath={(row) => `/account/enquiries/${row.reference}`}
-        empty={active === "all" ? "Send a tour, hotel, car, or bike request and it will show up here." : `No ${active} enquiries yet.`}
+        empty={
+          active === "all"
+            ? "Send a contact, tour, hotel, car, or bike request and it will show up here."
+            : active === "contact"
+              ? "No contact-page enquiries yet."
+              : `No ${active} enquiries yet.`
+        }
       />
     </div>
   );

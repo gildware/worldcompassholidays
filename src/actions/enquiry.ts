@@ -10,6 +10,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
+import { websiteEnquiryKind } from "@/lib/enquiries";
 import { enquiryInterests } from "@/lib/navigation";
 import { emailField } from "@/lib/validation";
 
@@ -97,10 +98,13 @@ export async function submitEnquiry(
       reference: bookingReference(),
       module: parsed.data.interest,
       status: "enquiry",
-      title: "Website enquiry",
-      notes: `${interest.label}\n${parsed.data.message}`,
+      title: `${interest.label} enquiry`,
+      notes: parsed.data.message,
       details: detailsWithEnquiryReceived({
+        kind: websiteEnquiryKind,
         interest: parsed.data.interest,
+        interestLabel: interest.label,
+        message: parsed.data.message,
         channel,
       }),
       contactName: parsed.data.name,
@@ -111,6 +115,7 @@ export async function submitEnquiry(
   });
 
   revalidatePath("/admin/bookings");
+  revalidatePath("/admin/enquiries");
   if (customer) revalidateCustomerBooking(parsed.data.interest, booking.reference);
 
   if (channel === "whatsapp") {
@@ -133,7 +138,7 @@ export async function submitEnquiry(
   }
 
   if (customer) {
-    redirect(`/account/bookings/${booking.reference}?created=1`);
+    redirect(`/account/enquiries/${booking.reference}?created=1`);
   }
 
   redirect(`/contact?sent=1&ref=${booking.reference}`);

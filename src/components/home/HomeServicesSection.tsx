@@ -75,7 +75,7 @@ function ServiceCard({ item, spot }: { item: HomeServiceItem; spot?: boolean }) 
       <div className="home-services__body">
         <strong>{item.title}</strong>
         {item.description ? <p>{item.description}</p> : null}
-        <span className="home-services__go">View</span>
+        <span className="home-services__go">View {item.title}</span>
       </div>
     </GlowLink>
   );

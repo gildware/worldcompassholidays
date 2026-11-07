@@ -4,6 +4,7 @@ import type { DestinationListCard, DestinationListLocation } from "@/components/
 import { prisma } from "@/lib/db";
 import { mapApiKey } from "@/lib/map-key";
 import { parseMapPoint } from "@/lib/maps";
+import { logListingSearch } from "@/lib/search/log";
 import { clipText, pageMetadata } from "@/lib/seo";
 import { cached } from "@/lib/ttl-cache";
 
@@ -74,6 +75,8 @@ export default async function DestinationsPage({
     name: destination.name,
     address: [destination.region, destination.country].filter(Boolean).join(", "),
   }));
+
+  logListingSearch("destinations", params);
 
   return (
     <DestinationListV3

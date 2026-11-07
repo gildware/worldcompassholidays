@@ -1,20 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Figtree } from "next/font/google";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { loadAdminNavBadges } from "@/actions/admin-nav";
 import { BrandLogo } from "@/components/worldcompassholiday/BrandLogo";
-import { theme } from "@/config/theme";
 import type { NavItem } from "@/lib/navigation";
 import "./ops/ops-shell.css";
-
-const figtree = Figtree({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-figtree",
-  display: "swap",
-});
 
 function isActive(pathname: string, href: string) {
   return href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -114,6 +106,14 @@ function NavIcon({ href, label }: { href: string; label?: string }) {
       <svg {...common}>
         <path d="M5 6.5h14v11H5z" />
         <path d="m5 8 7 4.5L19 8" />
+      </svg>
+    );
+  }
+  if (href === "/admin/searches" || label === "Searches") {
+    return (
+      <svg {...common}>
+        <circle cx="10.5" cy="10.5" r="5.5" />
+        <path d="M15.2 15.2 20 20" />
       </svg>
     );
   }
@@ -237,6 +237,8 @@ const OPERATE_HREFS = new Set([
   "/admin/rentals/cars",
   "/admin/rentals/bikes",
   "/admin/buses",
+  "/admin/enquiries",
+  "/admin/searches",
   "/admin/bookings",
   "/admin/visa",
   "/admin/visa/destinations",
@@ -264,6 +266,12 @@ function pageTitle(pathname: string, items: NavItem[], bookingDesk?: string | nu
       if (child) {
         if (child.href === "/admin/bookings" && pathname === "/admin/bookings") {
           return "Bookings overview";
+        }
+        if (child.href === "/admin/tours/overview" && pathname === child.href) {
+          return "Tours overview";
+        }
+        if (child.href === "/admin/hotels/overview" && pathname === child.href) {
+          return "Hotels overview";
         }
         return child.label;
       }
@@ -296,10 +304,14 @@ function NavAccordion({
   item,
   pathname,
   bookingDesk,
+  pendingHref,
+  onNavigate,
 }: {
   item: NavItem;
   pathname: string;
   bookingDesk?: string | null;
+  pendingHref?: string | null;
+  onNavigate?: (href: string) => void;
 }) {
   const childActive = Boolean(
     item.children?.some((c) => childIsActive(pathname, c.href, item.href, bookingDesk)),
@@ -327,13 +339,17 @@ function NavAccordion({
         <div className="subnav">
           {item.children?.map((child) => {
             const current = childIsActive(pathname, child.href, item.href, bookingDesk);
+            const pending = pendingHref === child.href;
             return (
               <Link
                 key={child.href}
                 href={child.href}
-                className={current ? "active" : undefined}
+                prefetch
+                className={current || pending ? "active" : undefined}
                 aria-current={current ? "page" : undefined}
+                aria-busy={pending || undefined}
                 tabIndex={open ? undefined : -1}
+                onClick={() => onNavigate?.(child.href)}
               >
                 <span>{child.label}</span>
                 <NavBadge count={child.badge} />
@@ -346,74 +362,8 @@ function NavAccordion({
   );
 }
 
-function pageSub(pathname: string) {
-  if (pathname === "/admin") {
-    return "Decide today from pipeline, load, and cash — not vanity counts.";
-  }
-  if (pathname.startsWith("/admin/tours/configuration")) {
-    return "Categories, styles, facilities, FAQs, includes, and excludes.";
-  }
-  if (pathname.startsWith("/admin/hotels/configuration")) {
-    return "Amenities, room features, room amenities, FAQs, and tax.";
-  }
-  if (pathname.startsWith("/admin/rentals/cars/configuration")) {
-    return "Tags, types, fuel, transmission, includes, excludes, and features.";
-  }
-  if (pathname.startsWith("/admin/rentals/bikes/configuration")) {
-    return "Tags, types, fuel, features, and required documents.";
-  }
-  if (pathname.startsWith("/admin/buses/locations")) {
-    return "Cities and stops. Each one needs a boarding point and a map pin.";
-  }
-  if (pathname.startsWith("/admin/buses/configuration")) {
-    return "Facilities a bus can offer. A route uses the bus, not its own list.";
-  }
-  if (pathname.startsWith("/admin/buses/routes/new") || /^\/admin\/buses\/routes\/[^/]+/.test(pathname)) {
-    return "Which bus runs, which locations it uses, and how long it takes.";
-  }
-  if (pathname.startsWith("/admin/buses/routes")) {
-    return "Runs between locations, with boarding points, duration, and fare.";
-  }
-  if (pathname.startsWith("/admin/buses/new") || /^\/admin\/buses\/[^/]+/.test(pathname)) {
-    return "The coach, its facilities, and its photos.";
-  }
-  if (pathname.startsWith("/admin/buses")) {
-    return "Coaches you can put on a route.";
-  }
-  if (pathname.startsWith("/admin/tours")) return "Packages, treks, and departures.";
-  if (pathname.startsWith("/admin/enquiries")) return "Tour, hotel, car, and bike requests. Not bookings.";
-  if (pathname === "/admin/bookings") {
-    return "All desks — tours, stays, fleet, visa, assist.";
-  }
-  if (pathname.startsWith("/admin/bookings/tours")) return "Tour and trek enquiries.";
-  if (pathname.startsWith("/admin/bookings/hotels")) return "Hotel stay requests.";
-  if (pathname.startsWith("/admin/bookings/cars")) return "Car rental bookings.";
-  if (pathname.startsWith("/admin/bookings/bikes")) return "Bike rental bookings.";
-  if (pathname.startsWith("/admin/bookings/visa")) return "Visa applications.";
-  if (pathname.startsWith("/admin/bookings/assist")) return "Airport meet and assist.";
-  if (pathname.startsWith("/admin/visa/destinations")) {
-    return "Countries offered on the visa request form.";
-  }
-  if (pathname.startsWith("/admin/meet-and-assist/airports")) {
-    return "Airports offered on the greeter request form.";
-  }
-  const bookingDetail = pathname.match(/^\/admin\/bookings\/([^/]+)$/);
-  if (bookingDetail && !bookingDeskSegments.has(bookingDetail[1])) {
-    return "Guest, trip, quote, owner, and status desk.";
-  }
-  if (pathname.startsWith("/admin/hotels")) return "Stay inventory and property details.";
-  if (pathname.startsWith("/admin/home")) {
-    return "Hero, section order, copy, and the lists shown on the public home page.";
-  }
-  if (pathname.startsWith("/admin/settings")) {
-    return "Logo, colour, contact details, WhatsApp, and social links.";
-  }
-  if (pathname.startsWith("/admin/destinations")) return "Places shown on the site.";
-  return theme.brandName;
-}
-
 export function AdminShell({
-  items,
+  items: initialItems,
   user,
   signOut,
   logoUrl,
@@ -429,6 +379,9 @@ export function AdminShell({
   const searchParams = useSearchParams();
   const [navOpen, setNavOpen] = useState(false);
   const [hintDesk, setHintDesk] = useState<string | null>(null);
+  const [items, setItems] = useState(initialItems);
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
   const deskFromQuery = searchParams.get("desk");
   const bookingDesk =
     (deskFromQuery && bookingDeskSegments.has(deskFromQuery) ? deskFromQuery : null) ??
@@ -443,7 +396,21 @@ export function AdminShell({
 
   useEffect(() => {
     setNavOpen(false);
+    setPendingHref(null);
   }, [pathname]);
+
+  // Load nav badges after paint — never block the shell on remote DB counts.
+  useEffect(() => {
+    let cancelled = false;
+    startTransition(() => {
+      void loadAdminNavBadges().then((next) => {
+        if (!cancelled && next) setItems(next);
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const sync = () => {
@@ -477,8 +444,14 @@ export function AdminShell({
     };
   }, []);
 
+  function markNavigate(href: string) {
+    if (href === pathname) return;
+    setPendingHref(href);
+  }
+
   function renderNavItem(item: NavItem) {
     const active = isActive(pathname, item.href);
+    const pending = pendingHref === item.href;
 
     if (item.children?.length) {
       return (
@@ -487,6 +460,8 @@ export function AdminShell({
           item={item}
           pathname={pathname}
           bookingDesk={bookingDesk}
+          pendingHref={pendingHref}
+          onNavigate={markNavigate}
         />
       );
     }
@@ -495,8 +470,11 @@ export function AdminShell({
       <Link
         key={item.href}
         href={item.href}
-        className={active ? "active" : undefined}
+        prefetch
+        className={active || pending ? "active" : undefined}
         aria-current={active ? "page" : undefined}
+        aria-busy={pending || undefined}
+        onClick={() => markNavigate(item.href)}
       >
         <NavIcon href={item.href} label={item.label} />
         <span className="nav-section-label">{item.label}</span>
@@ -506,7 +484,7 @@ export function AdminShell({
   }
 
   return (
-    <div className={`ops-cc ${figtree.variable} ${figtree.className}`} style={{ height: "100dvh" }}>
+    <div className="ops-cc" style={{ height: "100dvh" }}>
       <div
         className={`scrim${navOpen ? " show" : ""}`}
         hidden={!navOpen}
@@ -566,7 +544,6 @@ export function AdminShell({
               </button>
               <div>
                 <h1>{title}</h1>
-                <div className="sub">{pageSub(pathname)}</div>
               </div>
             </div>
             <div className="top-actions">
@@ -597,18 +574,28 @@ export function AdminShell({
                 View website
               </Link>
               {pathname === "/admin" ? (
-                <Link className="btn btn-primary" href="/admin/bookings">
+                <Link
+                  className="btn btn-primary"
+                  href="/admin/bookings"
+                  prefetch
+                  onClick={() => markNavigate("/admin/bookings")}
+                >
                   + New booking
                 </Link>
               ) : (
-                <Link className="btn" href="/admin">
+                <Link
+                  className="btn"
+                  href="/admin"
+                  prefetch
+                  onClick={() => markNavigate("/admin")}
+                >
                   Overview
                 </Link>
               )}
             </div>
           </header>
 
-          <div className="content">{children}</div>
+          <div className={`content${pendingHref ? " is-navigating" : ""}`}>{children}</div>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { prisma } from "@/lib/db";
 import type { Permission, RoleScope } from "@/lib/auth/permissions";
+import { cached, clearTtlCacheKey } from "@/lib/ttl-cache";
 
 export const SESSION_COOKIE = "session";
 
@@ -11,6 +12,9 @@ const sessionLength = {
   staff: 12 * 60 * 60 * 1000,
   customer: 30 * 24 * 60 * 60 * 1000,
 } satisfies Record<RoleScope, number>;
+
+/** Short TTL so admin menu clicks do not re-hit the remote DB every time. */
+const SESSION_USER_TTL_MS = 20_000;
 
 export type CurrentUser = {
   id: string;
@@ -26,6 +30,39 @@ export type CurrentUser = {
 
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
+}
+
+function sessionUserCacheKey(tokenHash: string) {
+  return `session-user:${tokenHash}`;
+}
+
+async function loadUserFromSession(tokenHash: string): Promise<CurrentUser | null> {
+  const session = await prisma.session.findUnique({
+    where: { id: tokenHash },
+    include: {
+      user: {
+        include: { role: { include: { permissions: true } } },
+      },
+    },
+  });
+
+  if (!session || session.expiresAt < new Date() || !session.user.isActive) {
+    return null;
+  }
+
+  const { user } = session;
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    scope: user.role.scope as RoleScope,
+    roleId: user.role.id,
+    roleName: user.role.name,
+    allAccess: user.role.allAccess,
+    permissions: new Set(user.role.permissions.map((item) => item.permission)),
+  };
 }
 
 export async function createSession(userId: string, scope: RoleScope) {
@@ -54,7 +91,9 @@ export async function destroySession() {
   const token = cookieStore.get(SESSION_COOKIE)?.value;
 
   if (token) {
-    await prisma.session.deleteMany({ where: { id: hashToken(token) } });
+    const tokenHash = hashToken(token);
+    clearTtlCacheKey(sessionUserCacheKey(tokenHash));
+    await prisma.session.deleteMany({ where: { id: tokenHash } });
   }
 
   cookieStore.delete(SESSION_COOKIE);
@@ -69,32 +108,10 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
-  const session = await prisma.session.findUnique({
-    where: { id: hashToken(token) },
-    include: {
-      user: {
-        include: { role: { include: { permissions: true } } },
-      },
-    },
-  });
-
-  if (!session || session.expiresAt < new Date() || !session.user.isActive) {
-    return null;
-  }
-
-  const { user } = session;
-
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    scope: user.role.scope as RoleScope,
-    roleId: user.role.id,
-    roleName: user.role.name,
-    allAccess: user.role.allAccess,
-    permissions: new Set(user.role.permissions.map((item) => item.permission)),
-  };
+  const tokenHash = hashToken(token);
+  return cached(sessionUserCacheKey(tokenHash), SESSION_USER_TTL_MS, () =>
+    loadUserFromSession(tokenHash),
+  );
 });
 
 export function can(user: CurrentUser | null, permission: Permission) {

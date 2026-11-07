@@ -8,6 +8,7 @@ const fallback: Record<EnquiryModule, string> = {
   car: "/img/cars/car-rental-banner.jpg",
   bike: "/img/bikes/bike-rental-banner.jpg",
   bus: "/img/company/service-holidays.jpg",
+  contact: "/img/company/service-holidays.jpg",
 };
 
 const placeFacts = new Set(["City", "From", "To", "Pickup city", "Starting from", "Area", "Places", "Drop-off", "Hotel", "Tour", "Model", "Bus"]);
@@ -96,6 +97,9 @@ export async function withEnquiryImages(rows: EnquiryView[]) {
   ]);
 
   return rows.map((row) => {
+    if (row.module === "contact") {
+      return { ...row, image: cover(row.image) || fallback.contact };
+    }
     const terms = needles(row);
     let image = "";
     if (row.module === "hotel") {

@@ -25,6 +25,7 @@ import {
   plainText,
   privateMetadata,
 } from "@/lib/seo";
+import { recordCatalogView } from "@/lib/catalog-views";
 import { parseJsonArray, type GalleryItem } from "@/lib/tours/json";
 
 type Props = {
@@ -126,6 +127,7 @@ export default async function HotelPage({ params, searchParams }: Props) {
     loadSimilarHotels(),
   ]);
   if (!hotel || !hotel.published) notFound();
+  recordCatalogView("hotel", hotel.id);
   const saved = user?.scope === "customer" ? await isFavorited(user.id, "hotel", hotel.id) : false;
 
   const similarRows = similarPool.filter((row) => row.id !== hotel.id).slice(0, 8);

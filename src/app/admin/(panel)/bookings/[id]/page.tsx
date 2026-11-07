@@ -22,7 +22,7 @@ import {
   statusLabel,
 } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
-import { isCustomEnquiry } from "@/lib/enquiries";
+import { isDeskEnquiry } from "@/lib/enquiries";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 
 type Props = { params: Promise<{ id: string }> };
@@ -50,7 +50,7 @@ export default async function AdminBookingDetailPage({ params }: Props) {
     loadStaffAssignees(),
   ]);
   if (!booking) notFound();
-  if (isCustomEnquiry(parseBookingDetails(booking.details))) redirect(`/admin/enquiries/${booking.id}`);
+  if (isDeskEnquiry(parseBookingDetails(booking.details), booking.title)) redirect(`/admin/enquiries/${booking.id}`);
 
   const canManage = can(user, "bookings.manage");
   const details = parseBookingDetails(booking.details);

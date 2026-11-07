@@ -125,17 +125,17 @@ function Stepper({
   onJump: (index: number) => void;
 }) {
   return (
-    <ol className="grid w-full min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
+    <ol className="flex w-full min-w-0 shrink-0 gap-2 overflow-x-auto pb-0.5">
       {STEPS.map((step, index) => {
         const active = index === current;
         return (
-          <li key={step.id} className="min-w-0">
+          <li key={step.id} className="min-w-0 shrink-0">
             <button
               type="button"
               onClick={() => onJump(index)}
               title={step.description}
               className={[
-                "flex w-full min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors",
+                "flex min-w-[7.5rem] items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors sm:min-w-[8.5rem]",
                 active
                   ? "border-brand bg-brand-soft"
                   : "border-line bg-white hover:bg-surface",
@@ -965,7 +965,7 @@ export function TourTabsForm({
           ) : null}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
         {currentStepId === "general" ? (
             <div className="grid gap-4">
               <Field
@@ -1834,69 +1834,65 @@ export function TourTabsForm({
             </div>
           ) : null}
         </div>
+      </div>
 
-        <div className="shrink-0 border-t border-line bg-white px-4 py-3 sm:px-5">
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <ButtonLink
-              href="/admin/tours"
-              variant="secondary"
-              size="sm"
-              className="w-full sm:w-auto"
-            >
-              Cancel
-            </ButtonLink>
-            <div className="flex flex-col-reverse gap-2 sm:flex-row">
-              {step > 0 ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  className="w-full sm:w-auto"
-                  onClick={goBack}
-                  disabled={pending}
-                >
-                  Back
-                </Button>
-              ) : null}
-              {step < STEPS.length - 1 ? (
-                <Button
-                  type="button"
-                  variant={isEdit && isPublishable ? "secondary" : "primary"}
-                  size="sm"
-                  className="w-full sm:w-auto"
-                  onClick={saveAndContinue}
-                  disabled={pending || imageBusy}
-                >
-                  {pending && saveMode === "continue"
-                    ? "Saving…"
-                    : "Save and continue"}
-                </Button>
-              ) : isEdit ? (
-                <Button
-                  type="button"
-                  variant={isPublishable ? "secondary" : "primary"}
-                  size="sm"
-                  className="w-full sm:w-auto"
-                  onClick={saveDraft}
-                  disabled={pending || imageBusy}
-                >
-                  {pending && saveMode === "draft" ? "Saving…" : "Save draft"}
-                </Button>
-              ) : null}
-              {!isEdit && step === STEPS.length - 1 ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  className="w-full sm:w-auto"
-                  onClick={publish}
-                  disabled={pending || imageBusy}
-                >
-                  {pending && saveMode === "publish"
-                    ? "Publishing…"
-                    : "Publish"}
-                </Button>
-              ) : null}
-            </div>
+      <div className="shrink-0 rounded-lg border border-line bg-white px-3 py-2.5 sm:px-5 sm:py-3">
+        <div className="flex items-center justify-between gap-2">
+          <ButtonLink
+            href="/admin/tours"
+            variant="secondary"
+            size="sm"
+            className="shrink-0"
+          >
+            Cancel
+          </ButtonLink>
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+            {step > 0 ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={goBack}
+                disabled={pending}
+              >
+                Back
+              </Button>
+            ) : null}
+            {step < STEPS.length - 1 ? (
+              <Button
+                type="button"
+                variant={isEdit && isPublishable ? "secondary" : "primary"}
+                size="sm"
+                onClick={saveAndContinue}
+                disabled={pending || imageBusy}
+              >
+                {pending && saveMode === "continue"
+                  ? "Saving…"
+                  : "Save and continue"}
+              </Button>
+            ) : isEdit ? (
+              <Button
+                type="button"
+                variant={isPublishable ? "secondary" : "primary"}
+                size="sm"
+                onClick={saveDraft}
+                disabled={pending || imageBusy}
+              >
+                {pending && saveMode === "draft" ? "Saving…" : "Save draft"}
+              </Button>
+            ) : null}
+            {!isEdit && step === STEPS.length - 1 ? (
+              <Button
+                type="button"
+                size="sm"
+                onClick={publish}
+                disabled={pending || imageBusy}
+              >
+                {pending && saveMode === "publish"
+                  ? "Publishing…"
+                  : "Publish"}
+              </Button>
+            ) : null}
           </div>
         </div>
       </div>

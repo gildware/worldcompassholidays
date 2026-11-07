@@ -14,7 +14,7 @@ import {
   parseBookingDetails,
   statusLabel,
 } from "@/lib/bookings";
-import { isCustomEnquiry } from "@/lib/enquiries";
+import { isDeskEnquiry } from "@/lib/enquiries";
 import { bookedHotelStatuses, readHotelReply } from "@/lib/hotel-reply";
 import { prisma } from "@/lib/db";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
@@ -41,7 +41,7 @@ export default async function AccountBookingPage({
 
   const booking = await prisma.booking.findUnique({ where: { reference } });
   if (!booking || booking.userId !== user.id) notFound();
-  if (isCustomEnquiry(parseBookingDetails(booking.details))) redirect(`/account/enquiries/${reference}`);
+  if (isDeskEnquiry(parseBookingDetails(booking.details), booking.title)) redirect(`/account/enquiries/${reference}`);
 
   const section = accountSectionForModule(booking.module);
   const editable =

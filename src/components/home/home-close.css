@@ -161,6 +161,7 @@
     padding-top: 28px;
   }
 
+  .worldcompassholiday-page .home-close__steps,
   .home-close__steps {
     grid-template-columns: 1fr;
   }

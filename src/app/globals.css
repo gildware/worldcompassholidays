@@ -35,6 +35,15 @@ body {
   font-family: var(--font-jost), sans-serif;
 }
 
+/* iOS Safari zooms focused fields when font-size is under 16px */
+@media (max-width: 1024px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]):not([type="hidden"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 .site-shell {
   display: flex;
   flex: 1 1 auto;
@@ -2494,7 +2503,7 @@ body > .worldcompassholiday-page > main > .footer {
   border: 0 !important;
   background: transparent !important;
   color: #051036;
-  font-size: 14px !important;
+  font-size: 16px !important;
   box-shadow: none !important;
 }
 
@@ -2619,7 +2628,7 @@ body > .worldcompassholiday-page > main > .footer {
   border-radius: 8px;
   background: #fff !important;
   color: var(--color-dark-1, #051036);
-  font-size: 14px !important;
+  font-size: 16px !important;
 }
 
 .tour-workspace__results {
@@ -2680,7 +2689,7 @@ body > .worldcompassholiday-page > main > .footer {
   border: 0 !important;
   background: transparent !important;
   color: var(--color-dark-1, #051036);
-  font-size: 14px !important;
+  font-size: 16px !important;
   line-height: 24px !important;
   box-shadow: none !important;
   vertical-align: middle;
@@ -3411,7 +3420,7 @@ body > .worldcompassholiday-page > main > .footer {
   border-radius: 0;
   background: transparent !important;
   color: var(--fleet-ink);
-  font-size: 13px !important;
+  font-size: 16px !important;
   font-weight: 500;
   line-height: 20px !important;
   outline: none;
@@ -3730,23 +3739,44 @@ body > .worldcompassholiday-page > main > .footer {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.bike-card__book {
+.bike-card__hit {
   position: absolute;
-  right: 10px;
-  bottom: 8px;
-  z-index: 3;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  color: inherit;
+  text-decoration: none;
+}
+
+.bike-card__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding: 6px 10px 8px;
+  border-top: 1px solid var(--fleet-rule);
+  min-width: 0;
+}
+
+.bike-card__book {
+  position: relative;
+  z-index: 0;
   display: inline-flex;
+  flex: none;
   align-items: center;
   gap: 4px;
+  max-width: 45%;
   color: #3554d1;
   font-size: 12px;
   font-weight: 600;
   line-height: 1.2;
   text-decoration: none;
+  white-space: nowrap;
   opacity: 0;
   pointer-events: none;
   transform: translateY(4px);
-  transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .bike-card__book::after {
@@ -3757,25 +3787,17 @@ body > .worldcompassholiday-page > main > .footer {
 .bike-card:hover .bike-card__book,
 .bike-card:focus-within .bike-card__book {
   opacity: 1;
-  pointer-events: auto;
   transform: none;
 }
 
 .bike-card:hover .bike-card__book::after,
-.bike-card:focus-within .bike-card__book::after,
-a.bike-card__book:hover::after {
+.bike-card:focus-within .bike-card__book::after {
   transform: translateX(3px);
 }
 
-a.bike-card__book:hover {
-  color: #2b46b8;
-}
-
-@media (hover: none) {
+@media (max-width: 767px) {
   .bike-card__book {
-    opacity: 1;
-    pointer-events: auto;
-    transform: none;
+    display: none;
   }
 }
 
@@ -3783,6 +3805,11 @@ a.bike-card__book:hover {
   border-color: var(--fleet-ink);
   box-shadow: 0 10px 24px var(--fleet-ink-06);
   color: inherit;
+}
+
+.bike-card:hover .bike-card__hit,
+.bike-card:focus-within .bike-card__hit {
+  outline: none;
 }
 
 .bike-card__media {
@@ -3828,12 +3855,13 @@ a.bike-card__book:hover {
 
 .bike-card__frame.is-photo img {
   padding: 0;
+  object-fit: cover;
 }
 
 .bike-card__nav {
   position: absolute;
   top: 50%;
-  z-index: 2;
+  z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3873,7 +3901,7 @@ a.bike-card__book:hover {
   right: 8px;
   bottom: 7px;
   left: 8px;
-  z-index: 2;
+  z-index: 3;
   display: flex;
   justify-content: center;
   gap: 4px;
@@ -3896,11 +3924,6 @@ a.bike-card__book:hover {
   background: var(--fleet-ink);
 }
 
-a.bike-card__body {
-  color: inherit;
-  text-decoration: none;
-}
-
 .bike-card__fuel {
   position: absolute;
   z-index: 2;
@@ -3919,6 +3942,7 @@ a.bike-card__body {
   line-height: 1.3;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  pointer-events: none;
 }
 
 .bike-card__fuel svg {
@@ -3937,6 +3961,7 @@ a.bike-card__body {
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+  pointer-events: none;
 }
 
 .bike-card__tag {
@@ -3979,14 +4004,18 @@ a.bike-card__body {
 .bike-card__topline .bike-card__place {
   margin-left: auto;
   max-width: 55%;
+  overflow: hidden;
   text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.bike-fleet .bike-card__kicker {
+:is(.bike-fleet, .car-fleet) .bike-card__kicker {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   margin: 0;
+  min-width: 0;
   color: var(--fleet-muted);
   font-size: 10px;
   line-height: 1.3;
@@ -4004,11 +4033,12 @@ a.bike-card__body {
   font-weight: 400;
 }
 
-.bike-fleet .bike-card__place {
+:is(.bike-fleet, .car-fleet) .bike-card__place {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   margin: 0;
+  min-width: 0;
   color: var(--fleet-muted);
   font-size: 10px;
   line-height: 1.3;
@@ -4017,14 +4047,17 @@ a.bike-card__body {
 .bike-card__title {
   margin: 0 !important;
   min-height: 0;
+  overflow: hidden;
   color: var(--fleet-ink);
   font-size: 14px !important;
   font-weight: 600;
   line-height: 1.25 !important;
   letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.bike-fleet .bike-card__specs {
+:is(.bike-fleet, .car-fleet) .bike-card__specs {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 12px;
@@ -4044,18 +4077,18 @@ a.bike-card__body {
   display: flex;
   align-items: baseline;
   gap: 4px;
-  margin: auto 0 0;
-  padding-top: 6px;
-  padding-right: 92px;
-  border-top: 1px solid var(--fleet-rule);
+  margin: 0;
+  min-width: 0;
   color: var(--fleet-ink);
   white-space: nowrap;
 }
 
 .bike-card__price strong {
+  overflow: hidden;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.02em;
+  text-overflow: ellipsis;
 }
 
 .bike-card__price span {
@@ -4083,19 +4116,7 @@ a.bike-card__body {
 }
 
 .car-fleet .bike-card__media {
-  aspect-ratio: 5 / 4;
-}
-
-.car-fleet .bike-card__frame.is-photo img {
-  display: block;
-  inset: 0;
-  width: 100% !important;
-  height: 100% !important;
-  max-width: none;
-  padding: 12px;
-  box-sizing: border-box;
-  object-fit: contain;
-  object-position: center;
+  aspect-ratio: 4 / 3;
 }
 
 .car-fleet .bike-card__price strong {

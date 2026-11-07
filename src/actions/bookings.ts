@@ -9,7 +9,7 @@ import { firstIssue, type FormState } from "@/lib/forms";
 import { requirePermission } from "@/lib/auth/guards";
 import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { bookingStatuses, parseBookingDetails, statusLabel } from "@/lib/bookings";
-import { enquiryStatusLabel, enquiryStatuses, isCustomEnquiry } from "@/lib/enquiries";
+import { enquiryStatusLabel, enquiryStatuses, isDeskEnquiry } from "@/lib/enquiries";
 
 const statusSchema = z.object({
   bookingId: z.string().min(1),
@@ -124,19 +124,19 @@ export async function updateBookingStatus(
     where: { id: parsed.data.bookingId },
   });
   if (!existing) return { error: "Booking not found." };
-  const custom = isCustomEnquiry(parseBookingDetails(existing.details));
-  const allowed = custom ? enquiryStatuses : bookingStatuses;
+  const deskEnquiry = isDeskEnquiry(parseBookingDetails(existing.details), existing.title);
+  const allowed = deskEnquiry ? enquiryStatuses : bookingStatuses;
   if (!(allowed as readonly string[]).includes(parsed.data.status)) {
     return { error: "Choose a status." };
   }
-  const current = custom && existing.status === "enquiry" ? "pending" : existing.status;
+  const current = deskEnquiry && existing.status === "enquiry" ? "pending" : existing.status;
   if (current === parsed.data.status) {
     return { error: null, success: "Already on that status." };
   }
 
   const details = appendBookingActivity(existing.details, {
     status: parsed.data.status,
-    message: `Status changed to ${custom ? enquiryStatusLabel(parsed.data.status) : statusLabel(parsed.data.status)}`,
+    message: `Status changed to ${deskEnquiry ? enquiryStatusLabel(parsed.data.status) : statusLabel(parsed.data.status)}`,
     actorName: actor.name,
   });
 

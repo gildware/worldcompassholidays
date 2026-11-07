@@ -27,10 +27,13 @@ import { formatDate } from "@/lib/format";
 
 export const customEnquiryKinds = ["custom_tour", "custom_hotel", "custom_car", "custom_bike", "custom_bus"] as const;
 
-export type EnquiryModule = "tour" | "hotel" | "car" | "bike" | "bus";
+export const websiteEnquiryKind = "website_enquiry" as const;
+
+export type EnquiryModule = "tour" | "hotel" | "car" | "bike" | "bus" | "contact";
 
 export const enquiryFilters = [
   { value: "all", label: "All" },
+  { value: "contact", label: "Contact" },
   { value: "tour", label: "Tours" },
   { value: "hotel", label: "Hotels" },
   { value: "car", label: "Cars" },
@@ -76,20 +79,46 @@ export function enquiryIsOpen(status: string) {
   return enquiryStatusValue(status) !== "closed";
 }
 
+export function isCustomEnquiry(details: Record<string, unknown>) {
+  return typeof details.kind === "string" && (customEnquiryKinds as readonly string[]).includes(details.kind);
+}
+
+/** Contact-page form (and older rows saved as “Website enquiry”). */
+export function isWebsiteEnquiry(details: Record<string, unknown>, title = "") {
+  if (details.kind === websiteEnquiryKind) return true;
+  if (title === "Website enquiry") return true;
+  return typeof details.interest === "string" && !details.kind;
+}
+
+/** Product request or contact-page enquiry — not a paid booking. */
+export function isDeskEnquiry(details: Record<string, unknown>, title = "") {
+  return isCustomEnquiry(details) || isWebsiteEnquiry(details, title);
+}
+
 export function customEnquiryWhere() {
   return {
-    OR: customEnquiryKinds.map((kind) => ({
-      details: { contains: `"kind":"${kind}"` },
-    })),
+    OR: [
+      ...customEnquiryKinds.map((kind) => ({
+        details: { contains: `"kind":"${kind}"` },
+      })),
+      { details: { contains: `"kind":"${websiteEnquiryKind}"` } },
+      { title: "Website enquiry" },
+    ],
+  };
+}
+
+export function websiteEnquiryWhere() {
+  return {
+    OR: [
+      { details: { contains: `"kind":"${websiteEnquiryKind}"` } },
+      { title: "Website enquiry" },
+      { module: "general" },
+    ],
   };
 }
 
 export function notCustomEnquiryWhere() {
   return { NOT: customEnquiryWhere() };
-}
-
-export function isCustomEnquiry(details: Record<string, unknown>) {
-  return typeof details.kind === "string" && (customEnquiryKinds as readonly string[]).includes(details.kind);
 }
 
 export function enquiryModule(kind: string): EnquiryModule | null {
@@ -98,6 +127,13 @@ export function enquiryModule(kind: string): EnquiryModule | null {
   if (kind === "custom_car") return "car";
   if (kind === "custom_bike") return "bike";
   if (kind === "custom_bus") return "bus";
+  if (kind === websiteEnquiryKind) return "contact";
+  return null;
+}
+
+function moduleFromBooking(module: string): EnquiryModule | null {
+  if (module === "tour" || module === "hotel" || module === "car" || module === "bike" || module === "bus") return module;
+  if (module === "general" || module === "contact") return "contact";
   return null;
 }
 
@@ -291,7 +327,15 @@ const kindLabels: Record<EnquiryModule, string> = {
   car: "Car",
   bike: "Bike",
   bus: "Bus",
+  contact: "Contact",
 };
+
+function websiteFacts(details: Record<string, unknown>) {
+  const facts: EnquiryFact[] = [];
+  const about = text(details, "interestLabel") || text(details, "interest");
+  if (about) push(facts, "Trip", "About", about, true);
+  return facts;
+}
 
 export function toEnquiryView(booking: {
   id: string;
@@ -299,6 +343,7 @@ export function toEnquiryView(booking: {
   module: string;
   status: string;
   title: string;
+  notes?: string;
   contactName: string;
   contactPhone: string;
   contactEmail: string;
@@ -312,19 +357,28 @@ export function toEnquiryView(booking: {
   } catch {
     return null;
   }
-  const module = enquiryModule(typeof parsed.kind === "string" ? parsed.kind : "") ?? (["tour", "hotel", "car", "bike", "bus"].includes(booking.module) ? (booking.module as EnquiryModule) : null);
-  if (!module || !isCustomEnquiry(parsed)) return null;
-  const facts = factsFor(module, parsed);
-  const summary = facts
-    .filter((fact) => fact.label !== "Budget")
-    .slice(0, 3)
-    .map((fact) => fact.value)
-    .join(" · ");
+  const website = isWebsiteEnquiry(parsed, booking.title);
+  const custom = isCustomEnquiry(parsed);
+  if (!website && !custom) return null;
+
+  const module = website
+    ? moduleFromBooking(booking.module) ?? "contact"
+    : enquiryModule(typeof parsed.kind === "string" ? parsed.kind : "") ?? moduleFromBooking(booking.module);
+  if (!module) return null;
+
+  const facts = website || module === "contact" ? websiteFacts(parsed) : factsFor(module, parsed);
+  const summary = website
+    ? [text(parsed, "interestLabel") || text(parsed, "interest"), booking.contactName].filter(Boolean).join(" · ")
+    : facts
+        .filter((fact) => fact.label !== "Budget")
+        .slice(0, 3)
+        .map((fact) => fact.value)
+        .join(" · ");
   return {
     id: booking.id,
     reference: booking.reference,
-    module,
-    kindLabel: kindLabels[module],
+    module: website ? "contact" : module,
+    kindLabel: website ? "Contact" : kindLabels[module],
     title: booking.title,
     status: booking.status,
     summary,
@@ -333,7 +387,7 @@ export function toEnquiryView(booking: {
     contactEmail: booking.contactEmail,
     createdAt: booking.createdAt,
     facts,
-    note: text(parsed, "message") || text(parsed, "note"),
+    note: text(parsed, "message") || text(parsed, "note") || (booking.notes ?? "").trim(),
     image: "",
     channel: text(parsed, "channel"),
   };

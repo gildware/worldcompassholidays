@@ -6,6 +6,7 @@ import { modules } from "@/config/modules";
 import { loadBusFacilities } from "@/lib/bus-catalog";
 import { busAmenityLabels, requestBusHref } from "@/lib/buses";
 import { prisma } from "@/lib/db";
+import { logListingSearch } from "@/lib/search/log";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -25,6 +26,12 @@ export default async function BusesPage({
   if (!modules.buses) notFound();
   const params = await searchParams;
   const initial = readBusQuery(params);
+  logListingSearch("buses", params, {
+    queryOverride:
+      [initial.q, initial.from && initial.to ? `${initial.from} → ${initial.to}` : initial.from || initial.to]
+        .filter(Boolean)
+        .join(" · ") || undefined,
+  });
   const [routes, facilities] = await Promise.all([
     prisma.busRoute.findMany({
       where: { published: true },

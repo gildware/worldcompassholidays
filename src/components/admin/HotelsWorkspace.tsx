@@ -100,6 +100,46 @@ function ActionPill({
   );
 }
 
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" aria-hidden>
+      <path
+        d="M1.5 8S3.8 3.5 8 3.5 14.5 8 14.5 8 12.2 12.5 8 12.5 1.5 8 1.5 8Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+      />
+      <circle cx="8" cy="8" r="1.8" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" aria-hidden>
+      <path
+        d="M9.2 3.2 12.8 6.8M2.5 13.5l2.7-.6 7.4-7.4a1.2 1.2 0 0 0 0-1.7L11.2 2.4a1.2 1.2 0 0 0-1.7 0L2.1 9.8l.4 3.7Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" aria-hidden>
+      <path
+        d="M3 4.5h10M6.2 4.5V3.2h3.6v1.3M4.2 4.5l.5 8.2h6.6l.5-8.2"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function HotelsWorkspace({
   hotels,
   destinations,
@@ -317,26 +357,35 @@ export function HotelsWorkspace({
               </tr>
             ) : (
               filtered.map((hotel) => (
-                <tr key={hotel.id} className="border-t border-line">
+                <tr key={hotel.id} className="border-b border-line last:border-b-0">
                   <td className="px-3 py-2">
-                    <div className="relative h-10 w-14 overflow-hidden rounded bg-surface">
-                      {hotel.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={hotel.imageUrl} alt="" className="h-full w-full object-cover" />
-                      ) : null}
-                    </div>
+                    {hotel.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={hotel.imageUrl}
+                        alt=""
+                        className="h-10 w-14 rounded-md border border-line object-cover"
+                      />
+                    ) : (
+                      <div className="h-10 w-14 rounded-md border border-line bg-surface" />
+                    )}
                   </td>
                   <td className="px-3 py-2">
-                    <p className="font-medium text-navy">{hotel.name}</p>
-                    <p className="mt-0.5 line-clamp-1 text-xs text-muted">
+                    <Link
+                      href={`/admin/hotels/${hotel.id}/view`}
+                      className="font-semibold text-navy hover:text-brand hover:underline"
+                    >
+                      {hotel.name}
+                    </Link>
+                    <p className="mt-0.5 line-clamp-1 max-w-xs text-xs text-muted">
                       {hotel.starRating > 0 ? `${hotel.starRating}-star · ` : ""}
                       {hotel.summary || hotel.slug}
                     </p>
                   </td>
-                  <td className="px-3 py-2 text-muted">{hotel.destinationName || "—"}</td>
-                  <td className="px-3 py-2">{propertyTypeLabel(hotel.propertyType)}</td>
-                  <td className="px-3 py-2">{hotel.roomCount}</td>
-                  <td className="px-3 py-2 text-right">
+                  <td className="px-3 py-2 text-navy">{hotel.destinationName || "—"}</td>
+                  <td className="px-3 py-2 text-navy">{propertyTypeLabel(hotel.propertyType)}</td>
+                  <td className="px-3 py-2 text-navy">{hotel.roomCount}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-navy">
                     {formatMoney(hotel.priceFrom, hotel.currency)}
                   </td>
                   <td className="px-3 py-2">
@@ -347,16 +396,16 @@ export function HotelsWorkspace({
                   <td className="px-3 py-2">
                     <div className="flex justify-end gap-1.5">
                       <ActionPill label="View hotel" tone="view" href={`/admin/hotels/${hotel.id}/view`}>
-                        <span aria-hidden>◉</span>
+                        <EyeIcon />
                       </ActionPill>
                       {canManage ? (
                         <ActionPill label="Edit hotel" tone="edit" href={`/admin/hotels/${hotel.id}`}>
-                          <span aria-hidden>✎</span>
+                          <PencilIcon />
                         </ActionPill>
                       ) : null}
                       {canManage ? (
                         <ActionPill label="Delete hotel" tone="delete" onClick={() => setDeleting(hotel)}>
-                          <span aria-hidden>✕</span>
+                          <TrashIcon />
                         </ActionPill>
                       ) : null}
                     </div>

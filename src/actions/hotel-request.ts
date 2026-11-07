@@ -261,17 +261,26 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
 
   const channel = text(formData.get("channel")) === "whatsapp" ? "whatsapp" : "form";
   const data = parsed.data;
+  const hotelSlugRaw = text(formData.get("hotelSlug")).slice(0, 120);
+  const linkedHotel = hotelSlugRaw
+    ? await prisma.hotel.findFirst({
+        where: { slug: hotelSlugRaw, published: true },
+        select: { slug: true, name: true },
+      })
+    : null;
+  const hotelSlug = linkedHotel?.slug ?? "";
+  const hotelName = linkedHotel?.name || data.hotelName;
   const booking = await prisma.booking.create({
     data: {
       reference: bookingReference(),
       module: "hotel",
       status: "pending",
-      title: data.hotelName ? `Hotel request: ${data.hotelName}` : `Hotel request in ${data.destination}`,
+      title: hotelName ? `Hotel request: ${hotelName}` : `Hotel request in ${data.destination}`,
       startDate: new Date(`${data.checkIn}T00:00:00`),
       endDate: new Date(`${data.checkOut}T00:00:00`),
       guests: data.adults + data.children,
       notes: [
-        requestNotes(data),
+        requestNotes({ ...data, hotelName }),
         customer?.phone && typedPhone && data.phone !== customer.phone ? `Account phone: ${customer.phone}` : "",
       ]
         .filter(Boolean)
@@ -279,7 +288,8 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
       details: detailsWithEnquiryReceived({
         kind: "custom_hotel",
         destination: data.destination,
-        hotelName: data.hotelName,
+        hotelName,
+        hotelSlug,
         checkIn: data.checkIn,
         checkOut: data.checkOut,
         adults: data.adults,

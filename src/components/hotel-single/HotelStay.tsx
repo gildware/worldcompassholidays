@@ -735,6 +735,7 @@ export function HotelStay({
             <input type="hidden" name="surface" value="stay" />
             <input type="hidden" name="destination" value={hotel.location || hotel.address || hotel.name} />
             <input type="hidden" name="hotelName" value={hotel.name} />
+            <input type="hidden" name="hotelSlug" value={hotel.slug || ""} />
             <input type="hidden" name="checkIn" value={iso(arrival)} />
             <input type="hidden" name="checkOut" value={iso(departure)} />
             <input type="hidden" name="adults" value={String(adults)} />

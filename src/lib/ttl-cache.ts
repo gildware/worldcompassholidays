@@ -29,3 +29,8 @@ export function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): P
 export function clearTtlCache() {
   store.clear();
 }
+
+export function clearTtlCacheKey(key: string) {
+  store.delete(key);
+  pending.delete(key);
+}

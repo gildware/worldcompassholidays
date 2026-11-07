@@ -65,9 +65,20 @@ export function ButtonLink({
   size = "md",
   className,
   children,
-}: Common & { href: string }) {
+  target,
+  rel,
+}: Common & {
+  href: string;
+  target?: React.HTMLAttributeAnchorTarget;
+  rel?: string;
+}) {
   return (
-    <Link href={href} className={classes(variant, size, className)}>
+    <Link
+      href={href}
+      className={classes(variant, size, className)}
+      target={target}
+      rel={rel}
+    >
       {children}
     </Link>
   );

@@ -27,6 +27,7 @@ import {
   privateMetadata,
   siteOrigin,
 } from "@/lib/seo";
+import { recordCatalogView } from "@/lib/catalog-views";
 import {
   formatTourDuration,
   parseDurationUnit,
@@ -128,6 +129,7 @@ export default async function TourPage({ params }: Props) {
     loadSimilarTours(),
   ]);
   if (!tour || !tour.published) notFound();
+  recordCatalogView("tour", tour.id);
   const saved = user?.scope === "customer" ? await isFavorited(user.id, "tour", tour.id) : false;
 
   const place = tour.destination ?? tour.destinationLinks[0]?.destination ?? null;

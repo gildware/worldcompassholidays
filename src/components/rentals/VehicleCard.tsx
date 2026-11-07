@@ -19,7 +19,14 @@ export type VehicleCardData = {
   bookHref: string;
 };
 
-export function VehicleCard({ vehicle }: { vehicle: VehicleCardData }) {
+export function VehicleCard({
+  vehicle,
+  preview = false,
+}: {
+  vehicle: VehicleCardData;
+  /** Admin preview: render the card without linking out to the website. */
+  preview?: boolean;
+}) {
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white">
       {vehicle.imageUrl ? (
@@ -63,19 +70,31 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardData }) {
           {vehicle.availability}
         </p>
         <div className="mt-4 flex gap-2">
-          <Link
-            href={`/rentals/${vehicle.slug}`}
-            className="inline-flex h-10 flex-1 items-center justify-center rounded-lg border border-line text-sm font-medium"
-          >
-            View details
-          </Link>
-          {vehicle.bookable ? (
+          {preview ? (
+            <span className="inline-flex h-10 flex-1 items-center justify-center rounded-lg border border-line text-sm font-medium text-muted">
+              View details
+            </span>
+          ) : (
             <Link
-              href={vehicle.bookHref}
-              className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-brand text-sm font-medium text-white"
+              href={`/rentals/${vehicle.slug}`}
+              className="inline-flex h-10 flex-1 items-center justify-center rounded-lg border border-line text-sm font-medium"
             >
-              Book now
+              View details
             </Link>
+          )}
+          {vehicle.bookable ? (
+            preview ? (
+              <span className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-brand text-sm font-medium text-white">
+                Book now
+              </span>
+            ) : (
+              <Link
+                href={vehicle.bookHref}
+                className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-brand text-sm font-medium text-white"
+              >
+                Book now
+              </Link>
+            )
           ) : (
             <span className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-surface text-sm text-muted">
               Unavailable

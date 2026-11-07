@@ -10,6 +10,7 @@ import { favoriteIds } from "@/lib/favorites";
 import { prisma } from "@/lib/db";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { cached } from "@/lib/ttl-cache";
+import { logListingSearch } from "@/lib/search/log";
 import { toCatalogTour } from "@/lib/tours/catalog-card";
 
 export const metadata: Metadata = pageMetadata({
@@ -58,6 +59,10 @@ export default async function ToursPage({
   const featured = tours.find((tour) => tour.featured) ?? tours[0] ?? null;
   const customer = user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null;
   const savedIds = user?.scope === "customer" ? await favoriteIds(user.id, "tour") : [];
+  const initial = readCatalogQuery(params, tours, today);
+  logListingSearch("tours", params, {
+    queryOverride: [initial.q, ...initial.region, ...initial.cat].filter(Boolean).join(" · ") || undefined,
+  });
 
   return (
     <>
@@ -83,7 +88,7 @@ export default async function ToursPage({
       />
       <TourCatalog
         tours={tours}
-        initial={readCatalogQuery(params, tours, today)}
+        initial={initial}
         today={today}
         customer={customer}
         featured={featured ? { href: featured.href, title: featured.title } : null}

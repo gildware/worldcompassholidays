@@ -114,16 +114,14 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
         <h1 className="mt-1 text-xl font-semibold tracking-tight text-navy">Edit {noun}</h1>
         <p className="mt-0.5 truncate text-xs text-muted">
           {vehicle.name}
-          {vehicle.published ? (
-            <>
-              {" · "}
-              <Link href={`/rentals/${vehicle.slug}`} className="font-medium text-brand hover:underline">
-                View on the website
-              </Link>
-            </>
-          ) : (
-            " · Draft"
-          )}
+          {vehicle.published ? " · Published" : " · Draft"}
+          {" · "}
+          <Link
+            href={`/admin/rentals/fleet/${vehicle.id}/view`}
+            className="font-medium text-brand hover:underline"
+          >
+            View {noun}
+          </Link>
         </p>
       </div>
 

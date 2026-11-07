@@ -69,6 +69,7 @@ const adminNav: (NavItem & {
       permission: "tours.view",
       enabled: modules.tours,
       children: [
+        { href: "/admin/tours/overview", label: "Overview" },
         { href: "/admin/tours", label: "Tours" },
         { href: "/admin/tours/configuration", label: "Configuration" },
       ],
@@ -79,6 +80,7 @@ const adminNav: (NavItem & {
       permission: "hotels.view",
       enabled: modules.hotels,
       children: [
+        { href: "/admin/hotels/overview", label: "Overview" },
         { href: "/admin/hotels", label: "Hotels" },
         { href: "/admin/hotels/configuration", label: "Configuration" },
       ],
@@ -126,6 +128,12 @@ const adminNav: (NavItem & {
     {
       href: "/admin/enquiries",
       label: "Enquiries",
+      permission: "bookings.view",
+      enabled: true,
+    },
+    {
+      href: "/admin/searches",
+      label: "Searches",
       permission: "bookings.view",
       enabled: true,
     },

@@ -16,6 +16,7 @@ import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Toggle } from "@/components/ui/Toggle";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { descendantIds } from "@/lib/destinations";
+import { clipText, plainText } from "@/lib/seo";
 
 type SortKey =
   | "name"
@@ -50,7 +51,7 @@ function destinationMatchesSearch(item: DestinationRow, needle: string) {
   const identity = [
     item.name,
     item.parentName,
-    item.summary,
+    plainText(item.summary),
     item.slug,
     item.mapLat,
     item.mapLng,
@@ -655,7 +656,7 @@ export function DestinationsWorkspace({
                       {destination.name}
                     </Link>
                     <p className="line-clamp-1 max-w-xs text-xs text-muted">
-                      {destination.summary}
+                      {clipText(destination.summary, 120)}
                     </p>
                   </td>
                   <td className="px-3 py-2 text-muted">

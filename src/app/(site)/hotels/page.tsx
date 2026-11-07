@@ -12,6 +12,7 @@ import { propertyTypeLabel } from "@/lib/hotels/options";
 import { getHotelSettings } from "@/lib/hotels/settings";
 import { readStayState, type StayListHotel, type StayPlace } from "@/lib/hotels/stay-list";
 import { parseJsonArray, type GalleryItem } from "@/lib/tours/json";
+import { logListingSearch } from "@/lib/search/log";
 import { pageMetadata } from "@/lib/seo";
 import { cached } from "@/lib/ttl-cache";
 
@@ -146,6 +147,14 @@ export default async function HotelsPage({
     places: places.map((place) => place.id),
     checkin,
     checkout,
+  });
+  const placeLabel =
+    initial.place === "all"
+      ? ""
+      : places.find((place) => place.id === initial.place)?.name || initial.place;
+  logListingSearch("hotels", params, {
+    placeLabel,
+    queryOverride: [initial.q, placeLabel].filter(Boolean).join(" · ") || undefined,
   });
 
   return (

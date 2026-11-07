@@ -93,25 +93,24 @@ function Chevron({ direction }: { direction: "left" | "right" }) {
 
 function CardPhotos({
   images,
-  href,
   name,
   eager,
   fuel,
   tags,
   save,
+  dragged,
 }: {
   images: string[];
-  href: string;
   name: string;
   eager: boolean;
   fuel: string;
   tags: string[];
   save?: ReactNode;
+  dragged: { current: boolean };
 }) {
   const [index, setIndex] = useState(0);
   const [broken, setBroken] = useState<Record<string, true>>({});
   const startX = useRef(0);
-  const dragged = useRef(false);
   const slides = images.filter((src) => src && !broken[src]);
   const count = slides.length;
   const current = Math.min(index, Math.max(count - 1, 0));
@@ -139,16 +138,7 @@ function CardPhotos({
     <div className="bike-card__media" onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
       {save}
       {count > 0 ? (
-        <Link prefetch={false}
-          href={href}
-          className="bike-card__shot"
-          aria-label={name}
-          onClick={(event) => {
-            if (!dragged.current) return;
-            event.preventDefault();
-            dragged.current = false;
-          }}
-        >
+        <div className="bike-card__shot">
           <span className="bike-card__track" style={{ transform: `translateX(-${current * 100}%)` }}>
             {slides.map((src, slide) => (
               <span
@@ -169,7 +159,7 @@ function CardPhotos({
               </span>
             ))}
           </span>
-        </Link>
+        </div>
       ) : (
         <div className="bike-card__fallback" />
       )}
@@ -251,80 +241,118 @@ export function BikeCards({
 
   return (
     <>
-      {bikes.map((item, index) => {
-        const query = detailQuery ? `?${detailQuery}` : "";
-        const href = `/rentals/${item.slug}${query}`;
-
-        return (
-          <article className="bike-card" key={item.id}>
-            <CardPhotos
-              images={item.images}
-              href={href}
-              name={item.name}
-              eager={index < 8}
-              fuel={item.fuel}
-              tags={item.tags}
-              save={
-                <FavoriteButton
-                  kind={item.kind === "bike" ? "bike" : "car"}
-                  itemId={item.id}
-                  initialSaved={savedIds.includes(item.id)}
-                  signedIn={signedIn}
-                  title={item.name}
-                  variant="icon"
-                  className="fav-btn--float"
-                />
-              }
-            />
-            <Link prefetch={false} href={href} className="bike-card__body">
-              <div className="bike-card__topline">
-                {item.category ? (
-                  <p className="bike-card__kicker">
-                    <TypeIcon />
-                    {item.category}
-                  </p>
-                ) : (
-                  <span />
-                )}
-                {item.location ? (
-                  <p className="bike-card__place">
-                    <PinIcon />
-                    {item.location}
-                  </p>
-                ) : null}
-              </div>
-              <h3 className="bike-card__title">{item.name}</h3>
-              <p className="bike-card__specs">
-                {showSeats && item.seats > 0 ? (
-                  <span>
-                    <SeatIcon />
-                    {item.seats} seats
-                  </span>
-                ) : null}
-                {item.transmission ? (
-                  <span>
-                    <GearIcon />
-                    {gear(item.transmission)}
-                  </span>
-                ) : null}
-                {item.mileageLabel ? (
-                  <span>
-                    <RoadIcon />
-                    {item.mileageLabel}
-                  </span>
-                ) : null}
-              </p>
-              <p className="bike-card__price">
-                <strong>{formatMoney(item.price, item.currency)}</strong>
-                <span>/ day</span>
-              </p>
-            </Link>
-            <Link prefetch={false} href={href} className="bike-card__book">
-              View more
-            </Link>
-          </article>
-        );
-      })}
+      {bikes.map((item, index) => (
+        <BikeCard
+          key={item.id}
+          item={item}
+          eager={index < 8}
+          showSeats={showSeats}
+          detailQuery={detailQuery}
+          saved={savedIds.includes(item.id)}
+          signedIn={signedIn}
+        />
+      ))}
     </>
+  );
+}
+
+function BikeCard({
+  item,
+  eager,
+  showSeats,
+  detailQuery,
+  saved,
+  signedIn,
+}: {
+  item: CarListCard;
+  eager: boolean;
+  showSeats: boolean;
+  detailQuery: string;
+  saved: boolean;
+  signedIn: boolean;
+}) {
+  const dragged = useRef(false);
+  const query = detailQuery ? `?${detailQuery}` : "";
+  const href = `/rentals/${item.slug}${query}`;
+
+  return (
+    <article className="bike-card">
+      <Link
+        prefetch={false}
+        href={href}
+        className="bike-card__hit"
+        aria-label={item.name}
+        onClick={(event) => {
+          if (!dragged.current) return;
+          event.preventDefault();
+          dragged.current = false;
+        }}
+      />
+      <CardPhotos
+        images={item.images}
+        name={item.name}
+        eager={eager}
+        fuel={item.fuel}
+        tags={item.tags}
+        dragged={dragged}
+        save={
+          <FavoriteButton
+            kind={item.kind === "bike" ? "bike" : "car"}
+            itemId={item.id}
+            initialSaved={saved}
+            signedIn={signedIn}
+            title={item.name}
+            variant="icon"
+            className="fav-btn--float"
+          />
+        }
+      />
+      <div className="bike-card__body">
+        <div className="bike-card__topline">
+          {item.category ? (
+            <p className="bike-card__kicker">
+              <TypeIcon />
+              {item.category}
+            </p>
+          ) : (
+            <span />
+          )}
+          {item.location ? (
+            <p className="bike-card__place">
+              <PinIcon />
+              {item.location}
+            </p>
+          ) : null}
+        </div>
+        <h3 className="bike-card__title">{item.name}</h3>
+        <p className="bike-card__specs">
+          {showSeats && item.seats > 0 ? (
+            <span>
+              <SeatIcon />
+              {item.seats} seats
+            </span>
+          ) : null}
+          {item.transmission ? (
+            <span>
+              <GearIcon />
+              {gear(item.transmission)}
+            </span>
+          ) : null}
+          {item.mileageLabel ? (
+            <span>
+              <RoadIcon />
+              {item.mileageLabel}
+            </span>
+          ) : null}
+        </p>
+      </div>
+      <div className="bike-card__foot">
+        <p className="bike-card__price">
+          <strong>{formatMoney(item.price, item.currency)}</strong>
+          <span>/ day</span>
+        </p>
+        <span className="bike-card__book">View more</span>
+      </div>
+    </article>
   );
 }

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { searchCatalog } from "@/lib/search/catalog";
+import { recordSearch } from "@/lib/search/log";
+import { hasSearchableQuery } from "@/lib/search/rank";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +13,13 @@ export async function GET(request: Request) {
 
   try {
     const hits = await searchCatalog(query);
+    if (hasSearchableQuery(query)) {
+      void recordSearch({
+        query,
+        source: "catalog",
+        results: hits.length,
+      });
+    }
     return NextResponse.json({ hits }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("catalog search failed", error);

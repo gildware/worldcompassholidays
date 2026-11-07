@@ -100,23 +100,64 @@ export type DeskBadgeStats = {
   unassignedAction: number;
 };
 
+/** Action counts only — enough for sidebar badges (no full table scan). */
+export async function loadBookingNavStats(): Promise<DeskBadgeStats[]> {
+  const enabled = bookingDesks.filter((d) => d.enabled).map((d) => d.key);
+  if (enabled.length === 0) return [];
+
+  const groups = await prisma.booking.groupBy({
+    by: ["module"],
+    where: {
+      module: { in: [...enabled] },
+      status: { in: [...actionBookingStatuses] },
+      ...notCustomEnquiryWhere(),
+    },
+    _count: { _all: true },
+  });
+  const actionByModule = Object.fromEntries(
+    groups.map((row) => [row.module, row._count._all]),
+  );
+
+  return enabled.map((module) => ({
+    module,
+    total: 0,
+    action: actionByModule[module] ?? 0,
+    unassignedAction: 0,
+  }));
+}
+
 export async function loadBookingDeskStats(): Promise<DeskBadgeStats[]> {
   const enabled = bookingDesks.filter((d) => d.enabled).map((d) => d.key);
-  const bookings = await prisma.booking.findMany({
-    where: { module: { in: [...enabled] }, ...notCustomEnquiryWhere() },
-    select: { module: true, status: true, details: true },
-  });
+  if (enabled.length === 0) return [];
+
+  // Totals via groupBy; only action-status rows need details for unassigned.
+  const [totals, actionRows] = await Promise.all([
+    prisma.booking.groupBy({
+      by: ["module"],
+      where: { module: { in: [...enabled] }, ...notCustomEnquiryWhere() },
+      _count: { _all: true },
+    }),
+    prisma.booking.findMany({
+      where: {
+        module: { in: [...enabled] },
+        status: { in: [...actionBookingStatuses] },
+        ...notCustomEnquiryWhere(),
+      },
+      select: { module: true, details: true },
+    }),
+  ]);
+
+  const totalByModule = Object.fromEntries(
+    totals.map((row) => [row.module, row._count._all]),
+  );
 
   return enabled.map((module) => {
-    const rows = bookings.filter((b) => b.module === module);
-    const actionRows = rows.filter((b) =>
-      (actionBookingStatuses as readonly string[]).includes(b.status),
-    );
+    const rows = actionRows.filter((b) => b.module === module);
     return {
       module,
-      total: rows.length,
-      action: actionRows.length,
-      unassignedAction: actionRows.filter((b) => {
+      total: totalByModule[module] ?? 0,
+      action: rows.length,
+      unassignedAction: rows.filter((b) => {
         const { assigneeId } = assigneeFromDetails(parseBookingDetails(b.details));
         return !assigneeId;
       }).length,
