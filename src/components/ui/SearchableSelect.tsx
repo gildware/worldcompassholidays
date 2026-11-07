@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 export type SelectOption = {
@@ -47,6 +47,8 @@ type MenuBox = {
   placement: "bottom" | "top";
 };
 
+const SHEET_MQ = "(max-width: 1024px)";
+
 function measure(trigger: HTMLElement): MenuBox {
   const rect = trigger.getBoundingClientRect();
   const gap = 4;
@@ -65,6 +67,20 @@ function measure(trigger: HTMLElement): MenuBox {
     maxHeight: Math.max(160, Math.min(320, available)),
     placement,
   };
+}
+
+function useSelectSheet() {
+  const [mobile, setMobile] = useState<boolean | null>(null);
+
+  useLayoutEffect(() => {
+    const query = window.matchMedia(SHEET_MQ);
+    const sync = () => setMobile(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+
+  return mobile === true;
 }
 
 function matches(query: string, label: string, value: string, keywords = "") {
@@ -109,6 +125,8 @@ export function SearchableSelect({
   const [activeIndex, setActiveIndex] = useState(0);
   const [box, setBox] = useState<MenuBox | null>(null);
   const [mounted, setMounted] = useState(false);
+  const sheet = useSelectSheet();
+  const sheetOpen = open && sheet;
 
   const items: SelectOption[] = [];
   if (emptyLabel && matches(query, emptyLabel, "")) {
@@ -127,16 +145,26 @@ export function SearchableSelect({
   const blank = selected === "";
   const shown = blank ? (emptyLabel ?? placeholder) : (selectedOption?.label ?? selected);
   const muted = blank && !emptyLabel;
+  const sheetTitle = ariaLabel || placeholder || "Choose";
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
+    if (!sheetOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sheetOpen]);
+
+  useEffect(() => {
     if (!open) return;
 
     function update() {
-      if (!triggerRef.current) return;
+      if (sheet || !triggerRef.current) return;
       setBox(measure(triggerRef.current));
     }
 
@@ -146,6 +174,7 @@ export function SearchableSelect({
     window.addEventListener("scroll", update, true);
 
     function onPointerDown(event: MouseEvent) {
+      if (sheet) return;
       const target = event.target as Node;
       if (triggerRef.current?.contains(target)) return;
       if (menuRef.current?.contains(target)) return;
@@ -177,7 +206,7 @@ export function SearchableSelect({
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown, true);
     };
-  }, [open]);
+  }, [open, sheet]);
 
   useEffect(() => {
     if (!open || safeIndex < 0) return;
@@ -202,7 +231,7 @@ export function SearchableSelect({
     const current = full.findIndex((option) => option.value === selected);
     setQuery("");
     setActiveIndex(current >= 0 ? current : 0);
-    if (triggerRef.current) setBox(measure(triggerRef.current));
+    if (!sheet && triggerRef.current) setBox(measure(triggerRef.current));
     setOpen(true);
   }
 
@@ -235,93 +264,144 @@ export function SearchableSelect({
     }
   }
 
+  const optionList = (
+    <ul
+      id={listId}
+      role="listbox"
+      className={`app-select-menu__list overflow-y-auto overscroll-contain py-1${sheet ? " is-sheet-list" : ""}`}
+      style={sheet ? undefined : { maxHeight: (box?.maxHeight ?? 320) - 44 }}
+    >
+      {items.length === 0 ? (
+        <li className="px-3 py-2 text-sm text-muted">No matches</li>
+      ) : (
+        items.map((option, index) => {
+          const active = index === safeIndex;
+          const chosen = option.value === selected;
+          return (
+            <li key={`${option.value}-${option.label}`} role="presentation" className={option.action ? "mt-1 border-t border-line pt-1" : undefined}>
+              <button
+                type="button"
+                id={`${listId}-option-${index}`}
+                role="option"
+                aria-selected={chosen}
+                data-index={index}
+                className={[
+                  "flex w-full items-center gap-3 px-3 py-2 text-sm",
+                  option.action
+                    ? "justify-center text-center font-semibold text-[#3554d1]"
+                    : "justify-between text-left",
+                  active ? "bg-brand-soft" : "hover:bg-surface",
+                  option.action ? "" : chosen ? "font-medium text-navy" : "text-foreground",
+                ].join(" ")}
+                onMouseEnter={() => setActiveIndex(index)}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => commit(option.value)}
+              >
+                <span className="flex min-w-0 flex-1 items-center gap-2">
+                  {option.icon || option.iconUrl ? <OptionIcon option={option} /> : null}
+                  <span className="min-w-0 truncate">{option.label}</span>
+                </span>
+                {chosen ? (
+                  <span className="shrink-0 text-brand" aria-hidden>
+                    ✓
+                  </span>
+                ) : null}
+              </button>
+            </li>
+          );
+        })
+      )}
+    </ul>
+  );
+
+  const searchField = (
+    <div className={`app-select-menu__search border-b border-line px-2 py-1.5${sheet ? " is-sheet-search" : ""}`}>
+      <input
+        ref={searchRef}
+        value={query}
+        onChange={(event) => {
+          setQuery(event.target.value);
+          setActiveIndex(0);
+        }}
+        onKeyDown={onSearchKeyDown}
+        placeholder={searchPlaceholder}
+        autoComplete="off"
+        spellCheck={false}
+        aria-label={searchPlaceholder}
+        aria-controls={listId}
+        aria-activedescendant={
+          safeIndex >= 0 ? `${listId}-option-${safeIndex}` : undefined
+        }
+        className="!h-8 !text-sm"
+      />
+    </div>
+  );
+
   const menu =
-    mounted && open && box
+    mounted && open && (sheet || box)
       ? createPortal(
-          <div
-            ref={menuRef}
-            className={[
-              "app-select-menu fixed z-[80] overflow-hidden rounded-lg border border-line bg-white shadow-lg",
-              menuClassName,
-            ].filter(Boolean).join(" ")}
-            style={{
-              position: "fixed",
-              zIndex: menuZIndex,
-              top: box.top,
-              left: box.left,
-              width: box.width,
-              maxHeight: box.maxHeight,
-              transform: box.placement === "top" ? "translateY(-100%)" : undefined,
-            }}
-          >
-            <div className="border-b border-line px-2 py-1.5">
-              <input
-                ref={searchRef}
-                value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value);
-                  setActiveIndex(0);
+          sheet ? (
+            <>
+              <button
+                type="button"
+                className="m-cal-backdrop"
+                aria-label={`Close ${sheetTitle}`}
+                onClick={() => {
+                  setOpen(false);
+                  triggerRef.current?.focus();
                 }}
-                onKeyDown={onSearchKeyDown}
-                placeholder={searchPlaceholder}
-                autoComplete="off"
-                spellCheck={false}
-                aria-label={searchPlaceholder}
-                aria-controls={listId}
-                aria-activedescendant={
-                  safeIndex >= 0 ? `${listId}-option-${safeIndex}` : undefined
-                }
-                className="!h-8 !text-sm"
+                data-picker
               />
-            </div>
-            <ul
-              id={listId}
-              role="listbox"
-              className="overflow-y-auto overscroll-contain py-1"
-              style={{ maxHeight: box.maxHeight - 44 }}
+              <div
+                ref={menuRef}
+                className={[
+                  "app-select-menu m-cal-sheet is-sheet is-select",
+                  menuClassName,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                role="dialog"
+                aria-modal="true"
+                aria-label={sheetTitle}
+                data-picker
+              >
+                <div className="m-cal-sheet__grab" aria-hidden />
+                <p className="m-cal-sheet__title">{sheetTitle}</p>
+                {searchField}
+                {optionList}
+                <button
+                  type="button"
+                  className="m-cal-sheet__done"
+                  onClick={() => {
+                    setOpen(false);
+                    triggerRef.current?.focus();
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            </>
+          ) : (
+            <div
+              ref={menuRef}
+              className={[
+                "app-select-menu fixed z-[80] overflow-hidden rounded-lg border border-line bg-white shadow-lg",
+                menuClassName,
+              ].filter(Boolean).join(" ")}
+              style={{
+                position: "fixed",
+                zIndex: menuZIndex,
+                top: box!.top,
+                left: box!.left,
+                width: box!.width,
+                maxHeight: box!.maxHeight,
+                transform: box!.placement === "top" ? "translateY(-100%)" : undefined,
+              }}
             >
-              {items.length === 0 ? (
-                <li className="px-3 py-2 text-sm text-muted">No matches</li>
-              ) : (
-                items.map((option, index) => {
-                  const active = index === safeIndex;
-                  const chosen = option.value === selected;
-                  return (
-                    <li key={`${option.value}-${option.label}`} role="presentation" className={option.action ? "mt-1 border-t border-line pt-1" : undefined}>
-                      <button
-                        type="button"
-                        id={`${listId}-option-${index}`}
-                        role="option"
-                        aria-selected={chosen}
-                        data-index={index}
-                        className={[
-                          "flex w-full items-center gap-3 px-3 py-2 text-sm",
-                          option.action
-                            ? "justify-center text-center font-semibold text-[#3554d1]"
-                            : "justify-between text-left",
-                          active ? "bg-brand-soft" : "hover:bg-surface",
-                          option.action ? "" : chosen ? "font-medium text-navy" : "text-foreground",
-                        ].join(" ")}
-                        onMouseEnter={() => setActiveIndex(index)}
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => commit(option.value)}
-                      >
-                        <span className="flex min-w-0 flex-1 items-center gap-2">
-                          {option.icon || option.iconUrl ? <OptionIcon option={option} /> : null}
-                          <span className="min-w-0 truncate">{option.label}</span>
-                        </span>
-                        {chosen ? (
-                          <span className="shrink-0 text-brand" aria-hidden>
-                            ✓
-                          </span>
-                        ) : null}
-                      </button>
-                    </li>
-                  );
-                })
-              )}
-            </ul>
-          </div>,
+              {searchField}
+              {optionList}
+            </div>
+          ),
           document.body,
         )
       : null;
@@ -434,6 +514,9 @@ export function MultiSearchableSelect({
   const [activeIndex, setActiveIndex] = useState(0);
   const [box, setBox] = useState<MenuBox | null>(null);
   const [mounted, setMounted] = useState(false);
+  const sheet = useSelectSheet();
+  const sheetOpen = open && sheet;
+  const sheetTitle = ariaLabel || placeholder || "Choose";
 
   const items = options.filter((option) =>
     matches(query, option.label, option.value, option.keywords),
@@ -448,10 +531,19 @@ export function MultiSearchableSelect({
   }, []);
 
   useEffect(() => {
+    if (!sheetOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sheetOpen]);
+
+  useEffect(() => {
     if (!open) return;
 
     function update() {
-      if (!triggerRef.current) return;
+      if (sheet || !triggerRef.current) return;
       setBox(measure(triggerRef.current));
     }
 
@@ -461,6 +553,7 @@ export function MultiSearchableSelect({
     window.addEventListener("scroll", update, true);
 
     function onPointerDown(event: MouseEvent) {
+      if (sheet) return;
       const target = event.target as Node;
       if (triggerRef.current?.contains(target)) return;
       if (menuRef.current?.contains(target)) return;
@@ -484,7 +577,7 @@ export function MultiSearchableSelect({
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown, true);
     };
-  }, [open]);
+  }, [open, sheet]);
 
   function toggle(value: string) {
     onChange(
@@ -496,7 +589,7 @@ export function MultiSearchableSelect({
     if (disabled) return;
     setQuery("");
     setActiveIndex(0);
-    if (triggerRef.current) setBox(measure(triggerRef.current));
+    if (!sheet && triggerRef.current) setBox(measure(triggerRef.current));
     setOpen(true);
   }
 
@@ -516,89 +609,140 @@ export function MultiSearchableSelect({
     }
   }
 
+  const searchField = (
+    <div className={`app-select-menu__search border-b border-line px-2 py-1.5${sheet ? " is-sheet-search" : ""}`}>
+      <input
+        ref={searchRef}
+        value={query}
+        onChange={(event) => {
+          setQuery(event.target.value);
+          setActiveIndex(0);
+        }}
+        onKeyDown={onSearchKeyDown}
+        placeholder={searchPlaceholder}
+        autoComplete="off"
+        spellCheck={false}
+        aria-label={searchPlaceholder}
+        aria-controls={listId}
+        className="!h-8 !text-sm"
+      />
+    </div>
+  );
+
+  const optionList = (
+    <ul
+      id={listId}
+      role="listbox"
+      aria-multiselectable="true"
+      className={`app-select-menu__list overflow-y-auto overscroll-contain py-1${sheet ? " is-sheet-list" : ""}`}
+      style={sheet ? undefined : { maxHeight: (box?.maxHeight ?? 320) - 44 }}
+    >
+      {items.length === 0 ? (
+        <li className="px-3 py-2 text-sm text-muted">No matches</li>
+      ) : (
+        items.map((option, index) => {
+          const active = index === safeIndex;
+          const chosen = values.includes(option.value);
+          return (
+            <li key={option.value} role="presentation">
+              <button
+                type="button"
+                role="option"
+                aria-selected={chosen}
+                className={[
+                  "flex w-full items-center gap-2 px-3 py-2 text-left text-sm",
+                  active ? "bg-brand-soft" : "hover:bg-surface",
+                  chosen ? "font-medium text-navy" : "text-foreground",
+                ].join(" ")}
+                onMouseEnter={() => setActiveIndex(index)}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => toggle(option.value)}
+              >
+                <span
+                  className={[
+                    "flex size-4 shrink-0 items-center justify-center rounded border text-[10px]",
+                    chosen
+                      ? "border-brand bg-brand text-white"
+                      : "border-line bg-white",
+                  ].join(" ")}
+                  aria-hidden
+                >
+                  {chosen ? "✓" : ""}
+                </span>
+                <OptionIcon option={option} />
+                <span className="min-w-0 flex-1 truncate">{option.label}</span>
+              </button>
+            </li>
+          );
+        })
+      )}
+    </ul>
+  );
+
   const menu =
-    mounted && open && box
+    mounted && open && (sheet || box)
       ? createPortal(
-          <div
-            ref={menuRef}
-            className={["app-select-menu fixed z-[80] overflow-hidden rounded-lg border border-line bg-white shadow-lg", menuClassName]
-              .filter(Boolean)
-              .join(" ")}
-            style={{
-              position: "fixed",
-              zIndex: 1200,
-              top: box.top,
-              left: box.left,
-              width: box.width,
-              maxHeight: box.maxHeight,
-              transform: box.placement === "top" ? "translateY(-100%)" : undefined,
-            }}
-          >
-            <div className="border-b border-line px-2 py-1.5">
-              <input
-                ref={searchRef}
-                value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value);
-                  setActiveIndex(0);
+          sheet ? (
+            <>
+              <button
+                type="button"
+                className="m-cal-backdrop"
+                aria-label={`Close ${sheetTitle}`}
+                onClick={() => {
+                  setOpen(false);
+                  triggerRef.current?.focus();
                 }}
-                onKeyDown={onSearchKeyDown}
-                placeholder={searchPlaceholder}
-                autoComplete="off"
-                spellCheck={false}
-                aria-label={searchPlaceholder}
-                aria-controls={listId}
-                className="!h-8 !text-sm"
+                data-picker
               />
-            </div>
-            <ul
-              id={listId}
-              role="listbox"
-              aria-multiselectable="true"
-              className="overflow-y-auto overscroll-contain py-1"
-              style={{ maxHeight: box.maxHeight - 44 }}
+              <div
+                ref={menuRef}
+                className={[
+                  "app-select-menu m-cal-sheet is-sheet is-select",
+                  menuClassName,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                role="dialog"
+                aria-modal="true"
+                aria-label={sheetTitle}
+                data-picker
+              >
+                <div className="m-cal-sheet__grab" aria-hidden />
+                <p className="m-cal-sheet__title">{sheetTitle}</p>
+                {searchField}
+                {optionList}
+                <button
+                  type="button"
+                  className="m-cal-sheet__done"
+                  onClick={() => {
+                    setOpen(false);
+                    triggerRef.current?.focus();
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            </>
+          ) : (
+            <div
+              ref={menuRef}
+              className={["app-select-menu fixed z-[80] overflow-hidden rounded-lg border border-line bg-white shadow-lg", menuClassName]
+                .filter(Boolean)
+                .join(" ")}
+              style={{
+                position: "fixed",
+                zIndex: 1200,
+                top: box!.top,
+                left: box!.left,
+                width: box!.width,
+                maxHeight: box!.maxHeight,
+                transform: box!.placement === "top" ? "translateY(-100%)" : undefined,
+              }}
             >
-              {items.length === 0 ? (
-                <li className="px-3 py-2 text-sm text-muted">No matches</li>
-              ) : (
-                items.map((option, index) => {
-                  const active = index === safeIndex;
-                  const chosen = values.includes(option.value);
-                  return (
-                    <li key={option.value} role="presentation">
-                      <button
-                        type="button"
-                        role="option"
-                        aria-selected={chosen}
-                        className={[
-                          "flex w-full items-center gap-2 px-3 py-2 text-left text-sm",
-                          active ? "bg-brand-soft" : "hover:bg-surface",
-                          chosen ? "font-medium text-navy" : "text-foreground",
-                        ].join(" ")}
-                        onMouseEnter={() => setActiveIndex(index)}
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => toggle(option.value)}
-                      >
-                        <span
-                          className={[
-                            "flex size-4 shrink-0 items-center justify-center rounded border text-[10px]",
-                            chosen
-                              ? "border-brand bg-brand text-white"
-                              : "border-line bg-white",
-                          ].join(" ")}
-                          aria-hidden
-                        >
-                          {chosen ? "✓" : ""}
-                        </span>
-                        <OptionIcon option={option} />
-                        <span className="min-w-0 flex-1 truncate">{option.label}</span>
-                      </button>
-                    </li>
-                  );
-                })
-              )}
-            </ul>
-          </div>,
+              {searchField}
+              {optionList}
+            </div>
+          ),
           document.body,
         )
       : null;

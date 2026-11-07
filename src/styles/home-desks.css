@@ -360,6 +360,114 @@ a.hx-desk__more {
   grid-template-columns: auto minmax(0, 1fr);
 }
 
+.home-fleet-mast {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(240px, 0.95fr);
+  gap: 0;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid #e4e7ef;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 14px 36px rgba(5, 16, 54, 0.07);
+}
+
+.home-fleet-mast__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px 32px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(53, 84, 209, 0.08), transparent 55%),
+    linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.home-fleet-mast__kicker {
+  margin: 0;
+  color: #3554d1;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.home-fleet-mast__copy h2 {
+  margin: 0;
+  color: #051036;
+  font-size: clamp(1.55rem, 2.2vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.home-fleet-mast__copy > p {
+  margin: 0;
+  max-width: 40ch;
+  color: #697488;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.home-fleet-mast__points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-fleet-mast__points li {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #e5f0fd;
+  color: #3554d1;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.worldcompassholiday-page a.home-fleet-mast__link,
+a.home-fleet-mast__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-top: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #3554d1;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.worldcompassholiday-page a.home-fleet-mast__link::after,
+a.home-fleet-mast__link::after {
+  content: "→";
+}
+
+.worldcompassholiday-page a.home-fleet-mast__link:hover,
+.worldcompassholiday-page a.home-fleet-mast__link:focus-visible,
+a.home-fleet-mast__link:hover,
+a.home-fleet-mast__link:focus-visible {
+  background: #2a46b8;
+  color: #fff;
+}
+
+.home-fleet-mast__art {
+  position: relative;
+  margin: 0;
+  min-height: 240px;
+  background: #d7e3f4;
+}
+
+.home-fleet-mast__art img {
+  object-fit: cover;
+}
+
 .home-fleet-scroll {
   display: flex;
   gap: 18px;
@@ -368,6 +476,11 @@ a.hx-desk__more {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+}
+
+.home-fleet-scroll--car {
+  margin-top: 18px;
+  padding-top: 2px;
 }
 
 .home-fleet-scroll__item {
@@ -402,6 +515,69 @@ a.hx-desk__more {
   overflow: hidden;
 }
 
+.home-fleet-card--car .home-fleet-card__media {
+  background:
+    linear-gradient(180deg, rgba(255, 248, 235, 0.55), transparent 42%),
+    linear-gradient(160deg, #9ec4e8 0%, #5f86c9 42%, #243b6b 100%);
+}
+
+.home-fleet-card__scene {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.home-fleet-card__sun {
+  position: absolute;
+  top: 14%;
+  right: 14%;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffe7a8 0%, #f0b35a 55%, rgba(240, 179, 90, 0) 72%);
+  opacity: 0.9;
+}
+
+.home-fleet-card__hill {
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  bottom: 18%;
+  height: 42%;
+  border-radius: 50% 50% 0 0;
+  background: linear-gradient(180deg, #6f8fb0 0%, #3f5f88 100%);
+  opacity: 0.35;
+}
+
+.home-fleet-card__road {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: 0;
+  height: 34%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 30%),
+    linear-gradient(180deg, #5d6f86 0%, #3d4a5c 100%);
+  clip-path: polygon(0 35%, 48% 0, 52% 0, 100% 35%, 100% 100%, 0 100%);
+}
+
+.home-fleet-card__road::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  width: 2px;
+  height: 48%;
+  transform: translateX(-50%);
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.75) 0 8px,
+    transparent 8px 16px
+  );
+  opacity: 0.7;
+}
+
 .home-fleet-card__media::after {
   content: "";
   position: absolute;
@@ -416,14 +592,20 @@ a.hx-desk__more {
   position: absolute;
   inset: 0;
   display: block;
+  z-index: 2;
 }
 
 .home-fleet-card__shot img {
   object-fit: contain;
   object-position: center;
   padding: 10px;
-  background: #eef1f6;
+  background: transparent;
   transition: transform 0.45s ease;
+}
+
+.home-fleet-card--car .home-fleet-card__shot img {
+  padding: 14px 10px 6px;
+  filter: drop-shadow(0 10px 16px rgba(5, 16, 54, 0.22));
 }
 
 .home-fleet-card:hover .home-fleet-card__shot img {
@@ -538,6 +720,21 @@ a.home-fleet-card__btn:hover,
 a.home-fleet-card__btn:focus-visible {
   background: #2a46b8;
   color: #fff;
+}
+
+@media (max-width: 900px) {
+  .home-fleet-mast {
+    grid-template-columns: 1fr;
+  }
+
+  .home-fleet-mast__art {
+    min-height: 200px;
+    order: -1;
+  }
+
+  .home-fleet-mast__copy {
+    padding: 22px 20px 24px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

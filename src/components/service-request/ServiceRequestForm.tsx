@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import type { FirebaseOptions } from "firebase/app";
 import { submitServiceRequest } from "@/actions/service-request";
 import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
@@ -195,7 +194,6 @@ export function ServiceRequestForm({
   firebaseConfig?: FirebaseOptions | null;
   defaultCountry?: string;
 }) {
-  const router = useRouter();
   const text = copy[kind];
   const isCar = kind === "car";
   const formId = `${kind}-request-form`;
@@ -360,9 +358,6 @@ export function ServiceRequestForm({
 
   return (
     <div className="hotel-request-card hotel-guide-card tour-guide-card" id={`${kind}-request-pass`}>
-      <button type="button" className="hotel-request-back" onClick={() => (window.history.length > 1 ? router.back() : router.push(text.backHref))}>
-        Back
-      </button>
       <div className="hotel-guide-heading">
         <p className="hotel-guide-kicker">{text.kicker}</p>
         <h1>{text.heading}</h1>

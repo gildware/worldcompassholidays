@@ -530,8 +530,9 @@ function WhyEditor({
   return (
     <>
       <p className="hs-hint">
-        These lines sit under the listings. Drag a card to change the order. Hide the block
-        from the layout if you do not want it on the home page.
+        Homepage teaser under the listings. Use ids desks, fleet, quote, or support to keep
+        icons. The full story lives on /why-us. Drag to reorder; hide the block from layout
+        if you do not want it on the home page.
       </p>
       <div className="hs-why">
         {items.map((item, index) => (

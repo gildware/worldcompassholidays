@@ -7,24 +7,63 @@
   --ask-line: #e4e8f2;
   --ask-blue: #3554d1;
   --ask-blue-dark: #2a43b0;
-  --ask-soft: #f3f5fb;
+  --ask-soft: #e8eefc;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 12px;
   margin: 0 0 14px;
   padding: 12px 12px 12px 14px;
-  border: 1px solid var(--ask-line);
+  border: 1px solid #c9d6f5;
   border-radius: 14px;
-  background: var(--ask-soft);
+  background: #e6edfc;
   color: var(--ask-ink);
   text-decoration: none;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.ask-request::before,
+.stay-list .sl-request::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    110deg,
+    #d7e2fb 0%,
+    #eef3ff 18%,
+    #c8d7f8 36%,
+    #e8effc 54%,
+    #b9cbf5 72%,
+    #eef3ff 88%,
+    #d7e2fb 100%
+  );
+  background-size: 280% 100%;
+  animation: ask-request-wash 4.5s linear infinite;
+}
+
+.ask-request > *,
+.stay-list .sl-request > * {
+  position: relative;
+  z-index: 1;
 }
 
 .ask-request:hover,
 .stay-list .sl-request:hover {
-  background: #eef1fa;
-  border-color: #d5dced;
+  border-color: #b7c7ef;
+  background: #dde6fa;
+}
+
+@keyframes ask-request-wash {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 .ask-request:hover .ask-request__cta,
@@ -33,6 +72,7 @@
 .stay-list .sl-request:hover .ask-request__cta {
   background: var(--ask-blue-dark);
 }
+
 
 .ask-request__mark,
 .stay-list .sl-request .ask-request__mark {
@@ -113,42 +153,79 @@
 @media (max-width: 640px) {
   .ask-request,
   .stay-list .sl-request {
-    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px 10px;
     margin: 2px 0 12px;
     padding: 12px;
   }
 
   .ask-request__mark,
   .stay-list .sl-request .ask-request__mark {
-    width: 34px;
-    height: 34px;
+    display: none;
+  }
+
+  .ask-request__copy,
+  .stay-list .sl-request .ask-request__copy {
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
   }
 
   .ask-request__copy b,
   .ask-request__title,
   .stay-list .sl-request .ask-request__title {
-    font-size: 14px;
+    font-size: 13.5px;
+    line-height: 1.25;
   }
 
   .ask-request__copy span,
   .ask-request span:not(.ask-request__mark):not(.ask-request__cta),
   .stay-list .sl-request span:not(.ask-request__mark):not(.ask-request__cta) {
-    font-size: 12.25px;
+    font-size: 12px;
+    line-height: 1.3;
   }
 
   .ask-request__cta,
   .ask-request > strong,
   .stay-list .sl-request > strong,
   .stay-list .sl-request .ask-request__cta {
+    flex: 0 0 auto;
+    flex-basis: 100%;
+    width: max-content;
+    max-width: 100%;
     min-height: 34px;
-    padding: 0 12px;
+    margin-inline: auto;
+    padding: 0 14px;
     font-size: 12.5px;
   }
+}
+
+/* Space above the bottom request card — wrapper padding can't be wiped by mobile margin resets */
+.ask-request-foot {
+  padding-top: 20px;
+}
+
+.ask-request-foot .ask-request,
+.ask-request-foot .sl-request {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ask-request,
   .stay-list .sl-request {
     transition: none;
+  }
+
+  .ask-request::before,
+  .stay-list .sl-request::before {
+    animation: none;
+    background: #e6edfc;
+    background-size: 100% 100%;
   }
 }

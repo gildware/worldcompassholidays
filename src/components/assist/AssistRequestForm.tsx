@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
-import { useRouter } from "next/navigation";
 import type { FirebaseOptions } from "firebase/app";
 import { submitAssistRequest } from "@/actions/assist";
 import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
@@ -104,7 +103,6 @@ export function AssistRequestForm({
   firebaseConfig?: FirebaseOptions | null;
   defaultCountry?: string;
 }) {
-  const router = useRouter();
   const [state, action, pending] = useActionState(submitAssistRequest, initialFormState);
   const [whatsappState, setWhatsappState] = useState<FormState | null>(null);
   const [whatsappPending, setWhatsappPending] = useState(false);
@@ -301,13 +299,6 @@ export function AssistRequestForm({
 
   return (
     <div className="hotel-request-card hotel-guide-card tour-guide-card" id="assist-request-pass">
-      <button
-        type="button"
-        className="hotel-request-back"
-        onClick={() => (window.history.length > 1 ? router.back() : router.push("/meet-and-assist"))}
-      >
-        Back
-      </button>
       <div className="hotel-guide-heading">
         <p className="hotel-guide-kicker">PERSONAL AIRPORT CONCIERGE</p>
         <h1>Request a greeter at the airport.</h1>

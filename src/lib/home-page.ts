@@ -354,19 +354,24 @@ export const defaultHomePageContent: HomePageContent = {
   why: {
     items: [
       {
-        id: "price",
-        title: "A price before you pay",
-        text: "The quote names the fee. You accept it before anyone is booked.",
+        id: "desks",
+        title: "Desks across India",
+        text: "Six offices from the Andaman to Kashmir — not a remote call centre.",
       },
       {
-        id: "request",
-        title: "One request for the trip",
-        text: "Tours, stays, visas, and rentals start from the same enquiry.",
+        id: "fleet",
+        title: "Our own cars in three cities",
+        text: "Chandigarh, Bhubaneswar, and the Andaman run vehicles we own and send.",
       },
       {
-        id: "reply",
-        title: "A person replies",
-        text: `Call or WhatsApp ${theme.contact.phone}. We answer from India.`,
+        id: "quote",
+        title: "Itemised quote before you pay",
+        text: "You see the full cost and approve it before anything is booked.",
+      },
+      {
+        id: "support",
+        title: "Help while you travel",
+        text: `Call or WhatsApp ${theme.contact.phone} if roads close, hotels change, or a pickup slips.`,
       },
     ],
   },
@@ -505,7 +510,7 @@ function asWhyItems(value: unknown): HomeWhyItem[] {
       title: title || fallback[index]?.title || `Point ${index + 1}`,
       text: text || fallback[index]?.text || "",
     });
-    if (items.length >= 4) break;
+    if (items.length >= 6) break;
   }
   return items.length ? items : fallback;
 }

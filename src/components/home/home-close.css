@@ -19,8 +19,16 @@
 }
 
 .home-close__head {
-  max-width: 38rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 28px;
   margin: 0 0 22px;
+}
+
+.home-close__intro {
+  max-width: 40rem;
+  min-width: 0;
 }
 
 .home-close__kicker,
@@ -33,7 +41,7 @@
   text-transform: uppercase;
 }
 
-.home-close__head h2,
+.home-close__intro h2,
 .home-invite h2 {
   margin: 8px 0 0;
   font-size: clamp(1.55rem, 2.2vw, 2rem);
@@ -42,59 +50,132 @@
   line-height: 1.15;
 }
 
-.home-close__head p,
+.home-close__intro > p,
 .home-invite__copy p {
   margin: 10px 0 0;
-  max-width: 46ch;
+  max-width: 48ch;
   color: #697488;
   font-size: 1rem;
   line-height: 1.5;
 }
 
-/* Beat Bootstrap `.worldcompassholiday-page ol { padding-left: 2rem }` */
-.worldcompassholiday-page .home-close__steps,
-.home-close__steps {
-  list-style: none;
+.home-close__proof {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 1px;
+  margin: 0 0 18px;
+  padding: 0;
+  background: #e4e7ef;
+  border: 1px solid #e4e7ef;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.home-close__proof > div {
+  margin: 0;
+  padding: 18px 18px 20px;
+  background: #fff;
+}
+
+.home-close__proof dt {
+  margin: 0;
+  color: #697488;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.home-close__proof dd {
+  margin: 6px 0 0;
+  color: #051036;
+  font-size: 1.65rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.home-close__proof p {
+  margin: 6px 0 0;
+  color: #697488;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.worldcompassholiday-page .home-close__reasons,
+.home-close__reasons {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
   margin: 0;
   padding: 0;
 }
 
-.home-close__steps li {
+.home-close__reasons li {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
   min-height: 100%;
   margin: 0;
-  padding: 22px 20px 24px;
+  padding: 20px 18px 22px;
   background: #fff;
   border: 1px solid #e4e7ef;
   border-radius: 18px;
 }
 
-.home-close__steps span {
+.home-close__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #e5f0fd;
   color: #3554d1;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
 }
 
-.home-close__steps h3 {
+.home-close__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.home-close__reasons h3 {
   margin: 0;
-  font-size: 1.12rem;
+  font-size: 1.08rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.3;
 }
 
-.home-close__steps p {
+.home-close__reasons p {
   margin: 0;
   color: #697488;
   font-size: 0.95rem;
   line-height: 1.5;
+}
+
+.home-close__more,
+.worldcompassholiday-page a.home-close__more,
+.home-x a.home-close__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-top: 4px;
+  color: #3554d1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.home-close__more::after {
+  content: "→";
+}
+
+.home-close__more:hover,
+.home-close__more:focus-visible {
+  color: #2a46b8;
 }
 
 .home-invite__panel {
@@ -161,8 +242,22 @@
     padding-top: 28px;
   }
 
-  .worldcompassholiday-page .home-close__steps,
-  .home-close__steps {
+  .home-close__head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .home-close__more,
+  .worldcompassholiday-page a.home-close__more,
+  .home-x a.home-close__more {
+    align-self: flex-end;
+    margin-top: 0;
+  }
+
+  .home-close__proof,
+  .worldcompassholiday-page .home-close__reasons,
+  .home-close__reasons {
     grid-template-columns: 1fr;
   }
 
@@ -181,5 +276,11 @@
 
   .home-invite h2 {
     max-width: none;
+  }
+}
+
+@media (min-width: 801px) and (max-width: 1100px) {
+  .home-close__proof {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

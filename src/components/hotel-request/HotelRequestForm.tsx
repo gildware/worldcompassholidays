@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 import type { FirebaseOptions } from "firebase/app";
 import { submitHotelRequest } from "@/actions/hotel-request";
 import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
@@ -169,7 +168,6 @@ export function HotelRequestForm({
   starsPreset = "",
   messagePreset = "",
   loginHref: _loginHref,
-  backHref = "/hotels",
   firebaseConfig = null,
   defaultCountry = "IN",
 }: {
@@ -184,11 +182,9 @@ export function HotelRequestForm({
   starsPreset?: string;
   messagePreset?: string;
   loginHref: string;
-  backHref?: string;
   firebaseConfig?: FirebaseOptions | null;
   defaultCountry?: string;
 }) {
-  const router = useRouter();
   const [state, action, pending] = useActionState(submitHotelRequest, initialFormState);
   const [whatsappState, setWhatsappState] = useState<FormState | null>(null);
   const [whatsappPending, setWhatsappPending] = useState(false);
@@ -454,9 +450,6 @@ export function HotelRequestForm({
 
   return (
     <div className="hotel-request-card hotel-guide-card" id="hotel-request-pass">
-      <button type="button" className="hotel-request-back" onClick={() => (window.history.length > 1 ? router.back() : router.push(backHref))}>
-        Back
-      </button>
       <div className="hotel-guide-heading">
         <p className="hotel-guide-kicker">PERSONAL HOTEL CONCIERGE</p>
         <h1>Find a stay that feels right.</h1>
@@ -1109,14 +1102,6 @@ function FieldMessage({ id, message }: { id: string; message?: string }) {
     <p id={id} className="hotel-request-error" role="alert">
       {message}
     </p>
-  );
-}
-
-export function BackIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }
 

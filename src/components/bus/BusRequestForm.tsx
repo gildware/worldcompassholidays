@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
-import { useRouter } from "next/navigation";
 import type { FirebaseOptions } from "firebase/app";
 import { submitBusRequest } from "@/actions/bus-request";
 import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
@@ -72,7 +71,6 @@ export function BusRequestForm({
   firebaseConfig?: FirebaseOptions | null;
   defaultCountry?: string;
 }) {
-  const router = useRouter();
   const [state, action, pending] = useActionState(submitBusRequest, initialFormState);
   const [whatsappState, setWhatsappState] = useState<FormState | null>(null);
   const [whatsappPending, setWhatsappPending] = useState(false);
@@ -223,9 +221,6 @@ export function BusRequestForm({
 
   return (
     <div className="hotel-request-card hotel-guide-card tour-guide-card" id="bus-request-pass">
-      <button type="button" className="hotel-request-back" onClick={() => (window.history.length > 1 ? router.back() : router.push("/buses"))}>
-        Back
-      </button>
       <div className="hotel-guide-heading">
         <p className="hotel-guide-kicker">BUS CONCIERGE</p>
         <h1>Find your coach.</h1>

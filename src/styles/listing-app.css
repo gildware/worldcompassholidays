@@ -1108,6 +1108,96 @@
     font-family: var(--font-jost), "Jost", system-ui, sans-serif;
   }
 
+  /* Select / searchable dropdown: same bottom sheet as date picker */
+  .m-cal-sheet.is-sheet.is-select {
+    display: flex;
+    flex-direction: column;
+    max-height: min(86vh, 640px) !important;
+    overflow: hidden;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .m-cal-sheet.is-select .m-cal-sheet__title {
+    flex-shrink: 0;
+  }
+
+  .m-cal-sheet.is-select .app-select-menu__search {
+    flex-shrink: 0;
+    margin: 0 0 8px;
+    padding: 0;
+    border: 1px solid #e4e7ef;
+    border-radius: 12px;
+    background: #f7f8fb;
+  }
+
+  .m-cal-sheet.is-select .app-select-menu__search.is-sheet-search {
+    border-bottom: 1px solid #e4e7ef;
+  }
+
+  .m-cal-sheet.is-select .app-select-menu__search input {
+    height: 44px !important;
+    padding: 0 14px !important;
+    font-size: 16px !important;
+  }
+
+  .m-cal-sheet.is-select .app-select-menu__list.is-sheet-list {
+    flex: 0 1 auto;
+    min-height: 0;
+    margin: 0 -4px;
+    padding: 4px 0 8px;
+    max-height: min(48vh, 380px);
+  }
+
+  .m-cal-sheet.is-select .app-select-menu__list [role="option"] {
+    min-height: 48px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 1rem;
+  }
+
+  /* Beat .app-select-menu button { background: transparent } */
+  .m-cal-sheet.is-select button.m-cal-sheet__done {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 48px;
+    margin-top: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 14px;
+    background: #3554d1;
+    color: #fff;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 650;
+    line-height: 1.2;
+    text-align: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .m-cal-sheet.is-select button.m-cal-sheet__done:active {
+    background: #2a43b0;
+  }
+
+  .m-cal-sheet.is-select.hotel-guide-select-menu {
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    border-radius: 20px 20px 0 0 !important;
+    box-shadow: 0 -8px 32px rgba(5, 16, 54, 0.16) !important;
+  }
+
+  .m-cal-sheet.is-select.hotel-guide-select-menu > .app-select-menu__search {
+    padding: 0;
+    border-color: #e6e1d7;
+    background: #f7f5f0;
+  }
+
+  .m-cal-sheet.is-select.hotel-guide-select-menu [role="option"] {
+    margin: 2px 0;
+  }
+
   .m-cal-sheet.is-trip {
     display: flex;
     flex-direction: column;

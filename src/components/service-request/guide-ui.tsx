@@ -215,62 +215,17 @@ function progressStepIcon(label: string, index: number, total: number) {
   return defaults[Math.min(index, defaults.length - 1)];
 }
 
-type ProgressLabelFit = "show" | "shrink" | "hide";
-
-function sameFits(a: ProgressLabelFit[], b: ProgressLabelFit[]) {
-  return a.length === b.length && a.every((value, index) => value === b[index]);
-}
-
 export function GuideProgress({ label, labels, step, onSelect }: { label: string; labels: readonly string[]; step: number; onSelect: (step: number) => void }) {
   const locked = step >= labels.length - 1 && labels[labels.length - 1] === "Submitted";
-  const trackRef = useRef<HTMLOListElement>(null);
-  const labelsKey = labels.join("\0");
-  const [fits, setFits] = useState<ProgressLabelFit[]>(() => labels.map((_, index) => (index === step ? "show" : "hide")));
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track || typeof ResizeObserver === "undefined") return;
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const measure = () => {
-      const fontFamily = getComputedStyle(track).fontFamily || "sans-serif";
-      const next = labels.map((item, index) => {
-        const column = track.children[index] as HTMLElement | undefined;
-        if (!column) return "hide" as const;
-        const available = Math.max(0, column.clientWidth - 4);
-        const isCurrent = index === step;
-
-        ctx.font = `650 11px ${fontFamily}`;
-        if (ctx.measureText(item).width <= available) return "show" as const;
-
-        ctx.font = `650 9px ${fontFamily}`;
-        if (ctx.measureText(item).width <= available) return "shrink" as const;
-
-        // Current step always keeps a label; neighbors can spill a little.
-        return isCurrent ? ("shrink" as const) : ("hide" as const);
-      });
-
-      setFits((prev) => (sameFits(prev, next) ? prev : next));
-    };
-
-    const observer = new ResizeObserver(measure);
-    observer.observe(track);
-    measure();
-    return () => observer.disconnect();
-  }, [labels, labelsKey, step]);
 
   return (
     <nav className="hotel-guide-progress" aria-label={`${label} request progress`}>
-      <ol ref={trackRef} className="hotel-guide-progress-track" style={{ "--hotel-guide-steps": labels.length } as CSSProperties}>
+      <ol className="hotel-guide-progress-track" style={{ "--hotel-guide-steps": labels.length } as CSSProperties}>
         {labels.map((item, index) => {
           const state = index === step ? "is-current" : index < step ? "is-complete" : "is-upcoming";
           const icon = index < step ? "check" : progressStepIcon(item, index, labels.length);
-          const fit = fits[index] ?? "show";
           return (
-            <li key={`${index}-${item}`} className={`${state} hotel-guide-step-${index}`} data-label-fit={fit}>
+            <li key={`${index}-${item}`} className={`${state} hotel-guide-step-${index}`}>
               <button
                 type="button"
                 className={state}

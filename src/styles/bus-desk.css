@@ -1558,3 +1558,57 @@ button.bus-chip {
     cursor: pointer;
   }
 }
+
+/* Instant route placeholder — avoids a blank white flash while buses RSC loads */
+.bus-route-loading {
+  min-height: 100dvh;
+  background: #f6f7fb;
+  padding: 18px 16px 32px;
+  color: #051036;
+}
+
+.bus-route-loading__bar,
+.bus-route-loading__search,
+.bus-route-loading__card {
+  border-radius: 16px;
+  background: linear-gradient(90deg, #e8ebf3 0%, #f4f6fb 45%, #e8ebf3 90%);
+  background-size: 200% 100%;
+  animation: bus-route-shimmer 1.1s ease-in-out infinite;
+}
+
+.bus-route-loading__bar {
+  height: 18px;
+  width: min(42%, 180px);
+  margin-bottom: 16px;
+}
+
+.bus-route-loading__search {
+  height: 64px;
+  margin-bottom: 18px;
+}
+
+.bus-route-loading__stack {
+  display: grid;
+  gap: 12px;
+}
+
+.bus-route-loading__card {
+  height: 112px;
+}
+
+@keyframes bus-route-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bus-route-loading__bar,
+  .bus-route-loading__search,
+  .bus-route-loading__card {
+    animation: none;
+  }
+}

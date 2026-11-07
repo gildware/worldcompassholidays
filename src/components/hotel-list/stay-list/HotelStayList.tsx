@@ -963,7 +963,7 @@ export function HotelStayList({
               className="sl-request"
               href={requestHref}
               title="Need a different stay?"
-              text="Not listed? Tell us the area and dates."
+              text="Tell us — we'll find what you need."
               cta="Request hotel"
               icon={
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -1027,6 +1027,31 @@ export function HotelStayList({
                   {hasMore ? <div ref={sentinelRef} className="stay-list__more" aria-hidden="true" /> : null}
                 </>
               )}
+            </div>
+            <div className="ask-request-foot">
+              <AskRequestLink
+                className="sl-request"
+                href={requestHref}
+                title="Need a different stay?"
+                text="Tell us — we'll find what you need."
+                cta="Request hotel"
+                icon={
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path
+                      d="M4.5 19.5V8.8A2.3 2.3 0 0 1 6.8 6.5h10.4a2.3 2.3 0 0 1 2.3 2.3v10.7"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M3.5 19.5h17M9 10.5h.01M12 10.5h.01M15 10.5h.01M9 14h.01M12 14h.01M15 14h.01"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                }
+              />
             </div>
           </div>
         </div>

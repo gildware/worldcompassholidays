@@ -492,8 +492,8 @@ export function CarListV1({
           {isBoard ? (
             <section className="bike-banner">
               <img
-                src={isCar ? "/img/cars/car-rental-banner.jpg" : "/img/bikes/bike-rental-banner.jpg"}
-                alt={isCar ? "Car on a coastal road at dusk" : "Rider on a scooter along a palm-lined coastal road"}
+                src={isCar ? "/img/company/service-transfers.jpg" : "/img/bikes/bike-rental-banner.jpg"}
+                alt={isCar ? "Illustrated car on a coastal road toward the airport" : "Rider on a scooter along a palm-lined coastal road"}
               />
               <div className="bike-banner__copy">
                 <div className="container">
@@ -584,7 +584,7 @@ export function CarListV1({
                 <AskRequestLink
                   href={fleetRequestHref(fleet, pickup, pickupAt, returnAt)}
                   title={isCar ? "Need a different car?" : "Need a different bike?"}
-                  text={isCar ? "Not listed? Tell us what you need." : "Not listed? Tell us what you need."}
+                  text="Tell us — we'll find what you need."
                   cta={isCar ? "Request car" : "Request bike"}
                   icon={
                     isCar ? (
@@ -650,6 +650,46 @@ export function CarListV1({
                     itemLabel="properties"
                   />
                 )}
+                <div className="ask-request-foot">
+                  <AskRequestLink
+                    href={fleetRequestHref(fleet, pickup, pickupAt, returnAt)}
+                    title={isCar ? "Need a different car?" : "Need a different bike?"}
+                    text="Tell us — we'll find what you need."
+                    cta={isCar ? "Request car" : "Request bike"}
+                    icon={
+                      isCar ? (
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                          <path
+                            d="M4.2 14.2 6.1 8.8A2.2 2.2 0 0 1 8.2 7.4h7.6c.9 0 1.7.5 2.1 1.4l1.9 5.4"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M3.5 14.2h17M6.2 17.2a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2Zm11.6 0a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2Z"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                          <circle cx="6.5" cy="16" r="2.7" stroke="currentColor" strokeWidth="1.8" />
+                          <circle cx="17.5" cy="16" r="2.7" stroke="currentColor" strokeWidth="1.8" />
+                          <path
+                            d="M6.5 16 10 8.5h4.2L17.5 16M10 8.5l1.4 3.2h3.4"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )
+                    }
+                  />
+                </div>
               </div>
             </div>
           </div>

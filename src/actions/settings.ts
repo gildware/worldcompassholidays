@@ -115,5 +115,6 @@ export async function saveAppearance(
   revalidatePath("/admin/settings");
   revalidatePath("/contact");
   revalidatePath("/about");
+  revalidatePath("/why-us");
   return { error: null, success: "Appearance saved. The public site will use these details now." };
 }

@@ -978,7 +978,7 @@ export function TourCatalog({
             <AskRequestLink
               href={tourRequestHref(query)}
               title="Need a different tour?"
-              text="Not listed? Share the dates and places."
+              text="Tell us — we'll find what you need."
               cta="Request tour"
               icon={
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -1034,6 +1034,25 @@ export function TourCatalog({
                 </div>
               </div>
             )}
+            <div className="ask-request-foot">
+              <AskRequestLink
+                href={tourRequestHref(query)}
+                title="Need a different tour?"
+                text="Tell us — we'll find what you need."
+                cta="Request tour"
+                icon={
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path
+                      d="M12 21s6.2-4.8 6.2-10.2a6.2 6.2 0 1 0-12.4 0C5.8 16.2 12 21 12 21Z"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinejoin="round"
+                    />
+                    <circle cx="12" cy="10.8" r="2.2" stroke="currentColor" strokeWidth="1.8" />
+                  </svg>
+                }
+              />
+            </div>
           </section>
         </div>
       </main>

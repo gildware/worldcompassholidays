@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { BusCatalog } from "@/components/bus/BusCatalog";
+import { BusRequestScreen } from "@/components/bus/BusRequestScreen";
 import { readBusQuery } from "@/components/bus/query";
 import { modules } from "@/config/modules";
 import { loadBusFacilities } from "@/lib/bus-catalog";
-import { busAmenityLabels, requestBusHref } from "@/lib/buses";
+import { busAmenityLabels } from "@/lib/buses";
 import { prisma } from "@/lib/db";
 import { logListingSearch } from "@/lib/search/log";
 import { pageMetadata } from "@/lib/seo";
@@ -32,6 +33,13 @@ export default async function BusesPage({
         .filter(Boolean)
         .join(" · ") || undefined,
   });
+
+  const publishedCount = await prisma.busRoute.count({ where: { published: true } });
+  // No listed runs yet — show the quote form here so we don't bounce through a second white screen.
+  if (publishedCount === 0) {
+    return <BusRequestScreen searchParams={{ ...params, passengers: params.passengers ?? "1" }} />;
+  }
+
   const [routes, facilities] = await Promise.all([
     prisma.busRoute.findMany({
       where: { published: true },
@@ -40,19 +48,6 @@ export default async function BusesPage({
     }),
     loadBusFacilities(),
   ]);
-
-  // No published runs yet — send people straight to the quote form.
-  if (routes.length === 0) {
-    const href = requestBusHref({
-      from: initial.from,
-      to: initial.to,
-      date: initial.date,
-      passengers: initial.passengers || 1,
-      coach: initial.coach.length === 1 ? initial.coach[0] : undefined,
-      time: initial.time.length === 1 ? initial.time[0] : undefined,
-    });
-    redirect(href.includes("passengers=") ? href : "/buses/request?passengers=1");
-  }
 
   return (
     <BusCatalog

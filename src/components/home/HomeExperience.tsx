@@ -147,6 +147,8 @@ function RideRail({
   savedIds: string[];
   signedIn: boolean;
 }) {
+  const isCar = kind === "car";
+
   return (
     <section className="home-x__rail" aria-labelledby={id}>
       <RailHead
@@ -156,10 +158,22 @@ function RideRail({
         linkLabel={linkLabel}
         headingId={id}
       />
+      {isCar ? (
+        <Link prefetch={false} href={href} className="home-x__car-art">
+          <Image
+            src="/img/company/service-transfers.jpg"
+            alt="Illustrated car on a coastal road toward the airport"
+            fill
+            sizes="100vw"
+            className="object-cover"
+          />
+          <span>Self-drive and chauffeur · priced by the day</span>
+        </Link>
+      ) : null}
       {items.length > 0 ? (
         <div className="home-x__scroller">
           {items.map((ride) => (
-            <article key={ride.slug} className="home-x__card home-x__card--ride">
+            <article key={ride.slug} className={`home-x__card home-x__card--ride${isCar ? " is-car" : ""}`}>
               <div className="home-x__card-media">
                 <Link prefetch={false} href={`/rentals/${ride.slug}`} className="home-x__card-shot" aria-label={ride.name}>
                   <Image

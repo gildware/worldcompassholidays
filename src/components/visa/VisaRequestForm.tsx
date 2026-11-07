@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
-import { useRouter } from "next/navigation";
 import type { FirebaseOptions } from "firebase/app";
 import { submitVisaRequest } from "@/actions/visa";
 import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
@@ -83,7 +82,6 @@ export function VisaRequestForm({
   firebaseConfig?: FirebaseOptions | null;
   defaultCountry?: string;
 }) {
-  const router = useRouter();
   const [state, action, pending] = useActionState(submitVisaRequest, initialFormState);
   const [whatsappState, setWhatsappState] = useState<FormState | null>(null);
   const [whatsappPending, setWhatsappPending] = useState(false);
@@ -266,13 +264,6 @@ export function VisaRequestForm({
 
   return (
     <div className="hotel-request-card hotel-guide-card tour-guide-card" id="visa-request-pass">
-      <button
-        type="button"
-        className="hotel-request-back"
-        onClick={() => (window.history.length > 1 ? router.back() : router.push("/visa-services"))}
-      >
-        Back
-      </button>
       <div className="hotel-guide-heading">
         <h1>Personal visa concierge</h1>
       </div>

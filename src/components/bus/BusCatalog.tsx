@@ -10,9 +10,6 @@ import { arrivesNextDay, busCoachTypes, busTimeWindows, coachLabel, inTimeWindow
 import type { BusListItem, BusQuery, BusSort } from "@/components/bus/query";
 import { formatMoney } from "@/lib/format";
 import { AskRequestLink } from "@/components/common/AskRequestLink";
-import "@/components/tour-list/catalog/tour-catalog.css";
-import "@/styles/listing-app.css";
-import "@/styles/bus-desk.css";
 
 const SORTS: { value: BusSort; label: string }[] = [
   { value: "depart", label: "Earliest departure" },
@@ -418,7 +415,7 @@ export function BusCatalog({ routes, initial }: { routes: BusListItem[]; initial
           <AskRequestLink
             href={requestHref}
             title="Need a different coach?"
-            text="Not listed? Send the cities and date."
+            text="Tell us — we'll find what you need."
             cta="Request a bus"
             icon={
               <svg viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -538,7 +535,7 @@ export function BusCatalog({ routes, initial }: { routes: BusListItem[]; initial
           </p>
         </div>
         <Link className="bus-desk__banner" href={requestHref}>
-          <span>Need a coach that is not listed? Send the cities and date.</span>
+          <span>Tell us — we'll find what you need.</span>
           <strong>Request a bus</strong>
         </Link>
 
@@ -683,6 +680,25 @@ export function BusCatalog({ routes, initial }: { routes: BusListItem[]; initial
             {hasMore ? <div ref={sentinelRef} className="bus-results__more" aria-hidden="true" /> : null}
           </div>
         )}
+        <div className="ask-request-foot">
+          <AskRequestLink
+            href={requestHref}
+            title="Need a different coach?"
+            text="Tell us — we'll find what you need."
+            cta="Request a bus"
+            icon={
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M6.5 4.5h11A2.5 2.5 0 0 1 20 7v8.5a2 2 0 0 1-2 2h-.4a1.6 1.6 0 1 1-3.2 0H9.6a1.6 1.6 0 1 1-3.2 0H6a2 2 0 0 1-2-2V7a2.5 2.5 0 0 1 2.5-2.5Z"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinejoin="round"
+                />
+                <path d="M4.5 10.5h15" stroke="currentColor" strokeWidth="1.8" />
+              </svg>
+            }
+          />
+        </div>
       </main>
     </div>
   );

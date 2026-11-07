@@ -27,6 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry("/meet-and-assist/request", 0.6, "monthly"),
     entry("/contact", 0.7, "monthly"),
     entry("/about", 0.7, "monthly"),
+    entry("/why-us", 0.7, "monthly"),
     entry("/help", 0.5, "monthly"),
     entry("/terms", 0.3, "yearly"),
     entry("/privacy", 0.3, "yearly"),

@@ -404,9 +404,50 @@
   line-height: 1.35;
 }
 
+.home-x__car-art,
+.home-x a.home-x__car-art {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  height: 132px;
+  margin: 0 0 12px;
+  border-radius: 18px;
+  text-decoration: none;
+  color: #fff;
+}
+
+.home-x__car-art img {
+  object-fit: cover;
+}
+
+.home-x__car-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(5, 16, 54, 0.72), rgba(5, 16, 54, 0.18));
+}
+
+.home-x__car-art span {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 12px;
+  z-index: 1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-shadow: 0 1px 8px rgba(5, 16, 54, 0.35);
+}
+
 .home-x__card--ride .home-x__card-media {
   aspect-ratio: 16 / 10;
   background: #eef4f2;
+}
+
+.home-x__card--ride.is-car .home-x__card-media {
+  background:
+    linear-gradient(180deg, rgba(255, 248, 235, 0.5), transparent 40%),
+    linear-gradient(160deg, #9ec4e8 0%, #5f86c9 45%, #243b6b 100%);
 }
 
 .home-x__card--ride .home-x__card-media img {
@@ -414,6 +455,10 @@
   object-position: center;
   padding: 10px;
   box-sizing: border-box;
+}
+
+.home-x__card--ride.is-car .home-x__card-media img {
+  filter: drop-shadow(0 8px 12px rgba(5, 16, 54, 0.2));
 }
 
 .home-x__card--ride:hover .home-x__card-media img,

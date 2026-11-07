@@ -12,8 +12,6 @@ import { arrivesNextDay, busAmenityLabels, coachLabel, parseGallery } from "@/li
 import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
-import "@/styles/bus-desk.css";
-import "@/styles/hotel-request.css";
 
 type Props = {
   params: Promise<{ slug: string }>;

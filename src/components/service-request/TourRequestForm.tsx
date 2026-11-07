@@ -2,11 +2,9 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 import type { FirebaseOptions } from "firebase/app";
 import { submitServiceRequest } from "@/actions/service-request";
 import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
-import { BackIcon } from "@/components/hotel-request/HotelRequestForm";
 import { DateMenu, prettyStayDate } from "@/components/hotel-list/stay-list/HotelStayList";
 import { deferGuideStep, GuideProgress, RequestSuccessStep } from "@/components/service-request/guide-ui";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
@@ -178,7 +176,6 @@ export function TourRequestForm({
   firebaseConfig?: FirebaseOptions | null;
   defaultCountry?: string;
 }) {
-  const router = useRouter();
   const [state, action, pending] = useActionState(submitServiceRequest, initialFormState);
   const [submittedInThisVisit, setSubmittedInThisVisit] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
@@ -356,9 +353,6 @@ export function TourRequestForm({
 
   return (
     <div className="hotel-request-card hotel-guide-card tour-guide-card" id="tour-request-pass">
-      <button type="button" className="hotel-request-back" onClick={() => (window.history.length > 1 ? router.back() : router.push("/tours"))}>
-        <BackIcon />Back
-      </button>
       <div className="hotel-guide-heading">
         <p className="hotel-guide-kicker">PERSONAL TOUR CONCIERGE</p>
         <h1>Plan a trip that feels like yours.</h1>

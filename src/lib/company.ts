@@ -125,6 +125,7 @@ export const moreServices = [
 
 export const companyLinks = [
   { href: "/about", label: "Read about us" },
+  { href: "/why-us", label: "Why book with us" },
   { href: "/help", label: "Get help" },
   { href: "/sitemap", label: "See all pages" },
   { href: "/terms", label: "Terms and conditions" },
@@ -629,6 +630,7 @@ export function siteMapGroups() {
       title: "The company",
       links: [
         { href: "/about", label: "Read about us" },
+        { href: "/why-us", label: "Why book with us" },
         { href: "/help", label: "Get help" },
         { href: "/contact", label: "Send an enquiry" },
         { href: "/terms", label: "Terms and conditions" },

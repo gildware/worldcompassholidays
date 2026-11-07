@@ -241,20 +241,18 @@ export async function loadBusLocations() {
     },
   });
 
-  for (const location of locations) {
-    if (location.mapLat && location.mapLng) continue;
+  // Resolve known pins in memory only — catalog writes belong in ensureBusCatalog (admin).
+  return locations.map((location) => {
+    if (location.mapLat && location.mapLng) return location;
     const pin = KNOWN_PINS[location.title.trim().toLowerCase()];
-    if (!pin) continue;
-    await prisma.catalogItem.update({
-      where: { id: location.id },
-      data: { mapLat: pin.lat, mapLng: pin.lng, mapZoom: pin.zoom },
-    });
-    location.mapLat = pin.lat;
-    location.mapLng = pin.lng;
-    location.mapZoom = pin.zoom;
-  }
-
-  return locations;
+    if (!pin) return location;
+    return {
+      ...location,
+      mapLat: pin.lat,
+      mapLng: pin.lng,
+      mapZoom: pin.zoom,
+    };
+  });
 }
 
 export function matchBusPlace<T extends { id: string; title: string }>(
