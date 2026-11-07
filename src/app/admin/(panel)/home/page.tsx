@@ -3,6 +3,7 @@ import { HomePageStudio, type HomePickItem } from "@/components/admin/home/HomeP
 import { requirePermission } from "@/lib/auth/guards";
 import { getSiteBrand } from "@/lib/brand";
 import { prisma } from "@/lib/db";
+import { getGoogleReviewsForPlace } from "@/lib/google-reviews";
 import { getHomePageContent, withLiveHomeLists } from "@/lib/home-page";
 
 export const metadata: Metadata = { title: "Homepage" };
@@ -24,10 +25,11 @@ function destItem(row: {
 
 export default async function HomePageEditor() {
   await requirePermission("staff.manage");
-  const [home, brand, destinations, popular, tours, featuredTours, hotels, featuredHotels, cars, liveCars, bikes, liveBikes, buses, liveBuses] =
+  const home = await getHomePageContent();
+  const [brand, googleReviews, destinations, popular, tours, featuredTours, hotels, featuredHotels, cars, liveCars, bikes, liveBikes, buses, liveBuses] =
     await Promise.all([
-      getHomePageContent(),
       getSiteBrand(),
+      getGoogleReviewsForPlace(home.reviews.placeId),
       prisma.destination.findMany({
         where: { published: true },
         orderBy: { name: "asc" },
@@ -207,6 +209,7 @@ export default async function HomePageEditor() {
       cars={cars.map(toRide)}
       bikes={bikes.map(toRide)}
       buses={buses.map(toBus)}
+      googleReviews={googleReviews}
     />
   );
 }

@@ -13,10 +13,11 @@ import { cached } from "@/lib/ttl-cache";
 import { toCatalogTour } from "@/lib/tours/catalog-card";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Tours",
+  title: "India Tours & Holiday Packages",
   description:
-    "Search tours by date, party, price, and pace. Every card shows the total for your group, the cancellation deadline, and what you still pay on the day.",
+    "Browse guided India tours and holiday packages by date, group size, price, and pace. See the group total, cancellation deadline, and what you still pay on the day — before you enquire.",
   path: "/tours",
+  keywords: ["India tours", "holiday packages", "guided tours India", "Kashmir tour", "Ladakh tour"],
 });
 
 export default async function ToursPage({

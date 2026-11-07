@@ -13,6 +13,7 @@ import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
 import "@/styles/bus-desk.css";
+import "@/styles/hotel-request.css";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -28,7 +29,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       toCity: true,
       summary: true,
       published: true,
-      bus: { select: { name: true, summary: true } },
+      imageUrl: true,
+      bus: { select: { name: true, summary: true, imageUrl: true } },
     },
   });
   if (!route || !route.published || !modules.buses) {
@@ -39,10 +41,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       index: false,
     });
   }
+  const coachName = route.bus?.name || route.name;
+  const corridor = `${route.fromCity} to ${route.toCity}`;
   return pageMetadata({
-    title: route.bus?.name || route.name,
-    description: route.bus?.summary || route.summary || `${route.fromCity} to ${route.toCity}. Request a quote for this listed bus.`,
+    title: `${coachName} | ${corridor} Bus`,
+    description:
+      route.bus?.summary ||
+      route.summary ||
+      `${corridor} coach hire with World Compass Holidays. See photos and an indicative fare, then request a quote — nothing is booked until you accept.`,
     path: `/buses/${slug}`,
+    image: route.bus?.imageUrl || route.imageUrl || undefined,
+    imageAlt: `${coachName} on the ${corridor} route`,
+    type: "article",
   });
 }
 

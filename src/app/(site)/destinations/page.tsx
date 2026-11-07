@@ -8,10 +8,11 @@ import { clipText, pageMetadata } from "@/lib/seo";
 import { cached } from "@/lib/ttl-cache";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Travel destinations",
+  title: "Travel Destinations Across India",
   description:
-    "Places we plan trips for, with tours, hotels, and car and bike rentals in each. Search by country, region, or city.",
+    "Explore destinations we plan trips for across India — each with tours, hotels, and car or bike rentals. Search by region, state, or city.",
   path: "/destinations",
+  keywords: ["India destinations", "travel destinations India", "Kashmir", "Ladakh", "Goa", "Kerala"],
 });
 
 function one(value: string | string[] | undefined) {

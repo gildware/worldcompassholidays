@@ -3,8 +3,9 @@ import { SitemapView } from "@/components/company/SitemapView";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Sitemap",
-  description: "Every public page on World Compass Holidays, from tours and hotels to the company policies.",
+  title: "HTML Sitemap",
+  description:
+    "A full list of public World Compass Holidays pages — destinations, tours, hotels, rentals, visas, meet and assist, and company policies.",
   path: "/sitemap",
 });
 

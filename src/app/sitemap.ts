@@ -21,30 +21,39 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     entry("/", 1, "daily"),
     entry("/destinations", 0.9, "weekly"),
-    entry("/visa-services", 0.7, "monthly"),
-    entry("/visa-services/apply", 0.6, "monthly"),
-    entry("/meet-and-assist", 0.7, "monthly"),
+    entry("/visa-services", 0.8, "weekly"),
+    entry("/visa-services/apply", 0.7, "monthly"),
+    entry("/meet-and-assist", 0.8, "weekly"),
     entry("/meet-and-assist/request", 0.6, "monthly"),
-    entry("/contact", 0.6, "monthly"),
+    entry("/contact", 0.7, "monthly"),
     entry("/about", 0.7, "monthly"),
     entry("/help", 0.5, "monthly"),
-    entry("/terms", 0.4, "yearly"),
-    entry("/privacy", 0.4, "yearly"),
-    entry("/cancellation", 0.4, "yearly"),
-    entry("/cookies", 0.3, "yearly"),
+    entry("/terms", 0.3, "yearly"),
+    entry("/privacy", 0.3, "yearly"),
+    entry("/cancellation", 0.3, "yearly"),
+    entry("/cookies", 0.2, "yearly"),
     entry("/sitemap", 0.3, "monthly"),
   ];
 
-  if (modules.tours) staticEntries.push(entry("/tours", 0.9, "daily"));
+  if (modules.tours) {
+    staticEntries.push(entry("/tours", 0.9, "daily"));
+    staticEntries.push(entry("/tours/request", 0.6, "monthly"));
+  }
   if (modules.hotels) {
     staticEntries.push(entry("/hotels", 0.9, "daily"));
     staticEntries.push(entry("/hotels/request", 0.6, "monthly"));
   }
   if (modules.cars || modules.bikes) staticEntries.push(entry("/rentals", 0.8, "daily"));
-  if (modules.cars) staticEntries.push(entry("/rentals/cars", 0.8, "daily"));
-  if (modules.bikes) staticEntries.push(entry("/rentals/bikes", 0.8, "daily"));
+  if (modules.cars) {
+    staticEntries.push(entry("/rentals/cars", 0.8, "daily"));
+    staticEntries.push(entry("/rentals/cars/request", 0.6, "monthly"));
+  }
+  if (modules.bikes) {
+    staticEntries.push(entry("/rentals/bikes", 0.8, "daily"));
+    staticEntries.push(entry("/rentals/bikes/request", 0.6, "monthly"));
+  }
   if (modules.buses) {
-    staticEntries.push(entry("/buses", 0.7, "weekly"));
+    staticEntries.push(entry("/buses", 0.8, "weekly"));
     staticEntries.push(entry("/buses/request", 0.6, "monthly"));
   }
 
@@ -82,10 +91,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticEntries,
-    ...destinations.map((item) => entry(`/destinations/${item.slug}`, 0.8, "weekly", item.updatedAt)),
-    ...tours.map((item) => entry(`/tours/${item.slug}`, 0.8, "weekly", item.updatedAt)),
-    ...hotels.map((item) => entry(`/hotels/${item.slug}`, 0.8, "weekly", item.updatedAt)),
-    ...vehicles.map((item) => entry(`/rentals/${item.slug}`, 0.7, "weekly", item.updatedAt)),
-    ...buses.map((item) => entry(`/buses/${item.slug}`, 0.6, "weekly", item.updatedAt)),
+    ...destinations.map((item) => entry(`/destinations/${item.slug}`, 0.85, "weekly", item.updatedAt)),
+    ...tours.map((item) => entry(`/tours/${item.slug}`, 0.85, "weekly", item.updatedAt)),
+    ...hotels.map((item) => entry(`/hotels/${item.slug}`, 0.85, "weekly", item.updatedAt)),
+    ...vehicles.map((item) => entry(`/rentals/${item.slug}`, 0.75, "weekly", item.updatedAt)),
+    ...buses.map((item) => entry(`/buses/${item.slug}`, 0.7, "weekly", item.updatedAt)),
   ];
 }

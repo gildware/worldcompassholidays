@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookingList } from "@/components/account/BookingList";
+import { DashboardWidgets } from "@/components/account/DashboardWidgets";
 import { RentalAccountList } from "@/components/account/FleetAccountPage";
 import { requireCustomer } from "@/lib/auth/guards";
 import { visibleAccountSections } from "@/lib/account-sections";
@@ -49,29 +50,34 @@ export default async function AccountPage() {
         <p className="mt-1 text-sm text-muted">Hello, {user.name}</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <Link href="/account/favorites" className="rounded-lg border border-line bg-white px-4 py-3 hover:border-brand/40">
-          <p className="text-xs text-muted">Favorites</p>
-          <p className="mt-1 text-2xl font-semibold leading-none">{favorites.length}</p>
-          <p className="mt-1.5 text-xs text-muted">Tours, hotels, cars, and bikes you saved</p>
-        </Link>
-        <Link href="/account/enquiries" className="rounded-lg border border-line bg-white px-4 py-3 hover:border-brand/40">
-          <p className="text-xs text-muted">Enquiries</p>
-          <p className="mt-1 text-2xl font-semibold leading-none">{enquiries.length}</p>
-          <p className="mt-1.5 text-xs text-muted">Tour, hotel, car, and bike requests</p>
-        </Link>
-        {stats.map((stat) => (
-          <Link
-            key={stat.key}
-            href={stat.href}
-            className="rounded-lg border border-line bg-white px-4 py-3 hover:border-brand/40"
-          >
-            <p className="text-xs text-muted">{stat.label}</p>
-            <p className="mt-1 text-2xl font-semibold leading-none">{stat.value}</p>
-            <p className="mt-1.5 text-xs text-muted">{stat.description}</p>
-          </Link>
-        ))}
-      </div>
+      <DashboardWidgets
+        items={[
+          {
+            key: "favorites",
+            href: "/account/favorites",
+            label: "Favorites",
+            value: favorites.length,
+            hint: "Saved tours, hotels & fleet",
+            icon: "favorites",
+          },
+          {
+            key: "enquiries",
+            href: "/account/enquiries",
+            label: "Enquiries",
+            value: enquiries.length,
+            hint: "Open tour & hotel requests",
+            icon: "enquiries",
+          },
+          ...stats.map((stat) => ({
+            key: stat.key,
+            href: stat.href,
+            label: stat.serviceLabel,
+            value: stat.value,
+            hint: stat.description,
+            icon: stat.key,
+          })),
+        ]}
+      />
 
       {hasAnything ? (
         <div className="grid gap-5">

@@ -58,6 +58,7 @@ export function useFavoriteList(initialIds: string[], signedIn: boolean) {
         savedRef.current = rolled;
         setSaved(rolled);
         if (result.reason === "auth") showLoginToast();
+        else showFavoriteToast("Could not update favorites. Try again.", "login");
         return;
       }
       if (result.saved === had) showSavedToast(result.saved);
@@ -111,6 +112,7 @@ export function useFavoriteToggle({
       if (!result.ok) {
         setSaved(!next);
         if (result.reason === "auth") showLoginToast();
+        else showFavoriteToast("Could not update favorites. Try again.", "login");
         return;
       }
       if (result.saved !== next) showSavedToast(result.saved);

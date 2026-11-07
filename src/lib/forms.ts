@@ -37,7 +37,9 @@ export function customerReturnPath(value: unknown, fallback = "/account") {
     value.startsWith("/rentals") ||
     value.startsWith("/tours") ||
     value.startsWith("/hotels") ||
-    value.startsWith("/buses")
+    value.startsWith("/buses") ||
+    value.startsWith("/visa-services") ||
+    value.startsWith("/meet-and-assist")
   ) {
     return value;
   }

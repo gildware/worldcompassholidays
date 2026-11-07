@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { DateMenu, prettyStayDate } from "@/components/hotel-list/stay-list/HotelStayList";
 import { SearchableSelect, type SelectOption } from "@/components/ui/SearchableSelect";
 import { formatPhone } from "@/lib/auth/phone";
+import { company } from "@/lib/company";
 import { isBudgetValue, type BudgetBand, type RequestOption } from "@/lib/custom-request";
+import { whatsAppHref } from "@/lib/visa";
 
 const glyphs: Record<string, string> = {
   any: "M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3zM18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8L18 15z",
@@ -39,6 +41,23 @@ const glyphs: Record<string, string> = {
   sunrise: "M17 18a5 5 0 0 0-10 0M12 7V3M4.2 10.2l1.4 1.4M19.8 10.2l-1.4 1.4M2 18h2M20 18h2M2 22h20",
   sun: "M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7m10 10 1.4 1.4m0-12.8L17 7M7 17l-1.4 1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z",
   moon: "M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5z",
+  plane: "M10 14L3 11l1-2 8 1 5-5a2 2 0 0 1 3 3l-5 5 1 8-2 1-3-7z",
+  passport: "M5 3h9a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2V3zM9 7h5M9 11h3M16 5h3v14a2 2 0 0 1-2 2",
+  board: "M4 5h16v4H4zM8 9v10M16 9v10M6 19h12",
+  wheelchair: "M12 5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM12 7v6h5l2 6M12 10H8M8 14a5 5 0 1 0 7 6",
+  lounge: "M4 10h16v3H4zM6 13v5M18 13v5M3 18h18",
+  baggage: "M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M5 7h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7z",
+  transfer: "M5 17h14l1-6-2-5H6l-2 5 1 6zM4 11h16M7 17v2M17 17v2",
+  immigration: "M4 4h16v16H4zM8 8h8M8 12h5M8 16h6",
+  tourist: "M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3z",
+  business: "M4 7h16v12H4zM9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2",
+  family: "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20a6 6 0 0 1 12 0M17 11a2.5 2.5 0 1 0 0-5M17 14a5 5 0 0 1 4.5 5",
+  arrival: "M10 14L3 11l1-2 8 1 5-5a2 2 0 0 1 3 3l-5 5 1 8-2 1-3-7z",
+  departure: "M10 14L3 11l1-2 8 1 5-5a2 2 0 0 1 3 3l-5 5 1 8-2 1-3-7z",
+  transit: "M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM8 17h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6",
+  round: "M3 12a9 9 0 1 0 3-6.7M3 4v5h5",
+  check: "M5 12.5 10 17.5 19 7.5",
+  eye: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
 };
 
 const optionIcons: Record<string, string> = {
@@ -64,6 +83,20 @@ const optionIcons: Record<string, string> = {
   morning: "sunrise",
   afternoon: "sun",
   night: "moon",
+  arrival: "arrival",
+  departure: "departure",
+  transit: "transit",
+  round: "round",
+  tourist: "tourist",
+  business: "business",
+  family: "family",
+  other: "any",
+  board: "board",
+  immigration: "immigration",
+  baggage: "baggage",
+  wheelchair: "wheelchair",
+  lounge: "lounge",
+  transfer: "transfer",
 };
 
 export function Glyph({ name }: { name: string }) {
@@ -160,18 +193,119 @@ export function FieldMessage({ id, message }: { id?: string; message?: string })
   return message ? <p id={id} className="hotel-request-error" role="alert">{message}</p> : null;
 }
 
+function progressStepIcon(label: string, index: number, total: number) {
+  const key = label.toLowerCase();
+  if (key.includes("submit") || (index === total - 1 && key.includes("done"))) return "check";
+  if (key.includes("preview") || key.includes("review")) return "eye";
+  if (key.includes("destination")) return "passport";
+  if (key.includes("date") || key.includes("party")) return "calendar";
+  if (key.includes("traveller")) return "users";
+  if (key.includes("stay preference")) return "bed";
+  if (key.includes("stay detail")) return "note";
+  if (key.includes("trip detail") || key.includes("route")) return "route";
+  if (key.includes("preference")) return "star";
+  if (key.includes("car option")) return "car";
+  if (key.includes("bike option")) return "bike";
+  if (key.includes("coach") || key.includes("luggage")) return "bus";
+  if (key.includes("flight")) return "plane";
+  if (key.includes("meet") || key.includes("airport")) return "arrival";
+  if (key.includes("budget") || key.includes("note") || key.includes("other") || key.includes("help")) return "note";
+  if (key.includes("option")) return "gear";
+  const defaults = ["pin", "calendar", "note", "eye", "check"] as const;
+  return defaults[Math.min(index, defaults.length - 1)];
+}
+
 export function GuideProgress({ label, labels, step, onSelect }: { label: string; labels: readonly string[]; step: number; onSelect: (step: number) => void }) {
+  const locked = step >= labels.length - 1 && labels[labels.length - 1] === "Submitted";
   return (
     <nav className="hotel-guide-progress" aria-label={`${label} request progress`}>
-      <div className="hotel-guide-progress-meta"><span>STEP {step + 1} OF {labels.length}</span><strong>{labels[step]}</strong></div>
-      <div className="hotel-guide-progress-track" role="group" aria-label="Completed and current steps">
-        {labels.map((item, index) => (
-          <button key={item} type="button" className={index === step ? "is-current" : index < step ? "is-complete" : ""} aria-current={index === step ? "step" : undefined} aria-label={`Step ${index + 1}: ${item}`} disabled={index > step} onClick={() => onSelect(index)}>
-            <span />
-          </button>
-        ))}
-      </div>
+      <ol className="hotel-guide-progress-track" style={{ "--hotel-guide-steps": labels.length } as CSSProperties}>
+        {labels.map((item, index) => {
+          const state = index === step ? "is-current" : index < step ? "is-complete" : "is-upcoming";
+          const icon = index < step ? "check" : progressStepIcon(item, index, labels.length);
+          return (
+            <li key={`${index}-${item}`} className={`${state} hotel-guide-step-${index}`}>
+              <button
+                type="button"
+                className={state}
+                aria-current={index === step ? "step" : undefined}
+                aria-label={`Step ${index + 1}: ${item}`}
+                disabled={index > step || locked}
+                onClick={() => onSelect(index)}
+              >
+                <span className="hotel-guide-progress-icon" aria-hidden="true">
+                  <Glyph name={icon} />
+                </span>
+                <span className="hotel-guide-progress-title">{item}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
     </nav>
+  );
+}
+
+export function RequestSuccessStep({
+  reference,
+  exploreHref,
+  detail,
+}: {
+  reference: string;
+  exploreHref: string;
+  detail?: string;
+}) {
+  const phone = company.phone;
+  const email = company.email;
+  const whatsapp = whatsAppHref(company.whatsapp);
+  const callHref = `tel:${phone.replace(/[^\d+]/g, "")}`;
+  const mailHref = `mailto:${email}`;
+  const chatHref = whatsapp
+    ? `${whatsapp}?text=${encodeURIComponent(`Hi, I submitted request ${reference} and would like an update.`)}`
+    : null;
+
+  return (
+    <section className="hotel-guide-panel hotel-guide-success" aria-labelledby="request-success-title">
+      <div className="hotel-guide-success-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M6.5 12.5 10.2 16.2 17.5 8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+      <h2 id="request-success-title">Submitted successfully</h2>
+      <p className="hotel-guide-success-lede">
+        We have received your request with request ID <strong>{reference}</strong>. Our team will get back to you shortly.
+        {detail ? ` ${detail}` : ""}
+      </p>
+      <div className="hotel-guide-success-contact">
+        <p>Need to speak with us sooner? Call or message us with your request ID.</p>
+        <ul>
+          <li>
+            <span>Phone</span>
+            <a href={callHref}>{phone}</a>
+          </li>
+          {chatHref ? (
+            <li>
+              <span>WhatsApp</span>
+              <a href={chatHref} target="_blank" rel="noreferrer">
+                {company.whatsapp}
+              </a>
+            </li>
+          ) : null}
+          <li>
+            <span>Email</span>
+            <a href={mailHref}>{email}</a>
+          </li>
+        </ul>
+      </div>
+      <div className="hotel-guide-success-actions">
+        <a className="hotel-guide-success-secondary" href={exploreHref}>
+          Explore more
+        </a>
+        <a className="hotel-guide-primary" href={`/account/enquiries/${reference}`}>
+          View request
+        </a>
+      </div>
+    </section>
   );
 }
 
@@ -182,6 +316,11 @@ export function StepTitle({ number, id, title, text }: { number: string; id: str
       <div><h2 id={id}>{title}</h2><p>{text}</p></div>
     </div>
   );
+}
+
+/** Defer step changes so a Continue click cannot land on a newly mounted Submit button. */
+export function deferGuideStep(update: () => void) {
+  window.setTimeout(update, 0);
 }
 
 export function GuideActions({
@@ -205,12 +344,19 @@ export function GuideActions({
   onContinue: () => void;
   children?: ReactNode;
 }) {
+  if (step > last) return null;
   return (
     <div className="hotel-guide-actions">
       {step > 0 ? <button type="button" className="hotel-guide-back" onClick={onBack}>Back</button> : <span className="hotel-guide-secure"><span aria-hidden="true">✦</span> Free, no-obligation request</span>}
       {step < last ? (
         <div className="hotel-guide-action-right">
-          <button type="button" className="hotel-guide-primary" onClick={onContinue}>Continue <span aria-hidden="true">→</span></button>
+          <button
+            type="button"
+            className="hotel-guide-primary"
+            onClick={() => deferGuideStep(onContinue)}
+          >
+            Continue <span aria-hidden="true">→</span>
+          </button>
         </div>
       ) : (
         <div className="hotel-guide-submit-group">
@@ -273,44 +419,49 @@ export function GuideSelectField({ name, label, icon, value, options, emptyLabel
   );
 }
 
-export function GuideCityField({ name, label, icon = "pin", value, cities, emptyLabel, customLabel, customPlaceholder, error, onChange }: { name: string; label: string; icon?: string; value: string; cities: readonly string[]; emptyLabel: string; customLabel: string; customPlaceholder: string; error?: string; onChange: (value: string) => void }) {
-  const [custom, setCustom] = useState(Boolean(value) && !cities.includes(value));
+export function GuideCityField({
+  name,
+  label,
+  icon = "pin",
+  value,
+  cities,
+  emptyLabel,
+  searchPlaceholder = "Search locations",
+  error,
+  onChange,
+}: {
+  name: string;
+  label: string;
+  icon?: string;
+  value: string;
+  cities: readonly string[];
+  emptyLabel: string;
+  searchPlaceholder?: string;
+  error?: string;
+  onChange: (value: string) => void;
+}) {
   const id = `guide-${name}`;
-  const options = useMemo<SelectOption[]>(() => [
-    ...cities.map((city) => ({ value: city, label: city })),
-    { value: "__custom__", label: customLabel, action: true },
-  ], [cities, customLabel]);
+  const options = useMemo<SelectOption[]>(
+    () => cities.map((city) => ({ value: city, label: city })),
+    [cities],
+  );
   return (
     <div className="hotel-guide-field hotel-guide-destination-field" id={`${name}-field`}>
       <label htmlFor={id} className="has-icon"><Glyph name={icon} />{label}</label>
-      {custom ? (
-        <div className={`hotel-request-control hotel-guide-custom-destination-input${error ? " is-invalid" : ""}`}>
-          <input id={id} type="text" autoFocus placeholder={customPlaceholder} aria-label={label} value={value} onChange={(event) => onChange(event.target.value)} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} />
-          <button type="button" className="hotel-guide-custom-destination" onClick={() => { setCustom(false); onChange(""); }}>Choose from list</button>
-        </div>
-      ) : (
-        <SearchableSelect
-          id={id}
-          value={value}
-          options={options}
-          emptyLabel={emptyLabel}
-          placeholder={emptyLabel}
-          searchPlaceholder="Search city, region or country"
-          ariaLabel={label}
-          invalid={Boolean(error)}
-          describedBy={error ? `${id}-error` : undefined}
-          className="hotel-guide-select-trigger"
-          menuClassName="hotel-guide-select-menu"
-          onChange={(next, typed) => {
-            if (next === "__custom__") {
-              setCustom(true);
-              onChange(typed || "");
-            } else {
-              onChange(next);
-            }
-          }}
-        />
-      )}
+      <SearchableSelect
+        id={id}
+        value={cities.includes(value) ? value : ""}
+        options={options}
+        emptyLabel={emptyLabel}
+        placeholder={emptyLabel}
+        searchPlaceholder={searchPlaceholder}
+        ariaLabel={label}
+        invalid={Boolean(error)}
+        describedBy={error ? `${id}-error` : undefined}
+        className="hotel-guide-select-trigger"
+        menuClassName="hotel-guide-select-menu"
+        onChange={onChange}
+      />
       <FieldMessage id={`${id}-error`} message={error} />
     </div>
   );
@@ -381,6 +532,47 @@ export function GuideChips({ id, label, labelIcon, options, value, onChange, err
         {options.map((option) => (
           <button key={option.value} type="button" className={value === option.value ? "is-selected" : ""} aria-pressed={value === option.value} onClick={() => onChange(option.value)}>
             {withIcons ? <Glyph name={optionIcon(option.value)} /> : null}{option.label}
+          </button>
+        ))}
+      </div>
+      <FieldMessage message={error} />
+    </fieldset>
+  );
+}
+
+export function GuideMultiChips({
+  id,
+  label,
+  labelIcon,
+  options,
+  values,
+  onChange,
+  error,
+  withIcons = false,
+}: {
+  id: string;
+  label: string;
+  labelIcon?: string;
+  options: readonly RequestOption[];
+  values: readonly string[];
+  onChange: (values: string[]) => void;
+  error?: string;
+  withIcons?: boolean;
+}) {
+  function toggle(value: string) {
+    onChange(values.includes(value) ? values.filter((item) => item !== value) : [...values, value]);
+  }
+  return (
+    <fieldset id={`${id}-field`} className="hotel-guide-choice-group tour-guide-choice-group is-chips">
+      <legend>
+        {labelIcon ? <Glyph name={labelIcon} /> : null}
+        {label} <span>Select all that apply</span>
+      </legend>
+      <div className="hotel-guide-chip-grid">
+        {options.map((option) => (
+          <button key={option.value} type="button" className={values.includes(option.value) ? "is-selected" : ""} aria-pressed={values.includes(option.value)} onClick={() => toggle(option.value)}>
+            {withIcons ? <Glyph name={optionIcon(option.value)} /> : null}
+            {option.label}
           </button>
         ))}
       </div>
@@ -466,12 +658,43 @@ export function ReviewLine({ label, icon, value }: { label: string; icon: string
   return <div className="hotel-guide-review-line"><dt><Glyph name={icon} />{label}</dt><dd>{value}</dd></div>;
 }
 
-export function GuideContact({ customer, phone, error, onPhone }: { customer: { name: string; phone: string } | null; phone: string; error?: string; onPhone: (value: string) => void }) {
-  if (!customer) return <p className="hotel-guide-login-note">You’ll verify your mobile number before we send the request.</p>;
+export function GuideContact({
+  customer,
+  name = "",
+  phone,
+  nameError,
+  phoneError,
+  onName,
+  onPhone,
+}: {
+  customer: { name: string; phone: string } | null;
+  name?: string;
+  phone: string;
+  nameError?: string;
+  phoneError?: string;
+  onName?: (value: string) => void;
+  onPhone: (value: string) => void;
+}) {
+  if (customer) {
+    return (
+      <div className="hotel-guide-contact-summary">
+        <span>Submitting as <strong>{customer.name}</strong></span>
+        {customer.phone ? (
+          <span>{formatPhone(customer.phone) || customer.phone}</span>
+        ) : (
+          <GuideTextField name="phone-entry" label="Phone number" type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={phone} onChange={onPhone} error={phoneError} />
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="hotel-guide-contact-summary">
-      <span>Submitting as <strong>{customer.name}</strong></span>
-      {customer.phone ? <span>{formatPhone(customer.phone) || customer.phone}</span> : <GuideTextField name="phone-entry" label="Phone number" type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={phone} onChange={onPhone} error={error} />}
+    <div className="hotel-guide-guest-contact">
+      <p className="hotel-guide-login-note">Add your name and mobile number. We’ll text a code to this number when you submit.</p>
+      <div className="hotel-guide-grid">
+        <GuideTextField name="guest-name" label="Your name" placeholder="Full name" value={name} onChange={onName ?? (() => undefined)} error={nameError} autoComplete="name" />
+        <GuideTextField name="phone-entry" label="Contact number" type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={phone} onChange={onPhone} error={phoneError} />
+      </div>
     </div>
   );
 }

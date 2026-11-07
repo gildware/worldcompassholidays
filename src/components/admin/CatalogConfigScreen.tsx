@@ -12,11 +12,17 @@ export async function CatalogConfigScreen({
   section,
   kinds,
 }: {
-  section: "tours" | "hotels" | "buses";
+  section: "tours" | "hotels" | "buses" | "visa" | "assist";
   kinds?: CatalogKind[];
 }) {
   await requirePermission(
-    section === "hotels" ? "hotels.manage" : section === "buses" ? "buses.manage" : "tours.manage",
+    section === "hotels"
+      ? "hotels.manage"
+      : section === "buses"
+        ? "buses.manage"
+        : section === "visa" || section === "assist"
+          ? "bookings.manage"
+          : "tours.manage",
   );
 
   const rows = await prisma.catalogItem.findMany({

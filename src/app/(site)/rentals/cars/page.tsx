@@ -3,10 +3,11 @@ import { pageMetadata } from "@/lib/seo";
 import { RentalListing } from "../listing";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Car rental",
+  title: "Self-Drive Car Rental in India",
   description:
-    "Self-drive cars with seats, daily rates, and pickup locations. Filter by city, dates, and the kind of car you need.",
+    "Rent self-drive cars across India with seat counts, daily rates, and pickup locations. Filter by city, dates, and the car type you need.",
   path: "/rentals/cars",
+  keywords: ["car rental India", "self drive car", "hire car India"],
 });
 
 type Search = Record<string, string | string[] | undefined>;

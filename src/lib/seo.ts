@@ -3,6 +3,14 @@ import { theme } from "@/config/theme";
 
 export const siteName = theme.brandName;
 
+/** Default social share image when a page does not supply its own. */
+export const defaultShareImage = {
+  url: "/img/masthead/1/bg.webp",
+  alt: "A mountain road planned by World Compass Holidays",
+  width: 1600,
+  height: 900,
+} as const;
+
 export const noIndexRobots: Metadata["robots"] = {
   index: false,
   follow: false,
@@ -21,6 +29,21 @@ const indexRobots: Metadata["robots"] = {
     "max-video-preview": -1,
   },
 };
+
+export const siteKeywords = [
+  "World Compass Holidays",
+  "India tours",
+  "holiday packages India",
+  "hotels in India",
+  "car rental India",
+  "bike rental India",
+  "Kashmir tours",
+  "Ladakh tours",
+  "Goa holidays",
+  "visa assistance India",
+  "airport meet and assist",
+  "DMC India",
+] as const;
 
 export function siteOrigin() {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -52,6 +75,15 @@ export function clipText(value: string, max = 158) {
   return `${shortened}…`;
 }
 
+/** Keep browser / SERP titles readable under the brand template. */
+export function clipTitle(value: string, max = 60) {
+  const clean = plainText(value);
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max - 1);
+  const boundary = cut.lastIndexOf(" ");
+  return `${(boundary > 24 ? cut.slice(0, boundary) : cut).trimEnd()}…`;
+}
+
 export function phoneE164(value: string) {
   const compact = value.replace(/[^\d+]/g, "");
   return compact.startsWith("+") ? compact : `+${compact}`;
@@ -69,35 +101,54 @@ type PageMetaInput = {
   openGraphDescription?: string;
   twitterTitle?: string;
   twitterDescription?: string;
+  keywords?: string[];
+  type?: "website" | "article";
 };
+
+function shareImage(url: string | undefined, alt: string) {
+  const src = url?.trim() || defaultShareImage.url;
+  const isDefault = src === defaultShareImage.url;
+  return {
+    url: src,
+    alt: alt || defaultShareImage.alt,
+    ...(isDefault
+      ? { width: defaultShareImage.width, height: defaultShareImage.height }
+      : {}),
+  };
+}
 
 export function pageMetadata(input: PageMetaInput): Metadata {
   const description = clipText(input.description);
   const index = input.index !== false;
-  const image = input.image?.trim() || undefined;
-  const ogTitle = input.openGraphTitle?.trim() || input.title;
+  const pageTitle = clipTitle(input.title);
+  const ogTitle = clipTitle(input.openGraphTitle?.trim() || input.title);
   const ogDescription = clipText(input.openGraphDescription?.trim() || description);
-  const twTitle = input.twitterTitle?.trim() || ogTitle;
+  const twTitle = clipTitle(input.twitterTitle?.trim() || ogTitle);
   const twDescription = clipText(input.twitterDescription?.trim() || ogDescription);
   const branded =
     input.absoluteTitle || input.title.toLowerCase().includes(siteName.toLowerCase());
+  const image = shareImage(input.image ?? undefined, input.imageAlt || ogTitle);
 
   return {
-    title: branded ? { absolute: input.title } : input.title,
+    title: branded ? { absolute: input.title } : pageTitle,
     description,
+    keywords: input.keywords?.length ? input.keywords : undefined,
     alternates: { canonical: input.path },
     robots: index ? indexRobots : noIndexRobots,
     openGraph: {
+      type: input.type || "website",
+      locale: "en_IN",
+      siteName,
       title: ogTitle,
       description: ogDescription,
       url: input.path,
-      ...(image ? { images: [{ url: image, alt: input.imageAlt || ogTitle }] } : {}),
+      images: [image],
     },
     twitter: {
-      card: image ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: twTitle,
       description: twDescription,
-      ...(image ? { images: [image] } : {}),
+      images: [image.url],
     },
   };
 }
@@ -107,7 +158,7 @@ export function privateMetadata(title: string, description = "This page is not f
     title,
     description,
     robots: noIndexRobots,
-    openGraph: { title, description },
+    openGraph: { title, description, siteName, locale: "en_IN" },
     twitter: { card: "summary", title, description },
   };
 }
@@ -124,11 +175,14 @@ export function graphLd(nodes: Array<Record<string, unknown> | null | undefined 
 }
 
 export function organizationNode() {
+  const sameAs = Object.values(theme.social).filter((url) => Boolean(url?.trim()));
   return {
     "@type": "TravelAgency",
     "@id": `${siteOrigin()}/#organization`,
     name: theme.brandName,
     url: `${siteOrigin()}/`,
+    logo: absoluteUrl("/icons/icon-512.png"),
+    image: absoluteUrl(defaultShareImage.url),
     email: theme.contact.email,
     telephone: phoneE164(theme.contact.phone),
     description: theme.description,
@@ -137,6 +191,7 @@ export function organizationNode() {
       "@type": "PostalAddress",
       addressCountry: "IN",
     },
+    ...(sameAs.length ? { sameAs } : {}),
   };
 }
 

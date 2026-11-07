@@ -98,13 +98,11 @@ export function TourCatalog({
   const [menu, setMenu] = useState<null | "where" | "date" | "who" | "sort" | "dock" | "loc" | "trip">(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [previewId, setPreviewId] = useState<string | null>(null);
   const [compareOpen, setCompareOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [toastOn, setToastOn] = useState(false);
   const resultsRef = useRef<HTMLElement>(null);
   const filtersRef = useRef<HTMLElement>(null);
-  const previewRef = useRef<HTMLDialogElement>(null);
   const compareRef = useRef<HTMLDialogElement>(null);
   const filterReturn = useRef<HTMLElement | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -158,7 +156,6 @@ export function TourCatalog({
   const categories = uniqueValues(tours, "category");
   const languages = uniqueValues(tours, "langs");
   const ideas = rows.length ? [] : emptyIdeas(tours, query, today).slice(0, 3);
-  const preview = tours.find((tour) => tour.id === previewId) ?? null;
   const compared = query.compare.flatMap((id) => {
     const tour = tours.find((item) => item.id === id);
     return tour ? [tour] : [];
@@ -188,13 +185,6 @@ export function TourCatalog({
     const handle = window.setTimeout(() => setToastOn(false), 2400);
     return () => window.clearTimeout(handle);
   }, [toast, toastOn]);
-
-  useEffect(() => {
-    const dialog = previewRef.current;
-    if (!dialog) return;
-    if (previewId && !dialog.open) dialog.showModal();
-    if (!previewId && dialog.open) dialog.close();
-  }, [previewId]);
 
   useEffect(() => {
     const dialog = compareRef.current;
@@ -267,7 +257,7 @@ export function TourCatalog({
   }, [menu]);
 
   useEffect(() => {
-    if (!compareOpen && !previewId) return;
+    if (!compareOpen) return;
     const y = window.scrollY;
     const body = document.body;
     const previous = {
@@ -302,7 +292,7 @@ export function TourCatalog({
       body.style.width = previous.width;
       window.scrollTo(0, y);
     };
-  }, [compareOpen, previewId]);
+  }, [compareOpen]);
 
   function showToast(text: string) {
     setToast(text);
@@ -348,7 +338,6 @@ export function TourCatalog({
   }
 
   function jumpDate(iso: string) {
-    setPreviewId(null);
     setQuery((current) => ({ ...current, date: iso, page: 1 }));
   }
 
@@ -378,7 +367,7 @@ export function TourCatalog({
   const bins = priceBins(tours, query, today, saved, lo, hi);
 
   return (
-    <div className={`tour-catalog${filtersOpen || compareOpen || previewId ? " is-locked" : ""}`}>
+    <div className={`tour-catalog${filtersOpen || compareOpen ? " is-locked" : ""}`}>
       <a className="skip" href="#results">
         Skip to tours
       </a>
@@ -1016,7 +1005,6 @@ export function TourCatalog({
                     eager={index < 2}
                     badge={badgeFor(tour, topId, query)}
                     onSave={() => void favorites.toggle("tour", tour.id)}
-                    onOpen={() => setPreviewId(tour.id)}
                     onDate={jumpDate}
                     onCompare={(on) => toggleCompare(tour.id, on)}
                   />
@@ -1087,18 +1075,6 @@ export function TourCatalog({
         </div>
       ) : null}
 
-      <dialog className="preview" ref={previewRef} aria-labelledby="tour-title" onClose={() => setPreviewId(null)} onClick={(event) => { if (event.target === event.currentTarget) setPreviewId(null); }}>
-        {preview ? (
-          <Preview
-            key={preview.id}
-            tour={preview}
-            query={query}
-            today={today}
-            onClose={() => setPreviewId(null)}
-            onDate={jumpDate}
-          />
-        ) : null}
-      </dialog>
       <dialog className="compare" ref={compareRef} aria-labelledby="compare-title" onClose={() => setCompareOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) setCompareOpen(false); }}>
         {compareOpen ? <CompareTable tours={compared} query={query} today={today} onClose={() => setCompareOpen(false)} /> : null}
       </dialog>
@@ -1465,7 +1441,6 @@ function TourCard({
   eager,
   badge,
   onSave,
-  onOpen,
   onDate,
   onCompare,
 }: {
@@ -1477,7 +1452,6 @@ function TourCard({
   eager: boolean;
   badge: { text: string; hot: boolean } | null;
   onSave: () => void;
-  onOpen: () => void;
   onDate: (iso: string) => void;
   onCompare: (on: boolean) => void;
 }) {
@@ -1485,8 +1459,9 @@ function TourCard({
   const cancel = cancelInfo(tour, query, today);
   const place = tour.place === tour.region ? tour.place : `${tour.place}, ${tour.region}`;
   const placeShort = tour.place || tour.region;
-  const bits = [durationLabel(tour), tour.when === "multi" ? runsLabel(tour) || "Starts any day" : "", groupLabel(tour)].filter(Boolean);
-  const runs = runsLabel(tour);
+  const duration = durationLabel(tour);
+  const group = groupLabel(tour);
+  const bits = [duration, group].filter(Boolean);
   const next = status === "ok" ? null : nextOpen(tour, query.date);
   const block = partyBlock({
     mode: "group",
@@ -1496,7 +1471,6 @@ function TourCard({
     maxGroupSize: tour.groupMax,
     seats: seatsLeft(tour, query.date),
   });
-  const miss = extraLine(tour);
   const quote = partyQuote(tour, query);
   const currency = tour.currency || "INR";
   return (
@@ -1525,63 +1499,15 @@ function TourCard({
             </span>
           </div>
         ) : null}
-        <p className="meta">
-          {bits.join(" · ")}
-          {runs && tour.when !== "multi" ? ` · ${runs}` : ""}
-        </p>
-        <p className="meta">
-          {tour.meetShort} · {tour.langs.join(", ")}
-        </p>
+        {bits.length ? <p className="meta">{bits.join(" · ")}</p> : null}
         <ul className="m-facts" aria-label="Tour details">
-          {durationLabel(tour) ? <li><span>{durationLabel(tour)}</span></li> : null}
-          {groupLabel(tour) ? <li><span>{groupLabel(tour)}</span></li> : null}
+          {duration ? <li><span>{duration}</span></li> : null}
+          {group ? <li><span>{group}</span></li> : null}
         </ul>
-        {tour.mention ? <p className="mention">{tour.mention}</p> : null}
-        {tour.levelNote ? <p className="expect">{tour.levelNote}</p> : null}
-        {tour.includes.length ? (
-          <div className="tags">
-            {tour.includes.slice(0, 3).map((item) => (
-              <span className="tag" key={item}>
-                {item}
-              </span>
-            ))}
-          </div>
-        ) : null}
-        {miss ? <p className="miss">{miss}</p> : null}
       </div>
       <div className="buy">
         <p className="total">{money(quote.total, currency)}</p>
         <p className="sub">{priceDetail(tour, query)}</p>
-        <p className="sub">Total for these travelers</p>
-        <details className="breakdown">
-          <summary>Price breakdown</summary>
-          <p>
-            <span>
-              {query.adults} × {money(quote.adult, currency)}
-            </span>
-            <span>{money(quote.adult * query.adults, currency)}</span>
-          </p>
-          {query.children > 0 ? (
-            <p>
-              <span>
-                {query.children} × {money(quote.child, currency)} child
-              </span>
-              <span>{money(quote.child * query.children, currency)}</span>
-            </p>
-          ) : null}
-          {quote.singles > 0 ? (
-            <p>
-              <span>
-                {quote.singles} single {quote.singles === 1 ? "room" : "rooms"}
-              </span>
-              <span>{money(quote.singleFee * quote.singles, currency)}</span>
-            </p>
-          ) : null}
-          <p>
-            <span>Total</span>
-            <span>{money(quote.total, currency)}</span>
-          </p>
-        </details>
         <p className={cancel.kind === "yes" ? "ok" : cancel.kind === "no" ? "warn" : "muted"}>{cancel.text}</p>
         {block ? <p className="warn">{block}</p> : null}
         {status === "ok" ? (
@@ -1600,99 +1526,11 @@ function TourCard({
             )}
           </>
         )}
-        <button className="textlink" type="button" onClick={onOpen}>
-          Quick look
-        </button>
         <label className="cmp">
           <input type="checkbox" checked={compared} onChange={(event) => onCompare(event.target.checked)} /> Compare
         </label>
       </div>
     </article>
-  );
-}
-
-function Preview({
-  tour,
-  query,
-  today,
-  onClose,
-  onDate,
-}: {
-  tour: CatalogTour;
-  query: CatalogQuery;
-  today: string;
-  onClose: () => void;
-  onDate: (iso: string) => void;
-}) {
-  const status = statusOf(tour, query.date);
-  const cancel = cancelInfo(tour, query, today);
-  const next = status === "ok" ? null : nextOpen(tour, query.date);
-  const quote = partyQuote(tour, query);
-  const currency = tour.currency || "INR";
-  const place = tour.place === tour.region ? tour.place : `${tour.place}, ${tour.region}`;
-  const includes = tour.includes.slice(0, 5);
-
-  return (
-    <div className="preview-body">
-      <div className="preview-media">
-        {tour.img ? <img alt={tour.alt} src={tour.img} /> : <div className="preview-media__empty" />}
-        <button className="preview-close" type="button" aria-label="Close" onClick={onClose}>
-          ×
-        </button>
-      </div>
-      <div className="preview-copy">
-        <p className="kicker">
-          {tour.category} · {place}
-        </p>
-        <h2 id="tour-title">{tour.title}</h2>
-        {tour.reviews > 0 ? (
-          <div className="score">
-            <b className={scoreClass(tour.rating)}>{tour.rating.toFixed(1)}</b>
-            <span>
-              <strong>{scoreWords(tour.rating)}</strong>
-              <span>{reviewCount(tour.reviews)} reviews</span>
-            </span>
-          </div>
-        ) : null}
-        <p className="meta">
-          {durationLabel(tour)} · {groupLabel(tour)} · {tour.langs.join(", ")}
-        </p>
-        <p className="mention">{tour.meetShort}</p>
-        {tour.story ? <p className="lede">{tour.story}</p> : null}
-        {tour.levelNote ? <p className="expect">{tour.levelNote}</p> : null}
-        {includes.length ? (
-          <div className="tags">
-            {includes.map((item) => (
-              <span className="tag" key={item}>
-                {item}
-              </span>
-            ))}
-            {tour.includes.length > includes.length ? <span className="tag">+{tour.includes.length - includes.length} more</span> : null}
-          </div>
-        ) : null}
-        <div className="preview-price">
-          <div>
-            <p className="total">{money(quote.total, currency)}</p>
-            <p className="sub">{priceDetail(tour, query)}</p>
-            <p className="sub">Total for these travelers</p>
-            <p className={cancel.kind === "yes" ? "ok" : cancel.kind === "no" ? "warn" : "muted"}>{cancel.text}</p>
-            {status !== "ok" ? (
-              <p className="warn">{status === "sold" ? `Sold out on ${prettyDate(query.date)}` : `Does not run on ${DAY[weekday(query.date)]}`}</p>
-            ) : null}
-          </div>
-          <div className="preview-actions">
-            <Link prefetch={false} className="btn" href={tour.href}>
-              See the tour
-            </Link>
-            {next ? (
-              <button className="btn btn--ghost" type="button" onClick={() => onDate(next)}>
-                Next date · {prettyDate(next)}
-              </button>
-            ) : null}
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 

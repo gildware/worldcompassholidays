@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { ServiceRequestForm, type ServiceDefaults, type ServiceKind } from "@/components/service-request/ServiceRequestForm";
 import { TourRequestForm } from "@/components/service-request/TourRequestForm";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
+import { countryIsoFromHeaders } from "@/lib/auth/countries";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
   bikeBudgetBands,
@@ -24,24 +25,28 @@ import {
   yesNoOptions,
   type BudgetBand,
 } from "@/lib/custom-request";
+import { firebaseWebConfig } from "@/lib/firebase/config";
+import { loadDestinationNames, loadRentalLocationNames } from "@/lib/request-locations";
 import { pageMetadata } from "@/lib/seo";
-import { prisma } from "@/lib/db";
 import "@/styles/hotel-request.css";
 
 const titles: Record<ServiceKind, { title: string; description: string; path: string }> = {
   tour: {
-    title: "Request a tour",
-    description: "Can't find the tour you want? Send where it starts, how long it runs, and who is travelling. Nothing is booked until you accept it.",
+    title: "Request a Custom Tour",
+    description:
+      "Can't find the India tour you want? Send where it starts, how long it runs, and who is travelling. We reply with a plan and price — nothing is booked until you accept.",
     path: "/tours/request",
   },
   car: {
-    title: "Request a car",
-    description: "Can't find the car you want? Send the city, the dates, and whether you need a driver. Nothing is booked until you accept it.",
+    title: "Request a Custom Car Rental",
+    description:
+      "Can't find the car you want? Send the city, dates, and whether you need a driver. We quote options — nothing is booked until you accept.",
     path: "/rentals/cars/request",
   },
   bike: {
-    title: "Request a bike",
-    description: "Can't find the bike you want? Send the city, dates, and whether you need a driver. Nothing is booked until you accept it.",
+    title: "Request a Custom Bike Rental",
+    description:
+      "Can't find the bike you want? Send the city, dates, and whether you need a rider option. We quote options — nothing is booked until you accept.",
     path: "/rentals/bikes/request",
   },
 };
@@ -100,14 +105,12 @@ export async function ServiceRequestPage({
   kind: ServiceKind;
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const [params, user, destinationRows] = await Promise.all([
+  const [params, user, locations] = await Promise.all([
     searchParams,
     getCurrentUser(),
-    prisma.destination.findMany({
-      where: { published: true },
-      select: { name: true, region: true, country: true },
-      orderBy: [{ popular: "desc" }, { name: "asc" }],
-    }),
+    kind === "tour"
+      ? loadDestinationNames()
+      : loadRentalLocationNames(kind === "car" ? "car" : "bike"),
   ]);
   const customer = user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null;
   const budget = clip(params.budget, 12);
@@ -174,25 +177,21 @@ export async function ServiceRequestPage({
   const path = titles[kind].path;
   const returnPath = nextQuery.size ? `${path}?${nextQuery}` : path;
   const loginHref = `/login?next=${encodeURIComponent(returnPath)}`;
-  if (!customer) redirect(loginHref);
-  const locations = [...new Set(destinationRows.flatMap((place) => [
-    place.name,
-    [place.name, place.region].filter(Boolean).join(", "),
-    [place.name, place.region, place.country].filter(Boolean).join(", "),
-    [place.region, place.country].filter(Boolean).join(", "),
-  ]).map((value) => value.trim()).filter(Boolean))];
-  const startingLocations = locations.length > 0
-    ? locations
-    : ["Srinagar", "Gulmarg, Kashmir", "Pahalgam, Kashmir", "Manali, Himachal Pradesh", "Delhi"];
+  const firebaseConfig = firebaseWebConfig();
+  const defaultCountry = countryIsoFromHeaders(await headers());
+  const allowed = new Set(locations);
+  if (kind === "tour" && defaults.startCity && !allowed.has(defaults.startCity)) defaults.startCity = "";
+  if (kind !== "tour" && defaults.destination && !allowed.has(defaults.destination)) defaults.destination = "";
+  if (defaults.dropoffCity && !allowed.has(defaults.dropoffCity)) defaults.dropoffCity = "";
 
   return (
     <WorldCompassHolidayFrame className="is-hotel-request">
       <div className="hotel-brief">
         <div className="container hotel-brief-layout is-solo">
           {kind === "tour" ? (
-            <TourRequestForm customer={customer} defaults={defaults} loginHref={loginHref} locations={startingLocations} />
+            <TourRequestForm customer={customer} defaults={defaults} loginHref={loginHref} locations={locations} firebaseConfig={firebaseConfig} defaultCountry={defaultCountry} />
           ) : (
-            <ServiceRequestForm kind={kind} customer={customer} defaults={defaults} loginHref={loginHref} locations={startingLocations} />
+            <ServiceRequestForm kind={kind} customer={customer} defaults={defaults} loginHref={loginHref} locations={locations} firebaseConfig={firebaseConfig} defaultCountry={defaultCountry} />
           )}
         </div>
       </div>

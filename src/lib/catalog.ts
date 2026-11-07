@@ -11,6 +11,8 @@ export const catalogKinds = [
   "hotel_faq",
   "bus_location",
   "bus_facility",
+  "visa_destination",
+  "assist_airport",
 ] as const;
 
 export type CatalogKind = (typeof catalogKinds)[number];
@@ -42,6 +44,18 @@ export const catalogGroups = [
     description: "Locations and facilities used by buses and routes.",
     kinds: ["bus_location", "bus_facility"],
   },
+  {
+    id: "visa",
+    label: "Visa",
+    description: "Destination countries shown on the visa request form.",
+    kinds: ["visa_destination"],
+  },
+  {
+    id: "assist",
+    label: "Meet & assist",
+    description: "Airports shown on the greeter request form.",
+    kinds: ["assist_airport"],
+  },
 ] as const;
 
 export function isCatalogKind(value: string): value is CatalogKind {
@@ -60,6 +74,8 @@ export function catalogKindLabel(kind: CatalogKind) {
   if (kind === "room_amenity") return "Room amenity";
   if (kind === "hotel_faq") return "Hotel FAQ";
   if (kind === "bus_location") return "Location";
+  if (kind === "visa_destination") return "Visa destination";
+  if (kind === "assist_airport") return "Airport";
   return "Facility";
 }
 
@@ -74,6 +90,14 @@ export function isHotelCatalogKind(kind: CatalogKind) {
 
 export function isBusCatalogKind(kind: CatalogKind) {
   return kind === "bus_location" || kind === "bus_facility";
+}
+
+export function isVisaCatalogKind(kind: CatalogKind) {
+  return kind === "visa_destination";
+}
+
+export function isAssistCatalogKind(kind: CatalogKind) {
+  return kind === "assist_airport";
 }
 
 export function catalogKindHasIcon(kind: CatalogKind) {
@@ -97,6 +121,11 @@ export function catalogKindHasAnswer(kind: CatalogKind) {
 /** Optional boarding note stored on a bus location. */
 export function catalogKindHasNote(kind: CatalogKind) {
   return kind === "bus_location";
+}
+
+/** Free-text detail field (airport code payload, visa keywords, boarding note). */
+export function catalogKindHasDetail(kind: CatalogKind) {
+  return kind === "bus_location" || kind === "visa_destination" || kind === "assist_airport";
 }
 
 /** Question and answer stored on one tour, not in the shared FAQ list. */

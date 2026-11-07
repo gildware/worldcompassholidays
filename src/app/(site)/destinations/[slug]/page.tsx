@@ -46,13 +46,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const place = [destination.region, destination.country].filter(Boolean).join(", ");
   const description =
     clipText(destination.summary, 158) ||
-    `Tours, hotels, and rentals in ${destination.name}${place ? `, ${place}` : ""}.`;
+    `Plan ${destination.name} trips with World Compass Holidays — tours, hotels, and car or bike rentals${place ? ` in ${place}` : ""}. Quotes before you pay.`;
   return pageMetadata({
-    title: `${destination.name} tours and stays`,
+    title: `${destination.name} Tours, Hotels & Rentals`,
     description,
     path: `/destinations/${slug}`,
     image: destination.imageUrl,
     imageAlt: destination.name,
+    keywords: [
+      `${destination.name} tours`,
+      `${destination.name} hotels`,
+      `${destination.name} travel`,
+      destination.region,
+      destination.country,
+    ].filter(Boolean),
   });
 }
 

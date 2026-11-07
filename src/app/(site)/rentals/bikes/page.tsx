@@ -3,10 +3,11 @@ import { pageMetadata } from "@/lib/seo";
 import { RentalListing } from "../listing";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Bike rental",
+  title: "Bike & Scooter Rental in India",
   description:
-    "Motorbikes and scooters with daily rates and pickup locations. Filter by city and dates, then book the bike you want.",
+    "Rent motorbikes and scooters across India with daily rates and pickup locations. Filter by city and dates, then book the bike you want.",
   path: "/rentals/bikes",
+  keywords: ["bike rental India", "scooter rental", "motorbike hire India"],
 });
 
 type Search = Record<string, string | string[] | undefined>;

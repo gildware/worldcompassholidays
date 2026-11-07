@@ -63,18 +63,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
   });
   if (!vehicle?.published) return privateMetadata("Rental");
-  const noun = vehicle.kind === "bike" ? "bike rental" : "car rental";
-  const title = vehicle.name.toLowerCase().includes("rental") ? vehicle.name : `${vehicle.name} ${noun}`;
+  const noun = vehicle.kind === "bike" ? "Bike Rental" : "Car Rental";
   const place = vehicle.destination?.name;
+  const title = vehicle.name.toLowerCase().includes("rental")
+    ? vehicle.name
+    : place
+      ? `${vehicle.name} ${noun} in ${place}`
+      : `${vehicle.name} ${noun}`;
   return pageMetadata({
     title,
     description:
       vehicle.summary.trim() ||
       plainText(vehicle.description) ||
-      `${vehicle.name} for rent${place ? ` in ${place}` : ""}. Daily rate, seats, and pickup details.`,
+      `${vehicle.name} for rent${place ? ` in ${place}` : ""} — daily rate, seats, and pickup details from World Compass Holidays.`,
     path: `/rentals/${slug}`,
     image: vehicle.images[0]?.url,
     imageAlt: vehicle.name,
+    type: "article",
   });
 }
 

@@ -20,6 +20,7 @@ import {
 } from "@/lib/custom-request";
 import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
+import { loadDestinationNames } from "@/lib/request-locations";
 import { emailField } from "@/lib/validation";
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
@@ -245,6 +246,15 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
     return {
       error: firstIssue(parsed.error),
       fields: fieldErrors(parsed.error),
+      values,
+    };
+  }
+
+  const destinations = await loadDestinationNames();
+  if (!destinations.includes(parsed.data.destination)) {
+    return {
+      error: "Choose a destination from the list.",
+      fields: { destination: "Choose a destination from the list." },
       values,
     };
   }

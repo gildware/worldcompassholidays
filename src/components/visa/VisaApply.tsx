@@ -7,7 +7,6 @@ import { theme } from "@/config/theme";
 import { visaApplyPath, whatsAppHref } from "@/lib/visa";
 import { CountryFlag } from "@/components/visa/CountryFlag";
 import { WhatsAppIcon } from "@/components/visa/VisaIcons";
-import { VisaRequestForm } from "@/components/visa/VisaRequestForm";
 
 export function VisaApply({
   sent,
@@ -18,7 +17,7 @@ export function VisaApply({
 }: {
   sent: boolean;
   reference: string;
-  customer: { name: string; email: string; phone: string } | null;
+  customer?: { name: string; email: string; phone: string } | null;
   compact?: boolean;
   tile?: boolean;
   whatsappPhone?: string;
@@ -93,14 +92,13 @@ export function VisaApply({
 export function VisaApplyDialog({
   open,
   onClose,
-  customer,
   country = "",
   visaType = "",
   heading = "",
 }: {
   open: boolean;
   onClose: () => void;
-  customer: { name: string; email: string; phone: string } | null;
+  customer?: { name: string; email: string; phone: string } | null;
   country?: string;
   visaType?: string;
   heading?: string;
@@ -124,6 +122,8 @@ export function VisaApplyDialog({
 
   if (!open) return null;
 
+  const href = visaApplyPath({ country, visaType });
+
   return createPortal(
     <div className="worldcompassholiday-page">
       <div className="visa-modal" onClick={onClose}>
@@ -144,17 +144,12 @@ export function VisaApplyDialog({
               </button>
             </div>
             <p className="text-14 text-light-1 mt-5 mb-15">
-              Tell us the trip. We reply with the document list and a quote. Nothing is filed until you accept it.
+              Continue to the request form. We reply with the document list and a quote. Nothing is filed until you accept it.
             </p>
           </div>
-          <VisaRequestForm
-            key={`${country}|${visaType}|${heading}`}
-            sent={false}
-            reference=""
-            customer={customer}
-            defaultCountry={country}
-            defaultVisaType={visaType}
-          />
+          <Link href={href} className="button -dark-1 h-50 px-30 rounded-4 bg-blue-1 text-white">
+            Continue to visa request
+          </Link>
         </div>
       </div>
     </div>,

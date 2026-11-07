@@ -5,11 +5,14 @@ import { clearTtlCache } from "@/lib/ttl-cache";
 import { z } from "zod";
 import {
   catalogKindHasAnswer,
+  catalogKindHasDetail,
   catalogKindHasNote,
   catalogKindLabel,
+  isAssistCatalogKind,
   isBusCatalogKind,
   isCatalogKind,
   isHotelCatalogKind,
+  isVisaCatalogKind,
   mapStoredSelection,
   selectionKeys,
   type CatalogKind,
@@ -31,6 +34,7 @@ const itemSchema = z.object({
 function catalogPermission(kind: CatalogKind) {
   if (isHotelCatalogKind(kind)) return "hotels.manage" as const;
   if (isBusCatalogKind(kind)) return "buses.manage" as const;
+  if (isVisaCatalogKind(kind) || isAssistCatalogKind(kind)) return "bookings.manage" as const;
   return "tours.manage" as const;
 }
 
@@ -40,6 +44,8 @@ function revalidateCatalog() {
   revalidatePath("/admin/hotels/configuration");
   revalidatePath("/admin/buses/configuration");
   revalidatePath("/admin/buses/locations");
+  revalidatePath("/admin/visa/destinations");
+  revalidatePath("/admin/meet-and-assist/airports");
   revalidatePath("/admin/tours");
   revalidatePath("/admin/tours/new");
   revalidatePath("/admin/hotels");
@@ -48,6 +54,13 @@ function revalidateCatalog() {
   revalidatePath("/admin/buses/new");
   revalidatePath("/admin/buses/routes");
   revalidatePath("/buses");
+  revalidatePath("/hotels/request");
+  revalidatePath("/tours/request");
+  revalidatePath("/rentals/cars/request");
+  revalidatePath("/rentals/bikes/request");
+  revalidatePath("/buses/request");
+  revalidatePath("/visa-services/apply");
+  revalidatePath("/meet-and-assist/request");
 }
 
 export async function saveCatalogItem(
@@ -69,6 +82,15 @@ export async function saveCatalogItem(
   if (catalogKindHasNote(kindValue) && parsed.data.content.length > 160) {
     return { error: "Keep the boarding note under 160 characters." };
   }
+  if (kindValue === "assist_airport") {
+    const code = parsed.data.content.split("|")[0]?.trim().toUpperCase() ?? "";
+    if (!/^[A-Z]{3}$/.test(code)) {
+      return { error: "Enter the airport as IATA|countryCode|name|city|country (for example SXR|in|Sheikh ul-Alam|Srinagar|India)." };
+    }
+  }
+  if (kindValue === "visa_destination" && parsed.data.title.trim().length < 2) {
+    return { error: "Enter a destination country." };
+  }
 
   const icon = readUploadedImage(formData);
   const iconError = validateUploadedImage(icon, "catalog", { required: false });
@@ -88,7 +110,7 @@ export async function saveCatalogItem(
   const id = String(formData.get("id") ?? "").trim();
   const title = parsed.data.title;
   const content =
-    catalogKindHasAnswer(kindValue) || catalogKindHasNote(kindValue)
+    catalogKindHasAnswer(kindValue) || catalogKindHasDetail(kindValue)
       ? parsed.data.content
       : "";
   const siblings = await prisma.catalogItem.findMany({
@@ -133,7 +155,7 @@ export async function saveCatalogItem(
       await bindHotels(kindValue, id, existing.title);
     } else if (isBusCatalogKind(kindValue)) {
       await bindBuses(kindValue, id, existing.title, title);
-    } else {
+    } else if (!isVisaCatalogKind(kindValue) && !isAssistCatalogKind(kindValue)) {
       await bindTours(kindValue, id, existing.title, title);
     }
   } else {
@@ -163,13 +185,16 @@ export async function deleteCatalogItem(id: string): Promise<FormState> {
   if (!item || !isCatalogKind(item.kind)) return { error: "That item was not found." };
   const hotelKind = isHotelCatalogKind(item.kind);
   const busKind = isBusCatalogKind(item.kind);
+  const requestOnly = isVisaCatalogKind(item.kind) || isAssistCatalogKind(item.kind);
   await requirePermission(catalogPermission(item.kind));
 
-  const used = hotelKind
-    ? await hotelsUsing(item.kind, item.id, item.title)
-    : busKind
-      ? await routesUsing(item.kind, item.id, item.title)
-      : await toursUsing(item.kind, item.id, item.title);
+  const used = requestOnly
+    ? 0
+    : hotelKind
+      ? await hotelsUsing(item.kind, item.id, item.title)
+      : busKind
+        ? await routesUsing(item.kind, item.id, item.title)
+        : await toursUsing(item.kind, item.id, item.title);
   if (used > 0) {
     const noun = catalogKindLabel(item.kind).toLowerCase();
     const place = hotelKind ? "hotel" : busKind ? "route" : "tour";

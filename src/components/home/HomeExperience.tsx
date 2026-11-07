@@ -3,8 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { HomeInvite, HomePromises } from "@/components/home/HomeClose";
+import { HomeGoogleReviews } from "@/components/home/HomeGoogleReviews";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
 import { formatMoney } from "@/lib/format";
+import type { GoogleReviewsSummary } from "@/lib/google-reviews";
 import { defaultHomePageContent, type HomePageContent } from "@/lib/home-page";
 import {
   busDeal,
@@ -165,7 +167,7 @@ function RideRail({
                     alt=""
                     fill
                     sizes="280px"
-                    style={{ objectFit: "cover" }}
+                    style={{ objectFit: "contain", objectPosition: "center", padding: 10 }}
                   />
                 </Link>
                 <span className="home-x__badge">{kindLabel}</span>
@@ -227,6 +229,7 @@ export function HomeExperience({
   signedIn = false,
   content = defaultHomePageContent,
   contactPhone,
+  googleReviews = null,
 }: {
   destinations: HomeDestination[];
   tours: HomeTour[];
@@ -243,6 +246,7 @@ export function HomeExperience({
   signedIn?: boolean;
   content?: HomePageContent;
   contactPhone?: string;
+  googleReviews?: GoogleReviewsSummary | null;
 }) {
   const destRail = (
     destinations.length > 0 ? (
@@ -452,6 +456,16 @@ export function HomeExperience({
               items={content.why.items}
               contactPhone={contactPhone}
               headingId="home-promises-mobile"
+            />
+          );
+        }
+        if (section.id === "reviews" && googleReviews) {
+          return (
+            <HomeGoogleReviews
+              key="reviews"
+              data={googleReviews}
+              config={content.reviews}
+              headingId="home-google-reviews-mobile"
             />
           );
         }

@@ -2,7 +2,9 @@ import { Fragment } from "react";
 import Link from "next/link";
 import PopularDestinations from "@/components/destinations/PopularDestinations";
 import { HomeInvite, HomePromises } from "@/components/home/HomeClose";
+import { HomeGoogleReviews } from "@/components/home/HomeGoogleReviews";
 import Hero1 from "@/components/hero/hero-1";
+import type { GoogleReviewsSummary } from "@/lib/google-reviews";
 import {
   bikeHomeFallback,
   carHomeFallback,
@@ -65,6 +67,7 @@ export function HomeDesktop({
   showBuses,
   savedIds,
   signedIn,
+  googleReviews = null,
 }: {
   content: HomePageContent;
   coverUrl: string;
@@ -79,6 +82,7 @@ export function HomeDesktop({
   showBuses: boolean;
   savedIds: string[];
   signedIn: boolean;
+  googleReviews?: GoogleReviewsSummary | null;
 }) {
   const servicesOn = content.sections.some((section) => section.id === "services" && section.enabled);
   const firstFleet = content.sections.find((section) => {
@@ -287,6 +291,17 @@ export function HomeDesktop({
           return (
             <div key="why" className="container">
               <HomePromises items={content.why.items} headingId="home-promises-desk" />
+            </div>
+          );
+        }
+        if (section.id === "reviews" && googleReviews) {
+          return (
+            <div key="reviews" className="container">
+              <HomeGoogleReviews
+                data={googleReviews}
+                config={content.reviews}
+                headingId="home-google-reviews-desk"
+              />
             </div>
           );
         }

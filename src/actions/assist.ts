@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth/guards";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -16,9 +15,9 @@ import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
 import { deskWhatsAppHref } from "@/lib/brand";
-import { airportLabel, findAirport } from "@/lib/data/airports";
 import { prisma } from "@/lib/db";
 import type { FormState } from "@/lib/forms";
+import { findConfiguredAirport, loadAssistAirports } from "@/lib/request-locations";
 import { emailField } from "@/lib/validation";
 
 function text(value: FormDataEntryValue | null) {
@@ -73,12 +72,6 @@ const assistSchema = z
     message: z.string().trim().max(2000, "Keep the note under 2000 characters").default(""),
   })
   .superRefine((data, ctx) => {
-    if (data.airport === "other" && data.airportName.trim().length < 2) {
-      ctx.addIssue({ code: "custom", path: ["airportName"], message: "Enter the airport name" });
-    }
-    if (data.airport !== "other" && !findAirport(data.airport)) {
-      ctx.addIssue({ code: "custom", path: ["airport"], message: "Choose an airport from the list" });
-    }
     if (data.flightDate < localToday()) {
       ctx.addIssue({ code: "custom", path: ["flightDate"], message: "Choose a flight date from today onward" });
     }
@@ -113,18 +106,13 @@ function day(value: string) {
   return new Date(`${value}T00:00:00`);
 }
 
-function placeLabel(code: string, written: string) {
-  if (code === "other") return written.trim();
-  const airport = findAirport(code);
-  return airport ? `${airportLabel(airport)} · ${airport.name}` : written.trim();
-}
-
 export async function submitAssistRequest(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
   const user = await getCurrentUser();
   const customer = user?.scope === "customer" ? user : null;
+  const airports = await loadAssistAirports();
   const extras = formData
     .getAll("extras")
     .map(String)
@@ -147,6 +135,13 @@ export async function submitAssistRequest(
     message: text(formData.get("message")),
   };
 
+  if (!customer) {
+    return {
+      error: "Log in to send this request.",
+      values,
+    };
+  }
+
   const parsed = assistSchema.safeParse({
     ...values,
     extras,
@@ -160,11 +155,18 @@ export async function submitAssistRequest(
   }
 
   const data = parsed.data;
+  const airport = findConfiguredAirport(airports, data.airport);
+  if (!airport) {
+    return {
+      error: "Check the highlighted fields.",
+      fields: { airport: "Choose an airport from the list" },
+      values,
+    };
+  }
   const channel = text(formData.get("channel")) === "whatsapp" ? "whatsapp" : "form";
-  const airport = data.airport === "other" ? null : findAirport(data.airport);
-  const airportName = airport ? airport.name : data.airportName.trim();
-  const city = airport?.city ?? "";
-  const place = placeLabel(data.airport, airportName);
+  const airportName = airport.name;
+  const city = airport.city;
+  const place = `${airport.label} · ${airport.name}`;
   const flightNumber = data.flightNumber.replace(/\s+/g, "").toUpperCase();
   const returnFlight = data.service === "round" ? data.returnFlight.replace(/\s+/g, "").toUpperCase() : "";
   const extraLabels = data.extras.map(assistExtraLabel);
@@ -239,7 +241,12 @@ export async function submitAssistRequest(
     };
   }
 
-  redirect(`/meet-and-assist/request?sent=1&ref=${booking.reference}`);
+  return {
+    error: null,
+    success: `Saved as ${booking.reference}.`,
+    reference: booking.reference,
+    values,
+  };
 }
 
 export async function updateAssistStaffNote(

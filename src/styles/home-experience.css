@@ -108,6 +108,17 @@
   font-weight: 400;
   text-align: left;
   cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.home-x__search:focus,
+.home-x__search:focus-visible,
+.home-x__search:active {
+  outline: none;
+  box-shadow: 0 10px 28px rgba(5, 16, 54, 0.22);
 }
 
 .home-x__search svg {
@@ -395,6 +406,19 @@
 
 .home-x__card--ride .home-x__card-media {
   aspect-ratio: 16 / 10;
+  background: #eef4f2;
+}
+
+.home-x__card--ride .home-x__card-media img {
+  object-fit: contain;
+  object-position: center;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.home-x__card--ride:hover .home-x__card-media img,
+.home-x__card--ride:focus-within .home-x__card-media img {
+  transform: scale(1.03);
 }
 
 .home-x__ride-kicker {

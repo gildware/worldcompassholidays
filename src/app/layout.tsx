@@ -3,16 +3,23 @@ import localFont from "next/font/local";
 import { theme } from "@/config/theme";
 import { RotatingFavicon } from "@/components/worldcompassholiday/RotatingFavicon";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { ViewportReset } from "@/components/pwa/ViewportReset";
 import { MobileAppHeader } from "@/components/pwa/MobileAppHeader";
 import { MobileTabBar } from "@/components/pwa/MobileTabBar";
 import { SerwistProvider } from "@/components/pwa/SerwistProvider";
 import { FavoriteToast } from "@/components/favorites/FavoriteToast";
 import { WhatsAppFloat } from "@/components/site/WhatsAppFloat";
 import { getSiteSettings } from "@/lib/brand";
-import { siteName, siteOrigin } from "@/lib/seo";
+import { defaultShareImage, siteKeywords, siteName, siteOrigin } from "@/lib/seo";
 import "./globals.css";
 import "@/styles/mobile-app-shell.css";
 import "@/styles/whatsapp-float.css";
+/* Listing CSS ships with the shell so a phone navigation already has the
+   mobile rules. Loading them only with the page let iOS paint the desktop
+   grid first and keep that zoomed-out layout until a refresh. */
+import "@/components/tour-list/catalog/tour-catalog.css";
+import "@/styles/hotel-list-stay.css";
+import "@/styles/listing-app.css";
 
 // Pages read the live database. A production image must not freeze that data at build time.
 export const dynamic = "force-dynamic";
@@ -46,8 +53,10 @@ const jost = localFont({
 
 const defaultTitle = `${siteName} | Tours, Hotels & Rentals`;
 const shareImage = {
-  url: "/img/masthead/1/bg.webp",
-  alt: "A mountain road planned by World Compass Holidays",
+  url: defaultShareImage.url,
+  alt: defaultShareImage.alt,
+  width: defaultShareImage.width,
+  height: defaultShareImage.height,
 };
 
 export const metadata: Metadata = {
@@ -57,6 +66,7 @@ export const metadata: Metadata = {
     template: `%s · ${siteName}`,
   },
   description: theme.description,
+  keywords: [...siteKeywords],
   applicationName: siteName,
   authors: [{ name: siteName, url: siteOrigin() }],
   creator: siteName,
@@ -64,6 +74,7 @@ export const metadata: Metadata = {
   category: "travel",
   referrer: "origin-when-cross-origin",
   formatDetection: { email: false, address: false, telephone: false },
+  alternates: { canonical: "/" },
   robots: {
     index: true,
     follow: true,
@@ -79,6 +90,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     siteName,
+    url: "/",
     title: defaultTitle,
     description: theme.description,
     images: [shareImage],
@@ -114,6 +126,8 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
+  /* Stops iOS from zooming the layout out to fit a wide first paint. Pinch-in still works. */
+  minimumScale: 1,
   viewportFit: "cover",
 };
 
@@ -145,6 +159,7 @@ export default async function RootLayout({
           reloadOnOnline
         >
           <RotatingFavicon />
+          <ViewportReset />
           <FavoriteToast />
           {/* Phone/tablet chrome on every public page; CSS hides on desktop */}
           <MobileAppHeader />

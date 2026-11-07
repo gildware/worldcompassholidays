@@ -24,25 +24,27 @@ export async function isFavorited(userId: string, kind: FavoriteKind, itemId: st
 }
 
 export async function publishedFavoritePath(kind: FavoriteKind, itemId: string) {
+  const key = itemId.trim();
+  if (!key) return null;
   if (kind === "tour") {
     const tour = await prisma.tour.findFirst({
-      where: { id: itemId, published: true },
-      select: { slug: true },
+      where: { published: true, OR: [{ id: key }, { slug: key }] },
+      select: { id: true, slug: true },
     });
-    return tour ? `/tours/${tour.slug}` : null;
+    return tour ? { path: `/tours/${tour.slug}`, itemId: tour.id } : null;
   }
   if (kind === "hotel") {
     const hotel = await prisma.hotel.findFirst({
-      where: { id: itemId, published: true },
-      select: { slug: true },
+      where: { published: true, OR: [{ id: key }, { slug: key }] },
+      select: { id: true, slug: true },
     });
-    return hotel ? `/hotels/${hotel.slug}` : null;
+    return hotel ? { path: `/hotels/${hotel.slug}`, itemId: hotel.id } : null;
   }
   const vehicle = await prisma.vehicle.findFirst({
-    where: { id: itemId, published: true, kind, status: { not: "inactive" } },
-    select: { slug: true },
+    where: { published: true, kind, status: { not: "inactive" }, OR: [{ id: key }, { slug: key }] },
+    select: { id: true, slug: true },
   });
-  return vehicle ? `/rentals/${vehicle.slug}` : null;
+  return vehicle ? { path: `/rentals/${vehicle.slug}`, itemId: vehicle.id } : null;
 }
 
 function kindEnabled(kind: FavoriteKind) {

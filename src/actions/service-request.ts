@@ -28,6 +28,7 @@ import {
   yesNoOptions,
 } from "@/lib/custom-request";
 import { prisma } from "@/lib/db";
+import { loadDestinationNames, loadRentalLocationNames } from "@/lib/request-locations";
 import { firstIssue, type FormState } from "@/lib/forms";
 import { emailField } from "@/lib/validation";
 
@@ -328,6 +329,33 @@ export async function submitServiceRequest(_previous: FormState, formData: FormD
   }
 
   const data = parsed.data;
+  const locations =
+    data.kind === "tour"
+      ? await loadDestinationNames()
+      : await loadRentalLocationNames(data.kind === "car" ? "car" : "bike");
+  const allowed = new Set(locations);
+  if (data.kind === "tour" && !allowed.has(data.startCity)) {
+    return {
+      error: "Choose a starting location from the list.",
+      fields: { startCity: "Choose a starting location from the list." },
+      values,
+    };
+  }
+  if (data.kind !== "tour" && !allowed.has(data.destination)) {
+    return {
+      error: "Choose a pickup city from the list.",
+      fields: { destination: "Choose a pickup city from the list." },
+      values,
+    };
+  }
+  if (data.dropoffCity && !allowed.has(data.dropoffCity)) {
+    return {
+      error: "Choose a drop-off city from the list.",
+      fields: { dropoffCity: "Choose a drop-off city from the list." },
+      values,
+    };
+  }
+
   const booking = await prisma.booking.create({
     data: {
       reference: bookingReference(),

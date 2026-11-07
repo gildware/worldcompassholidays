@@ -10,9 +10,15 @@ import { Toggle } from "@/components/ui/Toggle";
 import { tourImageFrames, type ImageFrame } from "@/lib/tours/image-frames";
 import { initialFormState } from "@/lib/forms";
 import {
+  withGoogleReviewId,
+  type GoogleReview,
+  type GoogleReviewsSummary,
+} from "@/lib/google-reviews";
+import {
   HOME_SECTION_LABELS,
   type HomePageContent,
   type HomeRailConfig,
+  type HomeReviewsContent,
   type HomeSectionId,
   type HomeServiceGroup,
   type HomeServiceItem,
@@ -329,7 +335,183 @@ function sectionDetail(
     const n = content.why.items.length;
     return `${n} point${n === 1 ? "" : "s"} · ${content.why.items[0]?.title ?? ""}`;
   }
+  if (id === "reviews") {
+    if (!content.reviews.placeId.trim()) return "No Place ID · hidden on site";
+    const hidden = content.reviews.hiddenIds.length;
+    return hidden
+      ? `${content.reviews.title} · ${hidden} hidden`
+      : content.reviews.title;
+  }
   return "On the public homepage";
+}
+
+function ReviewsEditor({
+  config,
+  reviews,
+  mapsUrl,
+  sectionEnabled,
+  onChange,
+  onSectionEnabledChange,
+}: {
+  config: HomeReviewsContent;
+  reviews: GoogleReview[];
+  mapsUrl?: string;
+  sectionEnabled: boolean;
+  onChange: (next: HomeReviewsContent) => void;
+  onSectionEnabledChange: (enabled: boolean) => void;
+}) {
+  const rows = reviews.map((review) => withGoogleReviewId(review));
+  const hidden = new Set(config.hiddenIds.filter(Boolean));
+  const placeId = config.placeId.trim();
+
+  const setShown = (id: string, shown: boolean) => {
+    if (!id) return;
+    const nextHidden = shown
+      ? config.hiddenIds.filter((item) => item !== id)
+      : config.hiddenIds.includes(id)
+        ? config.hiddenIds
+        : [...config.hiddenIds, id];
+    onChange({ ...config, hiddenIds: nextHidden });
+  };
+
+  let loadHint =
+    "Save this page after changing the Place ID, then reopen Homepage to refresh the list.";
+  if (!placeId) {
+    loadHint =
+      "Add a Google Place ID above. Until then, the Google reviews block stays hidden on the public homepage.";
+  } else if (!sectionEnabled) {
+    loadHint =
+      "This section is turned off in Layout. Turn it on to show reviews on the homepage.";
+  } else if (rows.length === 0) {
+    loadHint =
+      "No reviews loaded for this Place ID. Confirm the ID is correct, save, then reopen this page. The server also needs MAP_API_KEY with Places API enabled.";
+  }
+
+  return (
+    <>
+      <div className="hs-place-card">
+        <div className="hs-place-card__row">
+          <div>
+            <strong>Show Google reviews</strong>
+            <p>Turn the whole block on or off on the public homepage.</p>
+          </div>
+          <Toggle
+            checked={sectionEnabled}
+            label="Show Google reviews on homepage"
+            size="md"
+            onChange={onSectionEnabledChange}
+          />
+        </div>
+
+        <label className="hs-field">
+          <span>Google Place ID</span>
+          <input
+            value={config.placeId}
+            maxLength={256}
+            placeholder="ChIJ…"
+            spellCheck={false}
+            autoComplete="off"
+            onChange={(event) => onChange({ ...config, placeId: event.target.value })}
+          />
+        </label>
+
+        <div className="hs-place-help">
+          <strong>How to get your Place ID</strong>
+          <ol>
+            <li>
+              Open{" "}
+              <a
+                href="https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Google Place ID Finder
+              </a>
+              , search your business, and copy the Place ID (starts with <code>ChIJ</code>).
+            </li>
+            <li>
+              Or open your listing in Google Maps → Share → copy the link and use the{" "}
+              <code>placeid=</code> / <code>query_place_id=</code> value.
+            </li>
+            <li>
+              Paste it here and save. Leave blank to hide the section completely. An incorrect ID
+              also hides the section on the homepage.
+            </li>
+          </ol>
+          {mapsUrl ? (
+            <p>
+              Loaded profile:{" "}
+              <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
+                Open on Google
+              </a>
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      <Field
+        label="Title"
+        value={config.title}
+        maxLength={90}
+        onChange={(title) => onChange({ ...config, title })}
+      />
+      <Field
+        label="Description"
+        value={config.subtitle}
+        multiline
+        maxLength={240}
+        onChange={(subtitle) => onChange({ ...config, subtitle })}
+      />
+      <div className="hs-review-list">
+        <div className="hs-review-list__head">
+          <strong>Reviews from Google</strong>
+          <span>
+            {rows.length
+              ? `${rows.filter((review) => !hidden.has(review.id)).length} of ${rows.length} shown`
+              : "None loaded yet"}
+          </span>
+        </div>
+        {rows.length === 0 ? (
+          <p className="hs-hint">{loadHint}</p>
+        ) : (
+          rows.map((review) => {
+            const shown = !hidden.has(review.id);
+            return (
+              <div key={review.id} className={`hs-review-row${shown ? "" : " is-off"}`}>
+                {review.profilePhotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={review.profilePhotoUrl}
+                    alt=""
+                    width={40}
+                    height={40}
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <span className="hs-review-row__avatar" aria-hidden>
+                    {review.authorName.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+                <div className="hs-review-row__copy">
+                  <strong>{review.authorName}</strong>
+                  <span>
+                    {"★".repeat(Math.max(0, Math.min(5, Math.round(review.rating))))}
+                    {review.relativeTime ? ` · ${review.relativeTime}` : ""}
+                  </span>
+                  <p>{review.text || "Star rating only — no written review."}</p>
+                </div>
+                <Toggle
+                  checked={shown}
+                  label={`${shown ? "Hide" : "Show"} review by ${review.authorName}`}
+                  onChange={(next) => setShown(review.id, next)}
+                />
+              </div>
+            );
+          })
+        )}
+      </div>
+    </>
+  );
 }
 
 function WhyEditor({
@@ -670,6 +852,7 @@ export function HomePageStudio({
   cars,
   bikes,
   buses,
+  googleReviews = null,
 }: {
   initial: HomePageContent;
   coverUrl: string;
@@ -687,6 +870,7 @@ export function HomePageStudio({
   cars: HomePickItem[];
   bikes: HomePickItem[];
   buses: HomePickItem[];
+  googleReviews?: GoogleReviewsSummary | null;
 }) {
   const [state, action, actionPending] = useActionState(saveHomePage, initialFormState);
   const [saving, startSave] = useTransition();
@@ -955,6 +1139,24 @@ export function HomePageStudio({
                 <WhyEditor
                   items={content.why.items}
                   onChange={(items) => patch("why", { items })}
+                />
+              ) : null}
+
+              {selected === "reviews" ? (
+                <ReviewsEditor
+                  config={content.reviews}
+                  reviews={googleReviews?.reviews ?? []}
+                  mapsUrl={googleReviews?.mapsUrl}
+                  sectionEnabled={selectedSection?.enabled !== false}
+                  onChange={(reviews) => patch("reviews", reviews)}
+                  onSectionEnabledChange={(enabled) =>
+                    patch(
+                      "sections",
+                      content.sections.map((item) =>
+                        item.id === "reviews" ? { ...item, enabled } : item,
+                      ),
+                    )
+                  }
                 />
               ) : null}
 

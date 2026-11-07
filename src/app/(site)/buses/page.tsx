@@ -9,10 +9,12 @@ import { prisma } from "@/lib/db";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Find a bus",
-  description: "Listed coaches between cities, with photos and an indicative fare. Send a request — nothing is booked until you accept a quote.",
+  title: "Intercity Bus Hire Across India",
+  description:
+    "Browse listed coaches between Indian cities with photos and an indicative fare. Request a quote — nothing is booked until you accept it.",
   path: "/buses",
   index: modules.buses,
+  keywords: ["bus hire India", "intercity coach", "group bus rental"],
 });
 
 export default async function BusesPage({

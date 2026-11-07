@@ -67,7 +67,9 @@ export function FieldHelp({
 
   useEffect(() => {
     function onOther(event: Event) {
-      if ((event as CustomEvent<string>).detail !== id) setOpen(false);
+      if ((event as CustomEvent<string>).detail === id) return;
+      // Defer so a sibling click never setStates us during its render/update.
+      queueMicrotask(() => setOpen(false));
     }
     window.addEventListener(OPEN_EVENT, onOther);
     return () => window.removeEventListener(OPEN_EVENT, onOther);
@@ -113,10 +115,12 @@ export function FieldHelp({
     event.stopPropagation();
     const next = !open;
     if (next) {
-      // Notify siblings outside setState. React replays updater functions
-      // during render, so dispatching from one would setState other FieldHelps
-      // while this instance is still rendering.
-      window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: id }));
+      // Close other help panels after this click finishes. Synchronous
+      // dispatch + setState on siblings can trip React's "update while
+      // rendering" warning when many FieldHelps share a card.
+      queueMicrotask(() => {
+        window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: id }));
+      });
       place();
     }
     setOpen(next);

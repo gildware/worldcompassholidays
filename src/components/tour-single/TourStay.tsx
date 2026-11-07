@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import type { FirebaseOptions } from "firebase/app";
 import { submitTourRequest } from "@/actions/tour-request";
+import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { useSectionTabs } from "@/hooks/useSectionTabs";
-import { formatPhone } from "@/lib/auth/phone";
+import { canonicalPhone, formatPhone } from "@/lib/auth/phone";
 import { initialFormState } from "@/lib/forms";
 import { formatMoney } from "@/lib/format";
 import { plainText } from "@/lib/seo";
@@ -127,16 +129,25 @@ export function TourStay({
   tour,
   customer,
   saved = false,
+  firebaseConfig = null,
+  defaultCountry = "IN",
 }: {
   tour: TourStayData;
   customer: Guest;
   saved?: boolean;
+  firebaseConfig?: FirebaseOptions | null;
+  defaultCountry?: string;
 }) {
   const currency = tour.currency || "INR";
   const photos = tour.images.length > 0 ? tour.images : [];
   const visible = photos.slice(0, 5);
   const signedIn = Boolean(customer);
   const loginHref = `/login?next=${encodeURIComponent(`/tours/${tour.slug}`)}`;
+  const formRef = useRef<HTMLFormElement>(null);
+  const verifiedRef = useRef(Boolean(customer));
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
   const [mode, setMode] = useState<"group" | "private">("group");
   const [departureId, setDepartureId] = useState(
     tour.defaultState === "dates" && !tour.availabilityFrom
@@ -164,6 +175,7 @@ export function TourStay({
   const [ownRoom, setOwnRoom] = useState(false);
   const [sheet, setSheet] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [galleryIndex, setGalleryIndex] = useState(0);
   const [note, setNote] = useState("");
   const [toast, setToast] = useState("");
   const [listHref, setListHref] = useState("/tours");
@@ -214,11 +226,6 @@ export function TourStay({
   const succeeded = Boolean(state.success && state.reference);
   const summary = plainText(tour.summary);
   const description = plainText(tour.description);
-  const stops = useMemo(() => {
-    if (tour.days.length === 0) return [];
-    if (tour.days.length <= 4) return tour.days;
-    return [tour.days[0], tour.days[1], tour.days[2], tour.days[tour.days.length - 1]];
-  }, [tour.days]);
   const amenityGroups = useMemo(() => {
     if (tour.facilities.length > 0) {
       return chunk(tour.facilities, 4).map((items, index) => ({
@@ -291,7 +298,7 @@ export function TourStay({
   }
 
   function openRequest() {
-    if (block || !signedIn) return;
+    if (block) return;
     document.querySelector<HTMLDialogElement>("#road-reserve")?.showModal();
   }
 
@@ -354,11 +361,11 @@ export function TourStay({
         </div>
         {signedIn ? (
           <button className="road-btn road-btn--small road-topbar__book" type="button" onClick={openBook}>
-            Book
+            Book Tour
           </button>
         ) : (
           <Link className="road-btn road-btn--small road-topbar__book" href={loginHref}>
-            Book
+            Book Tour
           </Link>
         )}
       </header>
@@ -397,29 +404,52 @@ export function TourStay({
         </div>
 
         {visible.length > 0 ? (
-          <div className={`road-gallery road-gallery--${visible.length}`} aria-label={`Photographs of ${tour.title}`}>
-            {visible.map((src, index) => (
-              <button key={`${src}-${index}`} className={index === 0 ? "road-shot road-g1" : "road-shot"} type="button" onClick={() => openPhotos(index)}>
-                <img src={src} alt={`${tour.title} photograph ${index + 1}`} />
+          <>
+            <div className={`road-gallery road-gallery--desk road-gallery--${visible.length}`} aria-label={`Photographs of ${tour.title}`}>
+              {visible.map((src, index) => (
+                <button key={`${src}-${index}`} className={index === 0 ? "road-shot road-g1" : "road-shot"} type="button" onClick={() => openPhotos(index)}>
+                  <img src={src} alt={`${tour.title} photograph ${index + 1}`} />
+                </button>
+              ))}
+              {photos.length > 1 ? (
+                <button className="road-all" type="button" onClick={() => openPhotos(0)}>
+                  View all {photos.length} photos
+                </button>
+              ) : null}
+            </div>
+            <div className="road-gallery-m" aria-label={`Photographs of ${tour.title}`}>
+              <button
+                className="road-gallery-m__hero"
+                type="button"
+                onClick={() => openPhotos(galleryIndex)}
+                aria-label={`Open photograph ${galleryIndex + 1} of ${photos.length}`}
+              >
+                <img src={photos[galleryIndex] || photos[0]} alt={`${tour.title} photograph ${galleryIndex + 1}`} />
+                {photos.length > 1 ? (
+                  <span className="road-gallery-m__count">
+                    {galleryIndex + 1} / {photos.length}
+                  </span>
+                ) : null}
               </button>
-            ))}
-            {photos.length > 1 ? (
-              <button className="road-all" type="button" onClick={() => openPhotos(0)}>
-                View all {photos.length} photos
-              </button>
-            ) : null}
-          </div>
-        ) : null}
-
-        {stops.length > 0 ? (
-          <div className="road-route" aria-label="Route">
-            {stops.map((day) => (
-              <div className="road-stop" key={`${day.dayNumber}-${day.title}`}>
-                <span>Day {day.dayNumber}</span>
-                <strong>{day.title}</strong>
-              </div>
-            ))}
-          </div>
+              {photos.length > 1 ? (
+                <div className="road-gallery-m__thumbs" role="list">
+                  {photos.map((src, index) => (
+                    <button
+                      key={`m-${src}-${index}`}
+                      type="button"
+                      role="listitem"
+                      className={index === galleryIndex ? "is-on" : undefined}
+                      aria-label={`Photograph ${index + 1}`}
+                      aria-current={index === galleryIndex ? "true" : undefined}
+                      onClick={() => setGalleryIndex(index)}
+                    >
+                      <img src={src} alt="" />
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </>
         ) : null}
 
         <nav className="road-sub" aria-label="On this page" data-section-tabs>
@@ -764,23 +794,9 @@ export function TourStay({
                 : "This date is inside the cancellation window. The desk confirms the refund."}{" "}
               A child is 5–11 and pays 65% of the adult rate. Nothing is charged now.
             </p>
-            {signedIn ? (
-              <button className="road-btn road-btn--block" type="button" disabled={Boolean(block)} onClick={openRequest} style={{ marginTop: 12 }}>
-                Request this trip
-              </button>
-            ) : (
-              <Link
-                className={`road-btn road-btn--block${block ? " is-disabled" : ""}`}
-                href={block ? "#" : loginHref}
-                aria-disabled={Boolean(block)}
-                onClick={(event) => {
-                  if (block) event.preventDefault();
-                }}
-                style={{ marginTop: 12 }}
-              >
-                Login to request
-              </Link>
-            )}
+            <button className="road-btn road-btn--block" type="button" disabled={Boolean(block)} onClick={openRequest} style={{ marginTop: 12 }}>
+              Request this trip
+            </button>
           </aside>
         </div>
 
@@ -816,11 +832,11 @@ export function TourStay({
         </div>
         {signedIn ? (
           <button className="road-btn" type="button" onClick={openBook}>
-            Book
+            Book Tour
           </button>
         ) : (
           <Link className="road-btn" href={loginHref}>
-            Book
+            Book Tour
           </Link>
         )}
       </div>
@@ -868,7 +884,21 @@ export function TourStay({
             </div>
           </div>
         ) : (
-          <form action={action}>
+          <form
+            ref={formRef}
+            action={action}
+            onSubmit={(event: FormEvent<HTMLFormElement>) => {
+              if (customer || verifiedRef.current) return;
+              event.preventDefault();
+              const data = new FormData(event.currentTarget);
+              const name = String(data.get("name") || "").trim();
+              const phone = String(data.get("phone") || "").trim();
+              setGuestName(name);
+              setGuestPhone(phone);
+              if (name.length < 2 || !canonicalPhone(phone)) return;
+              setVerifyOpen(true);
+            }}
+          >
             <h2 id="road-reserve-title">Request this trip</h2>
             <p className="road-lede">
               {sentence}. Total {money(quote.total, currency)}.
@@ -912,16 +942,13 @@ export function TourStay({
               <>
                 <label>
                   Full name
-                  <input name="name" required minLength={2} autoComplete="name" defaultValue={state.values?.name || ""} />
+                  <input name="name" required minLength={2} autoComplete="name" defaultValue={state.values?.name || guestName} />
                 </label>
                 <label>
-                  Email
-                  <input name="email" type="email" required autoComplete="email" defaultValue={state.values?.email || ""} />
+                  Contact number
+                  <input name="phone" type="tel" required autoComplete="tel" inputMode="tel" defaultValue={state.values?.phone || guestPhone} placeholder="+91 98765 43210" />
                 </label>
-                <label>
-                  Phone
-                  <input name="phone" type="tel" required autoComplete="tel" inputMode="tel" defaultValue={state.values?.phone || ""} />
-                </label>
+                <p className="road-lede">We’ll text a verification code to this number when you send the request.</p>
               </>
             )}
             <label>
@@ -942,6 +969,21 @@ export function TourStay({
           </form>
         )}
       </dialog>
+      <RequestPhoneVerify
+        open={verifyOpen}
+        name={guestName}
+        phone={guestPhone}
+        config={firebaseConfig}
+        defaultCountry={defaultCountry}
+        onClose={() => setVerifyOpen(false)}
+        onVerified={({ name: verifiedName, phone: verifiedPhone }) => {
+          verifiedRef.current = true;
+          setGuestName(verifiedName);
+          setGuestPhone(formatPhone(verifiedPhone) || verifiedPhone);
+          setVerifyOpen(false);
+          window.setTimeout(() => formRef.current?.requestSubmit(), 0);
+        }}
+      />
 
       <div className={`road-toast${toast ? " is-on" : ""}`} role="status">
         {toast}

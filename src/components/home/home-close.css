@@ -51,6 +51,8 @@
   line-height: 1.5;
 }
 
+/* Beat Bootstrap `.worldcompassholiday-page ol { padding-left: 2rem }` */
+.worldcompassholiday-page .home-close__steps,
 .home-close__steps {
   list-style: none;
   display: grid;

@@ -25,7 +25,7 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardData }) {
       {vehicle.imageUrl ? (
         // Uploads may be local files or Cloudinary URLs.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={vehicle.imageUrl} alt="" className="h-44 w-full object-cover" />
+        <img src={vehicle.imageUrl} alt="" className="h-44 w-full bg-surface object-contain p-2" />
       ) : (
         <div className="flex h-44 items-center justify-center bg-surface text-sm text-muted">
           No photo yet

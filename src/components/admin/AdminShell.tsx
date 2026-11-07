@@ -239,7 +239,9 @@ const OPERATE_HREFS = new Set([
   "/admin/buses",
   "/admin/bookings",
   "/admin/visa",
+  "/admin/visa/destinations",
   "/admin/meet-and-assist",
+  "/admin/meet-and-assist/airports",
 ]);
 
 function pageTitle(pathname: string, items: NavItem[], bookingDesk?: string | null) {
@@ -389,6 +391,12 @@ function pageSub(pathname: string) {
   if (pathname.startsWith("/admin/bookings/bikes")) return "Bike rental bookings.";
   if (pathname.startsWith("/admin/bookings/visa")) return "Visa applications.";
   if (pathname.startsWith("/admin/bookings/assist")) return "Airport meet and assist.";
+  if (pathname.startsWith("/admin/visa/destinations")) {
+    return "Countries offered on the visa request form.";
+  }
+  if (pathname.startsWith("/admin/meet-and-assist/airports")) {
+    return "Airports offered on the greeter request form.";
+  }
   const bookingDetail = pathname.match(/^\/admin\/bookings\/([^/]+)$/);
   if (bookingDetail && !bookingDeskSegments.has(bookingDetail[1])) {
     return "Guest, trip, quote, owner, and status desk.";

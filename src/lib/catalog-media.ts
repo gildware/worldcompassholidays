@@ -85,10 +85,10 @@ const CAR_FALLBACKS = [
 
 const BIKE_FALLBACKS = ["/img/bikes/bike-rental-banner.jpg"];
 
-/* Limit size only — CSS crops the image to fill fleet card and detail frames. */
+/* Limit size only — fleet cards use object-fit:contain so the full vehicle stays visible. */
 const FLEET_PHOTO_TRANSFORM = "c_limit,w_1600";
 
-/** Serve fleet photos without cropping wheels or handlebars. */
+/** Serve fleet photos without cropping wheels or bumpers. */
 export function fleetPhotoUrl(url?: string | null) {
   const value = url?.trim() || "";
   if (!value.startsWith("https://res.cloudinary.com/") || !value.includes("/image/upload/")) {

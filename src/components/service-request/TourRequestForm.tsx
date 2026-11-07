@@ -3,11 +3,14 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import type { FirebaseOptions } from "firebase/app";
 import { submitServiceRequest } from "@/actions/service-request";
-import { BackIcon, SuccessModal } from "@/components/hotel-request/HotelRequestForm";
+import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
+import { BackIcon } from "@/components/hotel-request/HotelRequestForm";
 import { DateMenu, prettyStayDate } from "@/components/hotel-list/stay-list/HotelStayList";
+import { deferGuideStep, GuideProgress, RequestSuccessStep } from "@/components/service-request/guide-ui";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
-import { formatPhone } from "@/lib/auth/phone";
+import { canonicalPhone, formatPhone } from "@/lib/auth/phone";
 import {
   budgetChoices,
   isBudgetValue,
@@ -163,25 +166,31 @@ function parseSelectionList(value: string | undefined, options: readonly Request
 export function TourRequestForm({
   customer,
   defaults,
-  loginHref,
+  loginHref: _loginHref,
   locations,
+  firebaseConfig = null,
+  defaultCountry = "IN",
 }: {
   customer: { name: string; email: string; phone: string } | null;
   defaults: ServiceDefaults;
   loginHref: string;
   locations: string[];
+  firebaseConfig?: FirebaseOptions | null;
+  defaultCountry?: string;
 }) {
   const router = useRouter();
   const [state, action, pending] = useActionState(submitServiceRequest, initialFormState);
-  const [mounted, setMounted] = useState(false);
-  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+  const [submittedInThisVisit, setSubmittedInThisVisit] = useState(false);
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [stepOneTouched, setStepOneTouched] = useState(false);
   const [stepTwoTouched, setStepTwoTouched] = useState(false);
   const [stepThreeTouched, setStepThreeTouched] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const verifiedRef = useRef(Boolean(customer));
   const initialStartCity = state.values?.startCity || defaults.startCity;
-  const [startLocation, setStartLocation] = useState(locations.includes(initialStartCity) ? initialStartCity : initialStartCity ? "__custom__" : "");
-  const [customStartCity, setCustomStartCity] = useState(locations.includes(initialStartCity) ? "" : initialStartCity);
-  const startCity = startLocation === "__custom__" ? customStartCity : startLocation;
+  const [startLocation, setStartLocation] = useState(locations.includes(initialStartCity) ? initialStartCity : "");
+  const startCity = locations.includes(startLocation) ? startLocation : "";
   const [places, setPlaces] = useState(state.values?.places || defaults.places);
   const [itemName, setItemName] = useState(state.values?.itemName || defaults.itemName);
   const [start, setStart] = useState(state.values?.start || defaults.start);
@@ -201,13 +210,15 @@ export function TourRequestForm({
   const [budgetChoice, setBudgetChoice] = useState(state.values?.budget || defaults.budget || "");
   const [otherBudget, setOtherBudget] = useState("");
   const [message, setMessage] = useState(state.values?.message || defaults.message);
-  const [phone, setPhone] = useState(state.values?.phone || "");
+  const [guestName, setGuestName] = useState(state.values?.name || customer?.name || "");
+  const [phone, setPhone] = useState(state.values?.phone || customer?.phone || "");
+  const [contactTouched, setContactTouched] = useState(false);
   const firstStep = useRef(true);
   const today = todayIso();
-  const locationOptions = useMemo(() => [
-    ...locations.map((location) => ({ value: location, label: location })),
-    { value: "__custom__", label: "+ Enter another location", action: true },
-  ], [locations]);
+  const locationOptions = useMemo(
+    () => locations.map((location) => ({ value: location, label: location })),
+    [locations],
+  );
 
   const budgetValues = useMemo(() => new Set(budgetChoices(tourBudgetBands).map((option) => option.value)), []);
   const isCustomBudget = budgetChoice === "other" || (Boolean(budgetChoice) && !budgetValues.has(budgetChoice));
@@ -219,7 +230,7 @@ export function TourRequestForm({
 
   const stepOneErrors = useMemo(() => {
     const errors: Record<string, string> = {};
-    if (startCity.trim().length < 2) errors.startCity = "Enter the starting city.";
+    if (!startCity) errors.startCity = "Choose a starting location.";
     if (places.trim().length < 2) errors.places = "Add at least one place to cover.";
     if (!start) errors.start = "Choose your preferred start date.";
     else if (start < today) errors.start = "Choose today or a future date.";
@@ -238,10 +249,11 @@ export function TourRequestForm({
   const foodPreferenceError = stepThreeTouched && needFood === "yes" && foodPreference.length === 0 ? "Choose at least one meal." : undefined;
   const hotelPreferenceError = stepThreeTouched && needHotel === "yes" && hotelPreference.length === 0 ? "Choose at least one hotel preference." : undefined;
 
+  const successReference = submittedInThisVisit && !pending && state.reference && !state.error ? state.reference : "";
+
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setMounted(true));
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
+    if (successReference) setStep(4);
+  }, [successReference]);
 
   useEffect(() => {
     if (!state.error) return;
@@ -275,21 +287,6 @@ export function TourRequestForm({
     return state.fields?.[name] || (touched ? clientError : undefined);
   }
 
-  function loginWithBrief(form: HTMLFormElement | null) {
-    if (!form) {
-      router.push(loginHref);
-      return;
-    }
-    const data = new FormData(form);
-    const params = new URLSearchParams();
-    for (const key of tourFields) {
-      const value = String(data.get(key) || "").trim();
-      if (value) params.set(key, value);
-    }
-    const next = params.size ? `/tours/request?${params}` : "/tours/request";
-    router.push(`/login?next=${encodeURIComponent(next)}`);
-  }
-
   function continueTo(next: 1 | 2 | 3) {
     if (step === 0) {
       setStepOneTouched(true);
@@ -303,7 +300,7 @@ export function TourRequestForm({
       setStepThreeTouched(true);
       if (!stepThreeValid) return;
     }
-    setStep(next);
+    deferGuideStep(() => setStep(next));
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -333,25 +330,29 @@ export function TourRequestForm({
       setStepThreeTouched(true);
       return;
     }
-    if (!customer) {
-      event.preventDefault();
-      loginWithBrief(event.currentTarget);
-      return;
-    }
-    if (!customer.phone && phone.replace(/\D/g, "").length < 8) {
+    if (!customer && !verifiedRef.current) {
       event.preventDefault();
       setStep(3);
-      setStatePhoneTouched(true);
+      setContactTouched(true);
+      if (guestName.trim().length < 2 || !canonicalPhone(phone)) return;
+      setVerifyOpen(true);
+      return;
     }
+    if (customer && !customer.phone && phone.replace(/\D/g, "").length < 8) {
+      event.preventDefault();
+      setStep(3);
+      setContactTouched(true);
+      return;
+    }
+    setSubmittedInThisVisit(true);
   }
 
-  const [phoneTouched, setStatePhoneTouched] = useState(false);
-  const phoneError = customer && !customer.phone && phoneTouched && phone.replace(/\D/g, "").length < 8
-    ? "Enter a phone number with country code."
-    : undefined;
-  const successModal = !pending && state.reference && !state.error ? (
-    <SuccessModal reference={state.reference} exploreHref="/tours" detail="Nothing is booked until you accept the trip." />
-  ) : null;
+  const nameError = !customer && contactTouched && guestName.trim().length < 2 ? "Enter your name." : undefined;
+  const phoneError = !contactTouched
+    ? undefined
+    : !customer
+      ? (!canonicalPhone(phone) ? "Enter a phone number with country code." : undefined)
+      : (!customer.phone && phone.replace(/\D/g, "").length < 8 ? "Enter a phone number with country code." : undefined);
 
   return (
     <div className="hotel-request-card hotel-guide-card tour-guide-card" id="tour-request-pass">
@@ -363,8 +364,17 @@ export function TourRequestForm({
         <h1>Plan a trip that feels like yours.</h1>
         <p>Tell us what you have in mind and our local team will shape the journey around you.</p>
       </div>
-      <TourProgress step={step} onSelect={(next) => next < step && setStep(next as 0 | 1 | 2 | 3)} />
-      <form id="tour-request-form" action={action} noValidate className="hotel-request-form hotel-guide-form" onSubmit={handleSubmit}>
+      <GuideProgress
+        label="Tour"
+        labels={["Trip details", "Travellers", "Trip preferences", "Review", "Submitted"]}
+        step={step}
+        onSelect={(next) => next < step && step < 4 && setStep(next as 0 | 1 | 2 | 3 | 4)}
+      />
+      {step === 4 && successReference ? (
+        <RequestSuccessStep reference={successReference} exploreHref="/tours" detail="Nothing is booked until you accept the trip." />
+      ) : (
+      <>
+      <form ref={formRef} id="tour-request-form" action={action} noValidate className="hotel-request-form hotel-guide-form" onSubmit={handleSubmit}>
         <input type="hidden" name="kind" value="tour" />
         <input type="hidden" name="startCity" value={startCity} />
         <input type="hidden" name="places" value={places} />
@@ -385,6 +395,7 @@ export function TourRequestForm({
         <input type="hidden" name="datesFlexible" value={datesFlexible} />
         <input type="hidden" name="budget" value={budgetValue} />
         <input type="hidden" name="message" value={message} />
+        <input type="hidden" name="name" value={customer?.name || guestName} />
         <input type="hidden" name="phone" value={phone} />
         {state.error ? <p className="hotel-request-banner-alert hotel-guide-alert" role="alert">{state.fields ? "Please check the highlighted details." : state.error}</p> : null}
 
@@ -393,15 +404,10 @@ export function TourRequestForm({
             <div className="hotel-guide-step-title"><span>01</span><div><h2 id="tour-step-one-title">Where and when would you like to travel?</h2><p>Add your starting point, places to visit, trip length and preferred dates.</p></div></div>
             <div className="hotel-guide-grid">
               <LocationField
-                value={startLocation}
-                customValue={customStartCity}
+                value={startCity}
                 options={locationOptions}
                 error={errorFor("startCity", stepOneErrors.startCity, stepOneTouched)}
-                onChange={(value, query) => {
-                  setStartLocation(value);
-                  setCustomStartCity(value === "__custom__" ? query || "" : "");
-                }}
-                onCustomChange={setCustomStartCity}
+                onChange={setStartLocation}
               />
               <TourField label="Places to cover" icon="journey" name="places" placeholder="Sonamarg, Gulmarg, Pahalgam" value={places} onChange={setPlaces} error={errorFor("places", stepOneErrors.places, stepOneTouched)} />
               <TourField label="Tour name (optional)" icon="journey" name="itemName" placeholder="A tour or experience you have in mind" value={itemName} onChange={setItemName} />
@@ -510,33 +516,52 @@ export function TourRequestForm({
             {customer ? (
               <div className="hotel-guide-contact-summary">
                 <span>Requesting as <strong>{customer.name}</strong></span>
-                {customer.phone ? <span>{formatPhone(customer.phone) || customer.phone}</span> : <TourField label="Phone number" name="phone-entry" placeholder="+91 98765 43210" value={phone} onChange={setPhone} error={phoneError} />}
+                {customer.phone ? <span>{formatPhone(customer.phone) || customer.phone}</span> : <TourField label="Phone number" name="phone-entry" placeholder="+91 98765 43210" value={phone} onChange={(value) => { setPhone(value); setContactTouched(true); }} error={phoneError} />}
               </div>
-            ) : <p className="hotel-guide-login-note">Log in to send this request. It will use the name and phone on your account.</p>}
+            ) : (
+              <div className="hotel-guide-guest-contact">
+                <p className="hotel-guide-login-note">Add your name and mobile number. We’ll text a code to this number when you submit.</p>
+                <div className="hotel-guide-grid">
+                  <TourField label="Your name" name="guest-name" placeholder="Full name" value={guestName} onChange={(value) => { setGuestName(value); setContactTouched(true); }} error={nameError} />
+                  <TourField label="Contact number" name="phone-entry" placeholder="+91 98765 43210" value={phone} onChange={(value) => { setPhone(value); setContactTouched(true); }} error={phoneError} />
+                </div>
+              </div>
+            )}
           </section>
         ) : null}
 
       </form>
       <div className="hotel-guide-actions">
-        {step > 0 ? <button type="button" className="hotel-guide-back" onClick={() => setStep((step - 1) as 0 | 1 | 2)}>Back</button> : <span className="hotel-guide-secure"><span aria-hidden="true">✦</span> Free, no-obligation request</span>}
+        {step > 0 ? <button type="button" className="hotel-guide-back" onClick={() => setStep((step - 1) as 0 | 1 | 2 | 3)}>Back</button> : <span className="hotel-guide-secure"><span aria-hidden="true">✦</span> Free, no-obligation request</span>}
         {step < 3 ? (
           <div className="hotel-guide-action-right">
             <button type="button" className="hotel-guide-primary" onClick={(event) => { event.preventDefault(); event.stopPropagation(); continueTo((step + 1) as 1 | 2 | 3); }}>Continue <span aria-hidden="true">→</span></button>
           </div>
         ) : (
           <div className="hotel-guide-submit-group">
-            <button type="submit" form="tour-request-form" className="hotel-guide-primary" disabled={pending}>{pending ? "Sending request…" : customer ? "Submit tour request" : "Log in to request"}</button>
+            <button type="submit" form="tour-request-form" className="hotel-guide-primary" disabled={pending}>{pending ? "Sending request…" : "Submit tour request"}</button>
           </div>
         )}
       </div>
-      {mounted && successModal ? createPortal(successModal, document.body) : null}
+      </>
+      )}
+      <RequestPhoneVerify
+        open={verifyOpen}
+        name={guestName}
+        phone={phone}
+        config={firebaseConfig}
+        defaultCountry={defaultCountry}
+        onClose={() => setVerifyOpen(false)}
+        onVerified={({ name: verifiedName, phone: verifiedPhone }) => {
+          verifiedRef.current = true;
+          setGuestName(verifiedName);
+          setPhone(formatPhone(verifiedPhone) || verifiedPhone);
+          setVerifyOpen(false);
+          window.setTimeout(() => formRef.current?.requestSubmit(), 0);
+        }}
+      />
     </div>
   );
-}
-
-function TourProgress({ step, onSelect }: { step: number; onSelect: (step: number) => void }) {
-  const labels = ["Trip details", "Travellers", "Trip preferences", "Review"];
-  return <nav className="hotel-guide-progress" aria-label="Tour request progress"><div className="hotel-guide-progress-meta"><span>STEP {step + 1} OF 4</span><strong>{labels[step]}</strong></div><div className="hotel-guide-progress-track" role="group" aria-label="Completed and current steps">{labels.map((label, index) => <button key={label} type="button" className={index === step ? "is-current" : index < step ? "is-complete" : ""} aria-current={index === step ? "step" : undefined} aria-label={`Step ${index + 1}: ${label}`} disabled={index > step} onClick={() => onSelect(index)}><span /></button>)}</div></nav>;
 }
 
 function GuestCounter({ label, icon, value, min, max, error, onChange }: { label: string; icon: string; value: number; min: number; max: number; error?: string; onChange: (value: number) => void }) {
@@ -602,53 +627,32 @@ function TourDateField({ label, name, value, min, error, onPick }: { label: stri
 
 function LocationField({
   value,
-  customValue,
   options,
   error,
   onChange,
-  onCustomChange,
 }: {
   value: string;
-  customValue: string;
   options: readonly { value: string; label: string; action?: boolean }[];
   error?: string;
-  onChange: (value: string, query?: string) => void;
-  onCustomChange: (value: string) => void;
+  onChange: (value: string) => void;
 }) {
-  const isCustom = value === "__custom__";
   return (
     <div className="hotel-guide-field hotel-guide-destination-field" id="startCity-field">
       <label htmlFor="tour-start-location" className="has-icon"><Glyph name="pin" />Starting from (Location)</label>
-      {isCustom ? (
-        <div className="hotel-request-control hotel-guide-custom-destination-input">
-          <input
-            id="tour-start-location"
-            type="text"
-            autoFocus
-            placeholder="Enter a city or location"
-            value={customValue}
-            onChange={(event) => onCustomChange(event.target.value)}
-            aria-invalid={Boolean(error)}
-            aria-describedby={error ? "tour-start-location-error" : undefined}
-          />
-          <button type="button" className="hotel-guide-custom-destination" onClick={() => onChange("")}>Choose from list</button>
-        </div>
-      ) : (
-        <SearchableSelect
-          id="tour-start-location"
-          value={value}
-          options={options}
-          emptyLabel="Choose a starting location"
-          placeholder="Search locations"
-          searchPlaceholder="Search city, region or country"
-          ariaLabel="Starting from location"
-          invalid={Boolean(error)}
-          describedBy={error ? "tour-start-location-error" : undefined}
-          className="hotel-guide-select-trigger"
-          menuClassName="hotel-guide-select-menu"
-          onChange={onChange}
-        />
-      )}
+      <SearchableSelect
+        id="tour-start-location"
+        value={value}
+        options={options}
+        emptyLabel="Choose a starting location"
+        placeholder="Search locations"
+        searchPlaceholder="Search locations"
+        ariaLabel="Starting from location"
+        invalid={Boolean(error)}
+        describedBy={error ? "tour-start-location-error" : undefined}
+        className="hotel-guide-select-trigger"
+        menuClassName="hotel-guide-select-menu"
+        onChange={onChange}
+      />
       <FieldMessage id="tour-start-location-error" message={error} />
     </div>
   );

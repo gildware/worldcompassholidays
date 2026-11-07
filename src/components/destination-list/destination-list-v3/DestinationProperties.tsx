@@ -46,7 +46,7 @@ export function DestinationProperties({
   if (grid) {
     return (
       <>
-        {destinations.map((item) => {
+        {destinations.map((item, index) => {
           const listings = listingLine(item);
           return (
             <div
@@ -64,6 +64,7 @@ export function DestinationProperties({
                         className="rounded-4 col-12"
                         src={item.imageUrl}
                         alt={item.name}
+                        priority={index === 0}
                       />
                     ) : (
                       <div className="rounded-4 bg-light-2 w-100 h-100" />
@@ -130,6 +131,7 @@ export function DestinationProperties({
                           className="rounded-4 col-12"
                           src={item.imageUrl}
                           alt={item.name}
+                          priority={index === 0}
                         />
                       ) : (
                         <div className="rounded-4 bg-light-2 w-100 h-100" />

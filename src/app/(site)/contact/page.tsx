@@ -9,12 +9,13 @@ import { enquiryInterests } from "@/lib/navigation";
 import { absoluteUrl, graphLd, organizationNode, pageMetadata, phoneE164, siteOrigin } from "@/lib/seo";
 
 const contactDescription =
-  "Call, WhatsApp, or send a trip enquiry to World Compass Holidays. We reply with a plan and a price before you pay.";
+  "Call, WhatsApp, or send a trip enquiry to World Compass Holidays. We reply with a plan and a clear price before you pay — tours, hotels, rentals, visas, and airport assist.";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Contact us",
+  title: "Contact World Compass Holidays",
   description: contactDescription,
   path: "/contact",
+  keywords: ["contact World Compass Holidays", "trip enquiry India", "travel WhatsApp India"],
 });
 
 const officeMapEmbed = "https://maps.google.com/maps?q=India&z=5&output=embed";

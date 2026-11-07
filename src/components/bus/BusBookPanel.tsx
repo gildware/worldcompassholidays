@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
-import { createPortal, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
 import { submitBusRequest } from "@/actions/bus-request";
-import { SuccessModal } from "@/components/hotel-request/HotelRequestForm";
+import { RequestSuccessStep } from "@/components/service-request/guide-ui";
 import { initialFormState } from "@/lib/forms";
 
 function todayIso() {
@@ -35,15 +35,17 @@ export function BusBookPanel({
   const [state, action, pending] = useActionState(submitBusRequest, initialFormState);
   const [passengers, setPassengers] = useState(1);
   const [date, setDate] = useState("");
-  const [mounted, setMounted] = useState(false);
   const [submittedInThisVisit, setSubmittedInThisVisit] = useState(false);
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setMounted(true));
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
   const success = submittedInThisVisit && !pending && state.reference && !state.error ? state.reference : "";
+
+  if (success) {
+    return (
+      <aside className="bus-quote" id="bus-book" aria-label="Book this bus">
+        <RequestSuccessStep reference={success} exploreHref="/buses" detail="Nothing is booked until you accept a quote." />
+      </aside>
+    );
+  }
 
   return (
     <aside className="bus-quote" id="bus-book" aria-label="Book this bus">
@@ -86,7 +88,6 @@ export function BusBookPanel({
           </Link>
         )}
       </form>
-      {mounted && success ? createPortal(<SuccessModal reference={success} exploreHref="/buses" detail="Nothing is booked until you accept a quote." />, document.body) : null}
     </aside>
   );
 }

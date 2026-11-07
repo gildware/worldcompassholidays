@@ -1,84 +1,120 @@
 "use client";
 
-import { useActionState, useMemo, useState, type MouseEvent, type ReactNode } from "react";
-import { useFormStatus } from "react-dom";
-import DatePicker, { DateObject } from "react-multi-date-picker";
+import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
+import { useRouter } from "next/navigation";
+import type { FirebaseOptions } from "firebase/app";
 import { submitVisaRequest } from "@/actions/visa";
-import { formatPhone } from "@/lib/auth/phone";
+import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
+import {
+  FieldMessage,
+  GuideActions,
+  GuideCards,
+  GuideContact,
+  GuideCounter,
+  GuideDateField,
+  GuideNote,
+  GuideProgress,
+  GuideSelectField,
+  deferGuideStep,
+  RequestSuccessStep,
+  ReviewLine,
+  ReviewSection,
+  StepTitle,
+  clampCount,
+  focusGuideField,
+  optionIcon,
+  prettyDate,
+  todayIso,
+} from "@/components/service-request/guide-ui";
 import { CountryMark } from "@/components/visa/CountryFlag";
-import { VisaTypeIcon, WhatsAppIcon } from "@/components/visa/VisaIcons";
-import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { canonicalPhone, formatPhone } from "@/lib/auth/phone";
 import { initialFormState, type FormState } from "@/lib/forms";
-import { schengenDestination, worldCountries, type WorldCountry } from "@/lib/data/world-countries";
+import { worldCountries } from "@/lib/data/world-countries";
+import type { RequestCountry } from "@/lib/request-locations";
+import { visaApplyPath, visaTypeLabel, visaTypeLabels } from "@/lib/visa";
 import type { SelectOption } from "@/components/ui/SearchableSelect";
 
-const phonePlaceholder = "+91 98765 43210";
+type StepIndex = 0 | 1 | 2 | 3 | 4;
 
-const visaTypes = [
-  { value: "tourist", label: "Tourist", icon: <VisaTypeIcon name="tourist" /> },
-  { value: "business", label: "Business", icon: <VisaTypeIcon name="business" /> },
-  { value: "family", label: "Family visit", icon: <VisaTypeIcon name="family" /> },
-  { value: "transit", label: "Transit", icon: <VisaTypeIcon name="transit" /> },
-  { value: "other", label: "Not sure yet", icon: <VisaTypeIcon name="other" /> },
-];
+const stepLabels = ["Destination", "Dates & party", "Other details", "Preview", "Submitted"] as const;
 
-function countryOption(item: WorldCountry): SelectOption {
-  return {
-    value: item.name,
-    label: item.name,
-    keywords: item.keywords,
-    icon: <CountryMark code={item.code} />,
-  };
-}
+const stepFields = [
+  ["country", "nationality", "visaType"],
+  ["departure", "returnDate", "travellers"],
+  ["message"],
+  ["phone"],
+] as const;
 
-function resolveOption(value: string, options: readonly SelectOption[]) {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  const needle = trimmed.toLowerCase();
-  const exact = options.find((option) => option.value.toLowerCase() === needle);
-  if (exact) return exact.value;
-  const fuzzy = options.find((option) =>
-    option.keywords?.toLowerCase().split(/\s+/).includes(needle),
-  );
-  return fuzzy?.value ?? trimmed;
-}
+const visaTypeCards = [
+  { value: "tourist", title: "Tourist", description: "Holiday or short leisure travel", icon: "tourist" },
+  { value: "business", title: "Business", description: "Meetings, conferences, or work visits", icon: "business" },
+  { value: "family", title: "Family visit", description: "Visiting relatives or a host family", icon: "family" },
+  { value: "transit", title: "Transit", description: "A connection through another country", icon: "transit" },
+  { value: "other", title: "Not sure yet", description: "We will recommend the right visa type", icon: "any" },
+] as const;
 
-function toDate(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
-  const [year, month, day] = value.split("-").map(Number);
-  return new DateObject({ year, month, day });
-}
-
-function fromDate(value: DateObject | DateObject[] | null) {
-  if (!value || Array.isArray(value)) return "";
-  return value.format("YYYY-MM-DD");
+function resolveCountryName(value: string, destinations: RequestCountry[]) {
+  const needle = value.trim().toLowerCase();
+  if (!needle) return "";
+  const configured = destinations.find((item) => {
+    const tokens = `${item.name} ${item.keywords}`.toLowerCase().split(/[^a-z0-9]+/);
+    return item.name.toLowerCase() === needle || tokens.includes(needle);
+  });
+  if (configured) return configured.name;
+  const found = worldCountries.find((item) => {
+    const tokens = `${item.name} ${item.keywords}`.toLowerCase().split(/[^a-z0-9]+/);
+    return item.name.toLowerCase() === needle || tokens.includes(needle);
+  });
+  return found?.name ?? value;
 }
 
 export function VisaRequestForm({
-  sent,
-  reference,
   customer,
-  defaultCountry = "",
-  defaultVisaType = "",
+  defaults,
+  destinations,
+  loginHref: _loginHref,
+  firebaseConfig = null,
+  defaultCountry = "IN",
 }: {
-  sent: boolean;
-  reference: string;
   customer: { name: string; email: string; phone: string } | null;
+  defaults: { country: string; visaType: string; nationality?: string };
+  destinations: RequestCountry[];
+  loginHref: string;
+  firebaseConfig?: FirebaseOptions | null;
   defaultCountry?: string;
-  defaultVisaType?: string;
 }) {
+  const router = useRouter();
   const [state, action, pending] = useActionState(submitVisaRequest, initialFormState);
   const [whatsappState, setWhatsappState] = useState<FormState | null>(null);
   const [whatsappPending, setWhatsappPending] = useState(false);
   const view = whatsappState ?? state;
-  const saved = view.values ?? {};
+  const saved = state.values ?? {};
   const busy = pending || whatsappPending;
-  const [country, setCountry] = useState(saved.country || resolveCountryName(defaultCountry));
-  const [nationality, setNationality] = useState(saved.nationality || "India");
-  const [visaType, setVisaType] = useState(saved.visaType || defaultVisaType);
+  const [submittedInThisVisit, setSubmittedInThisVisit] = useState(false);
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const firstStep = useRef(true);
+  const verifiedRef = useRef(Boolean(customer));
+  const [step, setStep] = useState<StepIndex>(0);
+  const [touched, setTouched] = useState(false);
+  const [datesTouched, setDatesTouched] = useState(false);
+  const [contactTouched, setContactTouched] = useState(false);
+  const today = todayIso();
+
+  const [country, setCountry] = useState(() => {
+    const initial = resolveCountryName(saved.country || defaults.country, destinations);
+    return destinations.some((item) => item.name === initial) ? initial : "";
+  });
+  const [nationality, setNationality] = useState(saved.nationality || defaults.nationality || "India");
+  const [visaType, setVisaType] = useState(saved.visaType || defaults.visaType);
   const [departure, setDeparture] = useState(saved.departure ?? "");
   const [returnDate, setReturnDate] = useState(saved.returnDate ?? "");
-  const countryOptions = useMemo(
+  const [travellers, setTravellers] = useState(clampCount(saved.travellers, "1", 1, 20));
+  const [message, setMessage] = useState(saved.message ?? "");
+  const [guestName, setGuestName] = useState(saved.name || customer?.name || "");
+  const [phone, setPhone] = useState(saved.phone || customer?.phone || "");
+
+  const countryOptions = useMemo<SelectOption[]>(
     () =>
       worldCountries.map((item) => ({
         value: item.name,
@@ -88,26 +124,139 @@ export function VisaRequestForm({
       })),
     [],
   );
-  const destinationOptions = useMemo(
+  const destinationOptions = useMemo<SelectOption[]>(
     () =>
-      [
-        ...countryOptions,
-        {
-          value: schengenDestination.name,
-          label: schengenDestination.name,
-          keywords: schengenDestination.keywords,
-          icon: <CountryMark code={schengenDestination.code} />,
-        },
-      ].sort((a, b) => a.label.localeCompare(b.label, "en")),
-    [countryOptions],
+      destinations
+        .map((item) => ({
+          value: item.name,
+          label: item.name,
+          keywords: item.keywords,
+          icon: item.code ? <CountryMark code={item.code} /> : undefined,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label, "en")),
+    [destinations],
   );
 
-  async function applyOnWhatsApp(event: MouseEvent<HTMLButtonElement>) {
+  const destinationErrors = useMemo(() => {
+    const errors: Record<string, string> = {};
+    if (!destinations.some((item) => item.name === country)) {
+      errors.country = "Choose a destination from the list.";
+    }
+    if (nationality.trim().length < 2) errors.nationality = "Enter the nationality on the passport.";
+    if (!(visaType in visaTypeLabels)) errors.visaType = "Choose a visa type.";
+    return errors;
+  }, [country, destinations, nationality, visaType]);
+
+  const dateErrors = useMemo(() => {
+    const errors: Record<string, string> = {};
+    if (!departure) errors.departure = "Choose a departure date.";
+    else if (departure < today) errors.departure = "Choose a departure date from today onward.";
+    if (!returnDate) errors.returnDate = "Choose a return date.";
+    else if (departure && returnDate < departure) errors.returnDate = "Return must be on or after the departure date.";
+    return errors;
+  }, [departure, returnDate, today]);
+
+  const messageError = message.length > 2000 ? "Keep the note under 2000 characters." : undefined;
+  const nameError = !customer && contactTouched && guestName.trim().length < 2 ? "Enter your name." : undefined;
+  const phoneError = !contactTouched
+    ? undefined
+    : !customer
+      ? (!canonicalPhone(phone) ? "Enter a phone number with country code." : undefined)
+      : (!customer.phone && phone.replace(/\D/g, "").length < 8 ? "Enter a phone number with country code." : undefined);
+
+  const successReference = submittedInThisVisit && !busy && view.reference && !view.error ? view.reference : "";
+
+  useEffect(() => {
+    if (successReference) setStep(4);
+  }, [successReference]);
+
+  useEffect(() => {
+    if (!view.error) return;
+    const fields = view.fields ?? {};
+    const invalidStep = stepFields.findIndex((names) => names.some((name) => fields[name]));
+    const frame = window.requestAnimationFrame(() => {
+      if (invalidStep >= 0) setStep(invalidStep as StepIndex);
+      focusGuideField(stepFields.flat(), fields);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [view]);
+
+  useEffect(() => {
+    if (firstStep.current) {
+      firstStep.current = false;
+      return;
+    }
+    const card = document.getElementById("visa-request-pass");
+    if (!card) return;
+    window.scrollTo({ top: Math.max(0, card.getBoundingClientRect().top + window.scrollY - 80), behavior: "smooth" });
+  }, [step]);
+
+  function errorFor(name: string, clientError?: string, show = false) {
+    return view.fields?.[name] || (show ? clientError : undefined);
+  }
+
+  function continueTo(next: 1 | 2 | 3) {
+    if (step === 0) {
+      setTouched(true);
+      if (Object.keys(destinationErrors).length) return;
+    }
+    if (step === 1) {
+      setDatesTouched(true);
+      if (Object.keys(dateErrors).length) return;
+    }
+    if (step === 2 && messageError) return;
+    deferGuideStep(() => setStep(next));
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    setWhatsappState(null);
+    if (step < 3 || busy) {
+      event.preventDefault();
+      return;
+    }
+    if (Object.keys(destinationErrors).length) {
+      event.preventDefault();
+      setStep(0);
+      setTouched(true);
+      return;
+    }
+    if (Object.keys(dateErrors).length) {
+      event.preventDefault();
+      setStep(1);
+      setDatesTouched(true);
+      return;
+    }
+    if (messageError) {
+      event.preventDefault();
+      setStep(2);
+      return;
+    }
+    if (!customer && !verifiedRef.current) {
+      event.preventDefault();
+      setContactTouched(true);
+      if (guestName.trim().length < 2 || !canonicalPhone(phone)) return;
+      setVerifyOpen(true);
+      return;
+    }
+    if (customer && !customer.phone && phone.replace(/\D/g, "").length < 8) {
+      event.preventDefault();
+      setContactTouched(true);
+      return;
+    }
+    setSubmittedInThisVisit(true);
+  }
+
+  async function sendOnWhatsApp(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
-    const form = event.currentTarget.form;
+    const form = formRef.current;
     if (!form || busy) return;
+    if (!customer?.phone && phone.replace(/\D/g, "").length < 8) {
+      setContactTouched(true);
+      return;
+    }
     const data = new FormData(form);
     data.set("channel", "whatsapp");
+    setSubmittedInThisVisit(true);
     setWhatsappPending(true);
     const result = await submitVisaRequest(initialFormState, data);
     setWhatsappState(result);
@@ -115,366 +264,250 @@ export function VisaRequestForm({
     if (result.whatsappUrl) window.open(result.whatsappUrl, "_blank", "noopener,noreferrer");
   }
 
-  if (sent) {
-    return (
-      <div className="rounded-4 bg-blue-1-05 px-20 py-20">
-        <h2 className="text-18 fw-500">Request received</h2>
-        <p className="text-14 text-light-1 mt-5">
-          {reference ? `Reference ${reference}. ` : ""}
-          We will reply with the document list and the service fee.
-        </p>
-      </div>
-    );
-  }
-
-  const savedOnWhatsApp = Boolean(whatsappState?.reference && !whatsappState.error);
-
-  if (savedOnWhatsApp) {
-    return (
-      <div className="rounded-4 bg-blue-1-05 px-20 py-20">
-        <h2 className="text-18 fw-500">Request saved</h2>
-        <p className="text-14 text-light-1 mt-5">
-          {view.reference ? `Reference ${view.reference}. ` : ""}
-          The desk already has this request. Send the WhatsApp message so they have the same details there.
-        </p>
-        {view.whatsappUrl ? (
-          <a className="visa-whatsapp visa-whatsapp-form mt-15" href={view.whatsappUrl} target="_blank" rel="noreferrer">
-            <WhatsAppIcon />
-            Open WhatsApp
-          </a>
-        ) : null}
-      </div>
-    );
-  }
-
   return (
-    <form action={action} noValidate className="visa-request-form" onSubmit={() => setWhatsappState(null)}>
-      <div className="row y-gap-10">
-      {view.error ? (
-        <div className="col-12 visa-span-all">
-          <p className="visa-banner" role="alert">
-            {view.error}
-          </p>
-        </div>
-      ) : null}
-      {customer ? (
-        <div className="col-12 visa-span-all">
-          <p className="visa-account">
-            <strong>{customer.name}</strong>
-          </p>
-        </div>
-      ) : (
-        <>
-          <Field
-            label="Name"
-            name="name"
-            autoComplete="name"
-            placeholder="Full name as on the passport"
-            error={view.fields?.name}
-            defaultValue={saved.name}
-          />
-          <Field
-            label="Email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            placeholder="name@email.com"
-            error={view.fields?.email}
-            defaultValue={saved.email}
-          />
-          <Field
-            label="Phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            placeholder={phonePlaceholder}
-            error={view.fields?.phone}
-            defaultValue={formatPhone(saved.phone ?? "") || saved.phone}
-            span="full"
-          />
-        </>
-      )}
-      {customer ? (
-        <Field
-          label="Phone"
-          name="phone"
-          type="tel"
-          autoComplete="tel"
-          placeholder={phonePlaceholder}
-          error={view.fields?.phone}
-          defaultValue={formatPhone(saved.phone || customer.phone) || saved.phone || customer.phone}
-          span="full"
-        />
-      ) : null}
-      <PickerField id="country" label="Destination country" error={view.fields?.country}>
-        <SearchableSelect
-          id="country"
-          name="country"
-          value={country}
-          onChange={setCountry}
-          options={destinationOptions}
-          placeholder="Country you are travelling to"
-          searchPlaceholder="Search countries"
-          invalid={Boolean(view.fields?.country)}
-          describedBy={view.fields?.country ? "country-error" : undefined}
-          menuZIndex={10240}
-          wrapperClassName={`visa-picker mt-5${view.fields?.country ? " is-invalid" : ""}`}
-        />
-      </PickerField>
-      <PickerField id="nationality" label="Nationality" error={view.fields?.nationality}>
-        <SearchableSelect
-          id="nationality"
-          name="nationality"
-          value={nationality}
-          onChange={setNationality}
-          options={countryOptions}
-          placeholder="Country of your passport"
-          searchPlaceholder="Search countries"
-          invalid={Boolean(view.fields?.nationality)}
-          describedBy={view.fields?.nationality ? "nationality-error" : undefined}
-          menuZIndex={10240}
-          wrapperClassName={`visa-picker mt-5${view.fields?.nationality ? " is-invalid" : ""}`}
-        />
-      </PickerField>
-      <PickerField id="visaType" label="Visa type" error={view.fields?.visaType}>
-        <SearchableSelect
-          id="visaType"
-          name="visaType"
-          value={visaType}
-          onChange={setVisaType}
-          options={visaTypes}
-          placeholder="Choose a visa type"
-          searchPlaceholder="Search visa types"
-          invalid={Boolean(view.fields?.visaType)}
-          describedBy={view.fields?.visaType ? "visaType-error" : undefined}
-          menuZIndex={10240}
-          wrapperClassName={`visa-picker mt-5${view.fields?.visaType ? " is-invalid" : ""}`}
-        />
-      </PickerField>
-      <VisaDateField
-        label="Departure"
-        name="departure"
-        value={departure}
-        minDate={new DateObject()}
-        error={view.fields?.departure}
-        onChange={(next) => {
-          setDeparture(next);
-          if (returnDate && next && returnDate < next) setReturnDate("");
+    <div className="hotel-request-card hotel-guide-card tour-guide-card" id="visa-request-pass">
+      <button
+        type="button"
+        className="hotel-request-back"
+        onClick={() => (window.history.length > 1 ? router.back() : router.push("/visa-services"))}
+      >
+        Back
+      </button>
+      <div className="hotel-guide-heading">
+        <h1>Personal visa concierge</h1>
+      </div>
+      <GuideProgress
+        label="Visa"
+        labels={stepLabels}
+        step={step}
+        onSelect={(next) => {
+          if (next < step && step < 4) setStep(next as StepIndex);
         }}
       />
-      <VisaDateField
-        label="Return"
-        name="returnDate"
-        value={returnDate}
-        minDate={departure ? isoDate(departure) : new DateObject()}
-        error={view.fields?.returnDate}
-        onChange={setReturnDate}
-      />
-      <Field
-        label="Travellers"
-        name="travellers"
-        type="number"
-        placeholder="How many people"
-        min={1}
-        max={20}
-        error={view.fields?.travellers}
-        defaultValue={saved.travellers || "1"}
-      />
-      <div className="col-12 visa-span-all">
-        <label className="text-14 fw-500" htmlFor="message">
-          Note <span className="visa-optional">Optional</span>
-        </label>
-        <div className={`visa-control mt-5${view.fields?.message ? " is-invalid" : ""}`}>
-          <textarea
-            id="message"
-            name="message"
-            rows={2}
-            placeholder="A previous refusal, children on the trip, or a fixed appointment date"
-            defaultValue={saved.message}
-            aria-invalid={view.fields?.message ? true : undefined}
-            aria-describedby={view.fields?.message ? "message-error" : undefined}
-          />
-        </div>
-        <FieldMessage id="message-error" message={view.fields?.message} />
-      </div>
-      </div>
-      <div className="visa-form-actions">
-        <button
-          type="button"
-          className="visa-whatsapp visa-whatsapp-form"
-          disabled={busy}
-          onClick={applyOnWhatsApp}
-        >
-          <WhatsAppIcon />
-          {whatsappPending ? "Saving…" : "Send this request on WhatsApp"}
-        </button>
-        <Submit busy={busy} />
-      </div>
-    </form>
-  );
-}
-
-function resolveCountryName(value: string) {
-  const needle = value.trim().toLowerCase();
-  if (!needle) return "";
-  if (needle === "schengen" || needle === "schengen area" || needle === "eu") {
-    return schengenDestination.name;
-  }
-  const found = worldCountries.find((item) => {
-    const tokens = `${item.name} ${item.keywords}`.toLowerCase().split(/[^a-z0-9]+/);
-    return item.name.toLowerCase() === needle || tokens.includes(needle);
-  });
-  return found?.name ?? value;
-}
-
-function isoDate(value: string) {
-  return new DateObject({ date: value, format: "YYYY-MM-DD" });
-}
-
-function PickerField({
-  id,
-  label,
-  error,
-  children,
-}: {
-  id: string;
-  label: string;
-  error?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="col-md-6">
-      <label className="text-14 fw-500" htmlFor={id}>
-        {label}
-      </label>
-      {children}
-      <FieldMessage id={`${id}-error`} message={error} />
-    </div>
-  );
-}
-
-function VisaDateField({
-  label,
-  name,
-  value,
-  minDate,
-  error,
-  onChange,
-}: {
-  label: string;
-  name: string;
-  value: string;
-  minDate: DateObject;
-  error?: string;
-  onChange: (value: string) => void;
-}) {
-  const errorId = `${name}-error`;
-  return (
-    <div className="col-md-6">
-      <label className="text-14 fw-500" htmlFor={name}>
-        {label}
-      </label>
-      <div className={`visa-control visa-date mt-5${error ? " is-invalid" : ""}`}>
-        <DatePicker
-          id={name}
-          portal
-          zIndex={10240}
-          arrow={false}
-          editable={false}
-          inputMode="none"
-          hideOnScroll={false}
-          format="D MMM YYYY"
-          placeholder="Choose a date"
-          calendarPosition="bottom-start"
-          offsetY={8}
-          className="visa-calendar"
-          inputClass="visa-date-input"
-          containerClassName="visa-date-container"
-          value={value ? isoDate(value) : undefined}
-          minDate={minDate}
-          onChange={(next) => {
-            if (!next || Array.isArray(next)) {
-              onChange("");
-              return;
-            }
-            onChange(next.format("YYYY-MM-DD"));
-          }}
+      {step === 4 && successReference ? (
+        <RequestSuccessStep
+          reference={successReference}
+          exploreHref="/visa-services"
+          detail="Nothing is filed until you accept the quote. We will reply with the document list and the service fee."
         />
-        <i className="icon-calendar visa-date-icon" aria-hidden="true" />
-        <input type="hidden" name={name} value={value} />
-      </div>
-      <FieldMessage id={errorId} message={error} />
+      ) : (
+      <>
+      <form
+        ref={formRef}
+        id="visa-request-form"
+        action={action}
+        noValidate
+        className="hotel-request-form hotel-guide-form"
+        onSubmit={handleSubmit}
+      >
+        <input type="hidden" name="country" value={country} />
+        <input type="hidden" name="nationality" value={nationality} />
+        <input type="hidden" name="visaType" value={visaType} />
+        <input type="hidden" name="departure" value={departure} />
+        <input type="hidden" name="returnDate" value={returnDate} />
+        <input type="hidden" name="travellers" value={travellers} />
+        <input type="hidden" name="message" value={message} />
+        <input type="hidden" name="name" value={guestName} />
+        <input type="hidden" name="phone" value={phone} />
+        {view.error ? (
+          <p className="hotel-request-banner-alert hotel-guide-alert" role="alert">
+            {view.fields ? "Please check the highlighted details." : view.error}
+          </p>
+        ) : null}
+
+        {step === 0 ? (
+          <section className="hotel-guide-panel" aria-labelledby="visa-step-one-title">
+            <StepTitle
+              number="01"
+              id="visa-step-one-title"
+              title="Where are you travelling, and which visa?"
+              text="Choose the destination, the passport nationality, and the visa type that fits the trip."
+            />
+            <div className="hotel-guide-grid">
+              <GuideSelectField
+                name="country"
+                label="Destination country"
+                icon="pin"
+                value={country}
+                options={destinationOptions}
+                emptyLabel="Country you are travelling to"
+                searchPlaceholder="Search countries"
+                error={errorFor("country", destinationErrors.country, touched)}
+                onChange={setCountry}
+              />
+              <GuideSelectField
+                name="nationality"
+                label="Nationality"
+                icon="passport"
+                value={nationality}
+                options={countryOptions}
+                emptyLabel="Country of your passport"
+                searchPlaceholder="Search countries"
+                error={errorFor("nationality", destinationErrors.nationality, touched)}
+                onChange={setNationality}
+              />
+            </div>
+            <GuideCards
+              id="visaType"
+              label="Which visa do you need?"
+              items={visaTypeCards}
+              value={visaType}
+              onChange={setVisaType}
+              error={errorFor("visaType", destinationErrors.visaType, touched)}
+            />
+          </section>
+        ) : null}
+
+        {step === 1 ? (
+          <section className="hotel-guide-panel" aria-labelledby="visa-step-two-title">
+            <StepTitle
+              number="02"
+              id="visa-step-two-title"
+              title="When are you travelling?"
+              text="Set your travel dates and tell us how many people need the visa."
+            />
+            <div className="hotel-guide-grid">
+              <GuideDateField
+                name="departure"
+                label="Departure"
+                icon="cal-in"
+                value={departure}
+                min={today}
+                error={errorFor("departure", dateErrors.departure, datesTouched)}
+                onPick={(next) => {
+                  setDeparture(next);
+                  if (returnDate && returnDate < next) setReturnDate("");
+                }}
+              />
+              <GuideDateField
+                name="returnDate"
+                label="Return"
+                icon="cal-out"
+                value={returnDate}
+                min={departure || today}
+                error={errorFor("returnDate", dateErrors.returnDate, datesTouched)}
+                onPick={setReturnDate}
+              />
+            </div>
+            <div className="hotel-guide-travellers tour-guide-travellers">
+              <GuideCounter
+                id="travellers"
+                label="Travellers"
+                icon="adults"
+                hint="People needing this visa"
+                value={travellers}
+                min={1}
+                max={20}
+                error={view.fields?.travellers}
+                onChange={setTravellers}
+              />
+            </div>
+          </section>
+        ) : null}
+
+        {step === 2 ? (
+          <section className="hotel-guide-panel" aria-labelledby="visa-step-three-title">
+            <StepTitle
+              number="03"
+              id="visa-step-three-title"
+              title="Anything else we should know?"
+              text="A previous refusal, children on the trip, or a fixed appointment date helps us quote accurately."
+            />
+            <GuideNote
+              label="What should we know?"
+              placeholder="A previous refusal, children on the trip, or a fixed appointment date"
+              value={message}
+              onChange={setMessage}
+            />
+            <FieldMessage message={errorFor("message", messageError, true)} />
+          </section>
+        ) : null}
+
+        {step === 3 ? (
+          <section className="hotel-guide-panel" aria-labelledby="visa-step-four-title">
+            <StepTitle
+              number="04"
+              id="visa-step-four-title"
+              title="Review your visa request"
+              text="Check the details before sending. You can edit any section if something needs changing."
+            />
+            <div className="hotel-guide-review tour-guide-review">
+              <ReviewSection title="Destination" icon="pin" onEdit={() => setStep(0)}>
+                <ReviewLine label="Country" icon="pin" value={country || "Not provided"} />
+                <ReviewLine label="Nationality" icon="passport" value={nationality || "Not provided"} />
+                <ReviewLine label="Visa type" icon={optionIcon(visaType)} value={visaTypeLabel(visaType)} />
+              </ReviewSection>
+              <ReviewSection title="Dates & party" icon="calendar" onEdit={() => setStep(1)}>
+                <ReviewLine label="Departure" icon="cal-in" value={prettyDate(departure)} />
+                <ReviewLine label="Return" icon="cal-out" value={prettyDate(returnDate)} />
+                <ReviewLine
+                  label="Travellers"
+                  icon="adults"
+                  value={`${travellers} ${travellers === 1 ? "traveller" : "travellers"}`}
+                />
+              </ReviewSection>
+              <ReviewSection title="Other details" icon="note" onEdit={() => setStep(2)}>
+                <ReviewLine label="Note" icon="note" value={message || "None"} />
+              </ReviewSection>
+            </div>
+            <p className="hotel-guide-reassurance">
+              Our travel team will review your request and reply with the document list and a quote. Nothing is filed until you accept.
+            </p>
+            <GuideContact
+              customer={customer}
+              name={guestName}
+              phone={phone}
+              nameError={nameError}
+              phoneError={phoneError}
+              onName={(value) => { setGuestName(value); setContactTouched(true); }}
+              onPhone={(value) => { setPhone(value); setContactTouched(true); }}
+            />
+          </section>
+        ) : null}
+      </form>
+      <GuideActions
+        step={step}
+        last={3}
+        formId="visa-request-form"
+        busy={busy}
+        submitLabel="Submit visa request"
+        busyLabel="Sending request…"
+        onBack={() => setStep((step - 1) as StepIndex)}
+        onContinue={() => continueTo((step + 1) as 1 | 2 | 3)}
+      >
+        {customer ? (
+          <button type="button" className="hotel-guide-whatsapp" disabled={busy} onClick={sendOnWhatsApp}>
+            {whatsappPending ? "Preparing…" : "Send via WhatsApp"}
+          </button>
+        ) : null}
+      </GuideActions>
+      </>
+      )}
+      <RequestPhoneVerify
+        open={verifyOpen}
+        name={guestName}
+        phone={phone}
+        config={firebaseConfig}
+        defaultCountry={defaultCountry}
+        onClose={() => setVerifyOpen(false)}
+        onVerified={({ name: verifiedName, phone: verifiedPhone }) => {
+          verifiedRef.current = true;
+          setGuestName(verifiedName);
+          setPhone(formatPhone(verifiedPhone) || verifiedPhone);
+          setVerifyOpen(false);
+          window.setTimeout(() => formRef.current?.requestSubmit(), 0);
+        }}
+      />
     </div>
   );
 }
 
-function Field({
-  label,
-  name,
-  type = "text",
-  placeholder,
-  autoComplete,
-  defaultValue,
-  min,
-  max,
-  error,
-  span = "half",
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  placeholder?: string;
-  autoComplete?: string;
-  defaultValue?: string;
-  min?: number;
-  max?: number;
-  error?: string;
-  span?: "half" | "full";
-}) {
-  const errorId = `${name}-error`;
-  return (
-    <div className={span === "full" ? "col-12" : "col-md-6"}>
-      <label className="text-14 fw-500" htmlFor={name}>
-        {label}
-      </label>
-      <div className={`visa-control mt-5${error ? " is-invalid" : ""}`}>
-        <input
-          id={name}
-          name={name}
-          type={type}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          defaultValue={defaultValue}
-          min={min}
-          max={max}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? errorId : undefined}
-        />
-      </div>
-      <FieldMessage id={errorId} message={error} />
-    </div>
-  );
-}
+export type VisaRequestDefaults = {
+  country: string;
+  visaType: string;
+  nationality?: string;
+};
 
-function FieldMessage({ id, message }: { id: string; message?: string }) {
-  if (!message) return null;
-  return (
-    <p id={id} className="visa-error" role="alert">
-      {message}
-    </p>
-  );
-}
-
-function Submit({ busy }: { busy: boolean }) {
-  const { pending } = useFormStatus();
-  const waiting = pending || busy;
-  return (
-    <button
-      type="submit"
-      disabled={waiting}
-      className="button -dark-1 h-50 px-30 rounded-4 bg-blue-1 text-white"
-    >
-      {pending ? "Sending…" : "Request visa help"}
-    </button>
-  );
+export function visaLoginHref(defaults: VisaRequestDefaults) {
+  return `/login?next=${encodeURIComponent(visaApplyPath({ country: defaults.country, visaType: defaults.visaType }))}`;
 }

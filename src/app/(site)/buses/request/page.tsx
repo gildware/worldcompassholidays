@@ -1,18 +1,21 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import { BusRequestForm, type BusRequestDefaults } from "@/components/bus/BusRequestForm";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { modules } from "@/config/modules";
+import { countryIsoFromHeaders } from "@/lib/auth/countries";
 import { getCurrentUser } from "@/lib/auth/session";
 import { ensureBusCatalog, loadBusLocations } from "@/lib/bus-catalog";
 import { busCoachTypes, busTimeWindows, requestBusHref } from "@/lib/buses";
 import { prisma } from "@/lib/db";
+import { firebaseWebConfig } from "@/lib/firebase/config";
 import { pageMetadata } from "@/lib/seo";
 import "@/styles/hotel-request.css";
 
-const pageTitle = "Request a bus";
+const pageTitle = "Request Intercity Bus Hire";
 const pageDescription =
-  "Send the cities, date, and coach you want. We quote listed buses and options that are not on the list. Nothing is booked until you accept.";
+  "Send the cities, travel date, and coach type you want. We quote listed buses and options that are not on the list — nothing is booked until you accept.";
 
 export const metadata: Metadata = pageMetadata({
   title: pageTitle,
@@ -65,6 +68,7 @@ export default async function BusRequestPage({
     loadBusLocations(),
   ]);
   const cities = locations.map((location) => location.title);
+  const citySet = new Set(cities);
   const customer = user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null;
   const slug = (params.slug ?? "").slice(0, 80);
   const namedBus = await (slug
@@ -74,9 +78,11 @@ export default async function BusRequestPage({
       })
     : Promise.resolve(null));
 
+  const requestedFrom = (params.from ?? namedBus?.fromCity ?? "").slice(0, 80);
+  const requestedTo = (params.to ?? namedBus?.toCity ?? "").slice(0, 80);
   const defaults: BusRequestDefaults = {
-    fromCity: (params.from ?? namedBus?.fromCity ?? "").slice(0, 80),
-    toCity: (params.to ?? namedBus?.toCity ?? "").slice(0, 80),
+    fromCity: citySet.has(requestedFrom) ? requestedFrom : "",
+    toCity: citySet.has(requestedTo) ? requestedTo : "",
     travelDate: dateParam(params.date),
     adults: countParam(params.adults ?? params.passengers, "1"),
     children: countParam(params.children, "0"),
@@ -107,7 +113,6 @@ export default async function BusRequestPage({
     message: defaults.message,
   });
   const loginHref = `/login?next=${encodeURIComponent(returnPath)}`;
-  if (!customer) redirect(loginHref);
 
   return (
     <WorldCompassHolidayFrame className="is-hotel-request">
@@ -118,6 +123,8 @@ export default async function BusRequestPage({
             defaults={defaults}
             cities={cities}
             loginHref={loginHref}
+            firebaseConfig={firebaseWebConfig()}
+            defaultCountry={countryIsoFromHeaders(await headers())}
           />
         </div>
       </div>

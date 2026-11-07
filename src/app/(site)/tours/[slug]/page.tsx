@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { TourStay } from "@/components/tour-single/TourStay";
 import type { TourStayData } from "@/components/tour-single/TourStay";
 import { modules } from "@/config/modules";
+import { countryIsoFromHeaders } from "@/lib/auth/countries";
 import { getCurrentUser } from "@/lib/auth/session";
 import { loadTourCatalog } from "@/lib/catalog-query";
 import { isFavorited } from "@/lib/favorites";
 import { prisma } from "@/lib/db";
+import { firebaseWebConfig } from "@/lib/firebase/config";
 import { cached } from "@/lib/ttl-cache";
 import { formatMoney } from "@/lib/format";
 import { resolveFaqs, resolveTitles } from "@/lib/hotels/labels";
@@ -96,19 +99,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!tour?.published) return privateMetadata("Tour");
   const place = tour.destination?.name;
   const written = tour.seoDescription.trim() || tour.summary.trim() || plainText(tour.description);
+  const fallbackTitle = place ? `${tour.title} | ${place} Tour` : `${tour.title} | India Tour`;
   return pageMetadata({
-    title: tour.seoTitle.trim() || tour.title,
+    title: tour.seoTitle.trim() || fallbackTitle,
     description:
       written ||
-      `${tour.title}${place ? ` in ${place}` : ""}. A guided tour with duration, group size, and a price before you pay.`,
+      `${tour.title}${place ? ` in ${place}` : ""} — a guided India tour with duration, group size, and a clear price before you pay.`,
     path: `/tours/${slug}`,
     image: tour.seoImageUrl || tour.featuredImageUrl || tour.imageUrl,
     imageAlt: tour.title,
     index: tour.seoIndex,
-    openGraphTitle: tour.facebookTitle,
-    openGraphDescription: tour.facebookDescription,
-    twitterTitle: tour.twitterTitle,
-    twitterDescription: tour.twitterDescription,
+    openGraphTitle: tour.facebookTitle.trim() || undefined,
+    openGraphDescription: tour.facebookDescription.trim() || undefined,
+    twitterTitle: tour.twitterTitle.trim() || undefined,
+    twitterDescription: tour.twitterDescription.trim() || undefined,
+    type: "article",
   });
 }
 
@@ -264,6 +269,8 @@ export default async function TourPage({ params }: Props) {
         tour={data}
         customer={user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null}
         saved={saved}
+        firebaseConfig={firebaseWebConfig()}
+        defaultCountry={countryIsoFromHeaders(await headers())}
       />
     </>
   );

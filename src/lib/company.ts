@@ -160,9 +160,9 @@ const who = `${company.tradeName} is the name on the door. The company behind it
 
 export const termsPage: PolicyPage = {
   eyebrow: "Terms",
-  title: "Terms and conditions",
+  title: "Terms and Conditions",
   description:
-    "How a World Compass Holidays enquiry becomes a confirmed trip, what a quote covers, and what you agree to when you accept it.",
+    "How a World Compass Holidays enquiry becomes a confirmed trip, what a quote covers, payment and liability rules, and what you agree to when you accept.",
   path: "/terms",
   sections: [
     {
@@ -306,9 +306,9 @@ export const termsPage: PolicyPage = {
 
 export const privacyPage: PolicyPage = {
   eyebrow: "Privacy",
-  title: "Privacy policy",
+  title: "Privacy Policy",
   description:
-    "What World Compass Holidays collects when you enquire or book, why we keep it, and who else sees it.",
+    "What World Compass Holidays collects when you enquire or book a trip, why we keep it, how long we store it, and who else may see it.",
   path: "/privacy",
   sections: [
     {
@@ -405,9 +405,9 @@ export const privacyPage: PolicyPage = {
 
 export const cancellationPage: PolicyPage = {
   eyebrow: "Cancellation",
-  title: "Cancellation and refunds",
+  title: "Cancellation and Refunds",
   description:
-    "How to cancel a World Compass Holidays trip, and how refunds work for cars, stays, tours, flights, and visas.",
+    "How to cancel a World Compass Holidays booking, and how refunds work for tours, hotels, cars, bikes, flights, and visa files.",
   path: "/cancellation",
   sections: [
     {
@@ -497,9 +497,9 @@ export const cancellationPage: PolicyPage = {
 
 export const cookiesPage: PolicyPage = {
   eyebrow: "Cookies",
-  title: "Cookie policy",
+  title: "Cookie Policy",
   description:
-    "The sign-in cookie World Compass Holidays uses, and the notes the site stores on your device.",
+    "The sign-in cookie World Compass Holidays uses, what stays on your device while you browse, and how to clear it.",
   path: "/cookies",
   sections: [
     {

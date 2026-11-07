@@ -273,7 +273,7 @@ export function TourSingle({ tour, mapApiKey }: { tour: TourSingleData; mapApiKe
                   {tour.durationLabel} · {groupLabel(tour.groupSize)}
                 </p>
                 <Link href={bookHref} className="button -dark-1 bg-blue-1 text-white tour-detail__book-btn">
-                  Book now
+                  Book Tour
                 </Link>
                 <p className="tour-detail__reassure">
                   Tell us your dates. We confirm the price before you pay.
@@ -420,7 +420,7 @@ export function TourSingle({ tour, mapApiKey }: { tour: TourSingleData; mapApiKe
             <span>From</span>
             <strong>{tour.priceLabel}</strong>
           </div>
-          <Link href={bookHref}>Book now</Link>
+          <Link href={bookHref}>Book Tour</Link>
         </div>
       </div>
     </WorldCompassHolidayFrame>

@@ -97,6 +97,7 @@ export function HotelStay({
   const [sheet, setSheet] = useState(false);
   const [roomSlide, setRoomSlide] = useState<Record<string, number>>({});
   const [viewer, setViewer] = useState<{ images: string[]; index: number; label: string } | null>(null);
+  const [galleryIndex, setGalleryIndex] = useState(0);
   const [state, action, pending] = useActionState(submitHotelRequest, initialFormState);
   const room = rooms.find((item) => item.id === roomId) ?? rooms[0];
 
@@ -184,7 +185,6 @@ export function HotelStay({
     });
   }
 
-  const stars = hotel.stars > 0 ? "★".repeat(Math.min(5, hotel.stars)) : "";
   const place = hotel.address || hotel.location;
   const lat = Number(hotel.mapLat);
   const lng = Number(hotel.mapLng);
@@ -226,7 +226,7 @@ export function HotelStay({
           <strong>{hotel.name}</strong>
         </div>
         <button className="stay-btn stay-btn--small stay-topbar__book" type="button" onClick={openBook}>
-          Book
+          Book Hotel
         </button>
       </header>
       <div className="stay-wrap">
@@ -244,42 +244,28 @@ export function HotelStay({
 
         <div className="stay-hero">
           <div>
-            {hotel.scoreLabel ? <p className="stay-eyebrow">{hotel.scoreLabel}</p> : null}
+            <p className="stay-eyebrow">
+              {[hotel.propertyType, hotel.stars > 0 ? `${hotel.stars} star` : hotel.scoreLabel].filter(Boolean).join(" · ") || "Stay"}
+            </p>
             <h1>{hotel.name}</h1>
             <p className="stay-place">
-              {stars ? (
-                <span className="stay-stars" aria-label={`${hotel.stars} star stay`}>
-                  <span className="stay-stars-n">{hotel.stars}</span>
-                  {stars}
-                </span>
-              ) : null}
-              {place ? <a href="#location">{place}</a> : null}
-              {hotel.propertyType ? <span>{hotel.propertyType}</span> : null}
+              {hotel.location || place ? <a href="#location">{hotel.location || place}</a> : null}
+              {hotel.scoreLabel ? <span>{hotel.scoreLabel}</span> : null}
+              {hotel.priceLabel ? <span>{hotel.priceLabel} a night</span> : null}
             </p>
           </div>
-          <div className="stay-hero__side">
-            <FavoriteButton
-              kind="hotel"
-              itemId={hotel.id}
-              initialSaved={saved}
-              signedIn={Boolean(customer)}
-              title={hotel.name}
-              variant="icon"
-              className="fav-btn--plain"
-            />
-            {hotel.stars > 0 ? (
-              <button className="stay-score" type="button" onClick={() => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" })}>
-                <b>{hotel.stars.toFixed(1)}</b>
-                <span>
-                  <strong>{hotel.scoreLabel || "Star rating"}</strong>
-                  <span>Property rating</span>
-                </span>
-              </button>
-            ) : null}
-          </div>
+          <FavoriteButton
+            kind="hotel"
+            itemId={hotel.id}
+            initialSaved={saved}
+            signedIn={Boolean(customer)}
+            title={hotel.name}
+            variant="icon"
+            className="fav-btn--plain"
+          />
         </div>
 
-        <div className={`stay-gallery stay-gallery--${visible.length}`} aria-label={`Photographs of ${hotel.name}`}>
+        <div className={`stay-gallery stay-gallery--desk stay-gallery--${visible.length}`} aria-label={`Photographs of ${hotel.name}`}>
           {visible.map((src, index) => (
             <button
               key={`${src}-${index}`}
@@ -294,6 +280,38 @@ export function HotelStay({
             <button className="stay-all" type="button" onClick={() => openPhotos(photos, 0, hotel.name)}>
               View all {photos.length} photos
             </button>
+          ) : null}
+        </div>
+        <div className="stay-gallery-m" aria-label={`Photographs of ${hotel.name}`}>
+          <button
+            className="stay-gallery-m__hero"
+            type="button"
+            onClick={() => openPhotos(photos, galleryIndex, hotel.name)}
+            aria-label={`Open photograph ${galleryIndex + 1} of ${photos.length}`}
+          >
+            <img src={photos[galleryIndex] || photos[0]} alt={`${hotel.name} photograph ${galleryIndex + 1}`} />
+            {photos.length > 1 ? (
+              <span className="stay-gallery-m__count">
+                {galleryIndex + 1} / {photos.length}
+              </span>
+            ) : null}
+          </button>
+          {photos.length > 1 ? (
+            <div className="stay-gallery-m__thumbs" role="list">
+              {photos.map((src, index) => (
+                <button
+                  key={`m-${src}-${index}`}
+                  type="button"
+                  role="listitem"
+                  className={index === galleryIndex ? "is-on" : undefined}
+                  aria-label={`Photograph ${index + 1}`}
+                  aria-current={index === galleryIndex ? "true" : undefined}
+                  onClick={() => setGalleryIndex(index)}
+                >
+                  <img src={src} alt="" />
+                </button>
+              ))}
+            </div>
           ) : null}
         </div>
       </div>
@@ -661,7 +679,7 @@ export function HotelStay({
           </span>
         </div>
         <button className="stay-btn" type="button" onClick={openBook}>
-          Book
+          Book Hotel
         </button>
       </div>
       <p className="stay-sr" aria-live="polite">{money(stayTotal, currency)}</p>

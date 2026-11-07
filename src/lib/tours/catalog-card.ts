@@ -28,6 +28,7 @@ export function catalogIso(date: Date) {
 }
 
 type TourRow = {
+  id: string;
   slug: string;
   title: string;
   summary: string;
@@ -98,7 +99,7 @@ export function toCatalogTour(
   const meetShort = tour.address.trim() || (pickup ? "Hotel pickup" : placeName ? `Meet in ${placeName}` : "Meeting point on request");
 
   return {
-    id: tour.slug,
+    id: tour.id,
     slug: tour.slug,
     title: tour.title,
     place: placeName || region,

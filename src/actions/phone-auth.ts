@@ -16,6 +16,12 @@ export type PhoneLoginResult = {
   phone: string;
 };
 
+export type EstablishPhoneResult = {
+  error: string | null;
+  phone: string;
+  needsName: boolean;
+};
+
 async function findCustomer(phone: string) {
   return prisma.user.findFirst({
     where: {
@@ -32,21 +38,16 @@ async function limitKey() {
   return `phone-firebase:${ip}`;
 }
 
-export async function finishPhoneLogin(
-  idToken: string,
-  nextPath: string,
-  name?: string,
-): Promise<PhoneLoginResult> {
-  const next = customerReturnPath(nextPath, "/account");
+async function resolvePhoneSession(idToken: string, name?: string): Promise<EstablishPhoneResult> {
   const key = await limitKey();
   if (await isLoginBlocked(key)) {
-    return { error: "Too many attempts. Wait 15 minutes and try again.", phone: "" };
+    return { error: "Too many attempts. Wait 15 minutes and try again.", phone: "", needsName: false };
   }
 
   const phone = await phoneFromFirebaseToken(idToken).catch(() => "");
   if (!phone) {
     await recordLoginFailure(key);
-    return { error: "That verification could not be confirmed. Send a new code.", phone: "" };
+    return { error: "That verification could not be confirmed. Send a new code.", phone: "", needsName: false };
   }
 
   await clearLoginFailures(key);
@@ -54,17 +55,17 @@ export async function finishPhoneLogin(
   if (existing) {
     await prisma.user.update({ where: { id: existing.id }, data: { lastLoginAt: new Date() } });
     await createSession(existing.id, "customer");
-    redirect(next);
+    return { error: null, phone, needsName: false };
   }
 
   const trimmed = (name ?? "").trim();
   if (trimmed.length < 2) {
-    return { error: null, phone };
+    return { error: null, phone, needsName: true };
   }
 
   const customerRole = await prisma.role.findUnique({ where: { key: "customer" } });
   if (!customerRole) {
-    return { error: "Customer accounts are not set up yet.", phone };
+    return { error: "Customer accounts are not set up yet.", phone, needsName: false };
   }
 
   const user = await prisma.user.create({
@@ -78,5 +79,23 @@ export async function finishPhoneLogin(
     select: { id: true },
   });
   await createSession(user.id, "customer");
+  return { error: null, phone, needsName: false };
+}
+
+/** Creates a customer session after Firebase verification without navigating away. */
+export async function establishPhoneSession(idToken: string, name?: string): Promise<EstablishPhoneResult> {
+  return resolvePhoneSession(idToken, name);
+}
+
+export async function finishPhoneLogin(
+  idToken: string,
+  nextPath: string,
+  name?: string,
+): Promise<PhoneLoginResult> {
+  const next = customerReturnPath(nextPath, "/account");
+  const result = await resolvePhoneSession(idToken, name);
+  if (result.error || result.needsName) {
+    return { error: result.error, phone: result.phone };
+  }
   redirect(next);
 }

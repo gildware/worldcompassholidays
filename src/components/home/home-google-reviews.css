@@ -1,0 +1,235 @@
+.home-g-reviews {
+  color: #051036;
+  font-family: var(--font-jost), "Jost", sans-serif;
+  padding: 36px 0 8px;
+}
+
+.home-x .home-g-reviews {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.home-x .home-g-reviews__head,
+.home-x .home-g-reviews__summary,
+.home-x .home-g-reviews__credit {
+  margin-left: var(--hx-pad);
+  margin-right: var(--hx-pad);
+}
+
+.home-g-reviews__head {
+  max-width: 40rem;
+  margin: 0 0 22px;
+}
+
+.home-g-reviews__kicker {
+  margin: 0;
+  color: #3554d1;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.home-g-reviews__head h2 {
+  margin: 8px 0 0;
+  font-size: clamp(1.55rem, 2.2vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.home-g-reviews__head p {
+  margin: 10px 0 0;
+  max-width: 52ch;
+  color: #697488;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.home-g-reviews__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 20px;
+  margin: 0 0 18px;
+  padding: 18px 20px;
+  background: #fff;
+  border: 1px solid #e4e7ef;
+  border-radius: 18px;
+}
+
+.home-g-reviews__score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.home-g-reviews__score strong {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.home-g-reviews__score > span:last-child {
+  color: #697488;
+  font-size: 0.95rem;
+}
+
+.home-g-reviews__stars {
+  display: inline-flex;
+  gap: 1px;
+  color: #d5dae5;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.home-g-reviews__stars .is-on {
+  color: #f5b400;
+}
+
+.home-g-reviews__maps {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #3554d1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.home-g-reviews__maps:hover {
+  text-decoration: underline;
+}
+
+.home-g-reviews__scroller {
+  margin: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: #c9d0de transparent;
+}
+
+.home-g-reviews__scroller::-webkit-scrollbar {
+  height: 6px;
+}
+
+.home-g-reviews__scroller::-webkit-scrollbar-thumb {
+  background: #c9d0de;
+  border-radius: 999px;
+}
+
+/* Beat Bootstrap list padding; match --hx-pad gutter used by section head */
+.worldcompassholiday-page .home-g-reviews__list,
+.home-g-reviews__list {
+  list-style: none;
+  display: flex;
+  gap: 14px;
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: 4px 16px 14px;
+}
+
+.home-x .home-g-reviews__list,
+.worldcompassholiday-page .home-x .home-g-reviews__list {
+  padding-left: var(--hx-pad);
+  padding-right: var(--hx-pad);
+}
+
+.home-g-reviews__list li {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 0 0 min(78vw, 320px);
+  width: min(78vw, 320px);
+  min-height: 210px;
+  margin: 0;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e4e7ef;
+  border-radius: 18px;
+  scroll-snap-align: start;
+}
+
+.home-g-reviews__author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.home-g-reviews__photo,
+.home-g-reviews__avatar {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex: 0 0 56px;
+  background: #e5f0fd;
+  border: 1px solid #e4e7ef;
+}
+
+.home-g-reviews__avatar {
+  display: grid;
+  place-items: center;
+  color: #3554d1;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.home-g-reviews__author a,
+.home-g-reviews__author strong {
+  display: block;
+  color: #051036;
+  font-size: 0.98rem;
+  font-weight: 600;
+  text-decoration: none;
+  line-height: 1.25;
+}
+
+.home-g-reviews__author a:hover {
+  color: #3554d1;
+}
+
+.home-g-reviews__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  color: #697488;
+  font-size: 0.82rem;
+}
+
+.home-g-reviews__list p {
+  margin: 0;
+  color: #051036;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-g-reviews__list p.is-quiet {
+  color: #697488;
+}
+
+.home-g-reviews__credit {
+  margin: 8px 0 0;
+  color: #697488;
+  font-size: 0.78rem;
+}
+
+@media (min-width: 992px) {
+  .home-g-reviews__list li {
+    flex-basis: 300px;
+    width: 300px;
+  }
+}

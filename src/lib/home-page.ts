@@ -14,6 +14,7 @@ export const HOME_SECTION_IDS = [
   "bikes",
   "buses",
   "why",
+  "reviews",
   "cta",
 ] as const;
 
@@ -38,6 +39,15 @@ export type HomeWhyItem = {
   id: string;
   title: string;
   text: string;
+};
+
+export type HomeReviewsContent = {
+  title: string;
+  subtitle: string;
+  /** Google Business Profile Place ID (ChIJ…). Empty = hide section. */
+  placeId: string;
+  /** Google review ids (`time`) hidden from the public homepage. */
+  hiddenIds: string[];
 };
 
 export type HomeServiceItem = {
@@ -86,6 +96,7 @@ export type HomePageContent = {
   why: {
     items: HomeWhyItem[];
   };
+  reviews: HomeReviewsContent;
 };
 
 export const HOME_SECTION_LABELS: Record<HomeSectionId, string> = {
@@ -98,6 +109,7 @@ export const HOME_SECTION_LABELS: Record<HomeSectionId, string> = {
   bikes: "Bikes for the road",
   buses: "Buses between cities",
   why: "Why book with us",
+  reviews: "Google reviews",
   cta: "Contact banner",
 };
 
@@ -358,6 +370,13 @@ export const defaultHomePageContent: HomePageContent = {
       },
     ],
   },
+  reviews: {
+    title: "What travellers say on Google",
+    subtitle:
+      "Live ratings for World Compass Holidays by Negotrip Private Limited, pulled from our Google Business Profile.",
+    placeId: "",
+    hiddenIds: [],
+  },
 };
 
 function isSectionId(value: unknown): value is HomeSectionId {
@@ -491,6 +510,48 @@ function asWhyItems(value: unknown): HomeWhyItem[] {
   return items.length ? items : fallback;
 }
 
+function asHiddenReviewIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const ids: string[] = [];
+  for (const item of value) {
+    if (typeof item !== "string" && typeof item !== "number") continue;
+    let id = String(item).trim().slice(0, 80);
+    if (!id || id === "undefined" || id === "null") continue;
+    // Older saves used bare Google timestamps; normalize to grev-*.
+    if (/^\d+$/.test(id)) id = `grev-${id}`;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+    if (ids.length >= 20) break;
+  }
+  return ids;
+}
+
+function asPlaceId(value: unknown): string {
+  return asString(value, "")
+    .trim()
+    .replace(/^place_id=/i, "")
+    .slice(0, 256);
+}
+
+function asReviewsContent(value: unknown): HomeReviewsContent {
+  const fallback = defaultHomePageContent.reviews;
+  const row = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  // Before Place ID lived in admin, it was env-only. Keep showing that profile until
+  // Homepage → Google reviews is saved (even blank) so the section can be cleared on purpose.
+  const placeId =
+    "placeId" in row
+      ? asPlaceId(row.placeId)
+      : asPlaceId(process.env.GOOGLE_PLACE_ID) || "ChIJj_Mwfsmd4TgR2JeNScluuL0";
+  return {
+    title: asString(row.title, fallback.title).trim().slice(0, 90) || fallback.title,
+    subtitle: asString(row.subtitle, fallback.subtitle).trim().slice(0, 240) || fallback.subtitle,
+    placeId,
+    hiddenIds: asHiddenReviewIds(row.hiddenIds),
+  };
+}
+
 function asSections(value: unknown): HomeSectionMeta[] {
   const used = new Set<HomeSectionId>();
   const next: HomeSectionMeta[] = [];
@@ -565,6 +626,7 @@ export function parseHomePageContent(raw: string | null | undefined): HomePageCo
     why: {
       items: asWhyItems(why.items),
     },
+    reviews: asReviewsContent(parsed.reviews),
   };
 }
 

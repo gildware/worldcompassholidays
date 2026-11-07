@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { AssistDesk } from "@/components/assist/AssistDesk";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { pageMetadata } from "@/lib/seo";
 import "@/styles/assist-desk.css";
 
-const pageTitle = "Meet and assist at the airport";
+const pageTitle = "Airport Meet & Assist in India";
 const pageDescription =
-  "A greeter meets you on arrival, departure, or a connection. We quote the fee before anyone is booked.";
+  "Airport meet and assist across India — a greeter on arrival, departure, or a connection. Fee quoted before anyone is booked; flight delays are followed by number, not clock time.";
 
 export const metadata: Metadata = pageMetadata({
   title: pageTitle,
@@ -15,6 +14,7 @@ export const metadata: Metadata = pageMetadata({
   path: "/meet-and-assist",
   image: "/img/assist/assist-arrival.jpg",
   imageAlt: "A greeter meeting a traveller at an airport",
+  keywords: ["airport meet and assist", "airport greeter India", "arrival assistance"],
 });
 
 const faqs = [
@@ -36,17 +36,7 @@ const faqs = [
   },
 ];
 
-export default async function MeetAndAssistPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ sent?: string; ref?: string }>;
-}) {
-  const { sent, ref } = await searchParams;
-  if (sent === "1") {
-    const reference = ref && /^BK-[A-Z0-9]+$/.test(ref) ? ref : "";
-    redirect(reference ? `/meet-and-assist/request?sent=1&ref=${reference}` : "/meet-and-assist/request?sent=1");
-  }
-
+export default async function MeetAndAssistPage() {
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",

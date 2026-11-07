@@ -3,9 +3,12 @@
 import { useActionState, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import type { FirebaseOptions } from "firebase/app";
 import { submitHotelRequest } from "@/actions/hotel-request";
-import { formatPhone } from "@/lib/auth/phone";
+import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
+import { formatPhone, canonicalPhone } from "@/lib/auth/phone";
 import { DateMenu, prettyStayDate } from "@/components/hotel-list/stay-list/HotelStayList";
+import { deferGuideStep, GuideProgress, RequestSuccessStep } from "@/components/service-request/guide-ui";
 import { SearchableSelect, type SelectOption } from "@/components/ui/SearchableSelect";
 import {
   hotelAdditionalPreferences,
@@ -19,6 +22,8 @@ import {
   type RequestOption,
 } from "@/lib/custom-request";
 import { initialFormState, type FormState } from "@/lib/forms";
+
+type StepIndex = 0 | 1 | 2 | 3 | 4;
 
 const starOptions = [
   { value: "any", label: "Any", title: "Any star rating", count: 0 },
@@ -85,7 +90,7 @@ const budgetValues = new Set([
   ...legacyHotelBudgetBands.map((option) => option.value),
 ]);
 const allRoomTypeOptions = [...hotelRoomTypes, ...legacyHotelRoomTypes];
-const fieldOrder = ["phone", "destination", "area", "hotelName", "checkIn", "checkOut", "adults", "children", "childAges", "rooms", "budget", "stars", "roomType", "meals", "message"];
+const fieldOrder = ["name", "phone", "destination", "area", "hotelName", "checkIn", "checkOut", "adults", "children", "childAges", "rooms", "budget", "stars", "roomType", "meals", "message"];
 function parseSelectionList(value: string | undefined, allowed: readonly string[]) {
   try {
     const parsed: unknown = JSON.parse(value || "[]");
@@ -163,8 +168,10 @@ export function HotelRequestForm({
   destinationPreset = "",
   starsPreset = "",
   messagePreset = "",
-  loginHref,
+  loginHref: _loginHref,
   backHref = "/hotels",
+  firebaseConfig = null,
+  defaultCountry = "IN",
 }: {
   sent: boolean;
   reference: string;
@@ -178,6 +185,8 @@ export function HotelRequestForm({
   messagePreset?: string;
   loginHref: string;
   backHref?: string;
+  firebaseConfig?: FirebaseOptions | null;
+  defaultCountry?: string;
 }) {
   const router = useRouter();
   const [state, action, pending] = useActionState(submitHotelRequest, initialFormState);
@@ -189,9 +198,12 @@ export function HotelRequestForm({
   const formRef = useRef<HTMLFormElement>(null);
   const submissionStarted = useRef(false);
   const autoResumeStarted = useRef(false);
+  const verifiedRef = useRef(Boolean(customer));
   const [submitStarted, setSubmitStarted] = useState(false);
   const [resumeReady, setResumeReady] = useState(!autoSubmit);
-  const [step, setStep] = useState<0 | 1 | 2 | 3>(autoSubmit ? 3 : 0);
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [submittedInThisVisit, setSubmittedInThisVisit] = useState(Boolean(sent && reference));
+  const [step, setStep] = useState<StepIndex>(sent && reference ? 4 : autoSubmit ? 3 : 0);
   const firstStep = useRef(true);
 
   useEffect(() => {
@@ -208,9 +220,12 @@ export function HotelRequestForm({
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
   const touch = (name: string) => setTouchedFields((current) => (current[name] ? current : { ...current, [name]: true }));
   const [stars, setStars] = useState(saved.stars || defaults.stars || "any");
-  const [destination, setDestination] = useState(saved.destination || defaults.destination);
-  const [customDestination, setCustomDestination] = useState("");
-  const [phone, setPhone] = useState(saved.phone || "");
+  const [destination, setDestination] = useState(() => {
+    const initial = saved.destination || defaults.destination;
+    return destinations.includes(initial) ? initial : "";
+  });
+  const [guestName, setGuestName] = useState(saved.name || customer?.name || "");
+  const [phone, setPhone] = useState(saved.phone || customer?.phone || "");
   const [hotelName, setHotelName] = useState(saved.hotelName || defaults.hotelName || "");
   const [checkIn, setCheckIn] = useState(saved.checkIn || defaults.checkIn || "");
   const [checkOut, setCheckOut] = useState(saved.checkOut || defaults.checkOut || "");
@@ -230,46 +245,33 @@ export function HotelRequestForm({
   const [children, setChildren] = useState(clampCount(saved.children, defaults.children, 0, 12));
   const [childAges, setChildAges] = useState(splitAges(saved.childAges || defaults.childAges, clampCount(saved.children, defaults.children, 0, 12)));
   const [rooms, setRooms] = useState(clampCount(saved.rooms, defaults.rooms, 1, 10));
-  const [mounted, setMounted] = useState(false);
   const budgetValue = budgetChoice === "other" ? otherBudget.replace(/\D/g, "") : budgetChoice;
-  const destinationValue = destination === "__custom__" ? customDestination.trim() : destination;
-  const destinationOptions = useMemo<SelectOption[]>(() => {
-    const options = new Map<string, SelectOption>();
-    for (const entry of destinations) {
-      const parts = entry.split(",").map((part) => part.trim()).filter(Boolean);
-      const label = parts[0] || entry;
-      const key = label.toLocaleLowerCase();
-      if (!options.has(key)) {
-        options.set(key, {
-          value: entry,
-          label,
-          keywords: entry,
-        });
-      }
-    }
-    const result = [...options.values()];
-    if (destination && destination !== "__custom__" && !result.some((option) => option.value === destination)) {
-      result.unshift({ value: destination, label: destination });
-    }
-    result.push({ value: "__custom__", label: "+ Add a destination not listed", action: true });
-    return result;
-  }, [destination, destinations]);
+  const destinationValue = destinations.includes(destination) ? destination : "";
+  const destinationOptions = useMemo<SelectOption[]>(
+    () => destinations.map((entry) => ({ value: entry, label: entry, keywords: entry })),
+    [destinations],
+  );
   const today = todayIso();
 
   const stepOneErrors = useMemo(() => {
     const errors: Record<string, string> = {};
-    if (destinationValue.trim().length < 2) errors.destination = "Enter a destination.";
+    if (!destinationValue) errors.destination = "Choose a destination.";
     if (!checkIn) errors.checkIn = "Choose your check-in date.";
     else if (checkIn < today) errors.checkIn = "Choose today or a future date.";
     if (!checkOut) errors.checkOut = "Choose your check-out date.";
     else if (checkIn && checkOut <= checkIn) errors.checkOut = "Check-out must be after check-in.";
     else if (checkIn && nightCount(checkIn, checkOut) > 60) errors.checkOut = "Choose a stay of 60 nights or fewer.";
-    if (customer && !customer.phone && phone.replace(/\D/g, "").length < 8) errors.phone = "Enter a phone number with country code.";
+    if (!customer) {
+      if (guestName.trim().length < 2) errors.name = "Enter your name.";
+      if (!canonicalPhone(phone)) errors.phone = "Enter a phone number with country code.";
+    } else if (!customer.phone && phone.replace(/\D/g, "").length < 8) {
+      errors.phone = "Enter a phone number with country code.";
+    }
     if (children > 0 && (childAges.length !== children || childAges.some((age) => !/^\d{1,2}$/.test(age) || Number(age) > 17))) {
       errors.childAges = "Choose an age for every child.";
     }
     return errors;
-  }, [childAges, checkIn, checkOut, children, customer, destinationValue, phone, today]);
+  }, [childAges, checkIn, checkOut, children, customer, destinationValue, guestName, phone, today]);
   const stepOneValid = Object.keys(stepOneErrors).length === 0;
   const customBudgetValid = budgetChoice !== "other" ||
     (Boolean(otherBudget) && isBudgetValue([...hotelBudgetBands, ...legacyHotelBudgetBands], budgetValue));
@@ -299,10 +301,6 @@ export function HotelRequestForm({
   }, [destinationPreset, messagePreset, presetKey, starsPreset]);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
     if (!autoSubmit || resumeReady || autoResumeStarted.current) return;
     const timer = window.setTimeout(() => {
       try {
@@ -312,8 +310,8 @@ export function HotelRequestForm({
           if (pending && typeof pending === "object" && !Array.isArray(pending)) {
             const data = pending as Record<string, unknown>;
             const value = (key: string) => typeof data[key] === "string" ? data[key] as string : "";
-            setDestination(value("destination"));
-            setCustomDestination(value("customDestination"));
+            const restoredDestination = value("destination");
+            setDestination(destinations.includes(restoredDestination) ? restoredDestination : "");
             setHotelName(value("hotelName"));
             setCheckIn(value("checkIn"));
             setCheckOut(value("checkOut"));
@@ -390,21 +388,17 @@ export function HotelRequestForm({
   }, [step, view]);
 
   const successReference =
-    !busy && state.reference && !state.error
+    submittedInThisVisit && !busy && state.reference && !state.error
       ? state.reference
-      : !busy && whatsappState?.reference && !whatsappState.error
+      : submittedInThisVisit && !busy && whatsappState?.reference && !whatsappState.error
         ? whatsappState.reference
         : sent
           ? reference
           : "";
 
-  const successModal = successReference ? (
-    <SuccessModal
-      reference={successReference}
-      exploreHref="/hotels"
-      detail="Nothing is booked until you accept a stay."
-    />
-  ) : null;
+  useEffect(() => {
+    if (successReference) setStep(4);
+  }, [successReference]);
 
   function setChildCount(next: number) {
     touch("childAges");
@@ -422,25 +416,6 @@ export function HotelRequestForm({
       : [...current, value]);
   }
 
-  function loginWithBrief(form: HTMLFormElement | null) {
-    const params = new URLSearchParams();
-    if (form) {
-      const data = new FormData(form);
-      try {
-        window.sessionStorage.setItem("wch-pending-hotel-request", JSON.stringify(Object.fromEntries(data.entries())));
-      } catch {
-        // The query string below remains a fallback if session storage is unavailable.
-      }
-      for (const key of ["destination", "customDestination", "area", "hotelName", "checkIn", "checkOut", "adults", "children", "childAges", "rooms", "stars", "roomType", "meals", "stayPreference", "preferences", "budget", "message"]) {
-        const value = String(data.get(key) || "").trim();
-        if (value) params.set(key, value);
-      }
-    }
-    params.set("resume", "1");
-    const returnPath = `/hotels/request?${params}`;
-    window.location.assign(form ? `/login?next=${encodeURIComponent(returnPath)}` : loginHref);
-  }
-
   async function sendOnWhatsApp(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     const form = event.currentTarget.form;
@@ -449,6 +424,7 @@ export function HotelRequestForm({
     setSubmitStarted(true);
     const data = new FormData(form);
     data.set("channel", "whatsapp");
+    setSubmittedInThisVisit(true);
     setWhatsappPending(true);
     const result = await submitHotelRequest(initialFormState, data);
     setWhatsappState(result);
@@ -465,6 +441,7 @@ export function HotelRequestForm({
   }
 
   function continueTo(next: 1 | 2 | 3) {
+    if (step >= 4) return;
     if (step === 0 && !stepOneValid) {
       setStepOneTouched(true);
       return;
@@ -472,7 +449,7 @@ export function HotelRequestForm({
     if (step === 1 && !stepTwoValid) {
       return;
     }
-    setStep(next);
+    deferGuideStep(() => setStep(next));
   }
 
   return (
@@ -485,7 +462,19 @@ export function HotelRequestForm({
         <h1>Find a stay that feels right.</h1>
         <p>Share a few details and our local team will find the right options for you.</p>
       </div>
-      <GuidedProgress step={step} onSelect={(next) => next < step && setStep(next as 0 | 1 | 2 | 3)} />
+      <GuideProgress
+        label="Hotel"
+        labels={["Trip details", "Stay preferences", "Stay details", "Review", "Submitted"]}
+        step={step}
+        onSelect={(next) => next < step && step < 4 && setStep(next as StepIndex)}
+      />
+      {step === 4 && successReference ? (
+        <RequestSuccessStep
+          reference={successReference}
+          exploreHref="/hotels"
+          detail="Nothing is booked until you accept a stay."
+        />
+      ) : (
       <form
         ref={formRef}
         action={action}
@@ -497,27 +486,33 @@ export function HotelRequestForm({
             event.preventDefault();
             return;
           }
+          if (step < 3) {
+            event.preventDefault();
+            return;
+          }
           if (!stepOneValid) {
             event.preventDefault();
             setStep(0);
             setStepOneTouched(true);
             return;
           }
-          if (!customer) {
+          if (!customer && !verifiedRef.current) {
             event.preventDefault();
-            loginWithBrief(event.currentTarget);
+            setStep(3);
+            setVerifyOpen(true);
             return;
           }
           submissionStarted.current = true;
           setSubmitStarted(true);
+          setSubmittedInThisVisit(true);
         }}
       >
+        <input type="hidden" name="name" value={customer?.name || guestName} />
         <input type="hidden" name="stayPreference" value={stayPreference} />
         <input type="hidden" name="preferences" value={JSON.stringify(preferences)} />
         {step !== 0 ? (
           <>
             <input type="hidden" name="destination" value={destinationValue} />
-            <input type="hidden" name="customDestination" value={customDestination} />
             <input type="hidden" name="hotelName" value={hotelName} />
             <input type="hidden" name="checkIn" value={checkIn} />
             <input type="hidden" name="checkOut" value={checkOut} />
@@ -528,7 +523,7 @@ export function HotelRequestForm({
             <input type="hidden" name="area" value={area} />
           </>
         ) : null}
-        {step !== 0 && (customer || phone) && !(step === 3 && customer && !customer.phone) ? <input type="hidden" name="phone" value={phone} /> : null}
+        {step !== 0 && (customer || phone) && !(step === 3 && ((customer && !customer.phone) || !customer)) ? <input type="hidden" name="phone" value={phone} /> : null}
         {step !== 1 ? (
           <>
             <input type="hidden" name="budget" value={budgetValue} />
@@ -552,54 +547,23 @@ export function HotelRequestForm({
             <div className="hotel-guide-grid">
               <div className="hotel-guide-field hotel-guide-destination-field" id="destination-field">
                 <label htmlFor="destination-picker" className="has-icon"><Glyph name="pin" />Destination</label>
-                {destination === "__custom__" ? (
-                  <div className={`hotel-request-control hotel-guide-custom-destination-input${errorFor("destination") ? " is-invalid" : ""}`}>
-                    <input
-                      id="destination-picker"
-                      type="text"
-                      autoFocus
-                      aria-label="Destination"
-                      placeholder="Enter a city, destination or country"
-                      value={customDestination}
-                      aria-invalid={errorFor("destination") ? true : undefined}
-                      aria-describedby={errorFor("destination") ? "destination-error" : undefined}
-                      onChange={(event) => {
-                        setCustomDestination(event.target.value);
-                        touch("destination");
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="hotel-guide-custom-destination"
-                      onClick={() => {
-                        setDestination("");
-                        setCustomDestination("");
-                        touch("destination");
-                      }}
-                    >
-                      Choose from list
-                    </button>
-                  </div>
-                ) : (
-                  <SearchableSelect
-                    id="destination-picker"
-                    value={destination}
-                    options={destinationOptions}
-                    emptyLabel="Choose a destination"
-                    placeholder="Search destinations"
-                    searchPlaceholder="Search city, destination or country"
-                    ariaLabel="Destination"
-                    invalid={Boolean(errorFor("destination"))}
-                    describedBy={errorFor("destination") ? "destination-error" : undefined}
-                    className="hotel-guide-select-trigger"
-                    menuClassName="hotel-guide-select-menu"
-                    onChange={(value, typed) => {
-                      setDestination(value);
-                      setCustomDestination(value === "__custom__" ? typed || "" : "");
-                      touch("destination");
-                    }}
-                  />
-                )}
+                <SearchableSelect
+                  id="destination-picker"
+                  value={destinationValue}
+                  options={destinationOptions}
+                  emptyLabel="Choose a destination"
+                  placeholder="Search destinations"
+                  searchPlaceholder="Search destinations"
+                  ariaLabel="Destination"
+                  invalid={Boolean(errorFor("destination"))}
+                  describedBy={errorFor("destination") ? "destination-error" : undefined}
+                  className="hotel-guide-select-trigger"
+                  menuClassName="hotel-guide-select-menu"
+                  onChange={(value) => {
+                    setDestination(value);
+                    touch("destination");
+                  }}
+                />
                 <FieldMessage id="destination-error" message={errorFor("destination")} />
               </div>
               <Field label="Preferred hotel (optional)" icon="hotel" name="hotelName" placeholder="Any hotel name, if you have one in mind" value={hotelName} onChange={setHotelName} />
@@ -666,7 +630,15 @@ export function HotelRequestForm({
                 {customer.phone ? <span>{formatPhone(customer.phone) || customer.phone}</span> : null}
                 <Field label={customer.phone ? "Alternative phone (optional)" : "Phone number"} name="phone" type="tel" autoComplete="tel" placeholder="+91 98765 43210" error={errorFor("phone")} value={phone} onChange={(value) => { setPhone(value); touch("phone"); }} />
               </div>
-            ) : <input type="hidden" name="phone" value="" />}
+            ) : (
+              <div className="hotel-guide-guest-contact">
+                <p className="hotel-guide-login-note">Add your name and mobile number. We’ll text a code to this number when you submit.</p>
+                <div className="hotel-guide-grid">
+                  <Field label="Your name" name="guest-name" autoComplete="name" placeholder="Full name" error={errorFor("name")} value={guestName} onChange={(value) => { setGuestName(value); touch("name"); }} />
+                  <Field label="Contact number" name="phone" type="tel" autoComplete="tel" placeholder="+91 98765 43210" error={errorFor("phone")} value={phone} onChange={(value) => { setPhone(value); touch("phone"); }} />
+                </div>
+              </div>
+            )}
             <Field label="City area or landmark (optional)" icon="area" name="area" placeholder="Dal Lake, near the market, close to the airport" value={area} onChange={setArea} />
           </section>
         ) : null}
@@ -791,12 +763,20 @@ export function HotelRequestForm({
                 <span>Submitting as <strong>{customer.name}</strong></span>
                 {customer.phone ? <span>{formatPhone(customer.phone) || customer.phone}</span> : <Field label="Phone number" name="phone" type="tel" autoComplete="tel" placeholder="+91 98765 43210" error={errorFor("phone")} value={phone} onChange={setPhone} />}
               </div>
-            ) : <p className="hotel-guide-login-note">You’ll verify your mobile number before we send the request.</p>}
+            ) : (
+              <div className="hotel-guide-guest-contact">
+                <p className="hotel-guide-login-note">We’ll text a verification code to this number when you submit.</p>
+                <div className="hotel-guide-grid">
+                  <Field label="Your name" name="guest-name-review" autoComplete="name" placeholder="Full name" error={errorFor("name")} value={guestName} onChange={(value) => { setGuestName(value); touch("name"); }} />
+                  <Field label="Contact number" name="phone" type="tel" autoComplete="tel" placeholder="+91 98765 43210" error={errorFor("phone")} value={phone} onChange={(value) => { setPhone(value); touch("phone"); }} />
+                </div>
+              </div>
+            )}
           </section>
         ) : null}
 
         <div className="hotel-guide-actions">
-          {step > 0 ? <button type="button" className="hotel-guide-back" onClick={() => setStep((step - 1) as 0 | 1 | 2)}>Back</button> : <span className="hotel-guide-secure"><span aria-hidden="true">✦</span> Free, no-obligation request</span>}
+          {step > 0 ? <button type="button" className="hotel-guide-back" onClick={() => setStep((step - 1) as StepIndex)}>Back</button> : <span className="hotel-guide-secure"><span aria-hidden="true">✦</span> Free, no-obligation request</span>}
           {step < 3 ? (
             <div className="hotel-guide-action-right">
               {step === 0 && !stepOneValid ? <span className="hotel-guide-hint">Add a destination, dates and traveler details to continue.</span> : null}
@@ -810,24 +790,23 @@ export function HotelRequestForm({
           )}
         </div>
       </form>
-      {mounted && successModal ? createPortal(successModal, document.body) : null}
+      )}
+      <RequestPhoneVerify
+        open={verifyOpen}
+        name={guestName}
+        phone={phone}
+        config={firebaseConfig}
+        defaultCountry={defaultCountry}
+        onClose={() => setVerifyOpen(false)}
+        onVerified={({ name: verifiedName, phone: verifiedPhone }) => {
+          verifiedRef.current = true;
+          setGuestName(verifiedName);
+          setPhone(formatPhone(verifiedPhone) || verifiedPhone);
+          setVerifyOpen(false);
+          window.setTimeout(() => formRef.current?.requestSubmit(), 0);
+        }}
+      />
     </div>
-  );
-}
-
-function GuidedProgress({ step, onSelect }: { step: number; onSelect: (step: number) => void }) {
-  const labels = ["Trip details", "Stay preferences", "Stay details", "Review"];
-  return (
-    <nav className="hotel-guide-progress" aria-label="Hotel request progress">
-      <div className="hotel-guide-progress-meta"><span>STEP {step + 1} OF 4</span><strong>{labels[step]}</strong></div>
-      <div className="hotel-guide-progress-track" role="group" aria-label="Completed and current steps">
-        {labels.map((label, index) => (
-          <button key={label} type="button" className={index === step ? "is-current" : index < step ? "is-complete" : ""} aria-current={index === step ? "step" : undefined} aria-label={`Step ${index + 1}: ${label}`} disabled={index > step} onClick={() => onSelect(index)}>
-            <span />
-          </button>
-        ))}
-      </div>
-    </nav>
   );
 }
 
@@ -1150,27 +1129,5 @@ export function SuccessModal({
   exploreHref: string;
   detail: string;
 }) {
-  return (
-    <div className="hotel-request-modal" role="dialog" aria-modal="true" aria-labelledby="hotel-request-success-title">
-      <div className="hotel-request-modal-card">
-        <div className="hotel-request-modal-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M6.5 12.5 10.2 16.2 17.5 8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-        <h2 id="hotel-request-success-title">Request received</h2>
-        <p>
-          Reference {reference}. {detail}
-        </p>
-        <div className="hotel-request-modal-actions">
-          <a className="hotel-request-modal-secondary" href={exploreHref}>
-            Explore more
-          </a>
-          <a className="hotel-request-submit" href={`/account/enquiries/${reference}`}>
-            View request
-          </a>
-        </div>
-      </div>
-    </div>
-  );
+  return <RequestSuccessStep reference={reference} exploreHref={exploreHref} detail={detail} />;
 }

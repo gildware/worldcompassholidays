@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth/guards";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -11,6 +10,7 @@ import { bookingReference } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import type { FormState } from "@/lib/forms";
 import { deskWhatsAppHref } from "@/lib/brand";
+import { loadVisaDestinations } from "@/lib/request-locations";
 import { emailField } from "@/lib/validation";
 import { visaWhatsAppText } from "@/lib/visa";
 
@@ -107,6 +107,7 @@ export async function submitVisaRequest(
 ): Promise<FormState> {
   const user = await getCurrentUser();
   const customer = user?.scope === "customer" ? user : null;
+  const destinations = await loadVisaDestinations();
   const values = {
     name: customer?.name ?? text(formData.get("name")),
     email: customer?.email ?? text(formData.get("email")),
@@ -119,6 +120,13 @@ export async function submitVisaRequest(
     travellers: text(formData.get("travellers")),
     message: text(formData.get("message")),
   };
+
+  if (!customer) {
+    return {
+      error: "Log in to send this request.",
+      values,
+    };
+  }
 
   const parsed = visaSchema.safeParse({
     ...values,
@@ -133,6 +141,13 @@ export async function submitVisaRequest(
   }
 
   const data = parsed.data;
+  if (!destinations.some((item) => item.name === data.country)) {
+    return {
+      error: "Check the highlighted fields.",
+      fields: { country: "Choose a destination from the list" },
+      values,
+    };
+  }
   const channel = text(formData.get("channel")) === "whatsapp" ? "whatsapp" : "form";
   const visaLabel = visaTypeLabels[data.visaType];
   const notes = [
@@ -194,7 +209,12 @@ export async function submitVisaRequest(
     };
   }
 
-  redirect(`/visa-services/apply?sent=1&ref=${booking.reference}`);
+  return {
+    error: null,
+    success: `Saved as ${booking.reference}.`,
+    reference: booking.reference,
+    values,
+  };
 }
 
 export async function updateVisaStaffNote(

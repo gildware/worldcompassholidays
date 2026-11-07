@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import type { FirebaseOptions } from "firebase/app";
 import { submitServiceRequest } from "@/actions/service-request";
-import { SuccessModal } from "@/components/hotel-request/HotelRequestForm";
+import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
+import { canonicalPhone, formatPhone } from "@/lib/auth/phone";
 import {
   FieldMessage,
   focusGuideField,
@@ -20,6 +21,8 @@ import {
   GuideProgress,
   GuideSelectField,
   GuideTextField,
+  deferGuideStep,
+  RequestSuccessStep,
   ReviewLine,
   ReviewSection,
   StepTitle,
@@ -49,7 +52,7 @@ import { initialFormState } from "@/lib/forms";
 
 export type ServiceKind = "tour" | "car" | "bike";
 type RentalKind = Exclude<ServiceKind, "tour">;
-type StepIndex = 0 | 1 | 2 | 3;
+type StepIndex = 0 | 1 | 2 | 3 | 4;
 
 const copy = {
   car: {
@@ -57,7 +60,7 @@ const copy = {
     heading: "Find the right car for your trip.",
     lede: "Share a few details and our local team will find the right options for you.",
     backHref: "/rentals/cars",
-    labels: ["Trip details", "Car options", "Budget & notes", "Review"],
+    labels: ["Trip details", "Car options", "Budget & notes", "Review", "Submitted"],
     stepOneTitle: "Where and when do you need the car?",
     stepOneText: "Set your pickup and return details, including the pickup point and time.",
     stepTwoTitle: "Choose your car and driver options",
@@ -81,7 +84,7 @@ const copy = {
     heading: "Find the right bike for your ride.",
     lede: "Share a few details and our local team will find the right options for you.",
     backHref: "/rentals/bikes",
-    labels: ["Trip details", "Bike options", "Budget & notes", "Review"],
+    labels: ["Trip details", "Bike options", "Budget & notes", "Review", "Submitted"],
     stepOneTitle: "Where and when do you need the bike?",
     stepOneText: "Choose your pickup city and point, rental dates, and where you’ll return the bike.",
     stepTwoTitle: "Choose your bike and riding option",
@@ -116,27 +119,6 @@ const fieldSteps: Record<RentalKind, readonly (readonly string[])[]> = {
     ["phone"],
   ],
 };
-
-const loginKeys = [
-  "destination",
-  "pickupPoint",
-  "dropoffCity",
-  "itemName",
-  "start",
-  "end",
-  "pickupTime",
-  "vehicleType",
-  "passengers",
-  "drive",
-  "transmission",
-  "childSeats",
-  "bikeType",
-  "riders",
-  "needDriver",
-  "licence",
-  "budget",
-  "message",
-];
 
 export type ServiceDefaults = {
   destination: string;
@@ -200,14 +182,18 @@ export function ServiceRequestForm({
   kind,
   customer,
   defaults,
-  loginHref,
+  loginHref: _loginHref,
   locations,
+  firebaseConfig = null,
+  defaultCountry = "IN",
 }: {
   kind: RentalKind;
   customer: { name: string; email: string; phone: string } | null;
   defaults: ServiceDefaults;
   loginHref: string;
   locations: string[];
+  firebaseConfig?: FirebaseOptions | null;
+  defaultCountry?: string;
 }) {
   const router = useRouter();
   const text = copy[kind];
@@ -215,19 +201,27 @@ export function ServiceRequestForm({
   const formId = `${kind}-request-form`;
   const [state, action, pending] = useActionState(submitServiceRequest, initialFormState);
   const saved = state.values ?? {};
-  const [mounted, setMounted] = useState(false);
   const [submittedInThisVisit, setSubmittedInThisVisit] = useState(false);
+  const [verifyOpen, setVerifyOpen] = useState(false);
   const [step, setStep] = useState<StepIndex>(0);
   const [touched, setTouched] = useState<[boolean, boolean, boolean]>([false, false, false]);
-  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [contactTouched, setContactTouched] = useState(false);
   const firstStep = useRef(true);
+  const formRef = useRef<HTMLFormElement>(null);
+  const verifiedRef = useRef(Boolean(customer));
   const today = todayIso();
 
-  const [destination, setDestination] = useState(saved.destination || defaults.destination);
+  const [destination, setDestination] = useState(() => {
+    const initial = saved.destination || defaults.destination;
+    return locations.includes(initial) ? initial : "";
+  });
   const [pickupPoint, setPickupPoint] = useState(saved.pickupPoint || defaults.pickupPoint);
   const [itemName, setItemName] = useState(saved.itemName || defaults.itemName);
   const [dropMode, setDropMode] = useState(saved.dropoffCity || defaults.dropoffCity ? "other" : "same");
-  const [dropoffCity, setDropoffCity] = useState(saved.dropoffCity || defaults.dropoffCity);
+  const [dropoffCity, setDropoffCity] = useState(() => {
+    const initial = saved.dropoffCity || defaults.dropoffCity;
+    return locations.includes(initial) ? initial : "";
+  });
   const [start, setStart] = useState(saved.start || defaults.start);
   const [end, setEnd] = useState(saved.end || defaults.end);
   const [pickupTime, setPickupTime] = useState(saved.pickupTime || defaults.pickupTime);
@@ -244,16 +238,17 @@ export function ServiceRequestForm({
   const [budgetChoice, setBudgetChoice] = useState(initialBudget.choice);
   const [otherBudget, setOtherBudget] = useState(initialBudget.other);
   const [message, setMessage] = useState(saved.message || defaults.message);
-  const [phone, setPhone] = useState(saved.phone || "");
+  const [guestName, setGuestName] = useState(saved.name || customer?.name || "");
+  const [phone, setPhone] = useState(saved.phone || customer?.phone || "");
 
   const budget = resolveBudget(text.bands, budgetChoice, otherBudget);
   const times = useMemo(() => timeOptions(pickupTime), [pickupTime]);
 
   const stepErrors = useMemo(() => {
     const trip: Record<string, string> = {};
-    if (destination.trim().length < 2) trip.destination = "Enter the pickup city.";
+    if (!locations.includes(destination)) trip.destination = "Choose a pickup city.";
     if (pickupPoint.trim().length < 2) trip.pickupPoint = "Enter the pickup point.";
-    if (dropMode === "other" && dropoffCity.trim().length < 2) trip.dropoffCity = "Enter the drop-off city.";
+    if (dropMode === "other" && !locations.includes(dropoffCity)) trip.dropoffCity = "Choose a drop-off city.";
     if (!start) trip.start = "Choose your pickup date.";
     else if (start < today) trip.start = "Choose today or a future date.";
     if (!end) trip.end = "Choose your return date.";
@@ -278,16 +273,20 @@ export function ServiceRequestForm({
     if (budget.error) details.budget = budget.error;
     if (message.length > 2000) details.message = "Keep the note under 2000 characters.";
     return [trip, ride, details] as const;
-  }, [bikeType, budget.error, destination, drive, dropMode, dropoffCity, end, isCar, licence, message, needDriver, pickupPoint, pickupTime, start, today, transmission, vehicleType]);
+  }, [bikeType, budget.error, destination, drive, dropMode, dropoffCity, end, isCar, licence, locations, message, needDriver, pickupPoint, pickupTime, riders, start, today, transmission, vehicleType]);
 
-  const phoneError = customer && !customer.phone && phoneTouched && phone.replace(/\D/g, "").length < 8
-    ? "Enter a phone number with country code."
-    : undefined;
+  const nameError = !customer && contactTouched && guestName.trim().length < 2 ? "Enter your name." : undefined;
+  const phoneError = !contactTouched
+    ? undefined
+    : !customer
+      ? (!canonicalPhone(phone) ? "Enter a phone number with country code." : undefined)
+      : (!customer.phone && phone.replace(/\D/g, "").length < 8 ? "Enter a phone number with country code." : undefined);
+
+  const successReference = submittedInThisVisit && !pending && state.reference && !state.error ? state.reference : "";
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setMounted(true));
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
+    if (successReference) setStep(4);
+  }, [successReference]);
 
   useEffect(() => {
     if (!state.error) return;
@@ -324,18 +323,7 @@ export function ServiceRequestForm({
       touchStep(index);
       if (Object.keys(stepErrors[index]).length) return;
     }
-    setStep(next);
-  }
-
-  function loginWithBrief(form: HTMLFormElement) {
-    const data = new FormData(form);
-    const params = new URLSearchParams();
-    for (const key of loginKeys) {
-      const value = String(data.get(key) || "").trim();
-      if (value) params.set(key, value);
-    }
-    const next = params.size ? `${text.backHref}/request?${params}` : `${text.backHref}/request`;
-    router.push(params.size ? `/login?next=${encodeURIComponent(next)}` : loginHref);
+    deferGuideStep(() => setStep(next));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -351,22 +339,20 @@ export function ServiceRequestForm({
         return;
       }
     }
-    if (!customer) {
+    if (!customer && !verifiedRef.current) {
       event.preventDefault();
-      loginWithBrief(event.currentTarget);
+      setContactTouched(true);
+      if (guestName.trim().length < 2 || !canonicalPhone(phone)) return;
+      setVerifyOpen(true);
       return;
     }
-    if (!customer.phone && phone.replace(/\D/g, "").length < 8) {
+    if (customer && !customer.phone && phone.replace(/\D/g, "").length < 8) {
       event.preventDefault();
-      setPhoneTouched(true);
+      setContactTouched(true);
       return;
     }
     setSubmittedInThisVisit(true);
   }
-
-  const successModal = submittedInThisVisit && !pending && state.reference && !state.error ? (
-    <SuccessModal reference={state.reference} exploreHref={text.backHref} detail={text.detail} />
-  ) : null;
 
   const [tripErrors, rideErrors, detailErrors] = stepErrors;
   const [showTrip, showRide, showDetails] = touched;
@@ -382,8 +368,12 @@ export function ServiceRequestForm({
         <h1>{text.heading}</h1>
         <p>{text.lede}</p>
       </div>
-      <GuideProgress label={isCar ? "Car" : "Bike"} labels={text.labels} step={step} onSelect={(next) => next < step && setStep(next as StepIndex)} />
-      <form id={formId} action={action} noValidate className="hotel-request-form hotel-guide-form" onSubmit={handleSubmit}>
+      <GuideProgress label={isCar ? "Car" : "Bike"} labels={text.labels} step={step} onSelect={(next) => next < step && step < 4 && setStep(next as StepIndex)} />
+      {step === 4 && successReference ? (
+        <RequestSuccessStep reference={successReference} exploreHref={text.backHref} detail={text.detail} />
+      ) : (
+      <>
+      <form ref={formRef} id={formId} action={action} noValidate className="hotel-request-form hotel-guide-form" onSubmit={handleSubmit}>
         <input type="hidden" name="kind" value={kind} />
         <input type="hidden" name="destination" value={destination} />
         <input type="hidden" name="pickupPoint" value={pickupPoint} />
@@ -411,6 +401,7 @@ export function ServiceRequestForm({
         )}
         <input type="hidden" name="budget" value={budget.value} />
         <input type="hidden" name="message" value={message} />
+        <input type="hidden" name="name" value={customer?.name || guestName} />
         <input type="hidden" name="phone" value={phone} />
         {state.error ? <p className="hotel-request-banner-alert hotel-guide-alert" role="alert">{state.fields ? "Please check the highlighted details." : state.error}</p> : null}
 
@@ -424,8 +415,6 @@ export function ServiceRequestForm({
                 value={destination}
                 cities={locations}
                 emptyLabel="Choose a pickup city"
-                customLabel="+ Enter another city"
-                customPlaceholder="Enter a city or location"
                 error={errorFor("destination", tripErrors.destination, showTrip)}
                 onChange={setDestination}
               />
@@ -461,8 +450,6 @@ export function ServiceRequestForm({
                   value={dropoffCity}
                   cities={locations}
                   emptyLabel="Choose a drop-off city"
-                  customLabel="+ Enter another city"
-                  customPlaceholder="Enter a city or location"
                   error={errorFor("dropoffCity", tripErrors.dropoffCity, showTrip)}
                   onChange={setDropoffCity}
                 />
@@ -567,12 +554,36 @@ export function ServiceRequestForm({
               </ReviewSection>
             </div>
             <p className="hotel-guide-reassurance">{text.reassurance}</p>
-            <GuideContact customer={customer} phone={phone} error={phoneError} onPhone={setPhone} />
+            <GuideContact
+              customer={customer}
+              name={guestName}
+              phone={phone}
+              nameError={nameError}
+              phoneError={phoneError}
+              onName={(value) => { setGuestName(value); setContactTouched(true); }}
+              onPhone={(value) => { setPhone(value); setContactTouched(true); }}
+            />
           </section>
         ) : null}
       </form>
       <GuideActions step={step} last={3} formId={formId} busy={pending} submitLabel={text.submit} busyLabel="Sending request…" onBack={() => setStep((step - 1) as StepIndex)} onContinue={() => continueTo((step + 1) as 1 | 2 | 3)} />
-      {mounted && successModal ? createPortal(successModal, document.body) : null}
+      </>
+      )}
+      <RequestPhoneVerify
+        open={verifyOpen}
+        name={guestName}
+        phone={phone}
+        config={firebaseConfig}
+        defaultCountry={defaultCountry}
+        onClose={() => setVerifyOpen(false)}
+        onVerified={({ name: verifiedName, phone: verifiedPhone }) => {
+          verifiedRef.current = true;
+          setGuestName(verifiedName);
+          setPhone(formatPhone(verifiedPhone) || verifiedPhone);
+          setVerifyOpen(false);
+          window.setTimeout(() => formRef.current?.requestSubmit(), 0);
+        }}
+      />
     </div>
   );
 }

@@ -16,10 +16,11 @@ import { pageMetadata } from "@/lib/seo";
 import { cached } from "@/lib/ttl-cache";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Hotels and stays",
+  title: "Hotels & Stays Across India",
   description:
-    "Hotels and stays with rates, locations, and what is included. Search by city and dates, or ask us to find a place that is not listed.",
+    "Find hotels and stays across India with nightly rates, locations, and inclusions. Search by city and dates, or request a property that is not listed yet.",
   path: "/hotels",
+  keywords: ["hotels in India", "India stays", "book hotel India", "mountain hotels"],
 });
 
 function isoAhead(days: number) {

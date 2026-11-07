@@ -14,6 +14,7 @@ import { coachLabel } from "@/lib/buses";
 import { prisma } from "@/lib/db";
 import { favoriteIds } from "@/lib/favorites";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getGoogleReviewsForPlace } from "@/lib/google-reviews";
 import { getHomePageContent, orderByIds, type HomeRailConfig } from "@/lib/home-page";
 import { getPublicNav } from "@/lib/navigation";
 import { resolveRideCover, stayImageList } from "@/lib/catalog-media";
@@ -163,6 +164,16 @@ export const metadata: Metadata = pageMetadata({
   absoluteTitle: true,
   image: "/img/masthead/1/bg.webp",
   imageAlt: "A mountain road planned by World Compass Holidays",
+  keywords: [
+    "World Compass Holidays",
+    "India tours",
+    "holiday packages India",
+    "hotels in India",
+    "car rental India",
+    "bike rental India",
+    "visa assistance",
+    "airport meet and assist",
+  ],
 });
 
 function railWhere(rail: HomeRailConfig, auto: Record<string, unknown>) {
@@ -176,6 +187,11 @@ export default async function Page() {
   const items = getPublicNav();
   const user = await getCurrentUser();
   const home = await getHomePageContent();
+  const reviewsEnabled = home.sections.some((section) => section.id === "reviews" && section.enabled);
+  const googleReviews =
+    reviewsEnabled && home.reviews.placeId.trim()
+      ? await getGoogleReviewsForPlace(home.reviews.placeId)
+      : null;
   const listKey = [
     home.destinations.mode,
     home.destinations.ids.join(","),
@@ -523,6 +539,7 @@ export default async function Page() {
           coverUrl={coverUrl}
           savedIds={savedIds}
           signedIn={Boolean(signedInCustomer)}
+          googleReviews={googleReviews}
         />
       </div>
 
@@ -578,6 +595,7 @@ export default async function Page() {
           showBuses={modules.buses}
           savedIds={savedIds}
           signedIn={Boolean(signedInCustomer)}
+          googleReviews={googleReviews}
         />
         <HomeFooter items={items} />
       </div>

@@ -207,6 +207,7 @@ export function HotelRequestDesk({
             reference={reference}
             customer={customer}
             defaults={defaults}
+            destinations={places.map((place) => place.name)}
             presetKey={preset.key}
             destinationPreset={preset.destination}
             starsPreset={preset.stars}

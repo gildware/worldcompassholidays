@@ -12,9 +12,9 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getSiteSettings } from "@/lib/brand";
 import { pageMetadata } from "@/lib/seo";
 
-const pageTitle = "Visa help for Indian passports";
+const pageTitle = "Visa Assistance for Indian Passports";
 const pageDescription =
-  "Visa assistance for Indian passports. We list every document, quote the service fee before you pay, and keep the embassy fee separate. Thailand, Japan, the Schengen area, the UAE, and more.";
+  "Visa help for Indian passports — document checklist, service fee quoted before you pay, embassy fee kept separate. Thailand, Japan, Schengen, UAE, and more destinations.";
 
 export const metadata: Metadata = pageMetadata({
   title: pageTitle,
@@ -22,6 +22,7 @@ export const metadata: Metadata = pageMetadata({
   path: "/visa-services",
   image: "/img/visa/visa-hero.jpg",
   imageAlt: "Traveler with a passport at an airport window",
+  keywords: ["visa assistance India", "Indian passport visa", "Schengen visa help", "Thailand visa India"],
 });
 
 const stats = [

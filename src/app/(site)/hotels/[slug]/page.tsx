@@ -79,16 +79,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const hotel = await loadHotel(slug);
   if (!hotel?.published) return privateMetadata("Hotel");
   const place = hotel.destination?.name;
+  const stars = hotel.starRating > 0 ? `${hotel.starRating}-star ` : "";
+  const fallbackTitle = place
+    ? `${hotel.name} | ${stars}Hotel in ${place}`.replace(/\s+/g, " ").trim()
+    : `${hotel.name} | ${stars}Hotel in India`.replace(/\s+/g, " ").trim();
   return pageMetadata({
-    title: hotel.seoTitle.trim() || hotel.name,
+    title: hotel.seoTitle.trim() || fallbackTitle,
     description:
       hotel.seoDescription.trim() ||
       hotel.summary.trim() ||
-      `${hotel.name}${place ? ` in ${place}` : ""}. Rooms, rates, and what is included.`,
+      `${hotel.name}${place ? ` in ${place}` : ""} — rooms, nightly rates, and what is included. Enquire with World Compass Holidays before you pay.`,
     path: `/hotels/${slug}`,
     image: hotel.seoImageUrl || hotel.featuredImageUrl || hotel.imageUrl,
     imageAlt: hotel.name,
     index: hotel.seoIndex,
+    type: "article",
   });
 }
 

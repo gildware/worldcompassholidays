@@ -23,6 +23,13 @@
   }
 
   /* Slight side inset for list/detail pages on phone & tablet */
+  .site-shell,
+  .site-shell > main.public-header-offset,
+  .worldcompassholiday-page > main {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .site-shell > main.public-header-offset,
   .worldcompassholiday-page > main {
     padding-left: 0;
@@ -141,6 +148,15 @@
     font: inherit;
     text-decoration: none;
     cursor: pointer;
+    outline: none;
+    box-shadow: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-app-header__icon:focus,
+  .mobile-app-header__icon:focus-visible {
+    outline: none;
+    box-shadow: none;
   }
 
   .mobile-app-header__icon svg {
@@ -166,9 +182,20 @@
     gap: 8px;
     min-height: 46px;
     padding: 0 8px 0 12px;
+    border: 0;
     border-radius: 14px;
     background: #fff;
     color: var(--navy);
+    box-shadow: none;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .catalog-search__field:focus,
+  .catalog-search__field:focus-within {
+    border: 0;
+    outline: none;
+    box-shadow: none;
   }
 
   .catalog-search__field svg {
@@ -178,23 +205,36 @@
     color: var(--muted);
   }
 
-  .catalog-search__field input {
+  .catalog-search__field input,
+  .catalog-search__field input:focus,
+  .catalog-search__field input:focus-visible,
+  .catalog-search__field input:focus-within {
     flex: 1;
     min-width: 0;
-    border: 0;
-    background: transparent;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
     padding: 12px 0;
+    border: 0 !important;
+    border-radius: 0;
+    background: transparent !important;
     color: var(--navy);
     font: inherit;
     font-size: 0.92rem;
     font-weight: 500;
+    outline: none !important;
+    box-shadow: none !important;
+    appearance: none;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    caret-color: var(--navy);
   }
 
-  .catalog-search__field input:focus {
-    outline: none;
-  }
-
+  .catalog-search__field input::-webkit-search-decoration,
   .catalog-search__field input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
     display: none;
   }
 
@@ -633,7 +673,8 @@
 
   /* Hotel / tour detail Book docks sit above the tab bar */
   body:has(.mobile-tabbar) .stay-dock,
-  body:has(.mobile-tabbar) .road-dock {
+  body:has(.mobile-tabbar) .road-dock,
+  body:has(.mobile-tabbar) .rental-detail__dock {
     bottom: calc(68px + env(safe-area-inset-bottom, 0px));
   }
 

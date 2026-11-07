@@ -2,7 +2,7 @@ export const theme = {
   brandName: "World Compass Holidays",
   tagline: "Tours, treks, stays, and rides across the mountains and the coast.",
   description:
-    "Tours, treks, hotels, and car and bike rental across India. We quote the trip before you pay, from the mountains to the coast.",
+    "Book India tours, hotels, and car or bike rentals with World Compass Holidays. Guided packages, stays, and rides from the mountains to the coast — quoted before you pay.",
   headline: "Plan the journey. We handle the rest.",
   colors: {
     navy: "#051036",

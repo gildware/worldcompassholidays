@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import { HotelRequestForm, type HotelRequestDefaults } from "@/components/hotel-request/HotelRequestForm";
 import { WorldCompassHolidayFrame } from "@/components/worldcompassholiday/WorldCompassHolidayFrame";
 import { modules } from "@/config/modules";
+import { countryIsoFromHeaders } from "@/lib/auth/countries";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
   allHotelBudgetBands,
@@ -13,13 +15,14 @@ import {
   isBudgetValue,
   legacyHotelRoomTypes,
 } from "@/lib/custom-request";
-import { prisma } from "@/lib/db";
+import { firebaseWebConfig } from "@/lib/firebase/config";
+import { loadDestinationNames } from "@/lib/request-locations";
 import { pageMetadata } from "@/lib/seo";
 import "@/styles/hotel-request.css";
 
-const pageTitle = "Request a hotel";
+const pageTitle = "Request a Hotel Stay";
 const pageDescription =
-  "Can't find the hotel you want? Send the city, dates, and what you need. We search, including stays that are not listed, and contact you with options.";
+  "Can't find the hotel you want? Send the city, dates, and preferences. We search listed and unlisted stays and reply with options before anything is booked.";
 
 export const metadata: Metadata = pageMetadata({
   title: pageTitle,
@@ -61,14 +64,10 @@ export default async function HotelRequestPage({
   }>;
 }) {
   if (!modules.hotels) notFound();
-  const [params, user, destinationRows] = await Promise.all([
+  const [params, user, destinationSuggestions] = await Promise.all([
     searchParams,
     getCurrentUser(),
-    prisma.destination.findMany({
-      where: { published: true },
-      select: { name: true, region: true, country: true },
-      orderBy: [{ popular: "desc" }, { name: "asc" }],
-    }),
+    loadDestinationNames(),
   ]);
   const customer = user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null;
   const reference = params.ref && /^BK-[A-Z0-9]+$/.test(params.ref) ? params.ref : "";
@@ -82,8 +81,9 @@ export default async function HotelRequestPage({
   } catch {
     preferenceValues = [];
   }
+  const requestedDestination = (params.destination ?? "").slice(0, 120);
   const defaults: HotelRequestDefaults = {
-    destination: (params.destination ?? "").slice(0, 120),
+    destination: destinationSuggestions.includes(requestedDestination) ? requestedDestination : "",
     checkIn: dateParam(params.checkIn),
     checkOut: dateParam(params.checkOut),
     adults: countParam(params.adults, "2"),
@@ -123,17 +123,6 @@ export default async function HotelRequestPage({
   }
   const returnPath = nextQuery.size ? `/hotels/request?${nextQuery}` : "/hotels/request";
   const loginHref = `/login?next=${encodeURIComponent(returnPath)}`;
-  if (!customer) redirect(loginHref);
-  const destinationSuggestions = [...new Set(destinationRows.flatMap((place) => {
-    const values = [
-      place.name,
-      [place.name, place.country].filter(Boolean).join(", "),
-      [place.name, place.region, place.country].filter(Boolean).join(", "),
-      [place.region, place.country].filter(Boolean).join(", "),
-      place.country,
-    ];
-    return values.map((value) => value.trim()).filter(Boolean);
-  }))];
   return (
     <WorldCompassHolidayFrame className="is-hotel-request">
       <div className="hotel-brief">
@@ -145,6 +134,8 @@ export default async function HotelRequestPage({
             defaults={defaults}
             destinations={destinationSuggestions}
             loginHref={loginHref}
+            firebaseConfig={firebaseWebConfig()}
+            defaultCountry={countryIsoFromHeaders(await headers())}
             autoSubmit={params.resume === "1" && Boolean(customer)}
           />
         </div>

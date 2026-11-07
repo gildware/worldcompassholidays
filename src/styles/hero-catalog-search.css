@@ -26,23 +26,30 @@
   color: #697488;
 }
 
-.masthead-search .catalog-search__field input {
+.masthead-search .catalog-search__field input,
+.masthead-search .catalog-search__field input:focus,
+.masthead-search .catalog-search__field input:focus-visible {
   flex: 1;
   min-width: 0;
   height: 68px;
-  border: 0;
-  background: transparent;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
   color: #051036;
   font: inherit;
   font-size: 18px;
   font-weight: 500;
+  outline: none !important;
+  box-shadow: none !important;
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.masthead-search .catalog-search__field input:focus {
-  outline: none;
-}
-
+.masthead-search .catalog-search__field input::-webkit-search-decoration,
 .masthead-search .catalog-search__field input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
   display: none;
 }
 

@@ -145,6 +145,18 @@ const adminNav: (NavItem & {
       ],
     },
     {
+      href: "/admin/visa/destinations",
+      label: "Visa destinations",
+      permission: "bookings.manage",
+      enabled: true,
+    },
+    {
+      href: "/admin/meet-and-assist/airports",
+      label: "Greeter airports",
+      permission: "bookings.manage",
+      enabled: true,
+    },
+    {
       href: "/admin/customers",
       label: "Customers",
       permission: "customers.view",

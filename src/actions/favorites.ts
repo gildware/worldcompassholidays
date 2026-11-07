@@ -24,18 +24,18 @@ export async function toggleFavorite(kind: string, itemId: string): Promise<Togg
   if (!user || user.scope !== "customer") return { ok: false, reason: "auth" };
   if (!isFavoriteKind(kind) || !itemId.trim()) return { ok: false, reason: "missing" };
 
-  const itemPath = await publishedFavoritePath(kind, itemId);
-  if (!itemPath) return { ok: false, reason: "missing" };
+  const target = await publishedFavoritePath(kind, itemId);
+  if (!target) return { ok: false, reason: "missing" };
 
-  const where = { userId_kind_itemId: { userId: user.id, kind, itemId } };
+  const where = { userId_kind_itemId: { userId: user.id, kind, itemId: target.itemId } };
   const existing = await prisma.favorite.findUnique({ where, select: { id: true } });
   if (existing) {
     await prisma.favorite.delete({ where: { id: existing.id } });
-    revalidateFavorite(itemPath);
+    revalidateFavorite(target.path);
     return { ok: true, saved: false };
   }
 
-  await prisma.favorite.create({ data: { userId: user.id, kind, itemId } });
-  revalidateFavorite(itemPath);
+  await prisma.favorite.create({ data: { userId: user.id, kind, itemId: target.itemId } });
+  revalidateFavorite(target.path);
   return { ok: true, saved: true };
 }

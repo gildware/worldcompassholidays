@@ -87,6 +87,14 @@ const KIND_HINTS: Record<CatalogKind, { label: string; hint: string }> = {
     label: "Facilities",
     hint: "What a bus can offer, such as charging points, a blanket, or air conditioning. Routes reuse the bus.",
   },
+  visa_destination: {
+    label: "Destinations",
+    hint: "Countries offered on the visa request form. Only these values appear for travellers.",
+  },
+  assist_airport: {
+    label: "Airports",
+    hint: "Airports offered on the greeter request form. Store the IATA code in the detail field.",
+  },
 };
 
 export function CatalogWorkspace({
@@ -450,7 +458,11 @@ function CatalogItemForm({
               ? "City or stop"
               : kind === "bus_facility"
                 ? "Facility"
-                : "Title"
+                : kind === "visa_destination"
+                  ? "Country"
+                  : kind === "assist_airport"
+                    ? "Airport label"
+                    : "Title"
         }
         required
       >
@@ -464,12 +476,43 @@ function CatalogItemForm({
                 ? "Srinagar"
                 : kind === "bus_facility"
                   ? "Charging points"
-                  : "Title"
+                  : kind === "visa_destination"
+                    ? "United Arab Emirates"
+                    : kind === "assist_airport"
+                      ? "Srinagar (SXR)"
+                      : "Title"
           }
           className="!h-10"
           required
         />
       </Field>
+      {kind === "visa_destination" ? (
+        <Field label="Country code and keywords (optional)">
+          <input
+            name="content"
+            defaultValue={item?.content ?? ""}
+            placeholder="ae|uae emirates dubai"
+            className="!h-10"
+          />
+          <p className="mt-1 text-xs text-muted">
+            Format: <code>code|search keywords</code>. Used for the flag and search on the request form.
+          </p>
+        </Field>
+      ) : null}
+      {kind === "assist_airport" ? (
+        <Field label="Airport detail" required>
+          <input
+            name="content"
+            defaultValue={item?.content ?? ""}
+            placeholder="SXR|in|Sheikh ul-Alam|Srinagar|India"
+            className="!h-10"
+            required
+          />
+          <p className="mt-1 text-xs text-muted">
+            Format: <code>IATA|countryCode|airport name|city|country</code>. Only listed airports appear on the request form.
+          </p>
+        </Field>
+      ) : null}
       {catalogKindHasNote(kind) ? (
         <>
           <Field label="Usual boarding point">

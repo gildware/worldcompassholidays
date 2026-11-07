@@ -10,6 +10,7 @@ import { bookingReference } from "@/lib/bookings";
 import { busCoachTypes, busTimeWindows, coachLabel, timeWindowLabel } from "@/lib/buses";
 import { prisma } from "@/lib/db";
 import { firstIssue, type FormState } from "@/lib/forms";
+import { loadBusLocationNames } from "@/lib/request-locations";
 import { emailField } from "@/lib/validation";
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
@@ -176,6 +177,18 @@ export async function submitBusRequest(_previous: FormState, formData: FormData)
     return {
       error: firstIssue(parsed.error),
       fields: fieldErrors(parsed.error),
+      values,
+    };
+  }
+
+  const cities = new Set(await loadBusLocationNames());
+  if (!cities.has(parsed.data.fromCity) || !cities.has(parsed.data.toCity)) {
+    return {
+      error: "Choose boarding and arrival cities from the list.",
+      fields: {
+        ...(!cities.has(parsed.data.fromCity) ? { fromCity: "Choose a boarding city from the list." } : {}),
+        ...(!cities.has(parsed.data.toCity) ? { toCity: "Choose an arrival city from the list." } : {}),
+      },
       values,
     };
   }
