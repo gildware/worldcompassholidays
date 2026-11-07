@@ -1,20 +1,13 @@
 import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
 import { Suspense } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { requireStaff } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { getSiteBrand } from "@/lib/brand";
+import { figtree } from "@/lib/fonts";
 import { getAdminNav } from "@/lib/navigation";
 import { noIndexRobots } from "@/lib/seo";
-
-const figtree = Figtree({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-figtree",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: {

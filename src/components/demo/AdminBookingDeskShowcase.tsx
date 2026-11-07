@@ -1,22 +1,8 @@
 "use client";
 
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { useMemo, useState } from "react";
+import { ibmPlexMono as plexMono, ibmPlexSans as plex } from "@/lib/fonts";
 import "./admin-booking-desk.css";
-
-const plex = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-ad-sans",
-  display: "swap",
-});
-
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-ad-mono",
-  display: "swap",
-});
 
 type Tone = "ok" | "warn" | "info" | "mute";
 

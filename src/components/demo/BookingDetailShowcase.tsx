@@ -1,22 +1,8 @@
 "use client";
 
-import { Outfit, Fraunces } from "next/font/google";
 import { useMemo, useState } from "react";
+import { fraunces, outfit } from "@/lib/fonts";
 import "./booking-detail-showcase.css";
-
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-bd-sans",
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["500", "600"],
-  variable: "--font-bd-display",
-  display: "swap",
-});
 
 type Tone = "ok" | "warn" | "info";
 
