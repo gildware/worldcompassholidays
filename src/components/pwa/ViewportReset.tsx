@@ -19,12 +19,17 @@ export function ViewportReset() {
     if (!phone) return;
     const meta = document.querySelector('meta[name="viewport"]');
     if (!meta) return;
-    const current = meta.getAttribute("content") || "width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover";
+    const current =
+      meta.getAttribute("content") ||
+      "width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover, interactive-widget=resizes-content";
     const unlocked = current.replace(/,?\s*maximum-scale=[^,]+/g, "");
-    meta.setAttribute("content", `${unlocked}, maximum-scale=1`);
+    const withWidget = /interactive-widget=/i.test(unlocked)
+      ? unlocked
+      : `${unlocked}, interactive-widget=resizes-content`;
+    meta.setAttribute("content", `${withWidget}, maximum-scale=1`);
     const timer = window.setTimeout(() => {
       const fits = document.documentElement.scrollWidth <= window.innerWidth + 1;
-      meta.setAttribute("content", fits ? unlocked : `${unlocked}, maximum-scale=1`);
+      meta.setAttribute("content", fits ? withWidget : `${withWidget}, maximum-scale=1`);
     }, 120);
     return () => window.clearTimeout(timer);
   }, [pathname]);

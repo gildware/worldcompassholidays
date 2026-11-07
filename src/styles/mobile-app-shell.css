@@ -50,6 +50,30 @@
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
 
+  /* Soft keyboard open: free the bottom edge and keep fields scrollable */
+  html.keyboard-open body {
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  }
+
+  html.keyboard-open .mobile-tabbar,
+  html.keyboard-open .mobile-tabbar__backdrop,
+  html.keyboard-open .mobile-tabbar__sheet,
+  html.keyboard-open .whatsapp-float,
+  html.keyboard-open .stay-dock,
+  html.keyboard-open .road-dock,
+  html.keyboard-open .rental-detail__dock {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  html.keyboard-open input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+  html.keyboard-open textarea,
+  html.keyboard-open select,
+  html.keyboard-open [contenteditable="true"] {
+    scroll-margin-bottom: calc(24px + var(--keyboard-inset, 0px));
+    scroll-margin-top: 24px;
+  }
+
   .site-shell,
   .worldcompassholiday-page {
     padding-bottom: 0;

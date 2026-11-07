@@ -568,12 +568,14 @@
   box-sizing: border-box;
   height: 100%;
   min-height: 100%;
+  /* Shrink with the soft keyboard so nested form panes stay scrollable. */
+  max-height: calc(100dvh - var(--keyboard-inset, 0px));
   overflow: hidden;
   font-family: var(--font-figtree), "Figtree", "IBM Plex Sans", sans-serif;
 }
 .ops-cc *, .ops-cc *::before, .ops-cc *::after { box-sizing: border-box; }
 .ops-cc .app { height: 100%; min-height: 100%; }
-.ops-cc .sidebar { height: 100%; max-height: 100dvh; overflow: auto; }
+.ops-cc .sidebar { height: 100%; max-height: calc(100dvh - var(--keyboard-inset, 0px)); overflow: auto; }
 .ops-cc .main {
   min-width: 0;
   min-height: 0;

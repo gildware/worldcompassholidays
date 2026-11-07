@@ -698,8 +698,12 @@ a.home-fleet-card__btn:focus-visible {
   }
 }
 
-/* Empty fleet — section still shows when no vehicle is published. */
-.ride-promo {
+/* Empty fleet — section still shows when no vehicle is published.
+   Site link/paragraph rules (.worldcompassholiday-page a / p) are more
+   specific and were forcing dark navy text onto this photo card. */
+.ride-promo,
+.worldcompassholiday-page a.ride-promo,
+.home-x a.ride-promo {
   position: relative;
   display: flex;
   align-items: flex-end;
@@ -726,16 +730,22 @@ a.home-fleet-card__btn:focus-visible {
   z-index: 1;
   padding: 20px;
   max-width: 480px;
+  color: #fff;
 }
 
-.ride-promo__body h3 {
+.ride-promo__body h3,
+.worldcompassholiday-page .ride-promo__body h3,
+.home-x .ride-promo__body h3 {
   margin: 0 0 6px;
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.02em;
+  color: #fff;
 }
 
-.ride-promo__body p {
+.ride-promo__body p,
+.worldcompassholiday-page .ride-promo__body p,
+.home-x .ride-promo__body p {
   margin: 0;
   font-size: 0.86rem;
   line-height: 1.45;
@@ -750,16 +760,21 @@ a.home-fleet-card__btn:focus-visible {
   gap: 4px;
 }
 
-.ride-promo__body li {
+.ride-promo__body li,
+.worldcompassholiday-page .ride-promo__body li,
+.home-x .ride-promo__body li {
   font-size: 0.78rem;
   line-height: 1.35;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .ride-promo__body li::before {
   content: "· ";
 }
 
-.ride-promo__cta {
+.ride-promo__cta,
+.worldcompassholiday-page a.ride-promo .ride-promo__cta,
+.home-x a.ride-promo .ride-promo__cta {
   display: inline-flex;
   margin-top: 14px;
   padding: 10px 14px;

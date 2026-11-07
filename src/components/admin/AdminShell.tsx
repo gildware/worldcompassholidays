@@ -484,7 +484,7 @@ export function AdminShell({
   }
 
   return (
-    <div className="ops-cc" style={{ height: "100dvh" }}>
+    <div className="ops-cc" style={{ height: "calc(100dvh - var(--keyboard-inset, 0px))" }}>
       <div
         className={`scrim${navOpen ? " show" : ""}`}
         hidden={!navOpen}

@@ -54,6 +54,15 @@
   box-shadow: none;
 }
 
+.worldcompassholiday-page .hotel-request-control input,
+.worldcompassholiday-page .hotel-request-control select {
+  height: 48px;
+  max-height: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .worldcompassholiday-page .hotel-request-control select {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23051036' d='M1.4 0.6L6 5.2 10.6.6 12 2 6 8 0 2z'/%3E%3C/svg%3E");
@@ -1617,10 +1626,15 @@
 .worldcompassholiday-page .hotel-guide-contact .hotel-request-control input,
 .worldcompassholiday-page .hotel-guide-age-grid select,
 .worldcompassholiday-page .hotel-guide-preference-grid select {
+  height: 46px;
   min-height: 46px;
+  max-height: 46px;
   border-color: #dce1ea;
   border-radius: 11px;
   font-size: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .worldcompassholiday-page .hotel-guide-grid .hotel-request-control input:focus,
@@ -1894,13 +1908,29 @@
 
 .worldcompassholiday-page .hotel-guide-preference-grid select {
   width: 100%;
+  height: 46px;
   min-height: 46px;
+  max-height: 46px;
   padding: 0 40px 0 13px;
   border: 1px solid #dce1ea;
   border-radius: 11px;
   background-color: #fff;
   color: #071333;
   font-size: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worldcompassholiday-page .hotel-guide-field .hotel-request-control input,
+.worldcompassholiday-page .hotel-guide-field .hotel-request-control select,
+.worldcompassholiday-page .hotel-guide-field .hotel-guide-select-trigger {
+  height: 46px;
+  min-height: 46px;
+  max-height: 46px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .worldcompassholiday-page .hotel-guide-preference-grid .hotel-request-other {
@@ -1956,6 +1986,7 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .worldcompassholiday-page .hotel-guide-feature-group {
@@ -2361,8 +2392,22 @@
   .worldcompassholiday-page .hotel-guide-grid .hotel-request-control input,
   .worldcompassholiday-page .hotel-guide-grid .hotel-request-control select,
   .worldcompassholiday-page .hotel-guide-age-grid select,
-  .worldcompassholiday-page .hotel-guide-preference-grid select {
+  .worldcompassholiday-page .hotel-guide-preference-grid select,
+  .worldcompassholiday-page .hotel-guide-field .hotel-request-control input,
+  .worldcompassholiday-page .hotel-guide-field .hotel-request-control select,
+  .worldcompassholiday-page .hotel-guide-field .hotel-guide-select-trigger,
+  .worldcompassholiday-page .hotel-guide-select-trigger,
+  .worldcompassholiday-page .hr-stay-date .sl-who {
+    height: 44px;
     min-height: 44px;
+    max-height: 44px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .worldcompassholiday-page .hr-stay-date .sl-who strong {
+    line-height: 42px;
   }
 
   .worldcompassholiday-page .hotel-guide-travellers {
@@ -2564,8 +2609,9 @@
   display: flex;
   width: 100%;
   min-width: 0;
-  height: auto;
+  height: 46px;
   min-height: 46px;
+  max-height: 46px;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -2574,6 +2620,7 @@
   border-color: #dce1ea;
   border-radius: 11px;
   font-size: 16px;
+  overflow: hidden;
 }
 
 .worldcompassholiday-page .hotel-guide-select-trigger > span:first-child {
@@ -2582,6 +2629,14 @@
   flex: 1 1 auto;
   align-items: center;
   gap: 8px;
+  overflow: hidden;
+}
+
+.worldcompassholiday-page .hotel-guide-select-trigger > span:first-child > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .worldcompassholiday-page .hotel-guide-select-trigger > svg {
@@ -2601,18 +2656,25 @@
 .worldcompassholiday-page .hr-stay-date .sl-who {
   display: block;
   width: 100%;
+  height: 46px;
   min-height: 46px;
+  max-height: 46px;
   padding: 0 14px;
   border: 1px solid #dce1ea;
   border-radius: 11px;
   background: #fff;
   text-align: left;
+  overflow: hidden;
 }
 
 .worldcompassholiday-page .hr-stay-date .sl-who strong {
+  display: block;
   padding-top: 0;
   line-height: 44px;
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .hr-cal-pop.stay-list {
@@ -2682,12 +2744,17 @@
 }
 
 .worldcompassholiday-page .hotel-guide-custom-destination-input input {
+  height: 46px;
   min-height: 46px;
+  max-height: 46px;
   padding: 0 128px 0 12px;
   border-color: #dce1ea;
   border-radius: 11px;
   font-size: 14px;
   box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .worldcompassholiday-page .hotel-guide-custom-destination-input .hotel-guide-custom-destination {

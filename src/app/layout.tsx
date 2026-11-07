@@ -4,6 +4,7 @@ import { theme } from "@/config/theme";
 import { RotatingFavicon } from "@/components/worldcompassholiday/RotatingFavicon";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { ViewportReset } from "@/components/pwa/ViewportReset";
+import { KeyboardAvoid } from "@/components/pwa/KeyboardAvoid";
 import { MobileAppHeader } from "@/components/pwa/MobileAppHeader";
 import { MobileTabBar } from "@/components/pwa/MobileTabBar";
 import { SerwistProvider } from "@/components/pwa/SerwistProvider";
@@ -129,6 +130,8 @@ export const viewport: Viewport = {
   /* Stops iOS from zooming the layout out to fit a wide first paint. Pinch-in still works. */
   minimumScale: 1,
   viewportFit: "cover",
+  /* Shrink the layout when the soft keyboard opens so form fields stay reachable. */
+  interactiveWidget: "resizes-content",
 };
 
 export default async function RootLayout({
@@ -160,6 +163,7 @@ export default async function RootLayout({
         >
           <RotatingFavicon />
           <ViewportReset />
+          <KeyboardAvoid />
           <FavoriteToast />
           {/* Phone/tablet chrome on every public page; CSS hides on desktop */}
           <MobileAppHeader />
