@@ -227,9 +227,9 @@ export function BusRequestForm({
         Back
       </button>
       <div className="hotel-guide-heading">
-        <p className="hotel-guide-kicker">PERSONAL BUS CONCIERGE</p>
-        <h1>Find the right coach for your journey.</h1>
-        <p>Share a few details and our local team will find the right options for you.</p>
+        <p className="hotel-guide-kicker">BUS CONCIERGE</p>
+        <h1>Find your coach.</h1>
+        <p>Tell us your trip details and we will send options.</p>
       </div>
       <GuideProgress label="Bus" labels={stepLabels} step={step} onSelect={(next) => {
         if (next < step && step < 4) {
@@ -260,7 +260,7 @@ export function BusRequestForm({
 
         {step === 0 ? (
           <section className="hotel-guide-panel" aria-labelledby="bus-step-one-title">
-            <StepTitle number="01" id="bus-step-one-title" title="Where and when are you travelling?" text="Choose your route and date, then tell us the number of adults and children travelling." />
+            <StepTitle number="01" id="bus-step-one-title" title="Route and travellers" text="Pick your cities, date, and party size." />
             <div className="hotel-guide-grid">
               <GuideCityField name="fromCity" label="From" value={fromCity} cities={cityOptions} emptyLabel="Choose a boarding city" error={errorFor("fromCity", tripErrors.fromCity, touched)} onChange={setFromCity} />
               <GuideCityField name="toCity" label="To" icon="route" value={toCity} cities={cityOptions} emptyLabel="Choose an arrival city" error={errorFor("toCity", tripErrors.toCity, touched)} onChange={setToCity} />

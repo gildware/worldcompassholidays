@@ -532,7 +532,7 @@ export function TourRequestForm({
 
       </form>
       <div className="hotel-guide-actions">
-        {step > 0 ? <button type="button" className="hotel-guide-back" onClick={() => setStep((step - 1) as 0 | 1 | 2 | 3)}>Back</button> : <span className="hotel-guide-secure"><span aria-hidden="true">✦</span> Free, no-obligation request</span>}
+        {step > 0 ? <button type="button" className="hotel-guide-back" onClick={() => setStep((step - 1) as 0 | 1 | 2 | 3)}>Back</button> : null}
         {step < 3 ? (
           <div className="hotel-guide-action-right">
             <button type="button" className="hotel-guide-primary" onClick={(event) => { event.preventDefault(); event.stopPropagation(); continueTo((step + 1) as 1 | 2 | 3); }}>Continue <span aria-hidden="true">→</span></button>

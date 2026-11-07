@@ -535,7 +535,6 @@
   min-height: 0;
 }
 
-/* overflow: clip keeps the sticky action bar tied to the viewport, not this wrapper */
 .worldcompassholiday-page.is-hotel-request > main {
   overflow: clip;
 }
@@ -2265,6 +2264,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
+  margin-left: auto;
 }
 
 .worldcompassholiday-page .hotel-guide-hint {
@@ -2335,6 +2335,14 @@
     padding: 10px 0 18px;
   }
 
+  .worldcompassholiday-page .hotel-guide-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .worldcompassholiday-page .hotel-guide-grid > * {
+    grid-column: 1 / -1;
+  }
+
   .worldcompassholiday-page .hotel-guide-card {
     padding: 18px 18px 0;
     border-radius: 18px;
@@ -2361,6 +2369,10 @@
     margin-bottom: 22px;
   }
 
+  .worldcompassholiday-page .hotel-guide-progress-track > li {
+    overflow: visible;
+  }
+
   .worldcompassholiday-page .hotel-guide-progress-track > li:not(:last-child)::after {
     top: 16px;
     left: calc(50% + 18px);
@@ -2377,12 +2389,37 @@
     height: 15px;
   }
 
+  /* Show labels when they fit; shrink or hide via data-label-fit from GuideProgress. */
   .worldcompassholiday-page .hotel-guide-progress-title {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
     font-size: 11px;
+    text-overflow: clip;
+    white-space: nowrap;
   }
 
-  .worldcompassholiday-page .hotel-guide-step-title h2 {
-    font-size: 18px;
+  .worldcompassholiday-page .hotel-guide-progress-track > li[data-label-fit="shrink"] .hotel-guide-progress-title {
+    font-size: 9px;
+    letter-spacing: -0.01em;
+  }
+
+  .worldcompassholiday-page .hotel-guide-progress-track > li[data-label-fit="hide"] .hotel-guide-progress-title {
+    display: none;
+  }
+
+  .worldcompassholiday-page .hotel-guide-progress-track > li.is-current .hotel-guide-progress-title {
+    width: max-content;
+    max-width: none;
+    overflow: visible;
+  }
+
+  .worldcompassholiday-page .hotel-guide-progress-track > li[data-label-fit="hide"].is-current .hotel-guide-progress-title {
+    display: block;
+  }
+
+  .worldcompassholiday-page .hotel-guide-step-title {
+    display: none;
   }
 
   .worldcompassholiday-page .hotel-guide-grid {
@@ -2484,18 +2521,23 @@
   }
 
   .worldcompassholiday-page .hotel-guide-actions {
-    position: sticky;
-    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-    z-index: 20;
+    position: static;
     flex-wrap: nowrap;
-    margin: 18px calc(-1 * var(--hg-pad, 16px)) 0;
-    padding: 12px var(--hg-pad, 16px) calc(12px + env(safe-area-inset-bottom, 0px));
+    gap: 10px;
+    margin: 18px 0 0;
+    padding: 14px 0 0;
     border: 0;
-    border-top: 1px solid #e8ebf0;
-    border-radius: 0 0 16px 16px;
-    background: rgba(255, 255, 255, 0.97);
-    box-shadow: 0 -8px 22px rgba(7, 19, 51, 0.06);
-    backdrop-filter: blur(12px);
+    border-top: 1px solid #edf0f4;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .worldcompassholiday-page .hotel-guide-secure {
+    font-size: 9.5px;
+    line-height: 1.25;
+    max-width: 7.5rem;
   }
 
   .worldcompassholiday-page .hotel-guide-hint {
@@ -2504,7 +2546,8 @@
 
   .worldcompassholiday-page .hotel-guide-action-right,
   .worldcompassholiday-page .hotel-guide-submit-group {
-    width: 100%;
+    width: auto;
+    flex: 0 0 auto;
   }
 
   .worldcompassholiday-page .hotel-guide-submit-group {
@@ -2513,16 +2556,20 @@
 
   .worldcompassholiday-page .hotel-guide-back {
     flex: 0 0 auto;
+    min-height: 34px;
     padding-inline: 12px;
+    font-size: 12px;
     white-space: nowrap;
   }
 
   .worldcompassholiday-page .hotel-guide-primary {
-    flex: 1 1 0;
+    flex: 0 0 auto;
     width: auto;
     min-width: 0;
-    padding-inline: 8px;
-    font-size: 11px;
+    min-height: 34px;
+    padding-inline: 14px;
+    border-radius: 9px;
+    font-size: 12px;
     white-space: nowrap;
   }
 
@@ -2538,14 +2585,6 @@
 @media (max-width: 420px) {
   .worldcompassholiday-page .hotel-guide-card {
     padding-inline: 14px;
-  }
-
-  .worldcompassholiday-page .hotel-guide-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .worldcompassholiday-page .hotel-guide-grid > * {
-    grid-column: 1 / -1;
   }
 
   .worldcompassholiday-page .hotel-guide-travellers {
@@ -2891,7 +2930,7 @@
 
 @media (max-width: 1024px) {
   .worldcompassholiday-page .tour-guide-card > .hotel-guide-actions {
-    margin-top: auto;
+    margin-top: 18px;
   }
 }
   .worldcompassholiday-page .hg-stars .hg-icon {
@@ -2944,7 +2983,7 @@ body:has(.hotel-brief) {
   }
 
   .worldcompassholiday-page .hotel-guide-form > .hotel-guide-actions {
-    margin-top: auto;
+    margin-top: 18px;
   }
 }
 

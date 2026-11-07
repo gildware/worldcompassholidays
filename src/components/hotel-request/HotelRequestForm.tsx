@@ -776,7 +776,7 @@ export function HotelRequestForm({
         ) : null}
 
         <div className="hotel-guide-actions">
-          {step > 0 ? <button type="button" className="hotel-guide-back" onClick={() => setStep((step - 1) as StepIndex)}>Back</button> : <span className="hotel-guide-secure"><span aria-hidden="true">✦</span> Free, no-obligation request</span>}
+          {step > 0 ? <button type="button" className="hotel-guide-back" onClick={() => setStep((step - 1) as StepIndex)}>Back</button> : null}
           {step < 3 ? (
             <div className="hotel-guide-action-right">
               {step === 0 && !stepOneValid ? <span className="hotel-guide-hint">Add a destination, dates and traveler details to continue.</span> : null}
