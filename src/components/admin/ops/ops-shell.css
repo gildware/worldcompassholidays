@@ -151,18 +151,39 @@
     .ops-cc .main { min-width: 0; }
     .ops-cc .topbar {
       position: sticky; top: 0; z-index: 30;
-      height: var(--header-h);
+      min-height: var(--header-h);
       background: rgba(238, 242, 246, 0.86);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--line);
       display: flex; align-items: center; justify-content: space-between;
-      gap: 16px; padding: 0 24px;
+      gap: 12px; padding: 8px 24px;
+    }
+    .ops-cc .topbar-lead {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .ops-cc .topbar-title {
+      min-width: 0;
+      flex: 1 1 auto;
     }
     .ops-cc .topbar h1 {
       margin: 0; font-size: 18px; letter-spacing: -0.03em; font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .ops-cc .topbar .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
-    .ops-cc .top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .ops-cc .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+      justify-content: flex-end;
+    }
+    .ops-cc .btn-site svg { flex-shrink: 0; }
 
     .ops-cc .seg {
       display: inline-flex; background: var(--surface);
@@ -497,16 +518,42 @@
         transform: translateX(-105%); transition: transform .2s ease;
       }
       .ops-cc .sidebar.open { transform: translateX(0); }
-      .ops-cc .menu-btn { display: grid; }
+      .ops-cc .menu-btn { display: grid; flex-shrink: 0; }
       .ops-cc .scrim {
         display: none; position: fixed; inset: 0; background: rgba(11,21,32,.45); z-index: 35;
       }
       .ops-cc .scrim.show { display: block; }
-      .ops-cc .topbar { padding: 0 14px; }
+      .ops-cc .topbar {
+        padding: 8px 12px;
+        gap: 8px;
+      }
+      .ops-cc .topbar h1 { font-size: 15px; }
+      .ops-cc .top-actions { gap: 6px; }
+      .ops-cc .live { display: none; }
+      .ops-cc .btn {
+        padding: 8px 10px;
+        white-space: nowrap;
+      }
+      .ops-cc .btn-site {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        justify-content: center;
+      }
+      .ops-cc .btn-site .btn-label { display: none; }
       .ops-cc .content { padding: 14px; }
       .ops-cc .hero-grid { grid-template-columns: 1fr; }
       .ops-cc .attention { grid-template-columns: auto 1fr; }
       .ops-cc .attention .btn { grid-column: 1 / -1; justify-self: start; }
+    }
+
+    @media (max-width: 420px) {
+      .ops-cc .topbar { padding: 8px 10px; gap: 6px; }
+      .ops-cc .topbar h1 { font-size: 14px; }
+      .ops-cc .top-actions { gap: 4px; }
+      .ops-cc .btn { padding: 7px 8px; font-size: 12px; }
+      .ops-cc .btn-site { width: 36px; height: 36px; }
+      .ops-cc .menu-btn { width: 36px; height: 36px; }
     }
 
     @media (prefers-reduced-motion: reduce) {

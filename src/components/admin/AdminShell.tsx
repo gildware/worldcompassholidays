@@ -530,7 +530,7 @@ export function AdminShell({
 
         <div className="main">
           <header className="topbar">
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div className="topbar-lead">
               <button
                 className="menu-btn"
                 type="button"
@@ -542,7 +542,7 @@ export function AdminShell({
                   <path d="M4 7h16M4 12h16M4 17h16" />
                 </svg>
               </button>
-              <div>
+              <div className="topbar-title">
                 <h1>{title}</h1>
               </div>
             </div>
@@ -551,7 +551,7 @@ export function AdminShell({
                 <i /> Live
               </span>
               <Link
-                className="btn"
+                className="btn btn-site"
                 href="/"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -565,24 +565,14 @@ export function AdminShell({
                   stroke="currentColor"
                   strokeWidth="2"
                   aria-hidden
-                  style={{ marginRight: 6, verticalAlign: "-2px" }}
                 >
                   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                   <path d="M15 3h6v6" />
                   <path d="M10 14 21 3" />
                 </svg>
-                View website
+                <span className="btn-label">View website</span>
               </Link>
-              {pathname === "/admin" ? (
-                <Link
-                  className="btn btn-primary"
-                  href="/admin/bookings"
-                  prefetch
-                  onClick={() => markNavigate("/admin/bookings")}
-                >
-                  + New booking
-                </Link>
-              ) : (
+              {pathname !== "/admin" ? (
                 <Link
                   className="btn"
                   href="/admin"
@@ -591,7 +581,7 @@ export function AdminShell({
                 >
                   Overview
                 </Link>
-              )}
+              ) : null}
             </div>
           </header>
 
