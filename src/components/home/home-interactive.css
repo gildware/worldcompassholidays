@@ -316,6 +316,9 @@
   height: 200px;
   background: #d9deea;
   overflow: hidden;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .hic-stay__media::after {

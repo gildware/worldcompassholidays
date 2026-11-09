@@ -180,8 +180,9 @@
   padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); margin-bottom: 12px;
 }
 .stay-room.is-on { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+.stay-room-slides { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
 .stay-room-shot { display: block; width: 100%; padding: 0; border: 0; background: transparent; border-radius: 12px; }
-.stay-room-slides img { width: 100%; height: 148px; object-fit: cover; border-radius: 12px; background: #e5dfd6; }
+.stay-room-slides img { width: 100%; height: 148px; object-fit: cover; border-radius: 12px; background: #e5dfd6; pointer-events: none; -webkit-user-drag: none; }
 .stay-room-film { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; color: var(--muted); font-size: 12px; }
 .stay-room-film button {
   width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink);
@@ -464,6 +465,9 @@
     border-radius: 16px;
     background: #e5dfd6;
     cursor: zoom-in;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
   }
   .stay-gallery-m__hero img {
     width: 100%;

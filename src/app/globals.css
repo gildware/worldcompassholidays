@@ -554,6 +554,18 @@ body > .worldcompassholiday-page > main > .footer {
   margin: 0 auto;
 }
 
+/* Country / Region / Popular chips sit on the dark mast image */
+.worldcompassholiday-page .destination-mast .dropdown__button {
+  color: #051036;
+  background: #fff;
+  border-color: #fff;
+  box-shadow: 0 2px 12px rgba(5, 16, 54, 0.2);
+}
+
+.worldcompassholiday-page .destination-mast .dropdown__button .icon {
+  color: #051036;
+}
+
 @media (min-width: 992px) {
   .worldcompassholiday-page .halfMap.destination-list-v3 .halfMap__map {
     position: sticky;
@@ -3814,9 +3826,13 @@ body > .worldcompassholiday-page > main > .footer {
 
 .bike-card__media {
   position: relative;
+  z-index: 2;
   aspect-ratio: 4 / 3;
   overflow: hidden;
   background: var(--fleet-wash);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .bike-card__media img,
@@ -3831,6 +3847,9 @@ body > .worldcompassholiday-page > main > .footer {
   padding: 10px;
   box-sizing: border-box;
   background: var(--fleet-wash);
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
 }
 
 .bike-card__shot {
@@ -3839,6 +3858,8 @@ body > .worldcompassholiday-page > main > .footer {
   display: block;
   overflow: hidden;
   color: inherit;
+  touch-action: pan-y;
+  -webkit-user-drag: none;
 }
 
 .bike-card__track {
@@ -4764,6 +4785,9 @@ button[aria-invalid="true"]:focus-visible {
     radial-gradient(80% 80% at 50% 40%, #fff 0%, #f3ecdf 70%, #e7dcc8 100%);
   cursor: zoom-in;
   box-shadow: 0 16px 40px rgba(5, 16, 54, 0.08);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .rental-gallery__hero img {
@@ -4844,6 +4868,9 @@ button[aria-invalid="true"]:focus-visible {
   place-items: center;
   padding: 28px 72px;
   background: rgba(5, 16, 54, 0.9);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .rental-lightbox img {

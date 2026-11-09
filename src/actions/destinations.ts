@@ -260,7 +260,12 @@ export async function setDestinationPopular(
   } catch {
     return { error: "Could not update this destination. Try again." };
   }
-  revalidateDestinationPaths(destination.slug);
+  // Refresh the public site only. Revalidating /admin/destinations inside a
+  // client transition remounts the list (via loading.tsx) and kills the toggle.
+  clearTtlCache();
+  revalidatePath("/");
+  revalidatePath("/destinations");
+  if (destination.slug) revalidatePath(`/destinations/${destination.slug}`);
   return { error: null as string | null };
 }
 

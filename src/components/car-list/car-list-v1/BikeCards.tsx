@@ -93,6 +93,7 @@ function Chevron({ direction }: { direction: "left" | "right" }) {
 
 function CardPhotos({
   images,
+  href,
   name,
   eager,
   fuel,
@@ -101,6 +102,7 @@ function CardPhotos({
   dragged,
 }: {
   images: string[];
+  href: string;
   name: string;
   eager: boolean;
   fuel: string;
@@ -120,14 +122,23 @@ function CardPhotos({
     setIndex((value) => (value + delta + count) % count);
   };
 
+  const isControl = (target: EventTarget | null) =>
+    target instanceof Element &&
+    Boolean(target.closest(".bike-card__nav, .bike-card__dots, .fav-btn, .fav-btn--float"));
+
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (isControl(event.target)) return;
     startX.current = event.clientX;
     dragged.current = false;
+    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    if (count < 2) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (count < 2 || isControl(event.target)) return;
     const delta = event.clientX - startX.current;
     if (Math.abs(delta) < 28) return;
     dragged.current = true;
@@ -135,10 +146,30 @@ function CardPhotos({
   };
 
   return (
-    <div className="bike-card__media" onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
+    <div
+      className="bike-card__media"
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerCancel={(event) => {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+      }}
+    >
       {save}
       {count > 0 ? (
-        <div className="bike-card__shot">
+        <Link
+          prefetch={false}
+          href={href}
+          className="bike-card__shot"
+          aria-label={name}
+          draggable={false}
+          onClick={(event) => {
+            if (!dragged.current) return;
+            event.preventDefault();
+            dragged.current = false;
+          }}
+        >
           <span className="bike-card__track" style={{ transform: `translateX(-${current * 100}%)` }}>
             {slides.map((src, slide) => (
               <span
@@ -159,7 +190,7 @@ function CardPhotos({
               </span>
             ))}
           </span>
-        </div>
+        </Link>
       ) : (
         <div className="bike-card__fallback" />
       )}
@@ -169,7 +200,11 @@ function CardPhotos({
             type="button"
             className="bike-card__nav is-prev"
             aria-label="Previous photo"
-            onClick={() => step(-1)}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              step(-1);
+            }}
           >
             <Chevron direction="left" />
           </button>
@@ -177,7 +212,11 @@ function CardPhotos({
             type="button"
             className="bike-card__nav is-next"
             aria-label="Next photo"
-            onClick={() => step(1)}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              step(1);
+            }}
           >
             <Chevron direction="right" />
           </button>
@@ -190,7 +229,11 @@ function CardPhotos({
                 role="tab"
                 aria-selected={slide === current}
                 aria-label={`Photo ${slide + 1}`}
-                onClick={() => setIndex(slide)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setIndex(slide);
+                }}
               />
             ))}
           </div>
@@ -290,6 +333,7 @@ function BikeCard({
       />
       <CardPhotos
         images={item.images}
+        href={href}
         name={item.name}
         eager={eager}
         fuel={item.fuel}

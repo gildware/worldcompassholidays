@@ -298,11 +298,18 @@ body:has(.stay-list .sl-dialog[open]) {
   background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
 }
 .stay-list .sl-card.is-hot { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
-.stay-list .sl-photos { position: relative; min-height: 230px; background: #e7e1d8; }
+.stay-list .sl-photos {
+  position: relative;
+  min-height: 230px;
+  background: #e7e1d8;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
 .stay-list .sl-shot,
 .stay-list .sl-shot img { position: absolute; inset: 0; width: 100%; height: 100%; }
-.stay-list .sl-shot { border: 0; padding: 0; background: transparent; }
-.stay-list .sl-shot img { object-fit: cover; }
+.stay-list .sl-shot { border: 0; padding: 0; background: transparent; touch-action: pan-y; }
+.stay-list .sl-shot img { object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
 .stay-list button.sl-save.fav-btn,
 .stay-list button.sl-save.fav-btn.is-on,
 .stay-list button.sl-save.fav-btn:hover {

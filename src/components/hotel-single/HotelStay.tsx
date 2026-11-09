@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { submitHotelRequest } from "@/actions/hotel-request";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import type { HotelSingleData } from "@/components/hotel-single/types";
 import { StayMark } from "@/components/hotel-single/StayMark";
+import { usePhotoSwipe } from "@/hooks/usePhotoSwipe";
 import { useSectionTabs } from "@/hooks/useSectionTabs";
 import { initialFormState } from "@/lib/forms";
 import { formatMoney } from "@/lib/format";
@@ -63,6 +64,61 @@ function chunks<T>(items: T[], size: number) {
   return groups;
 }
 
+function RoomSlides({
+  name,
+  slides,
+  slide,
+  onOpen,
+  onStep,
+}: {
+  name: string;
+  slides: string[];
+  slide: number;
+  onOpen: () => void;
+  onStep: (direction: 1 | -1) => void;
+}) {
+  const many = slides.length > 1;
+  const swipe = usePhotoSwipe({
+    enabled: many,
+    ignore: ".stay-room-film",
+    onStep,
+  });
+
+  return (
+    <div
+      className="stay-room-slides"
+      onPointerDown={swipe.onPointerDown}
+      onPointerUp={swipe.onPointerUp}
+      onPointerCancel={swipe.onPointerCancel}
+    >
+      <button
+        className="stay-room-shot"
+        type="button"
+        onClick={() => {
+          if (swipe.didSwipe()) return;
+          onOpen();
+        }}
+        aria-label={`View ${name} photos`}
+      >
+        <img src={slides[slide] || slides[0]} alt="" draggable={false} />
+      </button>
+      {many ? (
+        <div className="stay-room-film">
+          <button type="button" aria-label="Previous room photo" onClick={() => onStep(-1)}>
+            ‹
+          </button>
+          <span>
+            {slide + 1} / {slides.length}
+          </span>
+          <button type="button" aria-label="Next room photo" onClick={() => onStep(1)}>
+            ›
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function HotelStay({
   hotel,
   customer,
@@ -100,7 +156,6 @@ export function HotelStay({
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [state, action, pending] = useActionState(submitHotelRequest, initialFormState);
   const room = rooms.find((item) => item.id === roomId) ?? rooms[0];
-  const drag = useRef<{ x: number; id: number } | null>(null);
 
   const photos = useMemo(() => (hotel.images.length > 0 ? hotel.images : ["/img/general/map.svg"]), [hotel.images]);
   const visible = photos.slice(0, 5);
@@ -220,18 +275,19 @@ export function HotelStay({
     });
   }
 
-  function onLightPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if ((event.target as HTMLElement).closest("button")) return;
-    drag.current = { x: event.clientX, id: event.pointerId };
-  }
+  const heroSwipe = usePhotoSwipe({
+    enabled: photos.length > 1,
+    ignore: ".stay-all, .stay-gallery-m__thumbs",
+    onStep: (direction) => {
+      setGalleryIndex((index) => (index + direction + photos.length) % photos.length);
+    },
+  });
 
-  function onLightPointerUp(event: ReactPointerEvent<HTMLDivElement>) {
-    if (!drag.current || drag.current.id !== event.pointerId || !viewer) return;
-    const delta = event.clientX - drag.current.x;
-    drag.current = null;
-    if (Math.abs(delta) < 40) return;
-    stepPhoto(delta < 0 ? 1 : -1);
-  }
+  const lightSwipe = usePhotoSwipe({
+    enabled: Boolean(viewer && viewer.images.length > 1),
+    ignore: "button",
+    onStep: (direction) => stepPhoto(direction),
+  });
 
   const place = hotel.address || hotel.location;
   const lat = Number(hotel.mapLat);
@@ -336,10 +392,16 @@ export function HotelStay({
             <button
               className="stay-gallery-m__hero"
               type="button"
-              onClick={() => openPhotos(photos, galleryIndex, hotel.name)}
+              onPointerDown={heroSwipe.onPointerDown}
+              onPointerUp={heroSwipe.onPointerUp}
+              onPointerCancel={heroSwipe.onPointerCancel}
+              onClick={() => {
+                if (heroSwipe.didSwipe()) return;
+                openPhotos(photos, galleryIndex, hotel.name);
+              }}
               aria-label={`Open photograph ${galleryIndex + 1} of ${photos.length}`}
             >
-              <img src={photos[galleryIndex] || photos[0]} alt={`${hotel.name} photograph ${galleryIndex + 1}`} />
+              <img src={photos[galleryIndex] || photos[0]} alt={`${hotel.name} photograph ${galleryIndex + 1}`} draggable={false} />
             </button>
             {photos.length > 1 ? (
               <>
@@ -422,24 +484,13 @@ export function HotelStay({
               const slide = roomSlide[item.id] ?? 0;
               return (
                 <article className={selected ? "stay-room is-on" : "stay-room"} key={item.id}>
-                  <div className="stay-room-slides">
-                    <button className="stay-room-shot" type="button" onClick={() => openPhotos(slides, slide, item.name)} aria-label={`View ${item.name} photos`}>
-                      <img src={slides[slide] || slides[0]} alt="" />
-                    </button>
-                    {slides.length > 1 ? (
-                      <div className="stay-room-film">
-                        <button type="button" aria-label="Previous room photo" onClick={() => stepRoom(item.id, slides.length, -1)}>
-                          ‹
-                        </button>
-                        <span>
-                          {slide + 1} / {slides.length}
-                        </span>
-                        <button type="button" aria-label="Next room photo" onClick={() => stepRoom(item.id, slides.length, 1)}>
-                          ›
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
+                  <RoomSlides
+                    name={item.name}
+                    slides={slides}
+                    slide={slide}
+                    onOpen={() => openPhotos(slides, slide, item.name)}
+                    onStep={(direction) => stepRoom(item.id, slides.length, direction)}
+                  />
                   <div>
                     <div className="stay-room-top">
                       <h3>{item.name}</h3>
@@ -746,8 +797,9 @@ export function HotelStay({
           role="dialog"
           aria-modal="true"
           aria-label={`${viewer.label} photographs`}
-          onPointerDown={onLightPointerDown}
-          onPointerUp={onLightPointerUp}
+          onPointerDown={lightSwipe.onPointerDown}
+          onPointerUp={lightSwipe.onPointerUp}
+          onPointerCancel={lightSwipe.onPointerCancel}
           onClick={(event) => {
             if (event.target === event.currentTarget) closePhotos();
           }}

@@ -6,6 +6,7 @@ import type { FirebaseOptions } from "firebase/app";
 import { submitTourRequest } from "@/actions/tour-request";
 import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
+import { usePhotoSwipe } from "@/hooks/usePhotoSwipe";
 import { useSectionTabs } from "@/hooks/useSectionTabs";
 import { canonicalPhone, formatPhone } from "@/lib/auth/phone";
 import { initialFormState } from "@/lib/forms";
@@ -312,6 +313,20 @@ export function TourStay({
     setPhotoIndex((current) => (current + step + photos.length) % photos.length);
   }
 
+  const heroSwipe = usePhotoSwipe({
+    enabled: photos.length > 1,
+    ignore: ".road-gallery-m__thumbs",
+    onStep: (direction) => {
+      setGalleryIndex((index) => (index + direction + photos.length) % photos.length);
+    },
+  });
+
+  const lightSwipe = usePhotoSwipe({
+    enabled: photos.length > 1,
+    ignore: "button",
+    onStep: (direction) => stepPhoto(direction),
+  });
+
   function togglePack(index: number) {
     setPacked((current) => {
       const next = current.map((item, itemIndex) => (itemIndex === index ? !item : item));
@@ -421,10 +436,16 @@ export function TourStay({
               <button
                 className="road-gallery-m__hero"
                 type="button"
-                onClick={() => openPhotos(galleryIndex)}
+                onPointerDown={heroSwipe.onPointerDown}
+                onPointerUp={heroSwipe.onPointerUp}
+                onPointerCancel={heroSwipe.onPointerCancel}
+                onClick={() => {
+                  if (heroSwipe.didSwipe()) return;
+                  openPhotos(galleryIndex);
+                }}
                 aria-label={`Open photograph ${galleryIndex + 1} of ${photos.length}`}
               >
-                <img src={photos[galleryIndex] || photos[0]} alt={`${tour.title} photograph ${galleryIndex + 1}`} />
+                <img src={photos[galleryIndex] || photos[0]} alt={`${tour.title} photograph ${galleryIndex + 1}`} draggable={false} />
                 {photos.length > 1 ? (
                   <span className="road-gallery-m__count">
                     {galleryIndex + 1} / {photos.length}
@@ -845,6 +866,9 @@ export function TourStay({
         className="road-light"
         id="road-light"
         aria-label="Photographs"
+        onPointerDown={lightSwipe.onPointerDown}
+        onPointerUp={lightSwipe.onPointerUp}
+        onPointerCancel={lightSwipe.onPointerCancel}
         onKeyDown={(event) => {
           if (event.key === "ArrowRight") stepPhoto(1);
           if (event.key === "ArrowLeft") stepPhoto(-1);
@@ -857,7 +881,7 @@ export function TourStay({
           ‹
         </button>
         <figure>
-          {photos[photoIndex] ? <img src={photos[photoIndex]} alt={`${tour.title} photograph ${photoIndex + 1}`} /> : null}
+          {photos[photoIndex] ? <img src={photos[photoIndex]} alt={`${tour.title} photograph ${photoIndex + 1}`} draggable={false} /> : null}
           <figcaption>
             {photos.length > 0 ? `${photoIndex + 1} of ${photos.length}` : ""}
           </figcaption>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { setDestinationPopular } from "@/actions/destinations";
 import { Badge } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
@@ -168,7 +168,7 @@ export function DestinationView({
   const [tab, setTab] = useState<TabId>("places");
   const [popular, setPopular] = useState(destination.popular);
   const [popularError, setPopularError] = useState<string | null>(null);
-  const [popularPending, startPopular] = useTransition();
+  const [popularPending, setPopularPending] = useState(false);
   const mapPoint = parseMapPoint(
     destination.mapLat,
     destination.mapLng,
@@ -256,16 +256,30 @@ export function DestinationView({
                   aria-checked={popular}
                   disabled={popularPending}
                   onClick={() => {
+                    if (popularPending) return;
                     const next = !popular;
                     setPopular(next);
                     setPopularError(null);
-                    startPopular(async () => {
-                      const result = await setDestinationPopular(destination.id, next);
-                      if (result.error) {
+                    setPopularPending(true);
+                    void (async () => {
+                      try {
+                        const result = await setDestinationPopular(
+                          destination.id,
+                          next,
+                        );
+                        if (result?.error) {
+                          setPopular(!next);
+                          setPopularError(result.error);
+                        }
+                      } catch {
                         setPopular(!next);
-                        setPopularError(result.error);
+                        setPopularError(
+                          "Could not update this destination. Try again.",
+                        );
+                      } finally {
+                        setPopularPending(false);
                       }
-                    });
+                    })();
                   }}
                   className={[
                     "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium",

@@ -713,10 +713,10 @@
 .ops-cc a.chip { text-decoration: none; }
 .ops-cc .content > *:first-child { margin-top: 0; }
 
-/* Instant feedback while the next admin page is still fetching */
+/* Instant feedback while the next admin page is still fetching.
+   Do not disable pointer-events — a stuck pendingHref would brick every button. */
 .ops-cc .content.is-navigating {
-  opacity: 0.55;
-  pointer-events: none;
+  opacity: 0.72;
   transition: opacity 0.12s ease;
 }
 .ops-cc .nav a[aria-busy="true"] {

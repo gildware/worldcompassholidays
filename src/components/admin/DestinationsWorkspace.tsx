@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { deleteDestination, setDestinationPopular } from "@/actions/destinations";
 import {
   DestinationForm,
@@ -215,7 +215,6 @@ export function DestinationsWorkspace({
   );
   const [popularError, setPopularError] = useState<string | null>(null);
   const [pendingPopularId, setPendingPopularId] = useState<string | null>(null);
-  const [, startPopular] = useTransition();
   const [deleting, setDeleting] = useState<DestinationRow | null>(null);
   const [toast, setToast] = useState<string | null>(() => toastMessage(notice));
 
@@ -229,10 +228,17 @@ export function DestinationsWorkspace({
   }, []);
 
   useEffect(() => {
-    setPopularState(
-      Object.fromEntries(destinations.map((item) => [item.id, item.popular])),
-    );
-  }, [destinations]);
+    // Keep optimistic values for an in-flight toggle; sync everything else.
+    setPopularState((current) => {
+      const next = Object.fromEntries(
+        destinations.map((item) => [item.id, item.popular]),
+      ) as Record<string, boolean>;
+      if (pendingPopularId && pendingPopularId in current) {
+        next[pendingPopularId] = current[pendingPopularId];
+      }
+      return next;
+    });
+  }, [destinations, pendingPopularId]);
 
   useEffect(() => {
     const message = toastMessage(notice);
@@ -331,19 +337,24 @@ export function DestinationsWorkspace({
     parentFilter !== "all" ||
     countryFilter !== "all";
 
-  function togglePopular(destination: DestinationRow) {
+  async function togglePopular(destination: DestinationRow) {
+    if (pendingPopularId) return;
     const next = !(popularState[destination.id] ?? destination.popular);
     setPopularError(null);
     setPopularState((current) => ({ ...current, [destination.id]: next }));
     setPendingPopularId(destination.id);
-    startPopular(async () => {
+    try {
       const result = await setDestinationPopular(destination.id, next);
-      setPendingPopularId(null);
-      if (result.error) {
+      if (result?.error) {
         setPopularState((current) => ({ ...current, [destination.id]: !next }));
         setPopularError(result.error);
       }
-    });
+    } catch {
+      setPopularState((current) => ({ ...current, [destination.id]: !next }));
+      setPopularError("Could not update this destination. Try again.");
+    } finally {
+      setPendingPopularId(null);
+    }
   }
 
   function toggleSort(key: SortKey) {

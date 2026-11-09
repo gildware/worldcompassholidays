@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState } from "react";
+import { usePhotoSwipe } from "@/hooks/usePhotoSwipe";
 
 export function BusGallery({ images, name }: { images: string[]; name: string }) {
   const [open, setOpen] = useState<number | null>(null);
   const [active, setActive] = useState(0);
   const track = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ x: number; id: number } | null>(null);
   const photos = images.filter(Boolean);
   const count = Math.min(photos.length, 3);
 
@@ -41,23 +41,18 @@ export function BusGallery({ images, name }: { images: string[]; name: string })
     el?.scrollTo({ left: index * el.clientWidth, behavior: "smooth" });
   };
 
-  const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest("button")) return;
-    drag.current = { x: event.clientX, id: event.pointerId };
-  };
-
-  const onPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!drag.current || drag.current.id !== event.pointerId || open === null) return;
-    const delta = event.clientX - drag.current.x;
-    drag.current = null;
-    if (Math.abs(delta) < 40) return;
-    setOpen((value) => {
-      if (value === null) return value;
-      const next = value + (delta < 0 ? 1 : -1);
-      if (next < 0 || next >= photos.length) return value;
-      return next;
-    });
-  };
+  const lightSwipe = usePhotoSwipe({
+    enabled: open !== null && photos.length > 1,
+    ignore: "button",
+    onStep: (direction) => {
+      setOpen((value) => {
+        if (value === null) return value;
+        const next = value + direction;
+        if (next < 0 || next >= photos.length) return value;
+        return next;
+      });
+    },
+  });
 
   return (
     <>
@@ -109,8 +104,9 @@ export function BusGallery({ images, name }: { images: string[]; name: string })
           role="dialog"
           aria-modal="true"
           aria-label={`${name} photos`}
-          onPointerDown={onPointerDown}
-          onPointerUp={onPointerUp}
+          onPointerDown={lightSwipe.onPointerDown}
+          onPointerUp={lightSwipe.onPointerUp}
+          onPointerCancel={lightSwipe.onPointerCancel}
         >
           <button type="button" className="bus-light__close" onClick={() => setOpen(null)}>
             Close

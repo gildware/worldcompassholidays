@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { FavoriteHeart, useFavoriteList } from "@/components/favorites/FavoriteButton";
 import { createPortal } from "react-dom";
 import { useLazySlice } from "@/hooks/useLazySlice";
+import { usePhotoSwipe } from "@/hooks/usePhotoSwipe";
 import {
   activeFilters,
   bestFlags,
@@ -1234,6 +1235,15 @@ function StayCard({
   const cancel = cancelFact(hotel, state.checkin, today);
   const favourite = (hotel.score ?? 0) >= 9.5;
   const href = stayHref(hotel, state);
+  const many = hotel.photos.length > 1;
+  const swipe = usePhotoSwipe({
+    enabled: many,
+    ignore: ".sl-save, .sl-dots, .sl-badge",
+    onStep: (direction) => {
+      const next = (photo + direction + hotel.photos.length) % hotel.photos.length;
+      onPhoto(next);
+    },
+  });
   const bits = [
     state.breakfast && hotel.breakfast ? "breakfast" : "",
     state.cancel && refundable(hotel, state.checkin, today) ? "free cancellation" : "",
@@ -1247,17 +1257,32 @@ function StayCard({
 
   return (
     <article className={`sl-card${hot ? " is-hot" : ""}`} data-stay={hotel.id}>
-      <div className="sl-photos">
-        <Link prefetch={false} className="sl-shot" href={href} aria-label={`Photos of ${hotel.name}`}>
+      <div
+        className="sl-photos"
+        onPointerDown={swipe.onPointerDown}
+        onPointerUp={swipe.onPointerUp}
+        onPointerCancel={swipe.onPointerCancel}
+      >
+        <Link
+          prefetch={false}
+          className="sl-shot"
+          href={href}
+          aria-label={`Photos of ${hotel.name}`}
+          draggable={false}
+          onClick={(event) => {
+            if (!swipe.didSwipe()) return;
+            event.preventDefault();
+          }}
+        >
           {shot ? (
-            <img src={shot.src} alt={shot.alt} width={900} height={600} fetchPriority={index === 0 ? "high" : undefined} loading={index === 0 ? undefined : "lazy"} decoding="async" />
+            <img src={shot.src} alt={shot.alt} width={900} height={600} fetchPriority={index === 0 ? "high" : undefined} loading={index === 0 ? undefined : "lazy"} decoding="async" draggable={false} />
           ) : null}
         </Link>
         <button className={`sl-save fav-btn fav-btn--icon${saved ? " is-on" : ""}`} type="button" aria-pressed={saved} aria-label={`${saved ? "Remove" : "Add"} ${hotel.name} ${saved ? "from" : "to"} favorites`} onClick={onSave}>
           <FavoriteHeart filled={saved} />
         </button>
         {favourite ? <span className="sl-badge">Guest favourite</span> : null}
-        {hotel.photos.length > 1 ? (
+        {many ? (
           <div className="sl-dots" role="tablist" aria-label={`Photos of ${hotel.name}`}>
             {hotel.photos.map((item, photoIndex) => (
               <button

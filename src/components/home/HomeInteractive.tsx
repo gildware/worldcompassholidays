@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
+import { usePhotoSwipe } from "@/hooks/usePhotoSwipe";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
 import { formatMoney } from "@/lib/format";
 import "./home-interactive.css";
@@ -193,6 +194,91 @@ function starWord(stars: number) {
   return "";
 }
 
+function HomeStayMedia({
+  stay,
+  shots,
+  index,
+  many,
+  word,
+  broken,
+  onBroken,
+  onStep,
+  onPick,
+}: {
+  stay: HomeStayCard;
+  shots: string[];
+  index: number;
+  many: boolean;
+  word: string;
+  broken: boolean;
+  onBroken: () => void;
+  onStep: (direction: 1 | -1) => void;
+  onPick: (dot: number) => void;
+}) {
+  const swipe = usePhotoSwipe({
+    enabled: many,
+    ignore: "button, .hic-stay__nav, .hic-dots, .fav-btn",
+    onStep,
+  });
+  const src = broken ? "" : shots[index];
+
+  return (
+    <div
+      className={`hic-stay__media${many ? " is-cycle" : ""}`}
+      onPointerDown={swipe.onPointerDown}
+      onPointerUp={swipe.onPointerUp}
+      onPointerCancel={swipe.onPointerCancel}
+      onClick={(event) => {
+        if (!many) return;
+        if ((event.target as HTMLElement).closest("button")) return;
+        if (swipe.didSwipe()) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        const back = event.clientX - rect.left < rect.width / 2;
+        onStep(back ? -1 : 1);
+      }}
+    >
+      {src ? <img src={src} alt="" draggable={false} onError={onBroken} /> : <span className="hic-stay__ph" aria-hidden />}
+      <Save kind="hotel" id={stay.id} title={stay.name} saved={stay.saved} signedIn={stay.signedIn} />
+      {many ? (
+        <>
+          <button
+            type="button"
+            className="hic-stay__nav hic-stay__nav--prev"
+            aria-label={`Previous photo of ${stay.name}`}
+            onClick={() => onStep(-1)}
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            className="hic-stay__nav hic-stay__nav--next"
+            aria-label={`Next photo of ${stay.name}`}
+            onClick={() => onStep(1)}
+          >
+            ›
+          </button>
+          <div className="hic-dots">
+            {shots.map((image, dot) => (
+              <button
+                key={`${stay.id}-${dot}-${image}`}
+                type="button"
+                className={dot === index ? "is-on" : ""}
+                aria-label={`Photo ${dot + 1} of ${stay.name}`}
+                onClick={() => onPick(dot)}
+              />
+            ))}
+          </div>
+        </>
+      ) : null}
+      {word ? (
+        <span className="hic-score">
+          <b>{stay.stars.toFixed(1)}</b> {word}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 export function HomeStayGrid({ stays }: { stays: HomeStayCard[] }) {
   const calm = useCalm();
   const [photos, setPhotos] = useState<Record<string, number>>({});
@@ -217,72 +303,19 @@ export function HomeStayGrid({ stays }: { stays: HomeStayCard[] }) {
           const many = shots.length > 1 && Boolean(shots[0]);
           const count = nights[stay.id] ?? 1;
           const word = starWord(stay.stars);
-          const src = broken[stay.id] ? "" : shots[index];
           return (
             <article key={stay.id} className="hic-stay">
-              <div
-                className={`hic-stay__media${many ? " is-cycle" : ""}`}
-                onClick={(event) => {
-                  if (!many) return;
-                  if ((event.target as HTMLElement).closest("button")) return;
-                  const rect = event.currentTarget.getBoundingClientRect();
-                  const back = event.clientX - rect.left < rect.width / 2;
-                  stepPhoto(stay.id, shots.length, back ? -1 : 1);
-                }}
-              >
-                {src ? (
-                  <img
-                    src={src}
-                    alt=""
-                    onError={() => setBroken((current) => ({ ...current, [stay.id]: true }))}
-                  />
-                ) : (
-                  <span className="hic-stay__ph" aria-hidden />
-                )}
-                <Save
-                  kind="hotel"
-                  id={stay.id}
-                  title={stay.name}
-                  saved={stay.saved}
-                  signedIn={stay.signedIn}
-                />
-                {many ? (
-                  <>
-                    <button
-                      type="button"
-                      className="hic-stay__nav hic-stay__nav--prev"
-                      aria-label={`Previous photo of ${stay.name}`}
-                      onClick={() => stepPhoto(stay.id, shots.length, -1)}
-                    >
-                      ‹
-                    </button>
-                    <button
-                      type="button"
-                      className="hic-stay__nav hic-stay__nav--next"
-                      aria-label={`Next photo of ${stay.name}`}
-                      onClick={() => stepPhoto(stay.id, shots.length, 1)}
-                    >
-                      ›
-                    </button>
-                    <div className="hic-dots">
-                      {shots.map((image, dot) => (
-                        <button
-                          key={`${stay.id}-${dot}-${image}`}
-                          type="button"
-                          className={dot === index ? "is-on" : ""}
-                          aria-label={`Photo ${dot + 1} of ${stay.name}`}
-                          onClick={() => setPhotos((current) => ({ ...current, [stay.id]: dot }))}
-                        />
-                      ))}
-                    </div>
-                  </>
-                ) : null}
-                {word ? (
-                  <span className="hic-score">
-                    <b>{stay.stars.toFixed(1)}</b> {word}
-                  </span>
-                ) : null}
-              </div>
+              <HomeStayMedia
+                stay={stay}
+                shots={shots}
+                index={index}
+                many={many}
+                word={word}
+                broken={Boolean(broken[stay.id])}
+                onBroken={() => setBroken((current) => ({ ...current, [stay.id]: true }))}
+                onStep={(direction) => stepPhoto(stay.id, shots.length, direction)}
+                onPick={(dot) => setPhotos((current) => ({ ...current, [stay.id]: dot }))}
+              />
               <div className="hic-stay__body">
                 {stay.place ? <p className="hic-kicker">{stay.place}</p> : null}
                 <h3>{stay.name}</h3>

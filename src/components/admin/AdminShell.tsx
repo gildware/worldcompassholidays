@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { loadAdminNavBadges } from "@/actions/admin-nav";
 import { BrandLogo } from "@/components/worldcompassholiday/BrandLogo";
 import type { NavItem } from "@/lib/navigation";
@@ -381,7 +381,6 @@ export function AdminShell({
   const [hintDesk, setHintDesk] = useState<string | null>(null);
   const [items, setItems] = useState(initialItems);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
   const deskFromQuery = searchParams.get("desk");
   const bookingDesk =
     (deskFromQuery && bookingDeskSegments.has(deskFromQuery) ? deskFromQuery : null) ??
@@ -399,13 +398,18 @@ export function AdminShell({
     setPendingHref(null);
   }, [pathname]);
 
+  // Soft navigations can hang on Next 16 + loading.tsx; never leave the desk locked.
+  useEffect(() => {
+    if (!pendingHref) return;
+    const timer = window.setTimeout(() => setPendingHref(null), 2500);
+    return () => window.clearTimeout(timer);
+  }, [pendingHref]);
+
   // Load nav badges after paint — never block the shell on remote DB counts.
   useEffect(() => {
     let cancelled = false;
-    startTransition(() => {
-      void loadAdminNavBadges().then((next) => {
-        if (!cancelled && next) setItems(next);
-      });
+    void loadAdminNavBadges().then((next) => {
+      if (!cancelled && next) setItems(next);
     });
     return () => {
       cancelled = true;
