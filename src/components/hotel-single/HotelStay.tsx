@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { submitHotelRequest } from "@/actions/hotel-request";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import type { HotelSingleData } from "@/components/hotel-single/types";
@@ -100,6 +100,7 @@ export function HotelStay({
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [state, action, pending] = useActionState(submitHotelRequest, initialFormState);
   const room = rooms.find((item) => item.id === roomId) ?? rooms[0];
+  const drag = useRef<{ x: number; id: number } | null>(null);
 
   const photos = useMemo(() => (hotel.images.length > 0 ? hotel.images : ["/img/general/map.svg"]), [hotel.images]);
   const visible = photos.slice(0, 5);
@@ -111,6 +112,30 @@ export function HotelStay({
     document.body.classList.toggle("stay-sheet", sheet);
     return () => document.body.classList.remove("stay-sheet");
   }, [sheet]);
+
+  useEffect(() => {
+    if (!viewer) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setViewer(null);
+        return;
+      }
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      const direction = event.key === "ArrowRight" ? 1 : -1;
+      setViewer((current) => {
+        if (!current || current.images.length === 0) return current;
+        const index = (current.index + direction + current.images.length) % current.images.length;
+        return { ...current, index };
+      });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [viewer]);
 
   useEffect(() => {
     try {
@@ -166,8 +191,14 @@ export function HotelStay({
   }
 
   function openPhotos(images: string[], index: number, label: string) {
-    setViewer({ images, index, label });
-    document.querySelector<HTMLDialogElement>("#stay-light")?.showModal();
+    const list = images.filter(Boolean);
+    if (!list.length) return;
+    const safe = Math.min(Math.max(0, index), list.length - 1);
+    setViewer({ images: list, index: safe, label });
+  }
+
+  function closePhotos() {
+    setViewer(null);
   }
 
   function stepPhoto(direction: number) {
@@ -178,11 +209,28 @@ export function HotelStay({
     });
   }
 
+  useEffect(() => {
+    if (viewer?.label === hotel.name) setGalleryIndex(viewer.index);
+  }, [viewer, hotel.name]);
+
   function stepRoom(id: string, total: number, direction: number) {
     setRoomSlide((current) => {
       const index = current[id] ?? 0;
       return { ...current, [id]: (index + direction + total) % total };
     });
+  }
+
+  function onLightPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if ((event.target as HTMLElement).closest("button")) return;
+    drag.current = { x: event.clientX, id: event.pointerId };
+  }
+
+  function onLightPointerUp(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!drag.current || drag.current.id !== event.pointerId || !viewer) return;
+    const delta = event.clientX - drag.current.x;
+    drag.current = null;
+    if (Math.abs(delta) < 40) return;
+    stepPhoto(delta < 0 ? 1 : -1);
   }
 
   const place = hotel.address || hotel.location;
@@ -271,31 +319,39 @@ export function HotelStay({
               key={`${src}-${index}`}
               className={index === 0 ? "stay-shot stay-g1" : "stay-shot"}
               type="button"
+              aria-label={`${hotel.name} photograph ${index + 1}`}
               onClick={() => openPhotos(photos, index, hotel.name)}
             >
-              <img src={src} alt={`${hotel.name} photograph ${index + 1}`} />
+              <img src={src} alt="" />
             </button>
           ))}
           {photos.length > 1 ? (
             <button className="stay-all" type="button" onClick={() => openPhotos(photos, 0, hotel.name)}>
-              View all {photos.length} photos
+              See all {photos.length} photos
             </button>
           ) : null}
         </div>
         <div className="stay-gallery-m" aria-label={`Photographs of ${hotel.name}`}>
-          <button
-            className="stay-gallery-m__hero"
-            type="button"
-            onClick={() => openPhotos(photos, galleryIndex, hotel.name)}
-            aria-label={`Open photograph ${galleryIndex + 1} of ${photos.length}`}
-          >
-            <img src={photos[galleryIndex] || photos[0]} alt={`${hotel.name} photograph ${galleryIndex + 1}`} />
+          <div className="stay-gallery-m__stage">
+            <button
+              className="stay-gallery-m__hero"
+              type="button"
+              onClick={() => openPhotos(photos, galleryIndex, hotel.name)}
+              aria-label={`Open photograph ${galleryIndex + 1} of ${photos.length}`}
+            >
+              <img src={photos[galleryIndex] || photos[0]} alt={`${hotel.name} photograph ${galleryIndex + 1}`} />
+            </button>
             {photos.length > 1 ? (
-              <span className="stay-gallery-m__count">
-                {galleryIndex + 1} / {photos.length}
-              </span>
+              <>
+                <span className="stay-gallery-m__count">
+                  {galleryIndex + 1} / {photos.length}
+                </span>
+                <button className="stay-all stay-all--mobile" type="button" onClick={() => openPhotos(photos, galleryIndex, hotel.name)}>
+                  See all {photos.length} photos
+                </button>
+              </>
             ) : null}
-          </button>
+          </div>
           {photos.length > 1 ? (
             <div className="stay-gallery-m__thumbs" role="list">
               {photos.map((src, index) => (
@@ -684,31 +740,43 @@ export function HotelStay({
       </div>
       <p className="stay-sr" aria-live="polite">{money(stayTotal, currency)}</p>
 
-      <dialog
-        className="stay-light"
-        id="stay-light"
-        aria-label="Photographs"
-        onKeyDown={(event) => {
-          if (event.key === "ArrowRight") stepPhoto(1);
-          if (event.key === "ArrowLeft") stepPhoto(-1);
-        }}
-      >
-        <button className="stay-light-x" type="button" onClick={() => document.querySelector<HTMLDialogElement>("#stay-light")?.close()}>
-          Close
-        </button>
-        <button className="stay-light-nav stay-light-prev" type="button" aria-label="Previous photo" onClick={() => stepPhoto(-1)}>
-          ‹
-        </button>
-        <figure>
-          <img src={viewer?.images[viewer.index]} alt={`${viewer?.label || hotel.name} photograph ${(viewer?.index ?? 0) + 1}`} />
-          <figcaption>
-            {viewer ? `${viewer.index + 1} of ${viewer.images.length}` : ""}
-          </figcaption>
-        </figure>
-        <button className="stay-light-nav stay-light-next" type="button" aria-label="Next photo" onClick={() => stepPhoto(1)}>
-          ›
-        </button>
-      </dialog>
+      {viewer ? (
+        <div
+          className="stay-light"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${viewer.label} photographs`}
+          onPointerDown={onLightPointerDown}
+          onPointerUp={onLightPointerUp}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) closePhotos();
+          }}
+        >
+          <button className="stay-light-x" type="button" onClick={closePhotos}>
+            Close
+          </button>
+          {viewer.images.length > 1 ? (
+            <button className="stay-light-nav stay-light-prev" type="button" aria-label="Previous photo" onClick={() => stepPhoto(-1)}>
+              ‹
+            </button>
+          ) : null}
+          <figure>
+            <img
+              src={viewer.images[viewer.index]}
+              alt={`${viewer.label} photograph ${viewer.index + 1}`}
+              draggable={false}
+            />
+            <figcaption>
+              {viewer.index + 1} of {viewer.images.length}
+            </figcaption>
+          </figure>
+          {viewer.images.length > 1 ? (
+            <button className="stay-light-nav stay-light-next" type="button" aria-label="Next photo" onClick={() => stepPhoto(1)}>
+              ›
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       <dialog className="stay-reserve" id="stay-reserve" aria-labelledby="stay-reserve-title">
         {succeeded ? (

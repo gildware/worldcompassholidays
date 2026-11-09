@@ -56,8 +56,15 @@ const hotels: HotelSource[] = [
   },
   {
     slug: "arison-luxury-srinagar",
-    pages: ["https://arisonluxury.com/"],
-    mediaApi: "https://arisonluxury.com/wp-json/wp/v2/media?per_page=40&media_type=image",
+    pages: ["https://arisonluxury.com/", "https://arisonluxury.com/gallery.html"],
+    // Distinct scenes from MakeMyTrip + ViaKashmir (exterior, lobby, bedroom, suite, corridor).
+    curated: [
+      "https://r1imghtlak.mmtcdn.com/29478057-2fdc-49f3-8f4e-62cc2a8f01d6.jpeg",
+      "https://ik.imagekit.io/viakashmir/viakashmir/hotels/arison-luxury-hyderpora-srinagar-1565654515/arison-luxury-hyderpora-srinagar-1565654515-b11-04.webp",
+      "https://ik.imagekit.io/viakashmir/viakashmir/hotels/arison-luxury-hyderpora-srinagar-1565654515/arison-luxury-hyderpora-srinagar-1565654515-b11-03.webp",
+      "https://ik.imagekit.io/viakashmir/viakashmir/hotels/arison-luxury-hyderpora-srinagar-1565654515/arison-luxury-hyderpora-srinagar-1565654515-b12-02.webp",
+      "https://ik.imagekit.io/viakashmir/viakashmir/hotels/arison-luxury-hyderpora-srinagar-1565654515/arison-luxury-hyderpora-srinagar-1565654515-b12-06.webp",
+    ],
   },
   {
     slug: "jhelum-comfort-residency-srinagar",
@@ -107,17 +114,13 @@ const hotels: HotelSource[] = [
   {
     slug: "zahgeer-continental-gulmarg",
     pages: ["https://hotelzahgeergulmarg.com/"],
+    // Exterior + dining + lounge + room (avoid near-identical bedroom crops).
     curated: [
-      "https://hotelzahgeergulmarg.com/HotelZahgeer/2.jpeg",
-      "https://hotelzahgeergulmarg.com/HotelZahgeer/23.jpeg",
-      "https://hotelzahgeergulmarg.com/Zahger/12.png",
-      "https://hotelzahgeergulmarg.com/Zahger/13.png",
-      "https://hotelzahgeergulmarg.com/Zahger/14.png",
-      "https://hotelzahgeergulmarg.com/Zahger/15.png",
-      "https://hotelzahgeergulmarg.com/Zahger/16.png",
-      "https://hotelzahgeergulmarg.com/Zahger/19.png",
-      "https://hotelzahgeergulmarg.com/Zahger/21.png",
-      "https://hotelzahgeergulmarg.com/Zahger/22.png",
+      "https://r1imghtlak.mmtcdn.com/9936e5508dd111ee9b320a58a9feac02.jpg",
+      "https://hotelzahgeergulmarg.com/Zahger/7.png",
+      "https://hotelzahgeergulmarg.com/Zahger/25.png",
+      "https://hotelzahgeergulmarg.com/Zahger/11.png",
+      "https://r1imghtlak.mmtcdn.com/c080a01e8dd211eebab80a58a9feac02.jpg",
     ],
   },
   {
@@ -145,7 +148,16 @@ const hotels: HotelSource[] = [
   },
   {
     slug: "riverside-resort-pahalgam",
-    pages: ["http://www.riversideresorts.in/", "https://www.riversideresorts.in/"],
+    // Official domain currently redirects to unrelated Just A Hotels assets —
+    // prefer Justdial catalogue photos of Riverside Resorts Inn, Movera.
+    pages: [],
+    curated: [
+      "https://content.jdmagicbox.com/v2/comp/pahalgam/h4/9999p1932.1932.240209222417.a3h4/catalogue/riverside-resorts-inn-pahalgam-pahalgam-hotels-x1wsnzoxlv.jpg",
+      "https://content.jdmagicbox.com/v2/comp/pahalgam/h4/9999p1932.1932.240209222417.a3h4/catalogue/riverside-resorts-inn-pahalgam-pahalgam-hotels-o275q1j14n.jpg",
+      "https://content.jdmagicbox.com/v2/comp/pahalgam/h4/9999p1932.1932.240209222417.a3h4/catalogue/riverside-resorts-inn-pahalgam-pahalgam-hotels-frlyt6bdeo.jpg",
+      "https://content.jdmagicbox.com/v2/comp/pahalgam/h4/9999p1932.1932.240209222417.a3h4/catalogue/riverside-resorts-inn-pahalgam-pahalgam-hotels-w2wylwowde.jpg",
+      "https://content.jdmagicbox.com/v2/comp/pahalgam/h4/9999p1932.1932.240209222417.a3h4/catalogue/riverside-resorts-inn-pahalgam-pahalgam-hotels-eklrx34mx9.jpg",
+    ],
   },
   {
     slug: "hayat-residency-pahalgam",

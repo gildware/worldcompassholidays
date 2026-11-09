@@ -36,7 +36,7 @@
       "driver": "cloudinary"
     },
     "destinations/pahalgam.jpg": {
-      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907143/worldcompass/destinations/pahalgam.jpg",
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794229696/worldcompass/destinations/pahalgam.jpg",
       "key": "worldcompass/destinations/pahalgam",
       "driver": "cloudinary"
     },
@@ -1408,6 +1408,31 @@
     "brand/covers/home": {
       "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1792907264/worldcompass/brand/covers/home.webp",
       "key": "worldcompass/brand/covers/home",
+      "driver": "cloudinary"
+    },
+    "destinations/pahalgam-cover.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794229697/worldcompass/destinations/pahalgam-cover.jpg",
+      "key": "worldcompass/destinations/pahalgam-cover",
+      "driver": "cloudinary"
+    },
+    "destinations/pahalgam-2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794229698/worldcompass/destinations/pahalgam-2.jpg",
+      "key": "worldcompass/destinations/pahalgam-2",
+      "driver": "cloudinary"
+    },
+    "destinations/pahalgam-3.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794229700/worldcompass/destinations/pahalgam-3.jpg",
+      "key": "worldcompass/destinations/pahalgam-3",
+      "driver": "cloudinary"
+    },
+    "destinations/pahalgam-4.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794229704/worldcompass/destinations/pahalgam-4.jpg",
+      "key": "worldcompass/destinations/pahalgam-4",
+      "driver": "cloudinary"
+    },
+    "destinations/pahalgam-5.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794229706/worldcompass/destinations/pahalgam-5.jpg",
+      "key": "worldcompass/destinations/pahalgam-5",
       "driver": "cloudinary"
     }
   },
