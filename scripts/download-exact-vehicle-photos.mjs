@@ -173,13 +173,14 @@ const sources = {
     "https://imgd.aeplcdn.com/1280x720/n/cw/ec/174325/carens-exterior-right-side-view-2.jpeg?isig=0&q=80&wm=1",
     "https://imgd.aeplcdn.com/1280x720/n/cw/ec/174325/carens-exterior-right-rear-three-quarter-2.jpeg?isig=0&q=80&wm=1",
   ],
+  // Prefer white studio / scenic cutouts — no people, avoid cluttered walls.
   "mahindra-thar": [
-    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/219824/thar-facelift-exterior-right-front-three-quarter-6.jpeg?isig=0&q=80",
-    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/219824/thar-facelift-exterior-right-front-three-quarter-2.png?isig=0&q=80",
-    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/219824/thar-facelift-exterior-right-side-view-5.jpeg?isig=0&q=80",
-    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/219824/thar-facelift-exterior-right-rear-three-quarter-7.png?isig=0&q=80",
-    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/219824/thar-facelift-exterior-right-rear-three-quarter-4.jpeg?isig=0&q=80",
-    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/219824/thar-facelift-exterior-rear-view-6.jpeg?isig=0&q=80",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/40087/thar-exterior-right-front-three-quarter-35.jpeg?q=80",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/40087/thar-exterior-right-front-three-quarter-37.jpeg?q=80",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/40087/thar-exterior-right-side-view.jpeg?q=80",
+    "https://imgd.aeplcdn.com/0x0/n/cw/ec/40087/thar-exterior-right-rear-three-quarter.jpeg?q=80",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/40087/thar-exterior-rear-view.jpeg?q=80",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/40087/thar-exterior-right-front-three-quarter-11.jpeg?q=80",
   ],
   "maruti-swift": [
     "https://stimg.cardekho.com/images/carexteriorimages/930x620/Maruti/Swift/10406/1697697295569/front-left-side-47.jpg",

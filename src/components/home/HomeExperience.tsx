@@ -181,7 +181,7 @@ function RideRail({
                     alt=""
                     fill
                     sizes="280px"
-                    style={{ objectFit: "contain", objectPosition: "center", padding: 10 }}
+                    style={{ objectFit: "cover", objectPosition: "center" }}
                   />
                 </Link>
                 <span className="home-x__badge">{kindLabel}</span>

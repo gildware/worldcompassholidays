@@ -107,7 +107,7 @@ function RideCard({
             alt=""
             fill
             sizes="280px"
-            className="object-contain"
+            className="object-cover"
             loading={eager ? "eager" : "lazy"}
             onError={() => setBroken(true)}
           />

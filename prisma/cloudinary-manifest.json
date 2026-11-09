@@ -1861,7 +1861,7 @@
       "driver": "cloudinary"
     },
     "vehicles/photos/mahindra-thar.jpg": {
-      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794233640/worldcompass/vehicles/mahindra-thar/cover.jpg",
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794237057/worldcompass/vehicles/mahindra-thar/cover.jpg",
       "key": "worldcompass/vehicles/mahindra-thar/cover",
       "driver": "cloudinary"
     },
@@ -2778,6 +2778,26 @@
     "vehicles/seed-yamaha-rayzr.svg": {
       "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794233724/worldcompass/vehicles/yamaha-rayzr/seed.svg",
       "key": "worldcompass/vehicles/yamaha-rayzr/seed",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/mahindra-thar-2.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794237060/worldcompass/vehicles/mahindra-thar-2/cover.jpg",
+      "key": "worldcompass/vehicles/mahindra-thar-2/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/mahindra-thar-3.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794237061/worldcompass/vehicles/mahindra-thar-3/cover.jpg",
+      "key": "worldcompass/vehicles/mahindra-thar-3/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/mahindra-thar-4.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794237063/worldcompass/vehicles/mahindra-thar-4/cover.jpg",
+      "key": "worldcompass/vehicles/mahindra-thar-4/cover",
+      "driver": "cloudinary"
+    },
+    "vehicles/photos/mahindra-thar-5.jpg": {
+      "url": "https://res.cloudinary.com/h1f2fe52/image/upload/v1794237064/worldcompass/vehicles/mahindra-thar-5/cover.jpg",
+      "key": "worldcompass/vehicles/mahindra-thar-5/cover",
       "driver": "cloudinary"
     }
   },

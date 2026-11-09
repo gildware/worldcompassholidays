@@ -596,16 +596,16 @@ a.home-fleet-mast__link:focus-visible {
 }
 
 .home-fleet-card__shot img {
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
-  padding: 10px;
+  padding: 0;
   background: transparent;
   transition: transform 0.45s ease;
 }
 
 .home-fleet-card--car .home-fleet-card__shot img {
-  padding: 14px 10px 6px;
-  filter: drop-shadow(0 10px 16px rgba(5, 16, 54, 0.22));
+  padding: 0;
+  filter: none;
 }
 
 .home-fleet-card:hover .home-fleet-card__shot img {

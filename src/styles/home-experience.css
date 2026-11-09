@@ -451,14 +451,14 @@
 }
 
 .home-x__card--ride .home-x__card-media img {
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
-  padding: 10px;
+  padding: 0;
   box-sizing: border-box;
 }
 
 .home-x__card--ride.is-car .home-x__card-media img {
-  filter: drop-shadow(0 8px 12px rgba(5, 16, 54, 0.2));
+  filter: none;
 }
 
 .home-x__card--ride:hover .home-x__card-media img,
