@@ -38,6 +38,17 @@
   object-position: center;
 }
 
+/* Keep the dark overlay on by default (not only on hover) */
+.pop-dest .citiesCard.-type-1 .citiesCard__bg {
+  opacity: 1;
+}
+
+.pop-dest .citiesCard.-type-1 .citiesCard__top .text-14 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Shorter square cards: keep the name visible, reveal CTA on hover */
 .pop-dest .citiesCard.-type-1 .citiesCard__content {
   padding-top: 20px;
