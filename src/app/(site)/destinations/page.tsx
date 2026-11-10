@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { DestinationListV3 } from "@/components/destination-list/destination-list-v3/DestinationListV3";
-import type { DestinationListCard, DestinationListLocation } from "@/components/destination-list/types";
+import { DestinationCatalog } from "@/components/destination-list/catalog/DestinationCatalog";
+import { readDestQuery } from "@/components/destination-list/catalog/logic";
+import type { DestinationListCard } from "@/components/destination-list/types";
 import { prisma } from "@/lib/db";
-import { mapApiKey } from "@/lib/map-key";
 import { parseMapPoint } from "@/lib/maps";
 import { logListingSearch } from "@/lib/search/log";
 import { clipText, pageMetadata } from "@/lib/seo";
@@ -28,23 +28,23 @@ export default async function DestinationsPage({
   const params = await searchParams;
   const rows = await cached("destinations", 20_000, () =>
     prisma.destination.findMany({
-    where: { published: true },
-    orderBy: [{ popular: "desc" }, { name: "asc" }],
-    include: {
-      parent: { select: { name: true } },
-      children: {
-        where: { published: true },
-        select: { name: true },
-        orderBy: { name: "asc" },
-      },
-      _count: {
-        select: {
-          tours: { where: { published: true } },
-          hotels: { where: { published: true } },
-          vehicles: { where: { published: true } },
+      where: { published: true },
+      orderBy: [{ popular: "desc" }, { name: "asc" }],
+      include: {
+        parent: { select: { name: true } },
+        children: {
+          where: { published: true },
+          select: { name: true },
+          orderBy: { name: "asc" },
+        },
+        _count: {
+          select: {
+            tours: { where: { published: true } },
+            hotels: { where: { published: true } },
+            vehicles: { where: { published: true } },
+          },
         },
       },
-    },
     }),
   );
 
@@ -70,20 +70,20 @@ export default async function DestinationsPage({
     };
   });
 
-  const locations: DestinationListLocation[] = destinations.map((destination) => ({
-    id: destination.id,
-    name: destination.name,
-    address: [destination.region, destination.country].filter(Boolean).join(", "),
-  }));
-
-  logListingSearch("destinations", params);
+  const initial = readDestQuery(params, one(params.q));
+  logListingSearch("destinations", params, {
+    queryOverride: [initial.q, initial.country, initial.region].filter(Boolean).join(" · ") || undefined,
+  });
 
   return (
-    <DestinationListV3
-      destinations={destinations}
-      locations={locations}
-      initialLocation={one(params.q)}
-      mapApiKey={mapApiKey()}
-    />
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+      <DestinationCatalog destinations={destinations} initial={initial} />
+    </>
   );
 }

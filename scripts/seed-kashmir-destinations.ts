@@ -6,12 +6,12 @@ loadEnvConfig(process.cwd());
 
 const prisma = new PrismaClient();
 const popularSlugs = new Set([
-  "kashmir",
   "gulmarg",
   "pahalgam",
   "sonamarg",
   "gurez",
   "doodhpathri",
+  "srinagar",
 ]);
 const parentOf: Record<string, string> = {
   gulmarg: "kashmir",
@@ -63,8 +63,9 @@ async function main() {
         imageUrl: existing?.imageUrl || fallbackImage,
         imageKey: existing?.imageKey || "destinations/seed-kashmir.svg",
         imageDriver: existing?.imageDriver || "local",
-        published: true,
-        popular: popularSlugs.has(destination.slug),
+        // Keep the parent region card hidden; city destinations stay published.
+        published: destination.slug !== "kashmir",
+        popular: destination.slug !== "kashmir" && popularSlugs.has(destination.slug),
       };
 
       await tx.destination.upsert({

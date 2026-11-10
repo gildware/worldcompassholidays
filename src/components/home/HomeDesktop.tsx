@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import PopularDestinations from "@/components/destinations/PopularDestinations";
-import { HomeInvite, HomePromises } from "@/components/home/HomeClose";
+import { HomeInvite } from "@/components/home/HomeClose";
 import { HomeGoogleReviews } from "@/components/home/HomeGoogleReviews";
 import Hero1 from "@/components/hero/hero-1";
 import type { GoogleReviewsSummary } from "@/lib/google-reviews";
@@ -288,11 +288,7 @@ export function HomeDesktop({
           );
         }
         if (section.id === "why") {
-          return (
-            <div key="why" className="container">
-              <HomePromises items={content.why.items} headingId="home-promises-desk" />
-            </div>
-          );
+          return null;
         }
         if (section.id === "reviews" && googleReviews) {
           return (

@@ -902,8 +902,8 @@ export function TourStay({
               <a className="road-btn" href="/tours">
                 Explore more
               </a>
-              <a className="road-btn" href={`/account/enquiries/${state.reference}`}>
-                View request
+              <a className="road-btn" href={`/account/bookings/${state.reference}`}>
+                View booking
               </a>
             </div>
           </div>

@@ -841,8 +841,8 @@ export function HotelStay({
               <a className="stay-btn" href="/hotels">
                 Explore more
               </a>
-              <a className="stay-btn" href={`/account/enquiries/${state.reference}`}>
-                View request
+              <a className="stay-btn" href={`/account/bookings/${state.reference}`}>
+                View booking
               </a>
             </div>
           </div>

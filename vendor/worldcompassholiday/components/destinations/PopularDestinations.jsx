@@ -68,10 +68,11 @@ const PopularDestinations = ({ destinations = /** @type {any[]} */ ([]) }) => {
               href={`/destinations/${item.slug}`}
               className="pop-dest__slide citiesCard -type-1 d-block rounded-4"
             >
-              <div className="citiesCard__image ratio ratio-3:4">
+              <div className="citiesCard__image pop-dest__media">
                 <Image
-                  width={300}
-                  height={400}
+                  fill
+                  quality={90}
+                  sizes="(max-width: 499px) 78vw, (max-width: 1023px) 45vw, (max-width: 1199px) 30vw, 25vw"
                   src={item.imageUrl}
                   alt={item.name}
                   className="js-lazy"

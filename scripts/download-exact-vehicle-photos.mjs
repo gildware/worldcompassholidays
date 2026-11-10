@@ -142,12 +142,15 @@ const sources = {
     "https://cdn.bikedekho.com/processedimages/tvs/ntorq-125/source/ntorq-1256a424230bc542.jpg",
     "https://cdn.bikedekho.com/processedimages/tvs/ntorq-125/source/ntorq-1256a424240df957.jpg",
   ],
+  // Prefer studio / empty-van exteriors — avoid lifestyle shots with people + logo overlays.
   "force-urbania": [
-    "https://newsvibesofindia.com/wp-content/uploads/2022/11/Urbania_2-scaled.jpg",
+    "https://stimg.cardekho.com/images/car-images/930x620/Force/Urbania/11849/1721042241113/221_Gray_414142.jpg",
+    "https://stimg.cardekho.com/images/car-images/930x620/Force/Urbania/11850/Force-Urbania-3350WB-11Str/1721192002774/222_White_cdd5d5.jpg",
+    "https://stimg.cardekho.com/images/carexteriorimages/930x620/Force/Urbania/11851/1775801172985/exterior-image-164.jpg",
     "https://drivetrick.com/wp-content/uploads/2022/11/urbania-force.jpg",
     "https://autohunt.in/wp-content/uploads/2025/03/Force-Urbania.webp",
     "https://forceurbania.co.in/wp-content/uploads/2022/10/inside-cabin_desktop.jpg",
-    "https://media.zigcdn.com/media/model/2024/Jul/cabin-view-86701690_930x620.jpg",
+    "https://stimg.cardekho.com/images/carinteriorimages/930x620/Force/Urbania/11849/Force-Urbania-3350WB-10Str/1721025336193/dashboard-59.jpg",
   ],
   "honda-city": [
     "https://imgd.aeplcdn.com/1280x720/n/cw/ec/219846/city-exterior-right-front-three-quarter-35.jpeg?isig=0&q=80",
@@ -190,36 +193,39 @@ const sources = {
     "https://imgd.aeplcdn.com/1280x720/n/cw/ec/159099/swift-exterior-right-front-three-quarter-187.jpeg?isig=0&q=80",
     "https://imgd.aeplcdn.com/1280x720/n/cw/ec/159099/swift-exterior-right-front-three-quarter-31.png?isig=0&q=80",
   ],
+  // Prefer white-studio Dzire cutouts — no ZigWheels watermark / marketing overlays.
   "sedan": [
-    "https://media.zigcdn.com/media/content/2024/Nov/6731f07ff1d3d.jpg?tr=w-1280",
-    "https://stimg.cardekho.com/images/carexteriorimages/930x620/Maruti/Dzire/11330/1749104473483/front-left-side-47.jpg",
-    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/170299/dzire-exterior-right-front-three-quarter-3.jpeg?isig=0&q=80",
-    "https://www.cartoq.com/wp-content/uploads/2024/11/Maruti-Suzuki-Dzire-dashboard-.jpg",
+    "https://stimg.cardekho.com/images/car-images/930x620/Maruti/Dzire/11387/1731318798692/225_Pearl-Arctic-White_999997.jpg",
+    "https://stimg.cardekho.com/images/carexteriorimages/930x620/Maruti/Dzire/12186/1771935643542/front-left-side-47.jpg",
     "https://imgd.aeplcdn.com/1280x720/n/cw/ec/170173/dzire-exterior-right-front-three-quarter-194.jpeg?isig=0&q=80",
-    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/170173/dzire-exterior-right-front-three-quarter-193.jpeg?isig=0&q=80&wm=1",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/170173/dzire-exterior-right-front-three-quarter-188.jpeg?isig=0&q=80",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/170173/dzire-interior-front-row-seats.jpeg?isig=0&q=80",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/170173/dzire-interior-dashboard.jpeg?isig=0&q=80",
   ],
+  // Prefer official Force Traveller highway / cabin shots — no custom yellow graphics or people.
   "tempo-traveller": [
-    "https://5.imimg.com/data5/SELLER/Default/2023/9/340256529/QF/GD/UC/8114104/force-tempo-traveller-26-seat-staff-bus-1000x1000.jpeg",
-    "https://www.renttempotraveller.com/images/new-img/exterior1.jpg",
-    "https://images.91trucks.com/wp-content/uploads/2022/09/Force-Traveller-3050-latest-.png",
+    "https://buscdn.cardekho.com/in/force/traveller-3050/force-traveller-3050.jpg?tr=w-1600",
+    "https://www.forcemotors.com/wp-content/uploads/2025/02/Traveller-3050WB-banner-new.webp",
+    "https://buscdn.cardekho.com/in/force/traveller-wider-body/force-traveller-wider-body-63641.jpg?tr=w-930,h-620,cm-pad_resize,bg-FFFFFF,f-jpg",
+    "https://www.forcemotors.com/wp-content/uploads/2025/02/Traveller-Passenger-Interior-new-2.jpg",
+    "https://www.forcemotors.com/wp-content/uploads/2025/02/Traveller-Passenger-Interior-new-1.jpg",
     "https://tempotravellerindia.com/wp-content/uploads/2024/08/5aa3f66a-d819-4084-a267-5cce9f73de9e.jpg",
-    "https://www.tempotravellerhire.in/jap/media/uploads/12seaterluxury-tempo-interior2.jpg",
   ],
   "toyota-innova": [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/2019_Toyota_Innova_2.0_G_%28107%29.jpg/1280px-2019_Toyota_Innova_2.0_G_%28107%29.jpg",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/2019_Toyota_Innova_2.0_G_%2856%29.jpg/1280px-2019_Toyota_Innova_2.0_G_%2856%29.jpg",
-    "https://stimg.cardekho.com/images/carexteriorimages/930x620/Toyota/Innova-Crysta/9612/1697698611076/front-left-side-47.jpg",
+    "https://stimg.cardekho.com/images/carexteriorimages/930x620/Toyota/Innova-Crysta/11703/1780562393141/front-left-side-47.jpg",
     "https://imgd.aeplcdn.com/1280x720/n/cw/ec/222736/innova-crysta-2026-exterior-right-front-three-quarter-8.jpeg?isig=0&q=80",
-    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/222736/innova-crysta-2026-exterior-right-front-three-quarter.png?isig=0&q=80&wm=1",
-    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/222736/innova-crysta-2026-exterior-right-side-view.jpeg?isig=0&q=80&wm=1",
-  ],
-  "toyota-innova-crysta": [
-    "https://stimg.cardekho.com/images/carexteriorimages/930x620/Toyota/Innova-Crysta/9612/1697698611076/front-left-side-47.jpg",
     "https://imgd.aeplcdn.com/1280x720/n/cw/ec/51435/innova-crysta-exterior-right-front-three-quarter-3.jpeg?q=85",
-    "https://img.autocarindia.com/model/uploads/modelimages/Toyota-Innova-Crysta-020320231741.jpg?w=1280&q=75",
-    "https://stimg.cardekho.com/images/carinteriorimages/930x620/Toyota/Innova-Crysta/8105/1606215327927/dashboard-59.jpg?imwidth=890&impolicy=resize",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/222736/innova-crysta-2026-exterior-right-side-view.jpeg?isig=0&q=80",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/222736/innova-crysta-2026-interior-dashboard.jpeg?isig=0&q=80",
+  ],
+  // Prefer white/black studio Crysta cutouts — avoid black-void PNGs and motion-blur interiors.
+  "toyota-innova-crysta": [
+    "https://stimg.cardekho.com/images/carexteriorimages/930x620/Toyota/Innova-Crysta/11703/1780562393141/front-left-side-47.jpg",
     "https://imgd.aeplcdn.com/1280x720/n/cw/ec/222736/innova-crysta-2026-exterior-right-front-three-quarter-8.jpeg?isig=0&q=80",
-    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/222736/innova-crysta-2026-exterior-right-front-three-quarter.png?isig=0&q=80&wm=1",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/51435/innova-crysta-exterior-right-front-three-quarter-3.jpeg?q=85",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/222736/innova-crysta-2026-exterior-right-side-view.jpeg?isig=0&q=80",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/222736/innova-crysta-2026-interior-dashboard.jpeg?isig=0&q=80",
+    "https://imgd.aeplcdn.com/1280x720/n/cw/ec/222736/innova-crysta-2026-exterior-left-rear-three-quarter.jpeg?isig=0&q=80",
   ],
 };
 

@@ -498,6 +498,7 @@ export type HomeDealCard = {
   ribbon: string;
   image: string;
   href: string;
+  cta?: string;
 };
 
 export function HomeDealList({ items }: { items: HomeDealCard[] }) {
@@ -522,7 +523,7 @@ export function HomeDealList({ items }: { items: HomeDealCard[] }) {
                   <strong>{deal.price}</strong> {deal.unit ? <small>{deal.unit}</small> : null}
                 </p>
                 <Link prefetch={false} href={deal.href} className="hic-btn">
-                  Hold
+                  {deal.cta || "Hold"}
                 </Link>
               </div>
             </div>

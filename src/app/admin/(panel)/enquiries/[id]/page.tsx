@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BookingStatusForm } from "@/components/admin/BookingStatusForm";
 import { EnquiryFacts } from "@/components/enquiries/EnquiryBoard";
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
+import { parseBookingDetails } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import { withEnquiryImages } from "@/lib/enquiry-images";
-import { enquiryStatusLabels, enquiryStatuses, enquiryStatusValue, toEnquiryView } from "@/lib/enquiries";
+import { enquiryStatusLabels, enquiryStatuses, enquiryStatusValue, isDeskEnquiry, toEnquiryView } from "@/lib/enquiries";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -22,6 +23,9 @@ export default async function AdminEnquiryPage({ params }: Props) {
   const { id } = await params;
   const booking = await prisma.booking.findUnique({ where: { id } });
   if (!booking) notFound();
+  if (!isDeskEnquiry(parseBookingDetails(booking.details), booking.title)) {
+    redirect(`/admin/bookings/${booking.id}`);
+  }
   const view = toEnquiryView(booking);
   if (!view) notFound();
   const [enquiry] = await withEnquiryImages([view]);

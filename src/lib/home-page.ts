@@ -119,7 +119,7 @@ export const defaultHomePageContent: HomePageContent = {
     description: theme.tagline,
     image: null,
   },
-  sections: HOME_SECTION_IDS.map((id) => ({ id, enabled: true })),
+  sections: HOME_SECTION_IDS.map((id) => ({ id, enabled: id !== "why" })),
   destinations: {
     title: "Popular Destinations",
     subtitle:
@@ -144,7 +144,7 @@ export const defaultHomePageContent: HomePageContent = {
   },
   cars: {
     title: "Cars for the trip",
-    subtitle: "Self-drive and chauffeur, priced by the day.",
+    subtitle: "Daily rates with pickup points shown on each car.",
     linkLabel: "All cars",
     mode: "auto",
     ids: [],
@@ -184,7 +184,7 @@ export const defaultHomePageContent: HomePageContent = {
           {
             id: "cars",
             title: "Cars",
-            description: "Self-drive and chauffeur cars, priced by the day before you pay.",
+            description: "Cars with daily rates and pickup points shown before you book.",
             href: "/rentals/cars",
             imageUrl: "/img/cars/car-rental-banner.jpg",
             image: null,

@@ -2,18 +2,18 @@ import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
-import { HomeInvite, HomePromises } from "@/components/home/HomeClose";
+import { HomeInvite } from "@/components/home/HomeClose";
 import { HomeGoogleReviews } from "@/components/home/HomeGoogleReviews";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
 import { formatMoney } from "@/lib/format";
 import type { GoogleReviewsSummary } from "@/lib/google-reviews";
 import { defaultHomePageContent, type HomePageContent } from "@/lib/home-page";
 import {
-  busDeal,
-  busHomeFallback,
+  HomeBusRequestCard,
+  HomeBusRunList,
   type HomeBus,
 } from "@/components/home/HomeBusSection";
-import { HomeDealList, HomeFlipGrid, HomeStayGrid } from "@/components/home/HomeInteractive";
+import { HomeFlipGrid, HomeStayGrid } from "@/components/home/HomeInteractive";
 import { HomeHeroSearch } from "@/components/home/HomeHeroSearch";
 import {
   bikeHomeFallback,
@@ -158,18 +158,6 @@ function RideRail({
         linkLabel={linkLabel}
         headingId={id}
       />
-      {isCar ? (
-        <Link prefetch={false} href={href} className="home-x__car-art">
-          <Image
-            src="/img/company/service-transfers.jpg"
-            alt="Illustrated car on a coastal road toward the airport"
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
-          <span>Self-drive and chauffeur · priced by the day</span>
-        </Link>
-      ) : null}
       {items.length > 0 ? (
         <div className="home-x__scroller">
           {items.map((ride) => (
@@ -446,32 +434,31 @@ export function HomeExperience({
           return (
             <Fragment key="buses">
             {firstFleet === "buses" ? rideGuides : null}
-            <section className="home-x__rail" aria-labelledby="home-buses">
-              <RailHead
-                title={content.buses.title}
-                subtitle={content.buses.subtitle}
-                href="/buses"
-                linkLabel={content.buses.linkLabel}
-                headingId="home-buses"
-              />
+            <section
+              className="home-x__rail"
+              aria-labelledby={buses.length > 0 ? "home-buses" : undefined}
+              aria-label={buses.length > 0 ? undefined : "Request a bus"}
+            >
               {buses.length > 0 ? (
-                <HomeDealList items={buses.map(busDeal)} />
+                <>
+                  <RailHead
+                    title={content.buses.title}
+                    subtitle={content.buses.subtitle}
+                    href="/buses"
+                    linkLabel={content.buses.linkLabel}
+                    headingId="home-buses"
+                  />
+                  <HomeBusRunList items={buses} />
+                </>
               ) : (
-                <HomeRidePromoCard promo={busHomeFallback} />
+                <HomeBusRequestCard />
               )}
             </section>
             </Fragment>
           );
         }
         if (section.id === "why") {
-          return (
-            <HomePromises
-              key="why"
-              items={content.why.items}
-              contactPhone={contactPhone}
-              headingId="home-promises-mobile"
-            />
-          );
+          return null;
         }
         if (section.id === "reviews" && googleReviews) {
           return (

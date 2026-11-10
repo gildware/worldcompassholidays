@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { EnquiryFacts } from "@/components/enquiries/EnquiryBoard";
 import { requireCustomer } from "@/lib/auth/guards";
+import { parseBookingDetails } from "@/lib/bookings";
 import { prisma } from "@/lib/db";
 import { withEnquiryImages } from "@/lib/enquiry-images";
-import { toEnquiryView } from "@/lib/enquiries";
+import { isDeskEnquiry, toEnquiryView } from "@/lib/enquiries";
 import { privateMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
@@ -26,6 +27,9 @@ export default async function AccountEnquiryPage({
   const { reference } = await params;
   const booking = await prisma.booking.findUnique({ where: { reference } });
   if (!booking || booking.userId !== user.id) notFound();
+  if (!isDeskEnquiry(parseBookingDetails(booking.details), booking.title)) {
+    redirect(`/account/bookings/${reference}`);
+  }
   const view = toEnquiryView(booking);
   if (!view) notFound();
   const [enquiry] = await withEnquiryImages([view]);

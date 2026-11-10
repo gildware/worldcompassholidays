@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
       },
     ],
+    qualities: [75, 90],
     // Seed placeholders are SVG; Cloudinary uploads will be raster.
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",

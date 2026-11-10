@@ -21,6 +21,51 @@
   min-width: 0;
 }
 
+.pop-dest__media {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  border-radius: inherit;
+}
+
+.pop-dest__media::before {
+  content: none;
+}
+
+.pop-dest__media img {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Shorter square cards: keep the name visible, reveal CTA on hover */
+.pop-dest .citiesCard.-type-1 .citiesCard__content {
+  padding-top: 20px;
+  padding-bottom: 16px;
+}
+
+.pop-dest .citiesCard.-type-1 .citiesCard__bottom {
+  transform: none;
+}
+
+.pop-dest .citiesCard.-type-1 .citiesCard__bottom .text-26 {
+  margin-bottom: 10px;
+  font-size: 22px;
+}
+
+.pop-dest .citiesCard.-type-1 .citiesCard__bottom .button.h-60 {
+  height: 44px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.pop-dest .citiesCard.-type-1:hover .citiesCard__bottom .button.h-60,
+.pop-dest .citiesCard.-type-1:focus-visible .citiesCard__bottom .button.h-60 {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .pop-dest__scroll {
   position: relative;
   height: 3px;

@@ -270,23 +270,39 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
     : null;
   const hotelSlug = linkedHotel?.slug ?? "";
   const hotelName = linkedHotel?.name || data.hotelName;
+  // Hotel product pages (surface=stay + slug) are bookings; the custom form stays an enquiry.
+  const productStay = data.surface === "stay" && Boolean(hotelSlug);
   const booking = await prisma.booking.create({
     data: {
       reference: bookingReference(),
       module: "hotel",
-      status: "pending",
-      title: hotelName ? `Hotel request: ${hotelName}` : `Hotel request in ${data.destination}`,
+      status: productStay ? "enquiry" : "pending",
+      title: productStay
+        ? hotelName || `Stay in ${data.destination}`
+        : hotelName
+          ? `Hotel request: ${hotelName}`
+          : `Hotel request in ${data.destination}`,
       startDate: new Date(`${data.checkIn}T00:00:00`),
       endDate: new Date(`${data.checkOut}T00:00:00`),
       guests: data.adults + data.children,
       notes: [
-        requestNotes({ ...data, hotelName }),
+        productStay
+          ? [
+              "Hotel booking",
+              `Hotel: ${hotelName || data.destination}`,
+              `Stay: ${prettyDate(data.checkIn)} to ${prettyDate(data.checkOut)}`,
+              `Party: ${data.adults} adults, ${data.children} children, ${data.rooms} rooms`,
+              data.message ? `Note: ${data.message}` : "",
+            ]
+              .filter(Boolean)
+              .join("\n")
+          : requestNotes({ ...data, hotelName }),
         customer?.phone && typedPhone && data.phone !== customer.phone ? `Account phone: ${customer.phone}` : "",
       ]
         .filter(Boolean)
         .join("\n"),
       details: detailsWithEnquiryReceived({
-        kind: "custom_hotel",
+        ...(productStay ? {} : { kind: "custom_hotel" as const }),
         destination: data.destination,
         hotelName,
         hotelSlug,
@@ -315,6 +331,7 @@ export async function submitHotelRequest(_previous: FormState, formData: FormDat
   });
 
   revalidatePath("/admin/bookings");
+  revalidatePath("/admin/bookings/hotels");
   revalidatePath("/admin/enquiries");
   if (customer) revalidateCustomerBooking("hotel", booking.reference);
 

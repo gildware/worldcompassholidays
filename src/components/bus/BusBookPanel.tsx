@@ -42,7 +42,13 @@ export function BusBookPanel({
   if (success) {
     return (
       <aside className="bus-quote" id="bus-book" aria-label="Book this bus">
-        <RequestSuccessStep reference={success} exploreHref="/buses" detail="Nothing is booked until you accept a quote." />
+        <RequestSuccessStep
+          reference={success}
+          exploreHref="/buses"
+          detail="Nothing is charged until you accept a quote."
+          accountHref={`/account/bookings/${success}`}
+          accountLabel="View booking"
+        />
       </aside>
     );
   }
@@ -55,6 +61,7 @@ export function BusBookPanel({
         {fromCity} → {toCity}
       </p>
       <form action={action} className="bus-quote__form" noValidate onSubmit={() => setSubmittedInThisVisit(true)}>
+        <input type="hidden" name="surface" value="book" />
         <input type="hidden" name="fromCity" value={fromCity} />
         <input type="hidden" name="toCity" value={toCity} />
         <input type="hidden" name="coach" value={coach} />

@@ -169,7 +169,7 @@ export async function submitTourRequest(_previous: FormState, formData: FormData
   const endIso = departure?.endDate ? isoDay(departure.endDate) : addDays(data.startDate, Math.max(0, tour.durationDays - 1));
   const roomLabel = data.ownRoom === "1" ? "own room for every adult" : quote.singles ? `${quote.singles} single room` : "twin share";
   const notes = [
-    "Tour request",
+    "Tour booking",
     `Tour: ${tour.title}`,
     `Start: ${prettyDate(data.startDate)}`,
     `Return: ${prettyDate(endIso)}`,
@@ -183,6 +183,7 @@ export async function submitTourRequest(_previous: FormState, formData: FormData
     .filter(Boolean)
     .join("\n");
 
+  // Product tour pages create bookings (not custom enquiries).
   const booking = await prisma.booking.create({
     data: {
       reference: bookingReference(),
@@ -196,7 +197,6 @@ export async function submitTourRequest(_previous: FormState, formData: FormData
       currency: tour.currency || "INR",
       notes,
       details: detailsWithEnquiryReceived({
-        kind: "custom_tour",
         tourSlug: tour.slug,
         mode: data.mode,
         startDate: data.startDate,
@@ -221,6 +221,7 @@ export async function submitTourRequest(_previous: FormState, formData: FormData
   });
 
   revalidatePath("/admin/bookings");
+  revalidatePath("/admin/bookings/tours");
   if (customer) revalidateCustomerBooking("tour", booking.reference);
 
   return {

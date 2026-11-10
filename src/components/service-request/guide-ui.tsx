@@ -251,10 +251,14 @@ export function RequestSuccessStep({
   reference,
   exploreHref,
   detail,
+  accountHref,
+  accountLabel = "View request",
 }: {
   reference: string;
   exploreHref: string;
   detail?: string;
+  accountHref?: string;
+  accountLabel?: string;
 }) {
   const phone = company.phone;
   const email = company.email;
@@ -264,6 +268,7 @@ export function RequestSuccessStep({
   const chatHref = whatsapp
     ? `${whatsapp}?text=${encodeURIComponent(`Hi, I submitted request ${reference} and would like an update.`)}`
     : null;
+  const detailHref = accountHref ?? `/account/enquiries/${reference}`;
 
   return (
     <section className="hotel-guide-panel hotel-guide-success" aria-labelledby="request-success-title">
@@ -302,8 +307,8 @@ export function RequestSuccessStep({
         <a className="hotel-guide-success-secondary" href={exploreHref}>
           Explore more
         </a>
-        <a className="hotel-guide-primary" href={`/account/enquiries/${reference}`}>
-          View request
+        <a className="hotel-guide-primary" href={detailHref}>
+          {accountLabel}
         </a>
       </div>
     </section>

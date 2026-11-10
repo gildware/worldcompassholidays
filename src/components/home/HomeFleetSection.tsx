@@ -32,15 +32,15 @@ export type HomeRidePromo = {
 export const carHomeFallback: HomeRidePromo = {
   href: "/rentals/cars",
   title: "Cars for the trip",
-  text: "Self-drive and chauffeur, priced by the day before you reserve.",
-  points: ["Airport and hotel pickup", "Chauffeur or self-drive", "Quote before you pay"],
+  text: "Daily rates with clear pickup points before you reserve.",
+  points: ["City and airport pickup", "Seat count on each car", "Daily rates shown upfront"],
   image: "/img/company/service-transfers.jpg",
   cta: "Browse cars",
 };
 
 const carSectionArt = {
   src: "/img/company/service-transfers.jpg",
-  alt: "Illustrated car on a coastal road toward the airport at golden hour",
+  alt: "Car for airport and city travel",
 } as const;
 
 export const bikeHomeFallback: HomeRidePromo = {
@@ -182,48 +182,20 @@ export function HomeFleetSection({
   return (
     <section className={nested ? "home-web-nested" : "layout-pt-md layout-pb-md"}>
       <div className="container">
-        {isCar ? (
-          <div className="home-fleet-mast">
-            <div className="home-fleet-mast__copy">
-              <p className="home-fleet-mast__kicker">Self-drive &amp; chauffeur</p>
-              <h2>{title}</h2>
-              <p>{subtitle}</p>
-              <ul className="home-fleet-mast__points">
-                <li>Airport and hotel pickup</li>
-                <li>Priced by the day</li>
-                <li>Quote before you pay</li>
-              </ul>
-              <Link prefetch={false} href={href} className="home-fleet-mast__link">
-                {linkLabel}
-              </Link>
-            </div>
-            <figure className="home-fleet-mast__art">
-              <Image
-                src={carSectionArt.src}
-                alt={carSectionArt.alt}
-                fill
-                sizes="(max-width: 900px) 100vw, 480px"
-                className="object-cover"
-                priority={false}
-              />
-            </figure>
-          </div>
-        ) : (
-          <div className="row y-gap-10 justify-between items-end">
-            <div className="col-auto">
-              <div className="sectionTitle -md">
-                <h2 className="sectionTitle__title">{title}</h2>
-                <p className="sectionTitle__text mt-5 sm:mt-0">{subtitle}</p>
-              </div>
-            </div>
-            <div className="col-auto">
-              <Link prefetch={false} href={href} className="button -md -blue-1 bg-blue-1-05 text-blue-1">
-                {linkLabel}
-                <div className="icon-arrow-top-right ml-15" />
-              </Link>
+        <div className="row y-gap-10 justify-between items-end">
+          <div className="col-auto">
+            <div className="sectionTitle -md">
+              <h2 className="sectionTitle__title">{title}</h2>
+              <p className="sectionTitle__text mt-5 sm:mt-0">{subtitle}</p>
             </div>
           </div>
-        )}
+          <div className="col-auto">
+            <Link prefetch={false} href={href} className="button -md -blue-1 bg-blue-1-05 text-blue-1">
+              {linkLabel}
+              <div className="icon-arrow-top-right ml-15" />
+            </Link>
+          </div>
+        </div>
         {items.length > 0 ? (
           <div className={`home-fleet-scroll${isCar ? " home-fleet-scroll--car" : " pt-20"}`}>
             {items.map((ride, index) => (
@@ -240,7 +212,7 @@ export function HomeFleetSection({
             ))}
           </div>
         ) : (
-          <div className={isCar ? "pt-20" : "pt-40"}>
+          <div className="pt-40">
             <HomeRidePromoCard promo={empty} />
           </div>
         )}

@@ -195,12 +195,18 @@ export async function submitBusRequest(_previous: FormState, formData: FormData)
 
   const channel = text(formData.get("channel")) === "whatsapp" ? "whatsapp" : "form";
   const data = parsed.data;
+  // Product bus pages send surface=book; the open /buses/request form stays an enquiry.
+  const productBus = text(formData.get("surface")) === "book" && Boolean(data.slug.trim());
   const booking = await prisma.booking.create({
     data: {
       reference: bookingReference(),
       module: "bus",
-      status: "pending",
-      title: data.busName ? `Bus request: ${data.busName}` : `Bus request: ${data.fromCity} to ${data.toCity}`,
+      status: productBus ? "enquiry" : "pending",
+      title: productBus
+        ? data.busName || `${data.fromCity} to ${data.toCity}`
+        : data.busName
+          ? `Bus request: ${data.busName}`
+          : `Bus request: ${data.fromCity} to ${data.toCity}`,
       startDate: new Date(`${data.travelDate}T00:00:00`),
       endDate: new Date(`${data.travelDate}T00:00:00`),
       guests: data.passengers,
@@ -211,7 +217,7 @@ export async function submitBusRequest(_previous: FormState, formData: FormData)
         .filter(Boolean)
         .join("\n"),
       details: detailsWithEnquiryReceived({
-        kind: "custom_bus",
+        ...(productBus ? {} : { kind: "custom_bus" as const }),
         destination: `${data.fromCity} to ${data.toCity}`,
         fromCity: data.fromCity,
         toCity: data.toCity,
