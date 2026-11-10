@@ -740,6 +740,16 @@ function TripSheet({
   );
 }
 
+function Pill({ label, count, checked, onChange }: { label: string; count: number; checked: boolean; onChange: () => void }) {
+  if (count === 0 && !checked) return null;
+  return (
+    <label className="pill">
+      {label} <span className="n">{count}</span>
+      <input type="checkbox" checked={checked} onChange={onChange} />
+    </label>
+  );
+}
+
 function QuickChip({ label, count, pressed, onClick }: { label: string; count: number; pressed: boolean; onClick: () => void }) {
   if (count === 0 && !pressed) return null;
   return (

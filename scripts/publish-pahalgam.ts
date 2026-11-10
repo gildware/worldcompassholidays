@@ -43,7 +43,7 @@ async function main() {
     const buffer = readFileSync(path.join(uploads, item.file));
     console.log(`Uploading ${item.file} → ${item.publicId} (${buffer.length} bytes)...`);
     const result = await uploadCloudinaryBuffer({ buffer, publicId: item.publicId });
-    uploaded[item.publicId] = result;
+    uploaded[item.publicId] = { url: result.url, key: result.key, driver: "cloudinary" };
     console.log(`  ok ${result.url}`);
   }
 
