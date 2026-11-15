@@ -205,7 +205,7 @@ export function TourStay({
   const loginHref = `/login?next=${encodeURIComponent(`/tours/${tour.slug}`)}`;
   const formRef = useRef<HTMLFormElement>(null);
   const asideRef = useRef<HTMLDivElement>(null);
-  const bookRef = useRef<HTMLAsideElement>(null);
+  const bookRef = useRef<HTMLElement>(null);
   const verifiedRef = useRef(Boolean(customer));
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [guestName, setGuestName] = useState("");

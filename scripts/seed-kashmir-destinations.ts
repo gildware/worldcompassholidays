@@ -12,11 +12,10 @@ loadEnvConfig(process.cwd());
 const prisma = new PrismaClient();
 
 const extraDestinations = [...phase1Destinations, ...phase2Destinations, ...phase3Destinations];
+const demoSlugs = new Set(demoDestinations.map((row) => row.slug as string));
 const allDestinations = [
   ...demoDestinations,
-  ...extraDestinations.filter(
-    (destination) => !demoDestinations.some((row) => row.slug === destination.slug),
-  ),
+  ...extraDestinations.filter((destination) => !demoSlugs.has(destination.slug)),
 ];
 
 const popularSlugs = new Set([
