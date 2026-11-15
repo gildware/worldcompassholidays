@@ -79,6 +79,7 @@ export default async function AdminTourViewPage({
   );
   const includes = labeled(tour.includesJson, catalog.includes);
   const excludes = labeled(tour.excludesJson, catalog.excludes);
+  const beforeYouGo = labeled(tour.beforeYouGoJson, catalog.beforeYouGo);
   const styles = labeled(tour.travelStylesJson, catalog.styles);
   const facilities = labeled(tour.facilitiesJson, catalog.facilities);
   const storedFaqs = parseJsonArray<unknown>(tour.faqsJson);
@@ -121,10 +122,14 @@ export default async function AdminTourViewPage({
           dayNumber: day.dayNumber,
           title: day.title,
           description: day.description,
+          morning: day.morning,
+          afternoon: day.afternoon,
+          evening: day.evening,
           imageUrl: day.imageUrl,
         })),
         includes,
         excludes,
+        beforeYouGo,
         styles,
         facilities,
         faqs,
@@ -144,6 +149,8 @@ export default async function AdminTourViewPage({
 function labeled(raw: string, items: CatalogOption[]) {
   return selectionKeys(parseJsonArray<unknown>(raw)).flatMap((key) => {
     const item = items.find((row) => row.id === key || row.title === key);
-    return item ? [{ title: item.title, iconUrl: item.iconUrl }] : [];
+    return item
+      ? [{ title: item.title, iconUrl: item.iconUrl, content: item.content }]
+      : [];
   });
 }

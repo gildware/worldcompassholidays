@@ -28,7 +28,16 @@ export type TourStayDay = {
   dayNumber: number;
   title: string;
   description: string;
+  morning?: string;
+  afternoon?: string;
+  evening?: string;
   imageUrl: string;
+};
+
+export type TourStayListItem = {
+  title: string;
+  iconUrl: string;
+  content?: string;
 };
 
 export type TourStayData = {
@@ -52,11 +61,14 @@ export type TourStayData = {
   images: string[];
   summary: string;
   description: string;
-  includes: string[];
-  excludes: string[];
-  facilities: string[];
+  includes: TourStayListItem[];
+  excludes: TourStayListItem[];
+  beforeYouGo: TourStayListItem[];
+  facilities: TourStayListItem[];
+  styles: TourStayListItem[];
+  categoryIconUrl: string;
   languages: string[];
-  faqs: { title: string; content: string }[];
+  faqs: { title: string; content: string; iconUrl?: string }[];
   days: TourStayDay[];
   departures: TourStayDeparture[];
   address: string;
@@ -66,17 +78,14 @@ export type TourStayData = {
 
 type Guest = { name: string; email: string; phone: string } | null;
 
-const PACK = [
-  "Government photo ID",
-  "Personal medicines",
-  "A day bag",
-  "Comfortable walking shoes",
-  "A warm layer for the evening",
-  "Cash for personal expenses",
-];
-
 function money(amount: number, currency: string) {
   return formatMoney(Math.round(amount), currency);
+}
+
+function paceLabel(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return trimmed;
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
 
 function todayIso() {
@@ -105,8 +114,15 @@ function shortDate(iso: string) {
   return `${weekday} ${date.getDate()} ${month}`;
 }
 
-function beats(text: string) {
-  const clean = plainText(text);
+function beats(day: TourStayDay) {
+  const periods = [
+    { when: "Morning", text: (day.morning ?? "").trim() },
+    { when: "Afternoon", text: (day.afternoon ?? "").trim() },
+    { when: "Evening", text: (day.evening ?? "").trim() },
+  ].filter((period) => period.text);
+  if (periods.length > 0) return periods;
+
+  const clean = plainText(day.description);
   const parts = clean.split(/\n+/).map((part) => part.trim()).filter(Boolean);
   const source = parts.length > 1 ? parts : clean.split(/(?<=[.!?])\s+/).map((part) => part.trim()).filter(Boolean);
   if (source.length >= 2 && parts.length <= 1) {
@@ -117,13 +133,56 @@ function beats(text: string) {
     ];
   }
   if (source.length > 1) return source.map((part, index) => ({ when: `Part ${index + 1}`, text: part }));
-  return [{ when: "The day", text: clean || "The plan for this day is confirmed with your request." }];
+  return [{ when: "The day", text: clean || "Details for this day are shared when your trip is confirmed." }];
 }
 
-function chunk<T>(items: T[], size: number) {
-  const groups: T[][] = [];
-  for (let index = 0; index < items.length; index += size) groups.push(items.slice(index, index + size));
-  return groups;
+const ICON = "/uploads/catalog/icons";
+const DEFAULT_FAQ_ICON = `${ICON}/message-circle-question.svg`;
+const DEFAULT_OK_ICON = `${ICON}/circle-help.svg`;
+
+const FAQ_ICON_BY_TITLE: Record<string, string> = {
+  "Which hotels are used on this package?": `${ICON}/hotel.svg`,
+  "How much should I budget for local extras?": `${ICON}/wallet.svg`,
+  "When can this be cancelled?": `${ICON}/calendar-x.svg`,
+  "Is a seat held when I send this?": `${ICON}/credit-card.svg`,
+};
+
+function CatalogIcon({
+  url,
+  title,
+  tone,
+}: {
+  url: string;
+  title: string;
+  tone: "ok" | "no";
+}) {
+  const src = url || (tone === "ok" ? DEFAULT_OK_ICON : "");
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img className="road-list-icon" src={src} alt="" />
+    );
+  }
+  return (
+    <span className={`road-list-fallback road-list-fallback--${tone}`} aria-hidden="true">
+      {tone === "ok" ? "✓" : "–"}
+    </span>
+  );
+}
+
+function FaqIcon({ url, title }: { url?: string; title: string }) {
+  const src = url || FAQ_ICON_BY_TITLE[title] || DEFAULT_FAQ_ICON;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img className="road-list-icon" src={src} alt="" />
+  );
+}
+
+function CardIcon({ src }: { src: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img className="road-card-icon" src={src} alt="" />
+  );
 }
 
 export function TourStay({
@@ -145,6 +204,8 @@ export function TourStay({
   const signedIn = Boolean(customer);
   const loginHref = `/login?next=${encodeURIComponent(`/tours/${tour.slug}`)}`;
   const formRef = useRef<HTMLFormElement>(null);
+  const asideRef = useRef<HTMLDivElement>(null);
+  const bookRef = useRef<HTMLAsideElement>(null);
   const verifiedRef = useRef(Boolean(customer));
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [guestName, setGuestName] = useState("");
@@ -180,7 +241,6 @@ export function TourStay({
   const [note, setNote] = useState("");
   const [toast, setToast] = useState("");
   const [listHref, setListHref] = useState("/tours");
-  const [packed, setPacked] = useState<boolean[]>(() => PACK.map(() => false));
   const [state, action, pending] = useActionState(submitTourRequest, initialFormState);
 
   const departure =
@@ -220,32 +280,19 @@ export function TourStay({
       : "Choose a start date.";
   const people = adults + children;
   const nextDate = tour.departures.find((item) => item.id !== departure?.id && item.seats >= people && item.iso >= todayIso());
-  const childWarn = !block && children > adults ? "More children than adults. The desk will confirm this is alright." : "";
-  const sentence = `${adults} ${adults === 1 ? "adult" : "adults"}${children ? ` · ${children} ${children === 1 ? "child" : "children"}` : ""} · ${mode} · ${shortDate(startIso)}${quote.seasonName ? ` · ${quote.seasonName}` : ""}`;
+  const childWarn = !block && children > adults ? "More children than adults — we'll check this works for your party." : "";
+  const rateLabel = mode === "private" ? "private rate" : "listed rate";
+  const sentence = `${adults} ${adults === 1 ? "adult" : "adults"}${children ? ` · ${children} ${children === 1 ? "child" : "children"}` : ""} · ${rateLabel} · ${shortDate(startIso)}${quote.seasonName ? ` · ${quote.seasonName}` : ""}`;
   const cancelOn = startIso ? addDays(startIso, -tour.cancelDays) : "";
   const cancelOpen = Boolean(cancelOn && cancelOn >= todayIso());
   const succeeded = Boolean(state.success && state.reference);
   const summary = plainText(tour.summary);
   const description = plainText(tour.description);
-  const amenityGroups = useMemo(() => {
-    if (tour.facilities.length > 0) {
-      return chunk(tour.facilities, 4).map((items, index) => ({
-        title: index === 0 ? "On this tour" : `Also included ${index + 1}`,
-        items,
-      }));
-    }
-    return [
-      {
-        title: "The trip",
-        items: [tour.durationLabel, tour.difficulty || "Pace confirmed with the desk", tour.maxGroupSize > 0 ? `Up to ${tour.maxGroupSize} travelers` : "Small group"].filter(Boolean),
-      },
-      {
-        title: "Before you pay",
-        items: [`Cancel until ${tour.cancelDays} days before the start`, "Nothing is held until you accept"],
-      },
-    ];
-  }, [tour.cancelDays, tour.difficulty, tour.durationLabel, tour.facilities, tour.maxGroupSize]);
-
+  const hasListedDepartures = tour.defaultState === "dates" && tour.departures.length > 0 && !tour.availabilityFrom;
+  const hasSeasonWindow = tour.defaultState === "dates" && Boolean(tour.availabilityFrom && tour.availabilityTo);
+  const showDepartures = hasListedDepartures || hasSeasonWindow;
+  const showTrip =
+    Boolean(tour.category) || tour.styles.length > 0 || tour.facilities.length > 0 || tour.languages.length > 0;
   useEffect(() => {
     document.body.classList.toggle("road-sheet", sheet);
     return () => document.body.classList.remove("road-sheet");
@@ -261,22 +308,79 @@ export function TourStay({
   }, []);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(`wch-tour-${tour.slug}-pack`);
-      if (stored) {
-        const parsed = JSON.parse(stored) as unknown;
-        if (Array.isArray(parsed)) setPacked(PACK.map((_, index) => Boolean(parsed[index])));
-      }
-    } catch {
-      setPacked(PACK.map(() => false));
-    }
-  }, [tour.slug]);
-
-  useEffect(() => {
     if (!toast) return;
     const timer = window.setTimeout(() => setToast(""), 2400);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  /* Keep the booking card fixed under the tabs — never let CSS sticky shove it upward at FAQ. */
+  useEffect(() => {
+    const aside = asideRef.current;
+    const book = bookRef.current;
+    if (!aside || !book) return;
+
+    const mq = window.matchMedia("(min-width: 1025px)");
+    let frame = 0;
+    let topPx = 146;
+
+    const clearPin = () => {
+      book.classList.remove("is-pinned");
+      book.style.removeProperty("left");
+      book.style.removeProperty("width");
+      aside.style.removeProperty("height");
+    };
+
+    const readTop = () => {
+      const topRaw = getComputedStyle(book).getPropertyValue("--road-book-top").trim() || "146px";
+      const probe = document.createElement("div");
+      probe.style.cssText = `position:fixed;top:${topRaw};visibility:hidden;pointer-events:none`;
+      document.body.appendChild(probe);
+      topPx = probe.getBoundingClientRect().top || 146;
+      probe.remove();
+    };
+
+    const update = () => {
+      frame = 0;
+      if (!mq.matches) {
+        clearPin();
+        return;
+      }
+
+      aside.style.height = `${book.offsetHeight}px`;
+      const rect = aside.getBoundingClientRect();
+
+      if (rect.top <= topPx) {
+        book.classList.add("is-pinned");
+        book.style.left = `${Math.round(rect.left)}px`;
+        book.style.width = `${Math.round(rect.width)}px`;
+      } else {
+        book.classList.remove("is-pinned");
+        book.style.removeProperty("left");
+        book.style.removeProperty("width");
+      }
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    const onResize = () => {
+      readTop();
+      onScroll();
+    };
+
+    readTop();
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    mq.addEventListener("change", onResize);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      mq.removeEventListener("change", onResize);
+      if (frame) window.cancelAnimationFrame(frame);
+      clearPin();
+    };
+  }, []);
 
   const { isActive, selectHref } = useSectionTabs(".road-sub a", [tour.slug, tour.days.length]);
   const tab = (href: string, label: string) => (
@@ -284,7 +388,7 @@ export function TourStay({
       href={href}
       className={isActive(href) ? "is-on" : undefined}
       aria-current={isActive(href) ? "true" : undefined}
-      onClick={() => selectHref(href)}
+      onClick={(event) => selectHref(href, event)}
     >
       {label}
     </a>
@@ -327,31 +431,35 @@ export function TourStay({
     onStep: (direction) => stepPhoto(direction),
   });
 
-  function togglePack(index: number) {
-    setPacked((current) => {
-      const next = current.map((item, itemIndex) => (itemIndex === index ? !item : item));
-      try {
-        localStorage.setItem(`wch-tour-${tour.slug}-pack`, JSON.stringify(next));
-      } catch {
-        setToast("Saving is blocked in this browser");
-      }
-      return next;
-    });
-  }
-
   const hasMap = Boolean(tour.map && Number.isFinite(tour.map.lat) && Number.isFinite(tour.map.lng));
   const mapSrc = hasMap
     ? `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(`${tour.map!.lng - 0.04},${tour.map!.lat - 0.03},${tour.map!.lng + 0.04},${tour.map!.lat + 0.03}`)}&layer=mapnik&marker=${tour.map!.lat}%2C${tour.map!.lng}`
     : "";
-  const includes = tour.includes.length > 0 ? tour.includes : ["The price on this page is the trip as listed. Ask the desk to confirm hotels and meals before you pay."];
-  const excludes = tour.excludes.length > 0 ? tour.excludes : ["Personal expenses, travel insurance, and anything not listed as included."];
+  const includes =
+    tour.includes.length > 0
+      ? tour.includes
+      : [
+          {
+            title: "Transport, guiding, and the inclusions listed for this package.",
+            iconUrl: "",
+          },
+        ];
+  const excludes =
+    tour.excludes.length > 0
+      ? tour.excludes
+      : [
+          {
+            title: "Personal expenses, travel insurance, and anything not listed as included.",
+            iconUrl: "",
+          },
+        ];
   const faqs = [
     ...tour.faqs,
     {
       title: "When can this be cancelled?",
       content: cancelOpen
-        ? `This trip can be cancelled until ${longDate(cancelOn)}.`
-        : `This start date is inside the ${tour.cancelDays}-day window. The desk confirms what can still be refunded.`,
+        ? `Free cancellation until ${longDate(cancelOn)}.`
+        : `This start date falls inside the ${tour.cancelDays}-day cancellation window. We'll confirm what can still be refunded.`,
     },
     {
       title: "Is a seat held when I send this?",
@@ -376,11 +484,11 @@ export function TourStay({
         </div>
         {signedIn ? (
           <button className="road-btn road-btn--small road-topbar__book" type="button" onClick={openBook}>
-            Book Tour
+            Request tour
           </button>
         ) : (
           <Link className="road-btn road-btn--small road-topbar__book" href={loginHref}>
-            Book Tour
+            Request tour
           </Link>
         )}
       </header>
@@ -398,24 +506,30 @@ export function TourStay({
         </nav>
 
         <div className="road-hero">
-          <div>
-            <p className="road-eyebrow">{[tour.category, tour.durationLabel].filter(Boolean).join(" · ") || "Tour"}</p>
-            <h1>{tour.title}</h1>
+          <p className="road-eyebrow road-eyebrow--with-icon">
+            {tour.categoryIconUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="road-cat-icon" src={tour.categoryIconUrl} alt="" />
+            ) : null}
+            <span>{[tour.category, tour.durationLabel].filter(Boolean).join(" · ") || "Tour"}</span>
+          </p>
+          <h1>{tour.title}</h1>
+          <div className="road-hero__meta">
             <p className="road-place">
               {tour.location ? <a href="#meeting">{tour.location}</a> : null}
-              {tour.difficulty ? <span>{tour.difficulty}</span> : null}
+              {tour.difficulty ? <span>{paceLabel(tour.difficulty)}</span> : null}
               <span>{money(tour.priceFrom, currency)} a person</span>
             </p>
+            <FavoriteButton
+              kind="tour"
+              itemId={tour.id}
+              initialSaved={saved}
+              signedIn={signedIn}
+              title={tour.title}
+              variant="icon"
+              className="fav-btn--plain"
+            />
           </div>
-          <FavoriteButton
-            kind="tour"
-            itemId={tour.id}
-            initialSaved={saved}
-            signedIn={signedIn}
-            title={tour.title}
-            variant="icon"
-            className="fav-btn--plain"
-          />
         </div>
 
         {visible.length > 0 ? (
@@ -475,12 +589,12 @@ export function TourStay({
 
         <nav className="road-sub" aria-label="On this page" data-section-tabs>
           {tab("#overview", "Overview")}
-          {tab("#departures", "Departures")}
+          {showDepartures ? tab("#departures", "Departures") : null}
           {tour.days.length > 0 ? tab("#itinerary", "Itinerary") : null}
           {tab("#included", "Included")}
-          {tab("#trip", "The trip")}
-          {tab("#meeting", "Meeting")}
-          {tab("#before", "Before you go")}
+          {tab("#excluded", "Excluded")}
+          {tour.beforeYouGo.length > 0 ? tab("#before", "Before you go") : null}
+          {faqs.length > 0 ? tab("#faq", "FAQ") : null}
           <button className="road-sub-total" type="button" onClick={openBook}>
             {money(quote.total, currency)}
           </button>
@@ -494,214 +608,306 @@ export function TourStay({
               {description && description !== summary ? <p className="road-lede">{description}</p> : null}
               <div className="road-stats">
                 <div className="road-stat">
-                  <b>{tour.durationLabel || `${tour.durationDays} days`}</b>
-                  <span>On the road</span>
+                  <b className="road-stat__title">
+                    <CardIcon src={`${ICON}/calendar-clock.svg`} />
+                    {tour.durationLabel || `${tour.durationDays} days`}
+                  </b>
+                  <span>Duration</span>
                 </div>
                 <div className="road-stat">
-                  <b>{tour.maxGroupSize > 0 ? `Up to ${tour.maxGroupSize}` : "Small group"}</b>
+                  <b className="road-stat__title">
+                    <CardIcon src={`${ICON}/users-round.svg`} />
+                    {tour.maxGroupSize > 0 ? `Up to ${tour.maxGroupSize}` : "Small group"}
+                  </b>
                   <span>Travelers</span>
                 </div>
                 <div className="road-stat">
-                  <b>{tour.difficulty || "Steady"}</b>
+                  <b className="road-stat__title">
+                    <CardIcon src={`${ICON}/mountain-snow.svg`} />
+                    {tour.difficulty ? paceLabel(tour.difficulty) : "Steady"}
+                  </b>
                   <span>Pace</span>
                 </div>
                 <div className="road-stat">
-                  <b>{money(tour.priceFrom, currency)}</b>
+                  <b className="road-stat__title">
+                    <CardIcon src={`${ICON}/receipt-indian-rupee.svg`} />
+                    {money(tour.priceFrom, currency)}
+                  </b>
                   <span>From</span>
                 </div>
               </div>
               <div className="road-hi">
                 <article>
-                  <h3>One total</h3>
-                  <p>The figure in the card is the amount the desk will confirm.</p>
+                  <h3>
+                    <CardIcon src={`${ICON}/wallet.svg`} />
+                    <span>Package price</span>
+                  </h3>
+                  <p>
+                    From {money(tour.priceFrom, currency)} a person twin share
+                    {tour.minPeople > 1 ? ` (min. ${tour.minPeople})` : ""}. Party total updates in the booking card.
+                  </p>
                 </article>
                 <article>
-                  <h3>Cancellation</h3>
+                  <h3>
+                    <CardIcon src={`${ICON}/calendar-x.svg`} />
+                    <span>Cancellation</span>
+                  </h3>
                   <p>
                     {cancelOpen
-                      ? `Cancel until ${longDate(cancelOn)}.`
-                      : `Cancellation is ${tour.cancelDays} days before the start. This date is already inside that window.`}
+                      ? `Free cancellation until ${longDate(cancelOn)}.`
+                      : `Free cancellation ends ${tour.cancelDays} days before departure. This date is already inside that window.`}
                   </p>
                 </article>
                 <article>
-                  <h3>{mode === "private" ? "Private" : "Group"}</h3>
+                  <h3>
+                    <CardIcon src={mode === "private" ? `${ICON}/user-round.svg` : `${ICON}/users.svg`} />
+                    <span>{mode === "private" ? "Private rate" : "Listed rate"}</span>
+                  </h3>
                   <p>
                     {mode === "private"
-                      ? "A private departure is your own vehicle and guide, priced from the listed rate."
-                      : tour.defaultState === "dates" && departure && !tour.availabilityFrom
-                        ? "Group dates use the price stored for that departure."
-                        : tour.defaultState === "dates" && tour.availabilityFrom && tour.availabilityTo
-                          ? `Requests are accepted ${longDate(tour.availabilityFrom)} through ${longDate(tour.availabilityTo)}.`
-                          : "Any start date can be requested. The desk confirms the group."}
+                      ? "Dedicated private departure from about 1.46× the listed twin-share rate, then adjusted for the season."
+                      : hasListedDepartures
+                        ? "Listed twin-share price on an open start date. Your party still travels in its own vehicle unless the itinerary says otherwise."
+                        : "Listed twin-share price. Your party keeps its own cab when the package includes a private vehicle."}
                   </p>
                 </article>
                 <article>
-                  <h3>{tour.days.length > 0 ? `${tour.days.length} days written out` : "Day by day on request"}</h3>
-                  <p>{tour.days.length > 0 ? "Each day below is the plan stored for this tour." : "The day-by-day plan is confirmed with your request."}</p>
+                  <h3>
+                    <CardIcon src={`${ICON}/car-front.svg`} />
+                    <span>{tour.days.length > 0 ? `${tour.days.length}-day itinerary` : "Itinerary on request"}</span>
+                  </h3>
+                  <p>
+                    {tour.days.length > 0
+                      ? `${tour.days.length} days planned end to end — open Itinerary for places, drive times, and overnight towns.`
+                      : "We'll share the full day-by-day plan when we confirm your request."}
+                  </p>
                 </article>
               </div>
             </section>
 
-            <section className="road-section" id="departures">
-              <h2>Departures</h2>
-              <p className="road-lede">
-                {tour.defaultState === "dates" && tour.departures.length > 0 && !tour.availabilityFrom
-                  ? "Group dates are the open departures. Private uses your own start date."
-                  : tour.defaultState === "dates" && tour.availabilityFrom && tour.availabilityTo
-                    ? `Available for start dates from ${longDate(tour.availabilityFrom)} through ${longDate(tour.availabilityTo)}.`
-                  : "Choose any start date for a group or private request. The desk confirms availability before anything is held."}
-              </p>
-              {mode === "group" && tour.defaultState === "dates" && tour.departures.length > 0 && !tour.availabilityFrom ? (
-                <div className="road-dates">
-                  {tour.departures.map((item) => {
-                    const shown = Math.round(item.price / 10) * 10;
-                    return (
-                      <button
-                        key={item.id}
-                        className={`road-dep${item.id === departure?.id ? " is-on" : ""}`}
-                        type="button"
-                        onClick={() => setDepartureId(item.id)}
-                      >
-                        <span>
-                          <b>{item.label}</b>
-                          <small>{item.seats > 0 ? `${item.seats} seats` : "Open departure"}</small>
-                        </span>
-                        <em>{money(shown, currency)}</em>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="road-lede">The start date sits in the request card. Private is about 1.46 times the listed rate, then the season for that month.</p>
-              )}
-            </section>
+            {showDepartures ? (
+              <section className="road-section" id="departures">
+                <h2>Departures</h2>
+                {hasListedDepartures && mode === "group" ? (
+                  <>
+                    <p className="road-lede">
+                      {tour.departures.length} open start {tour.departures.length === 1 ? "date" : "dates"} at the listed rate
+                      {departure ? ` · selected ${departure.label}` : ""}.
+                    </p>
+                    <div className="road-dates">
+                      {tour.departures.map((item) => {
+                        const shown = Math.round(item.price / 10) * 10;
+                        return (
+                          <button
+                            key={item.id}
+                            className={`road-dep${item.id === departure?.id ? " is-on" : ""}`}
+                            type="button"
+                            onClick={() => setDepartureId(item.id)}
+                          >
+                            <span>
+                              <b>{item.label}</b>
+                              <small>{item.seats > 0 ? `${item.seats} seats left` : "Open departure"}</small>
+                            </span>
+                            <em>{money(shown, currency)}</em>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="road-lede">Need a different day? Switch to Private in the booking card.</p>
+                  </>
+                ) : hasListedDepartures && mode === "private" ? (
+                  <p className="road-lede">
+                    Private start — choose any date in the booking card. Switch back to Listed rate to use an open departure
+                    {tour.departures.length > 0 ? ` (${tour.departures.length} available)` : ""}.
+                  </p>
+                ) : (
+                  <p className="road-lede">
+                    Start dates from {longDate(tour.availabilityFrom!)} through {longDate(tour.availabilityTo!)}. Choose yours in
+                    the booking card.
+                  </p>
+                )}
+              </section>
+            ) : null}
 
             {tour.days.length > 0 ? (
               <section className="road-section" id="itinerary">
                 <h2>Itinerary</h2>
+                <p className="road-lede">
+                  Day-by-day plan for this {tour.durationLabel || `${tour.durationDays}-day`} trip. Open a day for places, drive
+                  times, and overnight towns.
+                </p>
                 {tour.days.map((day, index) => (
                   <details className="road-day" key={`${day.dayNumber}-${day.title}`} open={index === 0}>
                     <summary>
-                      <span>
-                        <strong>
-                          Day {day.dayNumber}
-                          {day.title ? ` · ${day.title}` : ""}
-                        </strong>
+                      <span className="road-day-title">
+                        <strong>Day {day.dayNumber}</strong>
+                        {day.title ? <span className="road-day-name">{day.title}</span> : null}
                       </span>
                     </summary>
-                    <div className="road-day-body">
-                      {day.imageUrl ? <img src={day.imageUrl} alt="" style={{ width: "100%", borderRadius: 14, maxHeight: 180, objectFit: "cover" }} /> : null}
-                      {beats(day.description).map((beat) => (
-                        <div className="road-beat" key={beat.when}>
-                          <span>{beat.when}</span>
-                          <p>{beat.text}</p>
-                        </div>
-                      ))}
+                    <div className={`road-day-body${day.imageUrl ? " has-photo" : ""}`}>
+                      {day.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img className="road-day-img" src={day.imageUrl} alt="" />
+                      ) : null}
+                      <div className="road-day-copy">
+                        {beats(day).map((beat) => (
+                          <p className="road-beat" key={beat.when}>
+                            <strong>{beat.when}</strong>
+                            {beat.text}
+                          </p>
+                        ))}
+                      </div>
                     </div>
                   </details>
                 ))}
               </section>
             ) : null}
 
-            <section className="road-section" id="included">
+            <section className="road-section road-section--included" id="included">
               <h2>Included</h2>
-              <div className="road-split">
-                <div>
-                  <h3>In the price</h3>
-                  <ul className="road-ok">
-                    {includes.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <h3>Not in the price</h3>
-                  <ul className="road-no">
-                    {excludes.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
+              <p className="road-lede">Covered in the package price.</p>
+              <div className="road-panel road-panel--included">
+                <ul className="road-ok">
+                  {includes.map((item) => (
+                    <li key={item.title}>
+                      <CatalogIcon url={item.iconUrl} title={item.title} tone="ok" />
+                      <span>{item.title}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </section>
 
-            <section className="road-section" id="trip">
-              <h2>The trip</h2>
-              <div className="road-amen">
-                {amenityGroups.map((group) => (
-                  <article key={group.title}>
-                    <h3>{group.title}</h3>
-                    <ul>
-                      {group.items.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </article>
-                ))}
+            <section className="road-section road-section--excluded" id="excluded">
+              <h2>Excluded</h2>
+              <p className="road-lede">Paid separately or not part of this package.</p>
+              <div className="road-panel road-panel--excluded">
+                <ul className="road-no">
+                  {excludes.map((item) => (
+                    <li key={item.title}>
+                      <CatalogIcon url={item.iconUrl} title={item.title} tone="no" />
+                      <span>{item.title}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="road-pack">
-                {PACK.map((item, index) => (
-                  <label key={item}>
-                    <input type="checkbox" checked={packed[index] ?? false} onChange={() => togglePack(index)} />
-                    <span>{item}</span>
-                  </label>
-                ))}
-              </div>
-              <p className="road-fine">The packing list stays in this browser.</p>
             </section>
+
+            {showTrip ? (
+              <section className="road-section" id="trip">
+                <h2>The trip</h2>
+                <p className="road-lede">
+                  {[
+                    tour.category ? `${tour.category} trip` : "",
+                    tour.styles.length > 0 ? "travel style" : "",
+                    tour.facilities.length > 0 ? "practical touches on the road" : "",
+                    tour.languages.length > 0 ? `guided in ${tour.languages.join(", ")}` : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")
+                    .replace(/^./, (ch) => ch.toUpperCase())}
+                  .
+                </p>
+                {tour.styles.length > 0 ? (
+                  <div className="road-styles" aria-label="Travel styles">
+                    {tour.styles.map((item) => (
+                      <span className="road-style-chip" key={item.title}>
+                        {item.iconUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={item.iconUrl} alt="" />
+                        ) : null}
+                        {item.title}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+                {tour.facilities.length > 0 ? (
+                  <div className="road-styles" aria-label="Facilities">
+                    {tour.facilities.map((item) => (
+                      <span className="road-style-chip" key={item.title}>
+                        {item.iconUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={item.iconUrl} alt="" />
+                        ) : null}
+                        {item.title}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
 
             <section className="road-section" id="meeting">
               <h2>Meeting</h2>
+              <p className="road-lede">Where day 1 begins.</p>
               <p className="road-lede">
                 {tour.address
                   ? tour.address
                   : tour.location
-                    ? `The meeting point in ${tour.location} is confirmed with your request.`
-                    : "The meeting point is confirmed with your request."}
+                    ? `We'll share the exact meeting point in ${tour.location} when your trip is confirmed.`
+                    : "We'll share the exact meeting point when your trip is confirmed."}
               </p>
-              {tour.languages.length > 0 ? <p className="road-lede">Languages named on this tour: {tour.languages.join(", ")}.</p> : null}
               {hasMap ? <iframe className="road-map" title={`Map for ${tour.title}`} src={mapSrc} loading="lazy" /> : null}
             </section>
 
-            <section className="road-section" id="before">
-              <h2>Before you go</h2>
-              <div className="road-facts">
-                <div>
-                  <strong>Duration</strong>
-                  <span>{tour.durationLabel || `${tour.durationDays} days`}</span>
+            {tour.beforeYouGo.length > 0 ? (
+              <section className="road-section" id="before">
+                <h2>Before you go</h2>
+                <p className="road-lede">Practical prep for day one — fitness, documents, kit, and arrival.</p>
+                <div className="road-facts">
+                  {tour.beforeYouGo.map((item) => (
+                    <div key={item.title}>
+                      <strong className="road-facts__title">
+                        <CatalogIcon url={item.iconUrl} title={item.title} tone="ok" />
+                        <span>{item.title}</span>
+                      </strong>
+                      {item.content ? <span>{plainText(item.content)}</span> : null}
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <strong>Group</strong>
-                  <span>
-                    {tour.minPeople > 1 ? `From ${tour.minPeople} travelers. ` : ""}
-                    {tour.maxGroupSize > 0 ? `Up to ${tour.maxGroupSize}.` : "The desk confirms the group size."}
-                  </span>
-                </div>
-                <div>
-                  <strong>Cancellation</strong>
-                  <span>
-                    {cancelOpen
-                      ? `Cancel until ${longDate(cancelOn)}.`
-                      : `Cancellation is ${tour.cancelDays} days before the start. This date is already inside that window.`}
-                  </span>
-                </div>
-                <div>
-                  <strong>Payment</strong>
-                  <span>This request holds nothing. You pay only after you accept the trip.</span>
-                </div>
-              </div>
-              <div style={{ marginTop: 18 }}>
+              </section>
+            ) : null}
+
+            {faqs.length > 0 ? (
+              <section className="road-section" id="faq">
+                <h2>FAQ</h2>
+                <p className="road-lede">Questions people ask before they request.</p>
                 {faqs.map((item) => (
                   <details className="road-faq" key={item.title}>
-                    <summary>{item.title}</summary>
+                    <summary>
+                      <span className="road-faq__title">
+                        <FaqIcon url={item.iconUrl} title={item.title} />
+                        <span>{item.title}</span>
+                      </span>
+                    </summary>
                     <p>{plainText(item.content)}</p>
                   </details>
                 ))}
-              </div>
-            </section>
+              </section>
+            ) : null}
+
+            {tour.similar.length > 0 ? (
+              <section className="road-similar" aria-label="Other tours">
+                <h2>Other tours</h2>
+                <div className="road-cards">
+                  {tour.similar.slice(0, 3).map((item) => (
+                    <Link className="road-card" href={item.href} key={item.href}>
+                      {item.image ? <img src={item.image} alt="" /> : <img src="/img/tours/5.png" alt="" />}
+                      <div>
+                        <h3>{item.title}</h3>
+                        <p>
+                          {[item.location, item.duration, item.price].filter(Boolean).join(" · ")}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </div>
 
-          <aside className="road-book" id="book" aria-label="Request this tour">
+          <div className="road-aside" ref={asideRef}>
+          <aside className="road-book" id="book" ref={bookRef} aria-label="Request this tour">
             <div className="road-handle" aria-hidden="true" />
             <div className="road-sheet-head">
               <strong>Your trip</strong>
@@ -715,16 +921,21 @@ export function TourStay({
             <p className="road-kicker">Total for this party</p>
             <p className="road-sentence">{sentence}</p>
 
-            <div className="road-segment" role="group" aria-label="Group or private">
+            <div className="road-segment" role="group" aria-label="Listed rate or private rate">
               <button className={mode === "group" ? "is-on" : ""} type="button" onClick={() => setMode("group")}>
-                Group
+                Listed rate
               </button>
               <button className={mode === "private" ? "is-on" : ""} type="button" onClick={() => setMode("private")}>
-                Private
+                Private rate
               </button>
             </div>
+            <p className="road-fine">
+              {mode === "private"
+                ? "Private rate is a dedicated departure from about 1.46× the listed twin-share price."
+                : "Listed rate is twin share. Your party still uses its own cab when the package includes a private vehicle."}
+            </p>
             {mode === "group" && tour.defaultState === "dates" && departure && !tour.availabilityFrom ? (
-              <p className="road-kicker">Starts {departure.label}. {departure.seats > 0 ? `${departure.seats} seats on this departure.` : "The desk confirms seats."}</p>
+              <p className="road-kicker">Starts {departure.label}. {departure.seats > 0 ? `${departure.seats} seats left on this departure.` : "Seats confirmed when you book."}</p>
             ) : (
               <label className="road-field">
                 {mode === "private" ? "Private start date" : "Start date"}
@@ -811,37 +1022,19 @@ export function TourStay({
             </dl>
             <p className="road-fine">
               {cancelOpen
-                ? `Cancel until ${longDate(cancelOn)}.`
-                : "This date is inside the cancellation window. The desk confirms the refund."}{" "}
+                ? `Free cancellation until ${longDate(cancelOn)}.`
+                : "This date is inside the cancellation window — we'll confirm any refund."}{" "}
               A child is 5–11 and pays 65% of the adult rate. Nothing is charged now.
             </p>
             <button className="road-btn road-btn--block" type="button" disabled={Boolean(block)} onClick={openRequest} style={{ marginTop: 12 }}>
               Request this trip
             </button>
           </aside>
+          </div>
         </div>
 
-        {tour.similar.length > 0 ? (
-          <section className="road-similar" aria-label="Other tours">
-            <h2>Other tours</h2>
-            <div className="road-cards">
-              {tour.similar.slice(0, 3).map((item) => (
-                <Link className="road-card" href={item.href} key={item.href}>
-                  {item.image ? <img src={item.image} alt="" /> : <img src="/img/tours/5.png" alt="" />}
-                  <div>
-                    <h3>{item.title}</h3>
-                    <p>
-                      {[item.location, item.duration, item.price].filter(Boolean).join(" · ")}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
         <footer className="road-footer">
-          The price, seats, and dates on this page come from this tour. A request does not hold a seat or charge a card.
+          Prices and dates are for this tour. A request does not hold a seat or charge your card.
         </footer>
       </div>
 
@@ -853,11 +1046,11 @@ export function TourStay({
         </div>
         {signedIn ? (
           <button className="road-btn" type="button" onClick={openBook}>
-            Book Tour
+            Request tour
           </button>
         ) : (
           <Link className="road-btn" href={loginHref}>
-            Book Tour
+            Request tour
           </Link>
         )}
       </div>
@@ -976,8 +1169,8 @@ export function TourStay({
               </>
             )}
             <label>
-              Anything the desk should know
-              <textarea name="note" rows={3} maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Arrival flight, a dietary need, a room request" />
+              Notes for your trip
+              <textarea name="note" rows={3} maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Arrival flight, dietary needs, room preferences…" />
             </label>
             {state.error ? <p className="road-error">{state.error}</p> : null}
             {state.fields?.name ? <p className="road-error">{state.fields.name}</p> : null}

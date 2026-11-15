@@ -62,8 +62,8 @@ export function absoluteUrl(path: string) {
   return `${origin}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-export function plainText(value: string) {
-  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+export function plainText(value: string | null | undefined) {
+  return (value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
 export function clipText(value: string, max = 158) {

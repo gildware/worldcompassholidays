@@ -1,9 +1,18 @@
 export const tourCategories = [
+  "Religious",
+  "Trekking",
+  "Camping",
+  "Leisure",
+  "Honeymoon",
+  "Family",
+  "Adventure",
+  "Winter",
+  "Offbeat",
+  "Luxury",
+  "Road trip",
   "City trips",
   "Ecotourism",
   "Escorted tour",
-  "Trekking",
-  "Adventure",
   "Cultural",
 ] as const;
 

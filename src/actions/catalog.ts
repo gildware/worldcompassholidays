@@ -241,6 +241,7 @@ async function bindTours(
       faqsJson: true,
       includesJson: true,
       excludesJson: true,
+      beforeYouGoJson: true,
     },
   });
 
@@ -274,6 +275,7 @@ async function toursUsing(kind: CatalogKind, id: string, title: string) {
       faqsJson: true,
       includesJson: true,
       excludesJson: true,
+      beforeYouGoJson: true,
     },
   });
   return tours.filter((tour) => {
@@ -288,6 +290,7 @@ function listField(kind: CatalogKind) {
   if (kind === "faq") return "faqsJson" as const;
   if (kind === "include") return "includesJson" as const;
   if (kind === "exclude") return "excludesJson" as const;
+  if (kind === "before_you_go") return "beforeYouGoJson" as const;
   return null;
 }
 

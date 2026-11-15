@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kashmir — All Tours & Treks</title>
+  <style>
+    :root {
+      --bg: #eef4f7;
+      --ink: #12202a;
+      --muted: #4d5f6b;
+      --card: #ffffff;
+      --line: #d5e0e7;
+      --accent: #0b5f78;
+      --accent-soft: #dff1f6;
+      --hot: #9a3412;
+      --hot-bg: #ffedd5;
+      --solid: #065f46;
+      --solid-bg: #ecfdf5;
+      --niche: #5b4b3a;
+      --niche-bg: #f3ebe0;
+      --have: #1d4ed8;
+      --have-bg: #dbeafe;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at top, #d9ebf2 0%, transparent 42%),
+        radial-gradient(ellipse at bottom right, #e8f0e4 0%, transparent 40%),
+        var(--bg);
+      line-height: 1.45;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+    header {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 22px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.1rem);
+      letter-spacing: -0.02em;
+      line-height: 1.08;
+    }
+    .sub { margin: 0; max-width: 72ch; color: var(--muted); font-size: 1.05rem; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .search {
+      flex: 1 1 260px;
+      min-width: 220px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--card);
+      font: inherit;
+      font-size: 1rem;
+    }
+    .search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tab {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 999px;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+    .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .stats {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      color: var(--muted);
+      background: var(--accent-soft);
+      border-radius: 999px;
+      padding: 8px 14px;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .badge {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-family: system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    .badge.hot { background: var(--hot-bg); color: var(--hot); }
+    .badge.solid { background: var(--solid-bg); color: var(--solid); }
+    .badge.niche { background: var(--niche-bg); color: var(--niche); }
+    .badge.have { background: var(--have-bg); color: var(--have); }
+    .toc { display: flex; flex-wrap: wrap; gap: 8px; }
+    .toc a {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      text-decoration: none;
+      color: var(--ink);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 12px;
+    }
+    .block-title { margin: 34px 0 6px; font-size: 1.7rem; }
+    .block-sub { margin: 0 0 4px; color: var(--muted); }
+    section {
+      margin-top: 22px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 28px rgba(18, 32, 42, 0.04);
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      padding: 16px 20px;
+      background: linear-gradient(90deg, #eaf4f8, #eef6ef);
+      border-bottom: 1px solid var(--line);
+    }
+    .section-head h2 { margin: 0; font-size: 1.3rem; }
+    .count { font-family: system-ui, sans-serif; font-size: 12px; color: var(--muted); white-space: nowrap; }
+    ol { margin: 0; padding: 8px 20px 18px 44px; }
+    @media (min-width: 820px) {
+      ol.cols-2 { columns: 2; column-gap: 28px; }
+    }
+    li {
+      break-inside: avoid;
+      padding: 9px 0;
+      border-bottom: 1px dashed #e6eef2;
+      font-size: 0.98rem;
+    }
+    li:last-child { border-bottom: none; }
+    li .meta {
+      display: block;
+      margin-top: 3px;
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    li.hidden, section.hidden, .block.hidden { display: none; }
+    .note {
+      margin-top: 28px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      background: #eef8fb;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    footer {
+      margin-top: 24px;
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    a.back {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow">Kashmir only · Tours + Treks</div>
+      <h1>All Kashmir Tours & Treks</h1>
+      <p class="sub">
+        Complete Kashmir catalog: leisure, honeymoon, family, winter, offbeat, pilgrimage,
+        adventure — plus every major trek from weekend walks to Great Lakes and Warwan.
+        Items already in your site seed are marked <strong>On site</strong>.
+      </p>
+      <a class="back" href="/indian-tours-catalog.html">← Back to India popular catalog</a>
+      <div class="toolbar">
+        <input class="search" id="q" type="search" placeholder="Search Kashmir… e.g. Gulmarg, Great Lakes, Gurez" />
+        <div class="tabs" id="tabs">
+          <button class="tab active" data-view="all">All</button>
+          <button class="tab" data-view="tours">Tours only</button>
+          <button class="tab" data-view="treks">Treks only</button>
+          <button class="tab" data-view="popular">Popular only</button>
+        </div>
+        <div class="stats" id="stats">Loading…</div>
+      </div>
+      <div class="legend">
+        <span><span class="badge hot">High demand</span> top Kashmir sellers</span>
+        <span><span class="badge solid">Solid seller</span> regularly booked</span>
+        <span><span class="badge niche">Niche</span> optional / offbeat</span>
+        <span><span class="badge have">On site</span> already in your demo seed</span>
+      </div>
+      <nav class="toc" id="toc"></nav>
+    </header>
+
+    <div id="tours-block" class="block">
+      <h2 class="block-title">Kashmir Tours</h2>
+      <p class="block-sub">Packages travellers actually book from Srinagar.</p>
+      <div id="tours"></div>
+    </div>
+
+    <div id="treks-block" class="block">
+      <h2 class="block-title">Kashmir Treks</h2>
+      <p class="block-sub">From easy day hikes to multi-day alpine lake expeditions.</p>
+      <div id="treks"></div>
+    </div>
+
+    <div class="note">
+      Sources: Kashmir operator menus, Indiahikes Kashmir alternatives, Trek-in-Kashmir directories,
+      and your existing <code>kashmir-tours.ts</code> / phase trek seeds. Popular ≠ every listed variant —
+      start with High demand, then Solid seller.
+    </div>
+    <footer>Open at <code>/kashmir-tours-treks.html</code></footer>
+  </div>
+
+  <script>
+    const TOURS = [
+      {
+        id: "classic",
+        title: "Classic Valley Circuits",
+        items: [
+          { name: "Classic Kashmir Triangle (Srinagar–Gulmarg–Pahalgam)", tier: "hot", onSite: true, meta: "4N/5D · #1 first Kashmir trip" },
+          { name: "Best of Kashmir with Sonamarg", tier: "hot", onSite: true, meta: "5N/6D · OTA mid-range bestseller" },
+          { name: "Budget Express Kashmir (Srinagar base day trips)", tier: "hot", onSite: true, meta: "3N/4D · unpack once" },
+          { name: "Valley Day-Trip Circuit (Sonamarg + Gulmarg + Pahalgam)", tier: "solid", onSite: true, meta: "4N/5D · all nights Srinagar" },
+          { name: "Kashmir Short Break (Srinagar–Gulmarg–Pahalgam)", tier: "hot", onSite: false, meta: "3N/4D weekend style" },
+          { name: "Kashmir Essentials 4N", tier: "solid", onSite: false, meta: "Core first-timer package" },
+          { name: "Best of Kashmir with Doodhpathri", tier: "solid", onSite: false, meta: "Adds Valley of Milk day" },
+          { name: "Kashmir Grand Tour (overnight Gulmarg + Pahalgam + Sonamarg)", tier: "hot", onSite: false, meta: "6N/7D fuller pace" },
+          { name: "Kashmir Complete Holiday", tier: "solid", onSite: false, meta: "Week-long houseboat + valleys" },
+          { name: "5-Meadow Grand Circuit with Doodhpathri", tier: "solid", onSite: false, meta: "Gulmarg–Sonamarg–Doodhpathri–Pahalgam" },
+          { name: "Classic + Doodhpathri & Yusmarg", tier: "solid", onSite: true, meta: "Classic loop + offbeat meadows" },
+          { name: "Premium Relaxed Kashmir", tier: "solid", onSite: true, meta: "Slower luxury pacing" },
+          { name: "Grand Kashmir Circuit (iconic + offbeat)", tier: "solid", onSite: true, meta: "10N/11D complete arc" },
+          { name: "Srinagar Weekend Getaway", tier: "solid", onSite: false, meta: "2N/3D city + lake" },
+          { name: "Kashmir Group Tour by Tempo Traveller", tier: "solid", onSite: false, meta: "Fixed departure group product" }
+        ]
+      },
+      {
+        id: "honeymoon",
+        title: "Honeymoon & Couples",
+        items: [
+          { name: "Romantic Kashmir Honeymoon", tier: "hot", onSite: true, meta: "Houseboat + Gulmarg + Pahalgam" },
+          { name: "Luxury Houseboat Escape", tier: "hot", onSite: true, meta: "Short couples houseboat stay" },
+          { name: "Winter Honeymoon Valley Circuit", tier: "hot", onSite: true, meta: "Snow romance package" },
+          { name: "Kashmir Honeymoon Paradise 6N/7D", tier: "hot", onSite: false, meta: "Extended couples circuit" },
+          { name: "Kashmir Winter Honeymoon 5N", tier: "solid", onSite: false, meta: "Gulmarg snow + soft Pahalgam" },
+          { name: "Houseboat Candlelight Honeymoon 4N/5D", tier: "solid", onSite: false, meta: "Decor + Shikara focus" },
+          { name: "Nigeen Lake Quiet Couples Stay", tier: "niche", onSite: false, meta: "Quieter than Dal Lake" },
+          { name: "Pahalgam Riverside Couples Escape", tier: "solid", onSite: false, meta: "Lidder-focused romance" }
+        ]
+      },
+      {
+        id: "family",
+        title: "Family Tours",
+        items: [
+          { name: "Family Album Kashmir", tier: "hot", onSite: true, meta: "Easy family first trip" },
+          { name: "Family Grand Circuit", tier: "hot", onSite: true, meta: "Longer family loop with Sonamarg/Yusmarg" },
+          { name: "Kashmir with Family 6N", tier: "hot", onSite: false, meta: "Standard family OTA product" },
+          { name: "Kashmir Family Vacation — Kids Special", tier: "solid", onSite: false, meta: "Fewer hotel changes" },
+          { name: "Multi-generational Soft Kashmir", tier: "solid", onSite: false, meta: "Senior-friendly pacing" },
+          { name: "Family Snow Gulmarg Special", tier: "solid", onSite: false, meta: "Winter family snow play" }
+        ]
+      },
+      {
+        id: "winter",
+        title: "Winter / Snow / Ski",
+        items: [
+          { name: "Winter White Gulmarg", tier: "hot", onSite: true, meta: "Gulmarg snow nights" },
+          { name: "Kashmir Snow Tour", tier: "hot", onSite: true, meta: "Classic winter circuit" },
+          { name: "Winter Sports Week", tier: "hot", onSite: true, meta: "Ski/snow activities week" },
+          { name: "Winter Adventure Mini", tier: "solid", onSite: true, meta: "Short winter adventure" },
+          { name: "Gulmarg Snow Getaway 3N/4D", tier: "hot", onSite: false, meta: "Ski-in style short trip" },
+          { name: "Gulmarg Ski & Snow Week 7D", tier: "hot", onSite: false, meta: "Beginner ski lessons + gondola" },
+          { name: "Beginner Ski / Snowboard Package Gulmarg", tier: "solid", onSite: false, meta: "Course-focused winter product" },
+          { name: "Kashmir Winter 4N/5D (Gulmarg–Pahalgam–Houseboat)", tier: "hot", onSite: false, meta: "Mass-market winter package" },
+          { name: "Kashmir Winter with Sonamarg & Doodhpathri", tier: "solid", onSite: false, meta: "Winter day-trip variant" },
+          { name: "Solo Snow Getaway Fixed Departure", tier: "solid", onSite: false, meta: "Solo-friendly winter group" }
+        ]
+      },
+      {
+        id: "offbeat",
+        title: "Offbeat Valleys",
+        items: [
+          { name: "Offbeat Meadows: Doodhpathri & Yusmarg", tier: "hot", onSite: true, meta: "Quiet meadow twin" },
+          { name: "Gurez Valley Discovery", tier: "hot", onSite: true, meta: "Razdan Pass frontier" },
+          { name: "Offbeat North: Gurez · Lolab · Wular", tier: "solid", onSite: true, meta: "North Kashmir circuit" },
+          { name: "Hidden Valleys: Gurez · Bangus · Doodhpathri", tier: "solid", onSite: true, meta: "Deep offbeat mix" },
+          { name: "Deep Gurez Immersion", tier: "solid", onSite: true, meta: "Longer Gurez / Tulail stay" },
+          { name: "South Kashmir Springs & Waterfalls", tier: "solid", onSite: true, meta: "Kokernag / Verinag belt" },
+          { name: "Offbeat Kashmir: Gurez & Doodhpathri", tier: "hot", onSite: false, meta: "Popular offbeat combo" },
+          { name: "Unseen Kashmir: Gurez & Keran Valley", tier: "solid", onSite: false, meta: "LOC Kishanganga frontier" },
+          { name: "Gurez & Tulail Valley Explorer", tier: "solid", onSite: false, meta: "Habba Khatoon + Tulail" },
+          { name: "Doodhpathri & Gurez Valley Explorer", tier: "solid", onSite: false, meta: "Meadow + frontier" },
+          { name: "Lolab Valley & Kalaroos Caves", tier: "niche", onSite: false, meta: "Apple orchards north" },
+          { name: "Bangus Valley Escape", tier: "niche", onSite: false, meta: "Remote Kupwara meadow" },
+          { name: "Yusmarg Nilnag Lake Day / Overnight", tier: "solid", onSite: false, meta: "Pir Panjal foothills" },
+          { name: "Doodhpathri Overnight Meadow Stay", tier: "solid", onSite: false, meta: "Valley of Milk focus" },
+          { name: "Kashmir Scenic Tour (Gulmarg–Doodhpathri–Yusmarg)", tier: "solid", onSite: false, meta: "Meadow-heavy itinerary" }
+        ]
+      },
+      {
+        id: "pilgrimage",
+        title: "Pilgrimage / Faith",
+        items: [
+          { name: "Amarnath Yatra Group Tour", tier: "hot", onSite: true, meta: "Seasonal July–Aug" },
+          { name: "Amarnath Yatra by Helicopter", tier: "hot", onSite: true, meta: "From Srinagar / Sonamarg sector" },
+          { name: "Amarnath via Baltal", tier: "hot", onSite: false, meta: "Shorter steeper route" },
+          { name: "Amarnath via Pahalgam / Chandanwari", tier: "solid", onSite: false, meta: "Traditional longer route" },
+          { name: "Amarnath + Kashmir Sightseeing Combo", tier: "solid", onSite: false, meta: "Yatra + valley days" },
+          { name: "Kashmir + Vaishno Devi", tier: "hot", onSite: true, meta: "Faith + leisure combo" },
+          { name: "Hazratbal + Charar-e-Sharief Spiritual Day", tier: "niche", onSite: false, meta: "Srinagar faith circuit" },
+          { name: "Kheer Bhawani Temple Day Trip", tier: "niche", onSite: false, meta: "Tulmul spring shrine" }
+        ]
+      },
+      {
+        id: "adventure-road",
+        title: "Adventure / Road / Combos",
+        items: [
+          { name: "Srinagar to Leh Highway Trip", tier: "hot", onSite: true, meta: "Zoji La–Kargil–Leh" },
+          { name: "Kashmir Adventure Package (rafting + gondola + ATV)", tier: "solid", onSite: false, meta: "Activity-led short tour" },
+          { name: "Lidder River Rafting Pahalgam Day", tier: "solid", onSite: false, meta: "Summer adventure add-on" },
+          { name: "Gulmarg ATV / Snowmobile Day", tier: "solid", onSite: false, meta: "Winter activity add-on" },
+          { name: "Kashmir + Ladakh Combo", tier: "hot", onSite: false, meta: "Valley then high-altitude desert" },
+          { name: "Photography & Autumn Chinar Tour", tier: "solid", onSite: false, meta: "Oct–Nov foliage special" },
+          { name: "Kashmir in Tulip Season", tier: "hot", onSite: false, meta: "March–April Indira Gandhi Memorial Tulip Garden" },
+          { name: "Luxury Houseboat & Spa Retreat", tier: "solid", onSite: false, meta: "Premium wellness stay" }
+        ]
+      }
+    ];
+
+    const TREKS = [
+      {
+        id: "trek-popular",
+        title: "Flagship Alpine Treks",
+        items: [
+          { name: "Kashmir Great Lakes Trek (Sonamarg → Naranag)", tier: "hot", onSite: true, meta: "7–8D · 69–75 km · Mod–Difficult · Jul–Sep" },
+          { name: "Tarsar Marsar Trek (Aru / Pahalgam)", tier: "hot", onSite: true, meta: "5–7D · 48 km · Moderate · Jun–Sep" },
+          { name: "Tulian Lake Trek (Pahalgam / Baisaran)", tier: "hot", onSite: false, meta: "2–4D · short alpine lake · Easy–Mod" },
+          { name: "Nafran Valley & Harnag Lake Trek", tier: "hot", onSite: false, meta: "7D · KGL alternative · Mod–Difficult" },
+          { name: "Bodpathri / Bodhpathri Meadows Trek", tier: "hot", onSite: false, meta: "Grassland + multi-lake classic" },
+          { name: "Warwan Valley Trek", tier: "hot", onSite: false, meta: "7–8D · Difficult · remote frontier" },
+          { name: "Gurez Valley Trek (Patalwansar lakes)", tier: "solid", onSite: false, meta: "2–3D+ · Easy–Moderate · Jun–Sep" },
+          { name: "Pir Panjal Lakes Trek", tier: "solid", onSite: false, meta: "7D · 10+ lakes · Mod–Difficult" }
+        ]
+      },
+      {
+        id: "trek-classic",
+        title: "Classic & Strong Sellers",
+        items: [
+          { name: "Naranag to Gangabal Trek", tier: "hot", onSite: false, meta: "3–4D · Gangabal lake classic" },
+          { name: "Kolahoi Glacier Trek", tier: "solid", onSite: false, meta: "4–5D · Hard · from Lidderwat / Aru" },
+          { name: "Kounsarnag / Konsarnag Lake Trek", tier: "solid", onSite: false, meta: "3D · Mod–Hard · South Kashmir" },
+          { name: "Tosamaidan Trek", tier: "solid", onSite: false, meta: "Meadows + lakes · Moderate" },
+          { name: "Brammah Valley Trek", tier: "solid", onSite: false, meta: "Forest + big mountains · Moderate" },
+          { name: "Silent Meadows Trek", tier: "solid", onSite: false, meta: "Family-friendly customizable" },
+          { name: "Marchoi Valley Winter Trek", tier: "solid", onSite: false, meta: "4D · Easy–Mod snow trek" },
+          { name: "Sheshnag Lake Trek (Amarnath route segment)", tier: "solid", onSite: false, meta: "Pilgrim + trek hybrid" }
+        ]
+      },
+      {
+        id: "trek-day",
+        title: "Easy / Day / Weekend Treks",
+        items: [
+          { name: "Thajiwas Glacier Walk (Sonamarg)", tier: "hot", onSite: false, meta: "Half day · Easy · May–Oct" },
+          { name: "Doodhpathri Meadow Walk", tier: "hot", onSite: false, meta: "Half day · Easy" },
+          { name: "Yusmarg to Doodh Ganga / Nilnag", tier: "solid", onSite: false, meta: "1 day · Easy" },
+          { name: "Aru Valley to Lidderwat", tier: "hot", onSite: false, meta: "1 day · Easy–Moderate" },
+          { name: "Baisaran Meadow Walk (Pahalgam)", tier: "hot", onSite: false, meta: "Half day · Easy · mini Switzerland" },
+          { name: "Betaab / Aru Valley Easy Trails", tier: "solid", onSite: false, meta: "Family soft walks" },
+          { name: "Mahadev Peak Day Hike (near Srinagar)", tier: "niche", onSite: false, meta: "Local day hike" },
+          { name: "Shankaracharya Hill Walk", tier: "niche", onSite: false, meta: "Srinagar city treklette" },
+          { name: "Dachigam Nature Trail", tier: "niche", onSite: false, meta: "Wildlife park trail (permits)" }
+        ]
+      },
+      {
+        id: "trek-niche",
+        title: "Niche / Expedition Treks",
+        items: [
+          { name: "Gadsar Pass / Great Lakes variants", tier: "niche", onSite: false, meta: "Custom KGL routing" },
+          { name: "Vishansar–Kishansar Short Lakes Circuit", tier: "niche", onSite: false, meta: "Partial Great Lakes" },
+          { name: "Marsar Lake Extended Exploration", tier: "niche", onSite: false, meta: "Beyond standard Tarsar itinerary" },
+          { name: "Habba Khatoon Peak Approaches (Gurez)", tier: "niche", onSite: false, meta: "Frontier peak walks" },
+          { name: "Tulail Valley Multi-Day Trek", tier: "niche", onSite: false, meta: "Deep Gurez villages" },
+          { name: "Keran Valley Trek", tier: "niche", onSite: false, meta: "Kishanganga LOC sector" },
+          { name: "Bangus Valley Trek", tier: "niche", onSite: false, meta: "Remote Kupwara meadows" },
+          { name: "Lolab Valley Forest Trails", tier: "niche", onSite: false, meta: "Orchard / cave approaches" },
+          { name: "Warwan to Pahalgam / Suru Crossover", tier: "niche", onSite: false, meta: "Long expedition variant" },
+          { name: "Pir Ki Gali / Mughal Road Day Approaches", tier: "niche", onSite: false, meta: "Historic pass walks" },
+          { name: "Apharwat Ridge Walk (Gulmarg high)", tier: "niche", onSite: false, meta: "Gondola + ridge hike" },
+          { name: "Alpather Lake Trek (above Gulmarg)", tier: "solid", onSite: false, meta: "Frozen lake above Apharwat" }
+        ]
+      }
+    ];
+
+    const toursRoot = document.getElementById("tours");
+    const treksRoot = document.getElementById("treks");
+    const toc = document.getElementById("toc");
+    const stats = document.getElementById("stats");
+    const q = document.getElementById("q");
+    const tabs = document.getElementById("tabs");
+    let view = "all";
+
+    function badges(item) {
+      const tier =
+        item.tier === "hot" ? '<span class="badge hot">High demand</span>' :
+        item.tier === "solid" ? '<span class="badge solid">Solid seller</span>' :
+        '<span class="badge niche">Niche</span>';
+      const have = item.onSite ? ' <span class="badge have">On site</span>' : '';
+      return tier + have;
+    }
+
+    function renderGroup(root, groups, groupType) {
+      groups.forEach((cat) => {
+        const a = document.createElement("a");
+        a.href = "#" + cat.id;
+        a.textContent = cat.title;
+        a.dataset.type = groupType;
+        toc.appendChild(a);
+
+        const section = document.createElement("section");
+        section.id = cat.id;
+        section.dataset.type = groupType;
+        const hot = cat.items.filter((i) => i.tier === "hot").length;
+        const onSite = cat.items.filter((i) => i.onSite).length;
+        section.innerHTML = `
+          <div class="section-head">
+            <h2>${cat.title}</h2>
+            <span class="count" data-count>${cat.items.length} · ${hot} high demand${onSite ? " · " + onSite + " on site" : ""}</span>
+          </div>`;
+        const ol = document.createElement("ol");
+        ol.className = "cols-2";
+        cat.items.forEach((item) => {
+          const li = document.createElement("li");
+          li.dataset.name = (item.name + " " + (item.meta || "")).toLowerCase();
+          li.dataset.type = groupType;
+          li.dataset.tier = item.tier;
+          li.innerHTML = `${badges(item)} ${item.name}<span class="meta">${item.meta || ""}</span>`;
+          ol.appendChild(li);
+        });
+        section.appendChild(ol);
+        root.appendChild(section);
+      });
+    }
+
+    function flatCount(groups) {
+      return groups.reduce((n, g) => n + g.items.length, 0);
+    }
+
+    function hotCount(groups) {
+      return groups.reduce((n, g) => n + g.items.filter((i) => i.tier === "hot").length, 0);
+    }
+
+    function apply() {
+      const term = q.value.trim().toLowerCase();
+      let shown = 0;
+
+      document.getElementById("tours-block").classList.toggle(
+        "hidden",
+        view === "treks"
+      );
+      document.getElementById("treks-block").classList.toggle(
+        "hidden",
+        view === "tours"
+      );
+
+      document.querySelectorAll("#toc a").forEach((a) => {
+        const typeOk = view === "all" || view === "popular" || a.dataset.type === view;
+        a.style.display = typeOk ? "" : "none";
+      });
+
+      document.querySelectorAll("section").forEach((section) => {
+        const type = section.dataset.type;
+        const typeOk = view === "all" || view === "popular" || type === view;
+        let visible = 0;
+        section.querySelectorAll("li").forEach((li) => {
+          const popularOk = view !== "popular" || li.dataset.tier === "hot" || li.dataset.tier === "solid";
+          const match = typeOk && popularOk && (!term || li.dataset.name.includes(term));
+          li.classList.toggle("hidden", !match);
+          if (match) visible++;
+        });
+        section.classList.toggle("hidden", !typeOk || visible === 0);
+        const countEl = section.querySelector("[data-count]");
+        if (countEl) countEl.textContent = visible + " showing";
+        if (typeOk) shown += visible;
+      });
+
+      const tCount = flatCount(TOURS);
+      const kCount = flatCount(TREKS);
+      const tHot = hotCount(TOURS);
+      const kHot = hotCount(TREKS);
+
+      if (term) stats.textContent = shown + " matching";
+      else if (view === "tours") stats.textContent = tCount + " tours · " + tHot + " high demand";
+      else if (view === "treks") stats.textContent = kCount + " treks · " + kHot + " high demand";
+      else if (view === "popular") stats.textContent = shown + " popular (high + solid)";
+      else stats.textContent = tCount + " tours + " + kCount + " treks · " + (tHot + kHot) + " high demand";
+    }
+
+    toc.innerHTML = "";
+    renderGroup(toursRoot, TOURS, "tours");
+    renderGroup(treksRoot, TREKS, "treks");
+    apply();
+
+    q.addEventListener("input", apply);
+    tabs.addEventListener("click", (e) => {
+      const btn = e.target.closest(".tab");
+      if (!btn) return;
+      view = btn.dataset.view;
+      tabs.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t === btn));
+      apply();
+    });
+  </script>
+</body>
+</html>

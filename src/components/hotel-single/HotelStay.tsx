@@ -207,7 +207,7 @@ export function HotelStay({
       href={href}
       className={isActive(href) ? "is-on" : undefined}
       aria-current={isActive(href) ? "true" : undefined}
-      onClick={() => selectHref(href)}
+      onClick={(event) => selectHref(href, event)}
     >
       {label}
     </a>

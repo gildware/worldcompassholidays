@@ -17,6 +17,7 @@ export type TourCatalog = {
   faqs: CatalogOption[];
   includes: CatalogOption[];
   excludes: CatalogOption[];
+  beforeYouGo: CatalogOption[];
 };
 
 export async function loadTourCatalog(): Promise<TourCatalog> {
@@ -45,6 +46,7 @@ export async function loadTourCatalog(): Promise<TourCatalog> {
       faqs: pick("faq"),
       includes: pick("include"),
       excludes: pick("exclude"),
+      beforeYouGo: pick("before_you_go"),
     };
   });
 }

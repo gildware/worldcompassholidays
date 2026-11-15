@@ -2,8 +2,25 @@ import Link from "next/link";
 import { WhyUsIcon } from "@/components/company/WhyUsIcons";
 import { theme } from "@/config/theme";
 import type { HomePageContent, HomeWhyItem } from "@/lib/home-page";
+import { phoneE164 } from "@/lib/seo";
+import { whatsAppHref } from "@/lib/visa";
 import { whyUsHomeIds, whyUsPage, whyUsProof, whyUsReasons } from "@/lib/why-us";
 import "./home-close.css";
+
+const inviteSteps = [
+  {
+    title: "Share the trip",
+    text: "Dates, places, and who is travelling.",
+  },
+  {
+    title: "Review the quote",
+    text: "Itemised cost. Approve before anything is booked.",
+  },
+  {
+    title: "Pay when ready",
+    text: "Nothing charged until you say go.",
+  },
+] as const;
 
 function homeReasons(items: HomeWhyItem[]) {
   const byId = new Map(items.map((item) => [item.id, item]));
@@ -83,20 +100,54 @@ export function HomeInvite({
   headingId: string;
 }) {
   const phone = contactPhone || theme.contact.phone;
+  const callHref = `tel:${phoneE164(phone)}`;
+  const whatsapp = whatsAppHref(phone);
+
   return (
     <section className="home-invite" aria-labelledby={headingId}>
       <div className="home-invite__panel">
-        <div className="home-invite__copy">
-          <p className="home-invite__kicker">Before you pay</p>
-          <h2 id={headingId}>{cta.title}</h2>
-          <p>{cta.subtitle}</p>
-        </div>
-        <div className="home-invite__actions">
-          <Link prefetch={false} href="/contact" className="home-invite__btn">
-            {cta.buttonLabel}
-          </Link>
-          <p className="home-invite__note">Call or WhatsApp {phone}. We answer from India.</p>
-        </div>
+        <header className="home-invite__head">
+          <div className="home-invite__copy">
+            <p className="home-invite__kicker">Quote first</p>
+            <h2 id={headingId}>{cta.title}</h2>
+            <p>{cta.subtitle}</p>
+          </div>
+          <div className="home-invite__actions">
+            <Link prefetch={false} href="/contact" className="home-invite__btn">
+              {cta.buttonLabel}
+            </Link>
+            <p className="home-invite__note">
+              {whatsapp ? (
+                <>
+                  <a href={callHref}>Call</a>
+                  {" · "}
+                  <a href={whatsapp} target="_blank" rel="noreferrer">
+                    WhatsApp {phone}
+                  </a>
+                </>
+              ) : (
+                <a href={callHref}>{phone}</a>
+              )}
+            </p>
+          </div>
+        </header>
+
+        <ol className="home-invite__steps">
+          {inviteSteps.map((step, index) => (
+            <li
+              key={step.title}
+              aria-label={`${index + 1}. ${step.title}. ${step.text}`}
+            >
+              <span className="home-invite__step-num" aria-hidden>
+                {index + 1}
+              </span>
+              <div aria-hidden>
+                <strong>{step.title}</strong>
+                <p>{step.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   );

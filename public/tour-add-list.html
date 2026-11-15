@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Page 1 — Tours to Add (Final List)</title>
+  <style>
+    :root {
+      --bg: #f6f1e8; --ink: #1a1a1a; --muted: #5c564c; --card: #fffdf8;
+      --line: #e4d9c5; --accent: #0f5c4c; --soft: #e6f2ef;
+      --add: #9a3412; --add-bg: #ffedd5; --have: #1d4ed8; --have-bg: #dbeafe;
+      --hot: #065f46; --hot-bg: #ecfdf5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Iowan Old Style", Palatino, Georgia, serif;
+      background: radial-gradient(ellipse at top left, #efe4d0, transparent 45%), var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+    header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+    .eyebrow { font-family: system-ui,sans-serif; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+    h1 { margin: 8px 0; font-size: clamp(1.9rem,4vw,2.8rem); line-height: 1.1; }
+    .sub { color: var(--muted); max-width: 70ch; }
+    .nav { display:flex; flex-wrap:wrap; gap:10px; margin: 12px 0; font-family: system-ui,sans-serif; font-size:13px; }
+    .nav a { color: var(--accent); }
+    .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top: 12px; }
+    .search, .tab {
+      font-family: system-ui,sans-serif; border:1px solid var(--line); background:var(--card); border-radius:999px; padding:8px 14px;
+    }
+    .search { flex:1 1 240px; border-radius:10px; font:inherit; font-size:1rem; padding:11px 14px; }
+    .tab { cursor:pointer; font-size:13px; }
+    .tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .stats { font-family:system-ui,sans-serif; font-size:13px; background:var(--soft); color:var(--muted); border-radius:999px; padding:8px 14px; }
+    .badge { display:inline-flex; border-radius:999px; padding:2px 8px; font-family:system-ui,sans-serif; font-size:11px; font-weight:700; }
+    .badge.add { background:var(--add-bg); color:var(--add); }
+    .badge.have { background:var(--have-bg); color:var(--have); }
+    .badge.hot { background:var(--hot-bg); color:var(--hot); }
+    .badge.cat { background:#f3ebe0; color:#5b4b3a; }
+    .summary {
+      display:grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin: 18px 0;
+    }
+    .summary div {
+      background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px;
+      font-family: system-ui,sans-serif;
+    }
+    .summary strong { display:block; font-size:1.5rem; font-family: Georgia, serif; }
+    .summary span { color:var(--muted); font-size:12px; }
+    section {
+      margin-top: 26px; background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden;
+    }
+    .head {
+      display:flex; justify-content:space-between; gap:12px; padding:16px 20px;
+      background:linear-gradient(90deg,#f3ebe0,#eef6f3); border-bottom:1px solid var(--line);
+    }
+    .head h2 { margin:0; font-size:1.25rem; }
+    .count { font-family:system-ui,sans-serif; font-size:12px; color:var(--muted); }
+    table { width:100%; border-collapse:collapse; font-size:0.95rem; }
+    th, td { text-align:left; padding:10px 14px; border-bottom:1px solid #eee4d4; vertical-align:top; }
+    th { font-family:system-ui,sans-serif; font-size:12px; color:var(--muted); font-weight:600; background:#faf7f1; }
+    tr.hidden { display:none; }
+    .note { margin-top:24px; padding:14px 16px; border-left:4px solid #b8860b; background:#fff8e8; color:var(--muted); font-size:0.95rem; }
+    .toc { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .toc a { font-family:system-ui,sans-serif; font-size:13px; text-decoration:none; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:999px; padding:6px 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow">Page 1 · Finalise before seeding</div>
+      <h1>Tours to add</h1>
+      <p class="sub">
+        Proposed launch set: <strong>all recommended Kashmir tours + treks</strong>, plus
+        <strong>popular Indian tours only</strong> (high demand + solid sellers). Niche India tours are out of scope for this round.
+        Decide this list, then we generate original itineraries and fill the 7-tab tour data.
+      </p>
+      <div class="nav">
+        <a href="/tour-planning-index.html">← Planning hub</a>
+        <a href="/tour-data-spec.html">Page 2 · Data spec →</a>
+        <a href="/kashmir-tours-treks.html">Old Kashmir catalog</a>
+        <a href="/indian-tours-catalog.html">Old India catalog</a>
+      </div>
+      <div class="toolbar">
+        <input class="search" id="q" type="search" placeholder="Search tours…" />
+        <button class="tab active" data-view="all">All</button>
+        <button class="tab" data-view="add">To add only</button>
+        <button class="tab" data-view="have">Already on site</button>
+        <button class="tab" data-view="kashmir">Kashmir</button>
+        <button class="tab" data-view="india">India popular</button>
+        <div class="stats" id="stats"></div>
+      </div>
+      <div class="toc" id="toc"></div>
+    </header>
+
+    <div class="summary" id="summary"></div>
+    <main id="main"></main>
+
+    <div class="note">
+      <strong>Itinerary plan (after you approve this list):</strong>
+      for every tour we will write original day-by-day text (not copied). Where public itineraries exist online, we use them only as structure reference and rewrite. Where none exist, we create sensible operator-grade itineraries from destination knowledge.
+      Shared FAQs / Includes / Excludes / Categories live on Page 2.
+    </div>
+  </div>
+
+  <script>
+    /**
+     * status: have = already seeded in project, add = needs creation
+     * region: kashmir | india
+     * priority: hot | solid
+     */
+    const GROUPS = [
+      {
+        id: "k-leisure",
+        region: "kashmir",
+        title: "Kashmir — Classic / Leisure",
+        rows: [
+          ["Classic Kashmir Triangle", "Leisure", "hot", "have", "4N/5D Srinagar–Gulmarg–Pahalgam"],
+          ["Best of Kashmir with Sonamarg", "Leisure", "hot", "have", "5N/6D four valleys"],
+          ["Budget Express Kashmir", "Leisure", "hot", "have", "3N Srinagar base day trips"],
+          ["Valley Day-Trip Circuit", "Leisure", "solid", "have", "4N all nights Srinagar"],
+          ["Premium Relaxed Kashmir", "Luxury", "solid", "have", "Slower luxury pacing"],
+          ["Grand Kashmir Circuit", "Leisure", "solid", "have", "10N iconic + offbeat"],
+          ["Classic + Doodhpathri & Yusmarg", "Offbeat", "solid", "have", "Classic + meadows"],
+          ["Kashmir in Tulip Season", "Leisure", "hot", "have", "Mar–Apr tulip garden special"],
+          ["Photography & Autumn Chinar Tour", "Cultural", "solid", "have", "Oct–Nov foliage"],
+          ["Srinagar Weekend Getaway", "City trips", "solid", "have", "2N/3D short break"]
+        ]
+      },
+      {
+        id: "k-honey",
+        region: "kashmir",
+        title: "Kashmir — Honeymoon",
+        rows: [
+          ["Romantic Kashmir Honeymoon", "Honeymoon", "hot", "have", "Houseboat + valleys"],
+          ["Luxury Houseboat Escape", "Honeymoon", "hot", "have", "Short couples stay"],
+          ["Winter Honeymoon Valley Circuit", "Honeymoon", "hot", "have", "Snow romance"],
+          ["Pahalgam Riverside Couples Escape", "Honeymoon", "solid", "have", "Lidder-focused"]
+        ]
+      },
+      {
+        id: "k-family",
+        region: "kashmir",
+        title: "Kashmir — Family",
+        rows: [
+          ["Family Album Kashmir", "Family", "hot", "have", "Easy first family trip"],
+          ["Family Grand Circuit", "Family", "hot", "have", "Longer family loop"],
+          ["Family Snow Gulmarg Special", "Family", "solid", "have", "Winter kids snow play"]
+        ]
+      },
+      {
+        id: "k-winter",
+        region: "kashmir",
+        title: "Kashmir — Winter / Ski",
+        rows: [
+          ["Winter White Gulmarg", "Winter", "hot", "have", "Gulmarg snow nights"],
+          ["Kashmir Snow Tour", "Winter", "hot", "have", "Classic winter circuit"],
+          ["Winter Sports Week", "Adventure", "hot", "have", "Ski week"],
+          ["Winter Adventure Mini", "Adventure", "solid", "have", "Short winter adventure"],
+          ["Gulmarg Beginner Ski Package", "Adventure", "hot", "have", "Lessons + gondola focused"]
+        ]
+      },
+      {
+        id: "k-offbeat",
+        region: "kashmir",
+        title: "Kashmir — Offbeat",
+        rows: [
+          ["Offbeat Meadows: Doodhpathri & Yusmarg", "Offbeat", "hot", "have", "Quiet meadows"],
+          ["Gurez Valley Discovery", "Offbeat", "hot", "have", "Razdan Pass frontier"],
+          ["Offbeat North: Gurez · Lolab · Wular", "Offbeat", "solid", "have", "North circuit"],
+          ["Hidden Valleys: Gurez · Bangus · Doodhpathri", "Offbeat", "solid", "have", "Deep offbeat"],
+          ["Deep Gurez Immersion", "Offbeat", "solid", "have", "Long Gurez stay"],
+          ["South Kashmir Springs & Waterfalls", "Offbeat", "solid", "have", "Kokernag / Verinag"],
+          ["Gurez & Keran Valley Explorer", "Offbeat", "solid", "have", "LOC Kishanganga"]
+        ]
+      },
+      {
+        id: "k-faith",
+        region: "kashmir",
+        title: "Kashmir — Pilgrimage",
+        rows: [
+          ["Amarnath Yatra Group Tour", "Religious", "hot", "have", "Seasonal yatra"],
+          ["Amarnath Yatra by Helicopter", "Religious", "hot", "have", "Heli darshan"],
+          ["Kashmir + Vaishno Devi", "Religious", "hot", "have", "Faith + leisure combo"]
+        ]
+      },
+      {
+        id: "k-road",
+        region: "kashmir",
+        title: "Kashmir — Road / Adventure Combos",
+        rows: [
+          ["Srinagar to Leh Highway Trip", "Road trip", "hot", "have", "Zoji La–Kargil–Leh"],
+          ["Kashmir Adventure Activity Package", "Adventure", "solid", "have", "Rafting + gondola + ATV"]
+        ]
+      },
+      {
+        id: "k-treks",
+        region: "kashmir",
+        title: "Kashmir — Treks",
+        rows: [
+          ["Kashmir Great Lakes Trek", "Trekking", "hot", "have", "7–8D Sonamarg–Naranag"],
+          ["Tarsar Marsar Trek", "Trekking", "hot", "have", "5–6D Aru twin lakes"],
+          ["Tulian Lake Trek", "Trekking", "hot", "have", "2–4D Pahalgam alpine lake"],
+          ["Nafran Valley Trek", "Trekking", "hot", "have", "KGL alternative"],
+          ["Bodpathri Meadows Trek", "Trekking", "hot", "have", "Grassland + lakes"],
+          ["Warwan Valley Trek", "Trekking", "hot", "add", "Difficult frontier"],
+          ["Gurez Valley Trek", "Trekking", "solid", "have", "2–3D Easy–Mod"],
+          ["Naranag to Gangabal Trek", "Trekking", "hot", "have", "3–4D classic"],
+          ["Kolahoi Glacier Trek", "Trekking", "solid", "have", "4–5D Hard"],
+          ["Kounsarnag Lake Trek", "Trekking", "solid", "have", "South Kashmir lake"],
+          ["Thajiwas Glacier Day Walk", "Trekking", "hot", "have", "Sonamarg easy day"],
+          ["Aru to Lidderwat Day Trek", "Trekking", "solid", "have", "Easy–Mod day"],
+          ["Alpather Lake Trek (Gulmarg)", "Trekking", "solid", "have", "Above Apharwat"],
+          ["Marchoi Valley Winter Trek", "Trekking", "solid", "have", "Winter snow trek"]
+        ]
+      },
+      {
+        id: "i-religious",
+        region: "india",
+        title: "India Popular — Religious",
+        rows: [
+          ["Char Dham Yatra by Road", "Religious", "hot", "have", "Yamunotri–Gangotri–Kedarnath–Badrinath"],
+          ["Char Dham Yatra by Helicopter", "Religious", "hot", "have", "Dehradun heli circuit"],
+          ["Do Dham Yatra — Kedarnath & Badrinath", "Religious", "hot", "have", "Shorter dham combo"],
+          ["Kedarnath Yatra Package", "Religious", "hot", "have", "Single shrine classic"],
+          ["Vaishno Devi Katra Darshan", "Religious", "hot", "have", "Year-round pilgrimage"],
+          ["Ayodhya Ram Mandir Darshan", "Religious", "hot", "have", "High search growth"],
+          ["Varanasi & Ayodhya Spiritual Circuit", "Religious", "hot", "have", "Faith city circuit"],
+          ["Varanasi Spiritual Tour", "Religious", "hot", "have", "Ghats + aarti focus"],
+          ["Tirupati Balaji Darshan Package", "Religious", "hot", "have", "Most-visited temple"],
+          ["Shirdi Sai Baba Darshan", "Religious", "hot", "have", "Steady pan-India"],
+          ["Kailash Mansarovar Yatra by Helicopter", "Religious", "hot", "have", "Flagship yatra"],
+          ["12 Jyotirlinga Darshan Tour", "Religious", "solid", "add", "Pan-India long tour"],
+          ["Dwarka–Somnath Gujarat Temple Tour", "Religious", "solid", "add", "Gujarat pilgrimage"],
+          ["Golden Temple Amritsar Darshan", "Religious", "hot", "add", "Sikh + leisure"],
+          ["Amritsar Heritage + Wagah Border", "Religious", "solid", "add", "2–3N classic"],
+          ["Bodh Gaya Enlightenment Tour", "Religious", "solid", "add", "Buddhist core"],
+          ["Puri Jagannath Darshan", "Religious", "solid", "add", "East India temple"],
+          ["Rameswaram Temple Tour", "Religious", "solid", "add", "South Char Dham"],
+          ["Mathura–Vrindavan–Agra Circuit", "Religious", "solid", "add", "Family faith circuit"],
+          ["Ajmer Sharif + Pushkar", "Religious", "solid", "add", "Rajasthan faith combo"],
+          ["Ujjain Mahakaleshwar Darshan", "Religious", "solid", "add", "Jyotirlinga short trip"],
+          ["Haridwar–Rishikesh Spiritual Escape", "Religious", "solid", "add", "Easy spiritual break"]
+        ]
+      },
+      {
+        id: "i-honey",
+        region: "india",
+        title: "India Popular — Honeymoon",
+        rows: [
+          ["Kerala Backwaters Honeymoon", "Honeymoon", "hot", "have", "Munnar–Alleppey classic"],
+          ["Andaman Island Honeymoon", "Honeymoon", "hot", "have", "Top India beach honeymoon"],
+          ["Goa Beach Honeymoon", "Honeymoon", "hot", "have", "Budget couples favourite"],
+          ["Udaipur Romantic Palace Honeymoon", "Honeymoon", "hot", "add", "Heritage romance"],
+          ["Manali Honeymoon Escape", "Honeymoon", "hot", "add", "Himachal couples"],
+          ["Shimla–Manali Honeymoon", "Honeymoon", "solid", "add", "Hills couple circuit"],
+          ["Leh Ladakh Honeymoon", "Honeymoon", "solid", "add", "Adventure romance"],
+          ["Coorg Coffee Estate Honeymoon", "Honeymoon", "solid", "add", "South couples"],
+          ["Ooty–Kodaikanal Honeymoon", "Honeymoon", "solid", "add", "Nilgiris"],
+          ["Darjeeling–Gangtok Honeymoon", "Honeymoon", "solid", "add", "East hills"],
+          ["Jaipur–Udaipur Honeymoon", "Honeymoon", "solid", "add", "Rajasthan couples"]
+        ]
+      },
+      {
+        id: "i-trek",
+        region: "india",
+        title: "India Popular — Trekking",
+        rows: [
+          ["Kedarkantha Winter Trek", "Trekking", "hot", "have", "#1 beginner winter trek"],
+          ["Valley of Flowers & Hemkund Sahib Trek", "Trekking", "hot", "have", "Monsoon UNESCO"],
+          ["Hampta Pass Trek with Chandratal", "Trekking", "hot", "have", "Himachal crossover"],
+          ["Chopta–Chandrashila–Deoriatal Trek", "Trekking", "hot", "have", "Easy summit classic"],
+          ["Dayara Bugyal Trek", "Trekking", "hot", "have", "Beginner meadows"],
+          ["Brahmatal Winter Trek", "Trekking", "hot", "have", "Winter alternative"],
+          ["Triund Trek & Camping", "Trekking", "hot", "have", "Weekend Himalayan"],
+          ["Kheerganga Trek with Camping", "Trekking", "hot", "have", "Kasol favourite"],
+          ["Kuari Pass Trek", "Trekking", "solid", "have", "Curzon trail"],
+          ["Markha Valley Trek", "Trekking", "solid", "have", "Ladakh classic"],
+          ["Chadar Frozen River Trek", "Trekking", "hot", "have", "Winter expedition"],
+          ["Sar Pass Trek", "Trekking", "solid", "have", "Kasol group trek"],
+          ["Nag Tibba Trek", "Trekking", "solid", "have", "Mussoorie weekend"],
+          ["Har Ki Dun Trek", "Trekking", "solid", "have", "Uttarakhand valley"],
+          ["Goecha La Trek", "Trekking", "solid", "have", "Sikkim Kanchenjunga"],
+          ["Sandakphu–Phalut Trek", "Trekking", "solid", "have", "East Himalaya"],
+          ["Beas Kund Trek", "Trekking", "solid", "have", "Manali starter"],
+          ["Bhrigu Lake Trek", "Trekking", "solid", "have", "Manali alpine lake"],
+          ["Rupin Pass Trek", "Trekking", "solid", "add", "Moderate–difficult"],
+          ["Gaumukh Tapovan Trek", "Trekking", "solid", "add", "Spiritual adventure"],
+          ["Living Root Bridge Trek (Meghalaya)", "Trekking", "solid", "have", "Northeast experience"]
+        ]
+      },
+      {
+        id: "i-family",
+        region: "india",
+        title: "India Popular — Family",
+        rows: [
+          ["Shimla–Manali Family Delight", "Family", "hot", "have", "Himachal family staple"],
+          ["Kerala Family Getaway", "Family", "hot", "have", "Munnar–Thekkady–Alleppey"],
+          ["Goa Family Splash", "Family", "hot", "have", "Beach + kids activities"],
+          ["Andaman Island Family Adventure", "Family", "hot", "add", "Island family"],
+          ["Royal Rajasthan Family Trail", "Family", "hot", "add", "Jaipur–Jaisalmer–Udaipur"],
+          ["Golden Triangle Family", "Family", "hot", "add", "Delhi–Agra–Jaipur"],
+          ["Nainital–Jim Corbett Family Getaway", "Family", "solid", "add", "Hills + safari"],
+          ["Ladakh Family Expedition", "Family", "solid", "add", "Leh–Nubra–Pangong"],
+          ["Gangtok & Tsomgo Lake Family", "Family", "solid", "add", "Easy Northeast"],
+          ["Darjeeling–Gangtok Family Hills", "Family", "solid", "add", "East hills family"],
+          ["Coorg–Mysore Family Circuit", "Family", "solid", "add", "South family"],
+          ["Ooty–Coonoor Family Hills", "Family", "solid", "add", "Nilgiris family"]
+        ]
+      },
+      {
+        id: "i-camp",
+        region: "india",
+        title: "India Popular — Camping",
+        rows: [
+          ["Jaisalmer Sam Sand Dunes Desert Camp", "Camping", "hot", "have", "#1 desert camp"],
+          ["Rishikesh Beach Camping + Rafting", "Camping", "hot", "add", "Weekend camp classic"],
+          ["Chandratal Lake Camping", "Camping", "hot", "add", "Spiti camp night"],
+          ["Pangong Lake Shore Camping", "Camping", "hot", "add", "Ladakh overnight"],
+          ["Spiti Circuit with Chandratal Camp", "Camping", "hot", "have", "Best-selling Spiti style"],
+          ["Rann of Kutch White Desert Camping", "Camping", "hot", "add", "Seasonal festival camp"],
+          ["Nubra Valley Desert Camping", "Camping", "solid", "add", "Ladakh stay product"],
+          ["Bir Billing Paragliding Camp", "Camping", "solid", "add", "Adventure camping"],
+          ["Pawna Lake Camping", "Camping", "solid", "add", "Maharashtra weekend"],
+          ["Wayanad Forest Camping", "Camping", "solid", "add", "Kerala nature camp"]
+        ]
+      },
+      {
+        id: "i-leisure",
+        region: "india",
+        title: "India Popular — Leisure Circuits",
+        rows: [
+          ["Kerala Backwaters & Munnar Escape", "Leisure", "hot", "have", "Kerala bestseller"],
+          ["Goa Beach Getaway", "Leisure", "hot", "have", "Year-round leisure"],
+          ["Andaman Island Hopping", "Leisure", "hot", "add", "Port Blair–Havelock–Neil"],
+          ["Royal Rajasthan Circuit", "Leisure", "hot", "add", "Heritage multi-day"],
+          ["Golden Triangle Classic", "Leisure", "hot", "add", "Evergreen guest circuit"],
+          ["Shimla–Manali Combo", "Leisure", "hot", "add", "Hills leisure staple"],
+          ["Leh–Nubra–Pangong Circuit", "Leisure", "hot", "have", "Standard Ladakh"],
+          ["Spiti Valley Circuit", "Leisure", "hot", "have", "Offbeat Himalayan"],
+          ["Manali to Leh Highway Expedition", "Road trip", "solid", "have", "Bucket-list road trip"],
+          ["North Sikkim (Lachen–Lachung–Yumthang)", "Leisure", "solid", "add", "Rising Northeast"],
+          ["Darjeeling Tea Hills", "Leisure", "solid", "add", "Tea hills classic"],
+          ["Meghalaya Living Root Circuit", "Offbeat", "solid", "have", "Northeast experience"],
+          ["Coorg Coffee Hills", "Leisure", "solid", "add", "South weekend"],
+          ["Ooty–Coonoor Nilgiris", "Leisure", "solid", "add", "Nilgiris leisure"],
+          ["Jaipur City Break", "City trips", "solid", "add", "Short city leisure"],
+          ["Udaipur Lakes Weekend", "City trips", "solid", "add", "Short heritage break"],
+          ["Pondicherry French Escape", "Leisure", "solid", "add", "Coastal mini-cation"],
+          ["Best of Kerala Full Circuit", "Leisure", "solid", "add", "Full-state leisure"]
+        ]
+      },
+      {
+        id: "i-adv",
+        region: "india",
+        title: "India Popular — Adventure",
+        rows: [
+          ["Ladakh Bike Expedition", "Adventure", "hot", "have", "Top bike holiday"],
+          ["Manali–Leh Bike Trip", "Adventure", "hot", "have", "Classic high-altitude ride"],
+          ["Spiti Bike Circuit", "Adventure", "solid", "add", "Adventure road"],
+          ["Rishikesh White Water Rafting Package", "Adventure", "hot", "add", "#1 rafting package"],
+          ["Bir Billing Paragliding Tour", "Adventure", "hot", "add", "Top paragliding"],
+          ["Gulmarg Skiing Holiday", "Adventure", "solid", "add", "Peak winter ski"],
+          ["Auli Skiing Winter Package", "Adventure", "solid", "add", "Uttarakhand ski"],
+          ["Scuba Diving Andaman Package", "Adventure", "hot", "add", "Top India dive"]
+        ]
+      },
+      {
+        id: "i-wild",
+        region: "india",
+        title: "India Popular — Wildlife",
+        rows: [
+          ["Jim Corbett Safari Getaway", "Ecotourism", "hot", "have", "North safari leader"],
+          ["Ranthambore Tiger Safari", "Ecotourism", "hot", "have", "First tiger safari"],
+          ["Bandhavgarh Tiger Safari", "Ecotourism", "hot", "add", "High tiger density"],
+          ["Kaziranga Rhino Safari", "Ecotourism", "hot", "add", "UNESCO rhino"],
+          ["Kanha Jungle Book Safari", "Ecotourism", "solid", "add", "MP classic"],
+          ["Gir Asiatic Lion Safari", "Ecotourism", "solid", "add", "Only Asiatic lions"],
+          ["Sundarbans Boat Safari", "Ecotourism", "solid", "add", "Mangrove tiger"],
+          ["Periyar / Thekkady Wildlife Tour", "Ecotourism", "solid", "add", "Kerala wildlife"],
+          ["Ranthambore + Jaipur Combo", "Ecotourism", "solid", "add", "Safari + heritage"]
+        ]
+      },
+      {
+        id: "i-well",
+        region: "india",
+        title: "India Popular — Wellness / Festival",
+        rows: [
+          ["Kerala Ayurveda Wellness Retreat", "Leisure", "hot", "have", "Top wellness theme"],
+          ["Rishikesh Yoga & Ganga Retreat", "Leisure", "hot", "add", "Yoga capital retreat"],
+          ["Rann Utsav Package", "Cultural", "hot", "add", "Seasonal festival"],
+          ["Pushkar Camel Fair Tour", "Cultural", "solid", "add", "Annual festival"],
+          ["Holi Mathura–Vrindavan Special", "Cultural", "solid", "add", "Seasonal spike"]
+        ]
+      }
+    ];
+
+    const main = document.getElementById("main");
+    const toc = document.getElementById("toc");
+    const stats = document.getElementById("stats");
+    const summary = document.getElementById("summary");
+    const q = document.getElementById("q");
+    let view = "all";
+
+    function badgeStatus(s) {
+      return s === "have"
+        ? '<span class="badge have">On site</span>'
+        : '<span class="badge add">To add</span>';
+    }
+    function badgePri(p) {
+      return p === "hot"
+        ? '<span class="badge hot">High demand</span>'
+        : '<span class="badge hot" style="background:#ecfdf5;color:#065f46">Solid</span>';
+    }
+
+    function totals() {
+      let all = 0, add = 0, have = 0, k = 0, i = 0;
+      GROUPS.forEach((g) => {
+        g.rows.forEach((r) => {
+          all++;
+          if (r[3] === "add") add++; else have++;
+          if (g.region === "kashmir") k++; else i++;
+        });
+      });
+      return { all, add, have, k, i };
+    }
+
+    function render() {
+      toc.innerHTML = "";
+      main.innerHTML = "";
+      const t = totals();
+      summary.innerHTML = `
+        <div><strong>${t.all}</strong><span>Total in proposed list</span></div>
+        <div><strong>${t.add}</strong><span>Still to add</span></div>
+        <div><strong>${t.have}</strong><span>Already on site</span></div>
+        <div><strong>${t.k}</strong><span>Kashmir tours/treks</span></div>
+        <div><strong>${t.i}</strong><span>India popular</span></div>
+      `;
+
+      GROUPS.forEach((g) => {
+        const a = document.createElement("a");
+        a.href = "#" + g.id;
+        a.textContent = g.title.replace(/^Kashmir — |^India Popular — /, "");
+        toc.appendChild(a);
+
+        const section = document.createElement("section");
+        section.id = g.id;
+        section.dataset.region = g.region;
+        const addN = g.rows.filter((r) => r[3] === "add").length;
+        section.innerHTML = `
+          <div class="head">
+            <h2>${g.title}</h2>
+            <span class="count" data-count>${g.rows.length} · ${addN} to add</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:34%">Tour name</th>
+                  <th>Category</th>
+                  <th>Demand</th>
+                  <th>Status</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>`;
+        const tbody = section.querySelector("tbody");
+        g.rows.forEach((r) => {
+          const [name, cat, pri, status, note] = r;
+          const tr = document.createElement("tr");
+          tr.dataset.name = (name + " " + note).toLowerCase();
+          tr.dataset.status = status;
+          tr.dataset.region = g.region;
+          tr.innerHTML = `
+            <td><strong>${name}</strong></td>
+            <td><span class="badge cat">${cat}</span></td>
+            <td>${badgePri(pri)}</td>
+            <td>${badgeStatus(status)}</td>
+            <td style="color:#5c564c;font-family:system-ui,sans-serif;font-size:12px">${note}</td>`;
+          tbody.appendChild(tr);
+        });
+        main.appendChild(section);
+      });
+      apply();
+    }
+
+    function apply() {
+      const term = q.value.trim().toLowerCase();
+      let shown = 0;
+      document.querySelectorAll("section").forEach((section) => {
+        let vis = 0;
+        section.querySelectorAll("tbody tr").forEach((tr) => {
+          const statusOk =
+            view === "all" ||
+            (view === "add" && tr.dataset.status === "add") ||
+            (view === "have" && tr.dataset.status === "have") ||
+            (view === "kashmir" && tr.dataset.region === "kashmir") ||
+            (view === "india" && tr.dataset.region === "india");
+          const match = statusOk && (!term || tr.dataset.name.includes(term));
+          tr.classList.toggle("hidden", !match);
+          if (match) vis++;
+        });
+        section.style.display = vis ? "" : "none";
+        const c = section.querySelector("[data-count]");
+        if (c) c.textContent = vis + " showing";
+        shown += vis;
+      });
+      const t = totals();
+      stats.textContent = term || view !== "all"
+        ? shown + " showing"
+        : t.all + " proposed · " + t.add + " to add";
+    }
+
+    render();
+    q.addEventListener("input", apply);
+    document.querySelectorAll(".tab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        view = btn.dataset.view;
+        document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b === btn));
+        apply();
+      });
+    });
+  </script>
+</body>
+</html>

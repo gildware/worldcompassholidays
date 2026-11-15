@@ -283,6 +283,13 @@
   letter-spacing: -0.02em;
 }
 
+.hic-flip__front-body h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
 .hic-tilt__foot,
 .hic-stay__foot,
 .hic-deal__foot {
@@ -292,6 +299,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+}
+
+.hic-flip__front-body .hic-tilt__foot {
+  margin-top: 4px;
+  padding-top: 4px;
 }
 
 .hic-stay {
@@ -492,7 +504,7 @@
 
 .hic-flip {
   perspective: 1200px;
-  height: 430px;
+  height: 390px;
 }
 
 .hic-flip__inner {

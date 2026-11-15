@@ -13,6 +13,7 @@ import { readUploadedImage, validateUploadedImage } from "@/lib/storage/form";
 import { uniqueSlug } from "@/lib/slug";
 import { sanitizeTourHtml } from "@/lib/tours/html";
 import {
+  composeItineraryDescription,
   formatTourDuration,
   parseDurationUnit,
   parseJsonArray,
@@ -301,15 +302,30 @@ async function syncItinerary(tourId: string, items: ItineraryItem[]) {
   await prisma.itineraryDay.deleteMany({ where: { tourId } });
   if (items.length === 0) return;
   await prisma.itineraryDay.createMany({
-    data: items.map((item, index) => ({
-      tourId,
-      dayNumber: item.dayNumber || index + 1,
-      title: item.title.trim(),
-      description: item.description.trim(),
-      imageUrl: item.imageUrl?.trim() ?? "",
-      imageKey: item.imageKey?.trim() ?? "",
-      imageDriver: item.imageDriver === "cloudinary" ? "cloudinary" : "local",
-    })),
+    data: items.map((item, index) => {
+      const morning = item.morning?.trim() ?? "";
+      const afternoon = item.afternoon?.trim() ?? "";
+      const evening = item.evening?.trim() ?? "";
+      const description =
+        composeItineraryDescription({
+          morning,
+          afternoon,
+          evening,
+          description: item.description,
+        }) || item.description.trim();
+      return {
+        tourId,
+        dayNumber: item.dayNumber || index + 1,
+        title: item.title.trim(),
+        description,
+        morning,
+        afternoon,
+        evening,
+        imageUrl: item.imageUrl?.trim() ?? "",
+        imageKey: item.imageKey?.trim() ?? "",
+        imageDriver: item.imageDriver === "cloudinary" ? "cloudinary" : "local",
+      };
+    }),
   });
 }
 
@@ -321,6 +337,7 @@ async function applyCatalog(data: {
   faqsJson: string;
   includesJson: string;
   excludesJson: string;
+  beforeYouGoJson: string;
 }) {
   const categoryId = data.category.trim();
   const category = categoryId
@@ -343,6 +360,9 @@ async function applyCatalog(data: {
   );
   data.excludesJson = JSON.stringify(
     await keepCatalogIds("exclude", data.excludesJson),
+  );
+  data.beforeYouGoJson = JSON.stringify(
+    await keepCatalogIds("before_you_go", data.beforeYouGoJson),
   );
 }
 
@@ -414,6 +434,7 @@ function tourPayload(
       faqsJson: String(formData.get("faqsJson") ?? "[]"),
       includesJson: String(formData.get("includesJson") ?? "[]"),
       excludesJson: String(formData.get("excludesJson") ?? "[]"),
+      beforeYouGoJson: String(formData.get("beforeYouGoJson") ?? "[]"),
       surroundingsJson: String(
         formData.get("surroundingsJson") ??
           '{"education":[],"health":[],"transportation":[]}',

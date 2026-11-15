@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Indian Tours — Popular First</title>
+  <style>
+    :root {
+      --bg: #f6f1e8;
+      --ink: #1a1a1a;
+      --muted: #5c564c;
+      --card: #fffdf8;
+      --line: #e4d9c5;
+      --accent: #0f5c4c;
+      --accent-soft: #e6f2ef;
+      --hot: #9a3412;
+      --hot-bg: #ffedd5;
+      --niche: #5b4b3a;
+      --niche-bg: #f3ebe0;
+      --gold: #b8860b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      background:
+        radial-gradient(ellipse at top left, #efe4d0 0%, transparent 45%),
+        radial-gradient(ellipse at bottom right, #d9ebe4 0%, transparent 40%),
+        var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+    header {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.1rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .sub {
+      margin: 0;
+      max-width: 70ch;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .search {
+      flex: 1 1 260px;
+      min-width: 220px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--card);
+      font: inherit;
+      font-size: 1rem;
+    }
+    .search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tab {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 999px;
+      padding: 8px 14px;
+      cursor: pointer;
+      color: var(--ink);
+    }
+    .tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .stats {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      color: var(--muted);
+      background: var(--accent-soft);
+      border-radius: 999px;
+      padding: 8px 14px;
+    }
+    .toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .toc a {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      text-decoration: none;
+      color: #2c1810;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 12px;
+    }
+    .toc a:hover { border-color: var(--accent); color: var(--accent); }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-family: system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      white-space:nowrap;
+      vertical-align: middle;
+    }
+    .badge.hot { background: var(--hot-bg); color: var(--hot); }
+    .badge.solid { background: #ecfdf5; color: #065f46; }
+    .badge.niche { background: var(--niche-bg); color: var(--niche); }
+    section {
+      margin-top: 28px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(44, 24, 16, 0.04);
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      padding: 18px 20px;
+      background: linear-gradient(90deg, #f3ebe0, #eef6f3);
+      border-bottom: 1px solid var(--line);
+    }
+    .section-head h2 { margin: 0; font-size: 1.35rem; }
+    .count {
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    ol {
+      margin: 0;
+      padding: 8px 20px 18px 44px;
+    }
+    @media (min-width: 760px) {
+      ol.popular { columns: 1; }
+      ol.niche { columns: 2; column-gap: 28px; }
+    }
+    li {
+      break-inside: avoid;
+      padding: 9px 0;
+      border-bottom: 1px dashed #eee4d4;
+      font-size: 0.98rem;
+    }
+    li:last-child { border-bottom: none; }
+    li .meta {
+      display: block;
+      margin-top: 3px;
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    li.hidden, section.hidden, .block.hidden { display: none; }
+    .block-title {
+      margin: 36px 0 8px;
+      font-size: 1.7rem;
+    }
+    .block-sub {
+      margin: 0 0 4px;
+      color: var(--muted);
+      max-width: 70ch;
+    }
+    .note {
+      margin-top: 28px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--gold);
+      background: #fff8e8;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    footer {
+      margin-top: 28px;
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow">India only · Demand-ranked catalog</div>
+      <h1>Popular Indian Tours First</h1>
+      <p class="sub">
+        Top ~100 high-demand packages to list first on the website.
+        Niche / optional tours are kept below for completeness — not equal bestsellers.
+      </p>
+      <div class="toolbar">
+        <input class="search" id="q" type="search" placeholder="Search tours… e.g. Kashmir, Kedarnath, Andaman" />
+        <div class="tabs" id="tabs">
+          <button class="tab active" data-view="all">All</button>
+          <button class="tab" data-view="popular">Popular only</button>
+          <button class="tab" data-view="niche">Niche only</button>
+        </div>
+        <div class="stats" id="stats">Loading…</div>
+      </div>
+      <div class="legend">
+        <span><span class="badge hot">High demand</span> top booking / search leaders</span>
+        <span><span class="badge solid">Solid seller</span> regularly booked mid-tier</span>
+        <span><span class="badge niche">Niche</span> list for coverage, lower volume</span>
+      </div>
+      <nav class="toc" id="toc"></nav>
+    </header>
+
+    <div id="popular-block" class="block">
+      <h2 class="block-title">Popular — list these first (~100)</h2>
+      <p class="block-sub">Prioritise these for homepage, category pages, and seed data.</p>
+      <div id="popular"></div>
+    </div>
+
+    <div id="niche-block" class="block">
+      <h2 class="block-title">Niche / optional</h2>
+      <p class="block-sub">Useful for a deep catalog later — not required for launch.</p>
+      <div id="niche"></div>
+    </div>
+
+    <div class="note">
+      Ranking based on Indian OTA / operator demand patterns (MakeMyTrip, Thomas Cook/SOTC,
+      Justdial 2025 search growth, Indiahikes trek popularity, common family/honeymoon circuits).
+      “High demand” ≈ strongest search/booking signals. “Solid seller” ≈ consistently sold.
+    </div>
+    <footer>View at <code>/indian-tours-catalog.html</code></footer>
+  </div>
+
+  <script>
+    /** tier: hot = high demand, solid = mid-tier popular */
+    const POPULAR = [
+      {
+        id: "p-religious",
+        title: "Religious / Pilgrimage",
+        tours: [
+          { name: "Char Dham Yatra by Road", tier: "hot", why: "Justdial +73% package search growth" },
+          { name: "Char Dham Yatra by Helicopter", tier: "hot", why: "Premium senior-friendly bestseller" },
+          { name: "Kedarnath Yatra Package", tier: "hot", why: "Top single-shrine Himalayan yatra" },
+          { name: "Kedarnath Helicopter Darshan", tier: "hot", why: "High conversion short yatra" },
+          { name: "Do Dham Yatra — Kedarnath & Badrinath", tier: "hot", why: "Shorter alternative to full Char Dham" },
+          { name: "Vaishno Devi Katra Darshan", tier: "hot", why: "Year-round mass pilgrimage" },
+          { name: "Vaishno Devi by Helicopter", tier: "solid", why: "Strong VIP / family add-on" },
+          { name: "Ayodhya Ram Mandir Darshan", tier: "hot", why: "Justdial +40% search growth" },
+          { name: "Varanasi & Ayodhya Spiritual Circuit", tier: "hot", why: "Top North India faith circuit" },
+          { name: "Varanasi Spiritual Tour", tier: "hot", why: "Classic spiritual city break" },
+          { name: "Tirupati Balaji Darshan Package", tier: "hot", why: "India’s most-visited temple flow" },
+          { name: "Shirdi Sai Baba Darshan", tier: "hot", why: "Steady pan-India demand" },
+          { name: "Amarnath Yatra by Helicopter", tier: "hot", why: "Seasonal high-ticket yatra" },
+          { name: "Amarnath Yatra via Baltal / Pahalgam", tier: "solid", why: "Peak July–Aug demand" },
+          { name: "Kailash Mansarovar Yatra by Helicopter", tier: "hot", why: "Flagship lifetime pilgrimage" },
+          { name: "Kailash Mansarovar Yatra by Road", tier: "solid", why: "Classic long-haul yatra" },
+          { name: "Mathura–Vrindavan–Agra Circuit", tier: "solid", why: "Strong family / senior circuit" },
+          { name: "Dwarka–Somnath Gujarat Temple Tour", tier: "solid", why: "Core Gujarat pilgrimage" },
+          { name: "12 Jyotirlinga Darshan Tour", tier: "solid", why: "Long pan-India faith product" },
+          { name: "Puri Jagannath Darshan", tier: "solid", why: "East India temple staple" },
+          { name: "Haridwar–Rishikesh Spiritual Escape", tier: "solid", why: "Easy short spiritual getaway" },
+          { name: "Golden Temple Amritsar Darshan", tier: "hot", why: "Top Sikh + leisure combo trip" },
+          { name: "Amritsar Heritage + Wagah Border", tier: "solid", why: "Very common 2–3N package" },
+          { name: "Bodh Gaya Enlightenment Tour", tier: "solid", why: "Core Buddhist pilgrimage" },
+          { name: "Ajmer Sharif + Pushkar", tier: "solid", why: "Popular Rajasthan faith combo" },
+          { name: "Ujjain Mahakaleshwar Darshan", tier: "solid", why: "Rising Jyotirlinga short trip" },
+          { name: "Rameswaram Temple Tour", tier: "solid", why: "South Char Dham pillar" },
+          { name: "Badrinath Yatra Package", tier: "solid", why: "Core Himalayan dham product" }
+        ]
+      },
+      {
+        id: "p-honeymoon",
+        title: "Honeymoon (India)",
+        tours: [
+          { name: "Romantic Kashmir Honeymoon", tier: "hot", why: "Domestic honeymoon leader" },
+          { name: "Kashmir Houseboat Honeymoon", tier: "hot", why: "Signature couple product" },
+          { name: "Kerala Backwaters Honeymoon", tier: "hot", why: "Munnar–Alleppey classic" },
+          { name: "Andaman Island Honeymoon", tier: "hot", why: "Top India beach honeymoon" },
+          { name: "Goa Beach Honeymoon", tier: "hot", why: "Budget + first honeymoon favourite" },
+          { name: "Udaipur Romantic Palace Honeymoon", tier: "hot", why: "Top heritage romance trip" },
+          { name: "Manali Honeymoon Escape", tier: "hot", why: "Himachal couple bestseller" },
+          { name: "Shimla–Manali Honeymoon", tier: "solid", why: "Classic hills couple circuit" },
+          { name: "Leh Ladakh Honeymoon", tier: "solid", why: "Strong adventure-romance demand" },
+          { name: "Coorg Coffee Estate Honeymoon", tier: "solid", why: "South India couple favourite" },
+          { name: "Ooty–Kodaikanal Honeymoon", tier: "solid", why: "Nilgiris couple circuit" },
+          { name: "Darjeeling–Gangtok Honeymoon", tier: "solid", why: "East hills romance staple" },
+          { name: "Jaipur–Udaipur Honeymoon", tier: "solid", why: "Rajasthan couple circuit" },
+          { name: "Alleppey Private Houseboat Honeymoon", tier: "solid", why: "High add-on / short escape" },
+          { name: "Pondicherry French Quarter Honeymoon", tier: "solid", why: "Short coastal romance trip" }
+        ]
+      },
+      {
+        id: "p-trekking",
+        title: "Trekking",
+        tours: [
+          { name: "Kedarkantha Winter Trek", tier: "hot", why: "India’s #1 beginner winter trek" },
+          { name: "Valley of Flowers & Hemkund Sahib Trek", tier: "hot", why: "Monsoon UNESCO bestseller" },
+          { name: "Hampta Pass Trek with Chandratal", tier: "hot", why: "Top Himachal crossover trek" },
+          { name: "Kashmir Great Lakes Trek", tier: "hot", why: "Flagship alpine lakes trek" },
+          { name: "Chopta–Chandrashila–Deoriatal Trek", tier: "hot", why: "Easy Himalayan summit classic" },
+          { name: "Dayara Bugyal Trek", tier: "hot", why: "Beginner meadow favourite" },
+          { name: "Brahmatal Winter Trek", tier: "hot", why: "Top winter alternative to Kedarkantha" },
+          { name: "Triund Trek & Camping", tier: "hot", why: "Best weekend Himalayan trek" },
+          { name: "Kheerganga Trek with Camping", tier: "hot", why: "Kasol belt mass favourite" },
+          { name: "Nag Tibba Trek", tier: "solid", why: "Easy Mussoorie weekend trek" },
+          { name: "Har Ki Dun Trek", tier: "solid", why: "Classic Uttarakhand valley trek" },
+          { name: "Kuari Pass Trek", tier: "solid", why: "Curzon trail popularity" },
+          { name: "Tarsar Marsar Trek", tier: "solid", why: "Kashmir lakes mid-tier hit" },
+          { name: "Markha Valley Trek", tier: "solid", why: "Ladakh classic multi-day" },
+          { name: "Goecha La Trek", tier: "solid", why: "Sikkim Kanchenjunga views" },
+          { name: "Sandakphu–Phalut Trek", tier: "solid", why: "East Himalaya favourite" },
+          { name: "Chadar Frozen River Trek", tier: "hot", why: "Unique winter expedition demand" },
+          { name: "Sar Pass Trek", tier: "solid", why: "Popular Kasol group trek" },
+          { name: "Beas Kund Trek", tier: "solid", why: "Easy Manali starter trek" },
+          { name: "Bhrigu Lake Trek", tier: "solid", why: "Manali alpine lake hit" },
+          { name: "Rupin Pass Trek", tier: "solid", why: "Strong moderate-difficult demand" },
+          { name: "Gaumukh Tapovan Trek", tier: "solid", why: "Spiritual + adventure blend" },
+          { name: "Living Root Bridge Trek (Meghalaya)", tier: "solid", why: "Northeast experience trek" }
+        ]
+      },
+      {
+        id: "p-family",
+        title: "Family Tours",
+        tours: [
+          { name: "Classic Kashmir Family Triangle", tier: "hot", why: "Top domestic family circuit" },
+          { name: "Shimla–Manali Family Delight", tier: "hot", why: "Himachal family staple" },
+          { name: "Kerala Family Getaway", tier: "hot", why: "Munnar–Thekkady–Alleppey classic" },
+          { name: "Goa Family Splash", tier: "hot", why: "Beach + kids activities leader" },
+          { name: "Andaman Island Family Adventure", tier: "hot", why: "Top island family trip" },
+          { name: "Royal Rajasthan Family Trail", tier: "hot", why: "Jaipur–Jaisalmer–Udaipur favourite" },
+          { name: "Golden Triangle Family", tier: "hot", why: "Delhi–Agra–Jaipur evergreen" },
+          { name: "Nainital–Jim Corbett Family Getaway", tier: "solid", why: "Hills + safari family mix" },
+          { name: "Ladakh Family Expedition", tier: "solid", why: "Rising family adventure demand" },
+          { name: "Gangtok & Tsomgo Lake Family", tier: "solid", why: "Easy Northeast family entry" },
+          { name: "Darjeeling–Gangtok Family Hills", tier: "solid", why: "East hills family classic" },
+          { name: "Coorg–Mysore Family Circuit", tier: "solid", why: "South family favourite" },
+          { name: "Ooty–Coonoor Family Hills", tier: "solid", why: "Nilgiris family demand" },
+          { name: "Manali–Solang Family Fun", tier: "solid", why: "Adventure-lite family hit" },
+          { name: "Sikkim with Yumthang Valley Family", tier: "solid", why: "North Sikkim family product" }
+        ]
+      },
+      {
+        id: "p-camping",
+        title: "Camping",
+        tours: [
+          { name: "Jaisalmer Sam Sand Dunes Desert Camp", tier: "hot", why: "India’s #1 desert camp product" },
+          { name: "Rishikesh Beach Camping + Rafting", tier: "hot", why: "Top weekend camping package" },
+          { name: "Chandratal Lake Camping", tier: "hot", why: "Spiti signature camp night" },
+          { name: "Pangong Lake Shore Camping", tier: "hot", why: "Ladakh must-do overnight" },
+          { name: "Spiti Circuit with Chandratal Camp", tier: "hot", why: "Best-selling Spiti package style" },
+          { name: "Nubra Valley Desert Camping", tier: "solid", why: "Core Ladakh stay product" },
+          { name: "Rann of Kutch White Desert Camping", tier: "hot", why: "Seasonal festival camping boom" },
+          { name: "Triund Overnight Camp", tier: "hot", why: "Weekend Himalayan camp classic" },
+          { name: "Kheerganga Hot Spring Camp", tier: "solid", why: "Kasol camping staple" },
+          { name: "Bir Billing Paragliding Camp", tier: "solid", why: "Adventure camping favourite" },
+          { name: "Pawna Lake Camping", tier: "solid", why: "Maharashtra weekend mass market" },
+          { name: "Pushkar Desert Camp Experience", tier: "solid", why: "Rajasthan short camp product" },
+          { name: "Kasol–Manikaran Riverside Camp", tier: "solid", why: "Himachal youth camping" },
+          { name: "Wayanad Forest Camping", tier: "solid", why: "Kerala nature camp demand" }
+        ]
+      },
+      {
+        id: "p-leisure",
+        title: "Leisure / Domestic Circuits",
+        tours: [
+          { name: "Classic Kashmir Triangle", tier: "hot", why: "Kashmir packages +78% search growth" },
+          { name: "Best of Kashmir with Sonamarg", tier: "hot", why: "Extended Kashmir bestseller" },
+          { name: "Kerala Backwaters & Munnar Escape", tier: "hot", why: "Kerala +82% / Munnar +80%" },
+          { name: "Goa Beach Getaway", tier: "hot", why: "Year-round leisure leader" },
+          { name: "Andaman Island Hopping", tier: "hot", why: "Top island leisure circuit" },
+          { name: "Royal Rajasthan Circuit", tier: "hot", why: "Core multi-day heritage tour" },
+          { name: "Golden Triangle Classic", tier: "hot", why: "Most sold India circuit for guests" },
+          { name: "Shimla–Manali Combo", tier: "hot", why: "Shimla +57% / Manali +53%" },
+          { name: "Leh–Nubra–Pangong Circuit", tier: "hot", why: "Standard Ladakh package" },
+          { name: "Spiti Valley Circuit", tier: "hot", why: "Top offbeat Himalayan circuit" },
+          { name: "Manali to Leh Highway Expedition", tier: "solid", why: "Bucket-list road trip" },
+          { name: "North Sikkim (Lachen–Lachung–Yumthang)", tier: "solid", why: "Rising Northeast demand" },
+          { name: "Darjeeling Tea Hills", tier: "solid", why: "Darjeeling +60% search growth" },
+          { name: "Meghalaya Living Root Circuit", tier: "solid", why: "Fast-growing Northeast product" },
+          { name: "Coorg Coffee Hills", tier: "solid", why: "South weekend/leisure hit" },
+          { name: "Ooty–Coonoor Nilgiris", tier: "solid", why: "Ooty +51% search growth" },
+          { name: "Jaipur City Break", tier: "solid", why: "Peak leisure city demand" },
+          { name: "Udaipur Lakes Weekend", tier: "solid", why: "Strong short-break booking" },
+          { name: "Pondicherry French Escape", tier: "solid", why: "Popular coastal mini-cation" },
+          { name: "Best of Kerala full circuit", tier: "solid", why: "Full-state leisure staple" }
+        ]
+      },
+      {
+        id: "p-adventure",
+        title: "Adventure / Road Trip",
+        tours: [
+          { name: "Ladakh Bike Expedition", tier: "hot", why: "Top India bike holiday" },
+          { name: "Manali–Leh Bike Trip", tier: "hot", why: "Classic high-altitude ride" },
+          { name: "Spiti Bike Circuit", tier: "solid", why: "Strong adventure road product" },
+          { name: "Rishikesh White Water Rafting Package", tier: "hot", why: "India’s #1 rafting package" },
+          { name: "Bir Billing Paragliding Tour", tier: "hot", why: "Top paragliding destination" },
+          { name: "Gulmarg Skiing Holiday", tier: "solid", why: "Peak winter adventure demand" },
+          { name: "Auli Skiing Winter Package", tier: "solid", why: "Uttarakhand ski favourite" },
+          { name: "Scuba Diving Andaman Package", tier: "hot", why: "Top India dive product" },
+          { name: "Desert Jeep Safari Jaisalmer", tier: "solid", why: "Core Rajasthan adventure add-on" }
+        ]
+      },
+      {
+        id: "p-wildlife",
+        title: "Wildlife / Safari",
+        tours: [
+          { name: "Jim Corbett Safari Getaway", tier: "hot", why: "North India safari leader" },
+          { name: "Ranthambore Tiger Safari", tier: "hot", why: "Most booked first tiger safari" },
+          { name: "Bandhavgarh Tiger Safari", tier: "hot", why: "Highest tiger-density favourite" },
+          { name: "Kaziranga Rhino Safari", tier: "hot", why: "UNESCO rhino bestseller" },
+          { name: "Kanha Jungle Book Safari", tier: "solid", why: "MP classic tiger reserve" },
+          { name: "Gir Asiatic Lion Safari", tier: "solid", why: "Only wild Asiatic lions" },
+          { name: "Sundarbans Boat Safari", tier: "solid", why: "Unique mangrove tiger trip" },
+          { name: "Periyar / Thekkady Wildlife Tour", tier: "solid", why: "Kerala wildlife staple" },
+          { name: "Ranthambore + Jaipur Combo", tier: "solid", why: "Very common package pairing" }
+        ]
+      },
+      {
+        id: "p-wellness",
+        title: "Wellness / Festival",
+        tours: [
+          { name: "Kerala Ayurveda Wellness Retreat", tier: "hot", why: "Top wellness booking theme" },
+          { name: "Rishikesh Yoga & Ganga Retreat", tier: "hot", why: "Yoga capital short retreats" },
+          { name: "Rann Utsav Package", tier: "hot", why: "Peak seasonal festival tourism" },
+          { name: "Pushkar Camel Fair Tour", tier: "solid", why: "Major annual festival package" },
+          { name: "Holi Mathura–Vrindavan Special", tier: "solid", why: "High seasonal spike product" }
+        ]
+      }
+    ];
+
+    const NICHE = [
+      {
+        id: "n-religious",
+        title: "Religious — niche / optional",
+        tours: [
+          "Do Dham by Helicopter",
+          "Yamunotri–Gangotri Yatra",
+          "Vaishno Devi + Patnitop",
+          "Vaishno Devi + Amarnath Combo",
+          "Vaishno Devi + Shivkhori",
+          "Prayagraj Triveni Sangam Tour",
+          "Omkareshwar Yatra",
+          "Kashi Vishwanath + Sarnath",
+          "Nau Devi Darshan",
+          "Chintpurni–Jwalaji–Kangra Devi Circuit",
+          "Naina Devi–Chamunda Devi Tour",
+          "Mansa Devi–Chandi Devi Haridwar",
+          "Kainchi Dham & Nainital Yatra",
+          "7 Jyotirlinga Darshan",
+          "Somnath–Dwarka–Porbandar Circuit",
+          "Trimbakeshwar–Grishneshwar Nashik Tour",
+          "Bhimashankar Darshan",
+          "Srisailam Mallikarjuna Yatra",
+          "Madurai Meenakshi + Rameswaram",
+          "Tirupati + Pondicherry",
+          "Shirdi–Shani Shingnapur–Trimbakeshwar",
+          "Ashtavinayak Yatra",
+          "Puri Rath Yatra Special",
+          "Konark–Puri–Bhubaneswar Temple Circuit",
+          "Bada Char Dham full India",
+          "South India Temple Trail",
+          "Karnataka Temple Circuit (Udupi–Murudeshwar–Kukke–Dharmasthala–Sringeri)",
+          "Hampi–Badami–Pattadakal Heritage Temple Tour",
+          "Sabarimala Ayyappa Yatra",
+          "Guruvayur Temple Tour",
+          "Kamakhya Temple Guwahati Darshan",
+          "Baidyanath Deoghar Yatra",
+          "Gangotri Gaumukh Spiritual Trek Combo",
+          "Hemkund Sahib Yatra",
+          "Anandpur Sahib–Fatehgarh Sahib Circuit",
+          "Panj Takht Yatra",
+          "Nanded Sahib Gurudwara Tour",
+          "Buddhist Circuit — Bodh Gaya–Sarnath–Kushinagar",
+          "Sarnath–Varanasi Buddhist Heritage",
+          "Dharamshala–McLeod Ganj Circuit",
+          "Sikkim Monastery Circuit",
+          "Ladakh Monastery Circuit",
+          "Palitana Shatrunjaya Jain Yatra",
+          "Dilwara Temples Mount Abu",
+          "Shikharji Jain Pilgrimage",
+          "Ranakpur–Dilwara Jain Circuit",
+          "Haji Ali Mumbai Sufi Trail",
+          "Velankanni Basilica Pilgrimage",
+          "Goa Churches Heritage",
+          "Footsteps of St. Thomas"
+        ]
+      },
+      {
+        id: "n-honeymoon",
+        title: "Honeymoon — niche / optional",
+        tours: [
+          "Spiti Romantic Escape",
+          "Rishikesh Wellness Honeymoon",
+          "Lonavala–Mahabaleshwar Couple Getaway",
+          "Jim Corbett + Nainital Honeymoon",
+          "Meghalaya Couple Escape",
+          "Mini-Moon Weekend Goa",
+          "Mini-Moon Weekend Udaipur",
+          "Mini-Moon Weekend Lonavala",
+          "Baby-Moon Soft Hills Package",
+          "Goa Luxury Villa Honeymoon",
+          "Kerala Beach & Hills Honeymoon",
+          "Udaipur–Jodhpur Couple Circuit"
+        ]
+      },
+      {
+        id: "n-trekking",
+        title: "Trekking — niche / optional",
+        tours: [
+          "Ali Bedni Bugyal Trek",
+          "Phulara Ridge Trek",
+          "Benog Tibba Trek",
+          "Surya Top Trek",
+          "Chirbatiya Weekend Trek",
+          "Channarayana Durga Trek",
+          "Minchukallu Betta Trek",
+          "Bijli Mahadev Trek",
+          "Kareri Lake Trek",
+          "Prashar Lake Trek",
+          "Jalori Pass Trek",
+          "Buran Ghati Trek",
+          "Pin Bhaba Pass Trek",
+          "Pangarchulla Peak Trek",
+          "Chandrakhani Pass Trek",
+          "Miyar Valley Trek",
+          "Gurez Valley Trek",
+          "Nafran Valley Trek",
+          "Tulian Lake Trek",
+          "Bodpathri Meadows Trek",
+          "Pir Panjal Lakes Trek",
+          "Warwan Valley Trek",
+          "Brammah Valley Trek",
+          "Ranthan Kharak Trek",
+          "Green Lake Trek",
+          "Dzongri Trek",
+          "Singalila Ridge Trek",
+          "Dawki–Shnongpdeng Nature Trek",
+          "Kaas Plateau Monsoon Trek",
+          "Western Ghats Waterfall Treks",
+          "Bali Pass Trek",
+          "Pin Parvati Pass Trek",
+          "Stok Kangri Expedition",
+          "Kedartal Trek",
+          "Auden’s Col Expedition"
+        ]
+      },
+      {
+        id: "n-family",
+        title: "Family — niche / optional",
+        tours: [
+          "Family Grand Circuit Kashmir with Sonamarg",
+          "Mussoorie–Rishikesh Family Escape",
+          "Kerala Backwaters & Beaches Family",
+          "Enchanting Kerala with Houseboat",
+          "South Goa Quiet Family Beach",
+          "Andaman Island Hopper detailed",
+          "Jaipur–Jodhpur–Udaipur Family Circuit",
+          "Hyderabad–Hampi Family Heritage",
+          "Statue of Unity + Gujarat Family",
+          "Rann of Kutch Family Festival Tour",
+          "Northeast Family Circuit Shillong–Dawki",
+          "Arunachal Tawang Family Hills",
+          "Pondicherry Family Beach Break",
+          "Lonavala–Alibaug Family Weekend",
+          "Mahabaleshwar Family Hills",
+          "Jim Corbett Safari Family Weekend",
+          "Multi-generational Kerala Slow Tour",
+          "Multi-generational Rajasthan Palace Tour",
+          "Ooty–Kodaikanal Family"
+        ]
+      },
+      {
+        id: "n-camping",
+        title: "Camping — niche / optional",
+        tours: [
+          "Spiti Valley Stargazing Camp",
+          "Tso Moriri Camping",
+          "Jaisalmer Khuri Dunes Camping",
+          "Shivpuri / Kaudiyala Ganga Camp",
+          "Manali Solang Meadow Camp",
+          "Tirthan Valley Riverside Camp",
+          "Jibhi / Shoja Forest Camp",
+          "Chopta Meadow Camping",
+          "Deoriatal Lakeside Camp",
+          "Dayara Bugyal Camp Trek Combo",
+          "Tarsar / Great Lakes Alpine Camping",
+          "Ladakh Luxury Glamping",
+          "Chamba Camp Nubra",
+          "Sundarbans Jungle Camp",
+          "Coorg Estate Camping",
+          "Bhandardara Lakeside Camp",
+          "Igatpuri Weekend Camp",
+          "Mahabaleshwar Countryside Camp",
+          "Kutch Banni Village Camp",
+          "Spiti Homestay + High Camp Combo",
+          "Winter Snow Camping Kedarkantha Base",
+          "Glamping in Jaisalmer Swiss Tents",
+          "Alleppey Backwater Eco Camp",
+          "Meghalaya Cave & Camp Experience",
+          "Tawang High Altitude Camp",
+          "Multi-Day Rafting & Camping Expedition"
+        ]
+      },
+      {
+        id: "n-leisure",
+        title: "Leisure — niche / optional",
+        tours: [
+          "Budget Express Kashmir",
+          "North Goa Beaches & Nightlife",
+          "Manali Getaway",
+          "Shimla Delight",
+          "Leh Local Soft Tour",
+          "Srinagar to Leh Highway Trip",
+          "Gangtok Short Escape",
+          "Darjeeling–Gangtok Combo",
+          "Assam Tea + Kaziranga Soft Tour",
+          "Tamil Nadu Temple + Hills",
+          "Gujarat Heritage Ahmedabad–Rann–Dwarka",
+          "Statue of Unity Package",
+          "Odisha Temple & Beach",
+          "Kolkata + Sundarbans Soft",
+          "Himachal Offbeat Jibhi–Tirthan–Shoja",
+          "Uttarakhand Hills Nainital–Mukteshwar–Bhimtal",
+          "Weekend Lonavala–Khandala",
+          "Mahabaleshwar–Panchgani",
+          "Hampi Heritage Weekend",
+          "Mysore–Coorg–Ooty South Circuit"
+        ]
+      },
+      {
+        id: "n-adventure",
+        title: "Adventure — niche / optional",
+        tours: [
+          "Bungee Jumping Rishikesh Day Tour",
+          "Ziplining Dawki Adventure Day",
+          "Camel Safari Thar",
+          "Snowmobile / ATV Solang Package",
+          "Mountain Cycling Rishikesh",
+          "Mountain Cycling Spiti",
+          "River Kayaking Kerala",
+          "River Kayaking Goa",
+          "Surfing Gokarna Package",
+          "Surfing Mulki Package",
+          "Rock Climbing Badami",
+          "Rock Climbing Himachal",
+          "Winter Adventure Manali",
+          "Northeast Adventure root bridges + caves",
+          "Scuba + Snorkel Havelock add-on package"
+        ]
+      },
+      {
+        id: "n-wildlife",
+        title: "Wildlife — niche / optional",
+        tours: [
+          "Pench Tiger Reserve Tour",
+          "Tadoba Andhari Safari",
+          "Nagarhole–Bandipur Safari",
+          "Panna National Park Safari",
+          "Satpura Walking Safari",
+          "Jawai Leopard Camp Tour",
+          "Sariska Tiger Safari",
+          "Dudhwa / Katarniaghat Package",
+          "Bandhavgarh + Kanha Dual Park",
+          "Kaziranga + Meghalaya Combo",
+          "Kerala Wildlife + Backwaters Combo"
+        ]
+      },
+      {
+        id: "n-wellness",
+        title: "Wellness / Festival — niche / optional",
+        tours: [
+          "Gokarna Wellness Escape",
+          "Alleppey Snake Boat Race Festival Tour",
+          "Puri Rath Yatra Festival Package",
+          "Hornbill Festival Nagaland",
+          "Onam Kerala Special",
+          "Diwali Golden Triangle Special",
+          "Ladakh Festival Circuit",
+          "Tea Trails Darjeeling Cultural",
+          "Tea Trails Munnar Cultural",
+          "Rajasthan Folk & Palace Cultural Tour",
+          "Varanasi Classical Music & Ghat Experience"
+        ]
+      }
+    ];
+
+    const popularRoot = document.getElementById("popular");
+    const nicheRoot = document.getElementById("niche");
+    const toc = document.getElementById("toc");
+    const stats = document.getElementById("stats");
+    const q = document.getElementById("q");
+    const tabs = document.getElementById("tabs");
+    let view = "all";
+
+    function badge(tier) {
+      if (tier === "hot") return '<span class="badge hot">High demand</span>';
+      if (tier === "solid") return '<span class="badge solid">Solid seller</span>';
+      return '<span class="badge niche">Niche</span>';
+    }
+
+    function renderPopular() {
+      popularRoot.innerHTML = "";
+      POPULAR.forEach((cat) => {
+        const a = document.createElement("a");
+        a.href = "#" + cat.id;
+        a.textContent = cat.title;
+        a.dataset.group = "popular";
+        toc.appendChild(a);
+
+        const section = document.createElement("section");
+        section.id = cat.id;
+        section.dataset.group = "popular";
+        const hot = cat.tours.filter((t) => t.tier === "hot").length;
+        section.innerHTML = `
+          <div class="section-head">
+            <h2>${cat.title}</h2>
+            <span class="count" data-count>${cat.tours.length} tours · ${hot} high demand</span>
+          </div>`;
+        const ol = document.createElement("ol");
+        ol.className = "popular";
+        cat.tours.forEach((t) => {
+          const li = document.createElement("li");
+          li.dataset.name = (t.name + " " + (t.why || "")).toLowerCase();
+          li.dataset.group = "popular";
+          li.innerHTML = `${badge(t.tier)} ${t.name}<span class="meta">${t.why || ""}</span>`;
+          ol.appendChild(li);
+        });
+        section.appendChild(ol);
+        popularRoot.appendChild(section);
+      });
+    }
+
+    function renderNiche() {
+      nicheRoot.innerHTML = "";
+      NICHE.forEach((cat) => {
+        const a = document.createElement("a");
+        a.href = "#" + cat.id;
+        a.textContent = cat.title.replace(" — niche / optional", "");
+        a.dataset.group = "niche";
+        toc.appendChild(a);
+
+        const section = document.createElement("section");
+        section.id = cat.id;
+        section.dataset.group = "niche";
+        section.innerHTML = `
+          <div class="section-head">
+            <h2>${cat.title}</h2>
+            <span class="count" data-count>${cat.tours.length} tours</span>
+          </div>`;
+        const ol = document.createElement("ol");
+        ol.className = "niche";
+        cat.tours.forEach((name) => {
+          const li = document.createElement("li");
+          li.dataset.name = name.toLowerCase();
+          li.dataset.group = "niche";
+          li.innerHTML = `${badge("niche")} ${name}`;
+          ol.appendChild(li);
+        });
+        section.appendChild(ol);
+        nicheRoot.appendChild(section);
+      });
+    }
+
+    function totals() {
+      const popularCount = POPULAR.reduce((n, c) => n + c.tours.length, 0);
+      const hotCount = POPULAR.reduce((n, c) => n + c.tours.filter((t) => t.tier === "hot").length, 0);
+      const nicheCount = NICHE.reduce((n, c) => n + c.tours.length, 0);
+      return { popularCount, hotCount, nicheCount, all: popularCount + nicheCount };
+    }
+
+    function applyViewAndFilter() {
+      const term = q.value.trim().toLowerCase();
+      const t = totals();
+      let shown = 0;
+
+      document.querySelectorAll(".block").forEach((block) => {
+        const group = block.id.startsWith("popular") ? "popular" : "niche";
+        const showBlock = view === "all" || view === group;
+        block.classList.toggle("hidden", !showBlock);
+      });
+
+      document.querySelectorAll("#toc a").forEach((a) => {
+        const show = view === "all" || a.dataset.group === view;
+        a.style.display = show ? "" : "none";
+      });
+
+      document.querySelectorAll("section").forEach((section) => {
+        const group = section.dataset.group;
+        const groupAllowed = view === "all" || view === group;
+        let visibleInSection = 0;
+        section.querySelectorAll("li").forEach((li) => {
+          const match = (!term || li.dataset.name.includes(term)) && groupAllowed;
+          li.classList.toggle("hidden", !match);
+          if (match) visibleInSection++;
+        });
+        section.classList.toggle("hidden", !groupAllowed || visibleInSection === 0);
+        const countEl = section.querySelector("[data-count]");
+        if (countEl && groupAllowed) {
+          if (group === "popular") {
+            const hotVisible = [...section.querySelectorAll("li")].filter(
+              (li) => !li.classList.contains("hidden") && li.innerHTML.includes("High demand")
+            ).length;
+            countEl.textContent = visibleInSection + " tours · " + hotVisible + " high demand";
+          } else {
+            countEl.textContent = visibleInSection + " tours";
+          }
+        }
+        if (groupAllowed) shown += visibleInSection;
+      });
+
+      if (term) {
+        stats.textContent = shown + " matching";
+      } else if (view === "popular") {
+        stats.textContent = t.popularCount + " popular · " + t.hotCount + " high demand";
+      } else if (view === "niche") {
+        stats.textContent = t.nicheCount + " niche / optional";
+      } else {
+        stats.textContent =
+          t.popularCount + " popular + " + t.nicheCount + " niche · " + t.hotCount + " high demand";
+      }
+    }
+
+    toc.innerHTML = "";
+    renderPopular();
+    renderNiche();
+    applyViewAndFilter();
+
+    q.addEventListener("input", applyViewAndFilter);
+    tabs.addEventListener("click", (e) => {
+      const btn = e.target.closest(".tab");
+      if (!btn) return;
+      view = btn.dataset.view;
+      tabs.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t === btn));
+      applyViewAndFilter();
+    });
+  </script>
+</body>
+</html>

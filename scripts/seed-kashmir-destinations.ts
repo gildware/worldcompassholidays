@@ -1,10 +1,24 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { loadEnvConfig } from "@next/env";
 import { PrismaClient } from "@prisma/client";
+import { phase1Destinations } from "../src/lib/demo/india-phase1-destinations";
+import { phase2Destinations } from "../src/lib/demo/india-phase2-destinations";
+import { phase3Destinations } from "../src/lib/demo/india-phase3-destinations";
 import { demoDestinations } from "../src/lib/demo/north-india-catalog";
 
 loadEnvConfig(process.cwd());
 
 const prisma = new PrismaClient();
+
+const extraDestinations = [...phase1Destinations, ...phase2Destinations, ...phase3Destinations];
+const allDestinations = [
+  ...demoDestinations,
+  ...extraDestinations.filter(
+    (destination) => !demoDestinations.some((row) => row.slug === destination.slug),
+  ),
+];
+
 const popularSlugs = new Set([
   "gulmarg",
   "pahalgam",
@@ -12,11 +26,51 @@ const popularSlugs = new Set([
   "gurez",
   "doodhpathri",
   "srinagar",
+  "kedarnath",
+  "haridwar",
+  "manali",
+  "chopta",
+  "leh",
+  "kasol",
+  "katra",
+  "spiti",
+  "varanasi",
+  "tirupati",
+  "alleppey",
+  "shillong",
+  "jim-corbett",
 ]);
 const parentOf: Record<string, string> = {
   gulmarg: "kashmir",
   pahalgam: "kashmir",
   sonamarg: "kashmir",
+  haridwar: "uttarakhand",
+  rishikesh: "uttarakhand",
+  dehradun: "uttarakhand",
+  guptkashi: "uttarakhand",
+  kedarnath: "uttarakhand",
+  badrinath: "uttarakhand",
+  yamunotri: "uttarakhand",
+  gangotri: "uttarakhand",
+  chopta: "uttarakhand",
+  sankri: "uttarakhand",
+  joshimath: "uttarakhand",
+  "jim-corbett": "uttarakhand",
+  manali: "himachal",
+  kasol: "himachal",
+  mcleodganj: "himachal",
+  kaza: "spiti",
+  spiti: "himachal",
+  katra: "jammu",
+  leh: "ladakh",
+  nubra: "ladakh",
+  pangong: "ladakh",
+  kargil: "ladakh",
+  alleppey: "kerala",
+  cochin: "kerala",
+  munnar: "kerala",
+  shillong: "meghalaya",
+  cherrapunji: "meghalaya",
 };
 
 function assertLocalDatabaseTarget() {
@@ -45,13 +99,29 @@ function assertLocalDatabaseTarget() {
 async function main() {
   assertLocalDatabaseTarget();
 
-  await prisma.$transaction(async (tx) => {
-    for (const destination of demoDestinations) {
+  await prisma.$transaction(
+    async (tx) => {
+    for (const destination of allDestinations) {
       const existing = await tx.destination.findUnique({
         where: { slug: destination.slug },
         select: { imageUrl: true, imageKey: true, imageDriver: true },
       });
-      const fallbackImage = "/uploads/destinations/seed-kashmir.svg";
+      const localJpg = `destinations/${destination.slug}.jpg`;
+      const hasLocalJpg = existsSync(path.join(process.cwd(), "public", "uploads", localJpg));
+      const fallbackImage = hasLocalJpg
+        ? `/uploads/${localJpg}`
+        : "/uploads/destinations/seed-kashmir.svg";
+      const fallbackKey = hasLocalJpg ? localJpg : "destinations/seed-kashmir.svg";
+      const hideParents = new Set([
+        "kashmir",
+        "uttarakhand",
+        "himachal",
+        "ladakh",
+        "jammu",
+        "spiti",
+        "kerala",
+        "meghalaya",
+      ]);
       const data = {
         name: destination.name,
         region: destination.region,
@@ -60,12 +130,16 @@ async function main() {
         mapLat: destination.mapLat,
         mapLng: destination.mapLng,
         mapZoom: destination.mapZoom,
-        imageUrl: existing?.imageUrl || fallbackImage,
-        imageKey: existing?.imageKey || "destinations/seed-kashmir.svg",
+        imageUrl: existing?.imageUrl && !existing.imageUrl.includes("seed-kashmir")
+          ? existing.imageUrl
+          : fallbackImage,
+        imageKey: existing?.imageKey && !existing.imageKey.includes("seed-kashmir")
+          ? existing.imageKey
+          : fallbackKey,
         imageDriver: existing?.imageDriver || "local",
-        // Keep the parent region card hidden; city destinations stay published.
-        published: destination.slug !== "kashmir",
-        popular: destination.slug !== "kashmir" && popularSlugs.has(destination.slug),
+        // Keep region parent cards hidden; city destinations stay published.
+        published: !hideParents.has(destination.slug),
+        popular: !hideParents.has(destination.slug) && popularSlugs.has(destination.slug),
       };
 
       await tx.destination.upsert({
@@ -89,20 +163,22 @@ async function main() {
     }
 
     await tx.destination.updateMany({
-      where: { slug: { notIn: demoDestinations.map((destination) => destination.slug) } },
+      where: { slug: { notIn: allDestinations.map((destination) => destination.slug) } },
       data: { published: false },
     });
-  });
+    },
+    { timeout: 120_000, maxWait: 20_000 },
+  );
 
   const saved = await prisma.destination.findMany({
-    where: { slug: { in: demoDestinations.map((destination) => destination.slug) } },
+    where: { slug: { in: allDestinations.map((destination) => destination.slug) } },
     select: { slug: true },
   });
-  if (saved.length !== demoDestinations.length) {
-    throw new Error(`Expected ${demoDestinations.length} destinations; found ${saved.length}.`);
+  if (saved.length !== allDestinations.length) {
+    throw new Error(`Expected ${allDestinations.length} destinations; found ${saved.length}.`);
   }
   console.log(
-    `Verified ${saved.length} Kashmir destinations and unpublished out-of-scope destinations in the configured database.`,
+    `Verified ${saved.length} destinations (Kashmir + Phase-1) and unpublished out-of-scope destinations.`,
   );
 }
 

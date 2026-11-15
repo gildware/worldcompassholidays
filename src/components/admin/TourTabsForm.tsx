@@ -33,6 +33,7 @@ import { defaultStateOptions } from "@/lib/data/tour-options";
 import { initialFormState } from "@/lib/forms";
 import {
   formatTourDuration,
+  ITINERARY_PERIODS,
   type DurationUnit,
   type GalleryItem,
   type ItineraryItem,
@@ -41,6 +42,7 @@ import {
 } from "@/lib/tours/json";
 import type { UploadedImage } from "@/lib/storage/types";
 
+/** Locked 7-step order — see `src/lib/tours/format.ts` (Classic Kashmir Triangle). */
 const STEPS = [
   {
     id: "general",
@@ -65,12 +67,12 @@ const STEPS = [
   {
     id: "details",
     title: "Tour details",
-    description: "FAQs, includes, styles, and facilities",
+    description: "FAQs, includes, before you go, styles, and facilities",
   },
   {
     id: "images",
     title: "Images",
-    description: "Banner, cover, and gallery",
+    description: "Banner, cover, gallery, and day photos",
   },
   {
     id: "seo",
@@ -235,6 +237,7 @@ function buildDraft(tour: TourFormValues | undefined, catalog: TourCatalog): Dra
       extraFaqs: [],
       includes: [],
       excludes: [],
+      beforeYouGo: [],
       itinerary: [],
       surroundings: emptySurroundings(),
       address: "",
@@ -287,6 +290,7 @@ function buildDraft(tour: TourFormValues | undefined, catalog: TourCatalog): Dra
     extraFaqs: tour.extraFaqs,
     includes: resolveCatalogIds(tour.includes, catalog.includes),
     excludes: resolveCatalogIds(tour.excludes, catalog.excludes),
+    beforeYouGo: resolveCatalogIds(tour.beforeYouGo, catalog.beforeYouGo),
     itinerary: tour.itinerary,
     surroundings: tour.surroundings,
     address: tour.address,
@@ -786,6 +790,7 @@ export function TourTabsForm({
     formData.set("faqsJson", JSON.stringify(packFaqs(draft.faqs, draft.extraFaqs)));
     formData.set("includesJson", JSON.stringify(draft.includes));
     formData.set("excludesJson", JSON.stringify(draft.excludes));
+    formData.set("beforeYouGoJson", JSON.stringify(draft.beforeYouGo));
     formData.set("itineraryJson", JSON.stringify(draft.itinerary));
     formData.set("surroundingsJson", JSON.stringify(draft.surroundings));
     formData.set("galleryJson", JSON.stringify(draft.gallery));
@@ -896,6 +901,9 @@ export function TourTabsForm({
           dayNumber: 1,
           title: "",
           description: "",
+          morning: "",
+          afternoon: "",
+          evening: "",
           clientId: crypto.randomUUID(),
         },
         ...draft.itinerary,
@@ -1287,19 +1295,41 @@ export function TourTabsForm({
                               }
                             />
                           </Field>
-                          <Field label="Description">
-                            <textarea
-                              value={item.description}
-                              rows={4}
-                              placeholder="What happens on this part of the tour"
-                              className="!min-h-0 resize-y"
-                              onChange={(e) =>
-                                updateItinerary(index, {
-                                  description: e.target.value,
-                                })
-                              }
-                            />
-                          </Field>
+                          {ITINERARY_PERIODS.map(({ key, label }) => (
+                            <Field key={key} label={label}>
+                              <textarea
+                                value={item[key] ?? ""}
+                                rows={2}
+                                placeholder={`What happens in the ${label.toLowerCase()}`}
+                                className="!min-h-0 resize-y"
+                                onChange={(e) =>
+                                  updateItinerary(index, {
+                                    [key]: e.target.value,
+                                  })
+                                }
+                              />
+                            </Field>
+                          ))}
+                          {!item.morning?.trim() &&
+                          !item.afternoon?.trim() &&
+                          !item.evening?.trim() &&
+                          item.description.trim() ? (
+                            <Field
+                              label="Description"
+                              hint="Older day note — move this into Morning, Afternoon, or Evening."
+                            >
+                              <textarea
+                                value={item.description}
+                                rows={3}
+                                className="!min-h-0 resize-y"
+                                onChange={(e) =>
+                                  updateItinerary(index, {
+                                    description: e.target.value,
+                                  })
+                                }
+                              />
+                            </Field>
+                          ) : null}
                         </div>
                         </div>
                       </div>
@@ -1616,6 +1646,42 @@ export function TourTabsForm({
                   />
                 </Field>
               </div>
+
+              <Field label="Before you go">
+                <CatalogMultiSelect
+                  items={catalog.beforeYouGo}
+                  values={draft.beforeYouGo}
+                  placeholder="Choose before-you-go tips"
+                  searchPlaceholder="Search before-you-go tips"
+                  emptyLabel="No before-you-go tips yet."
+                  onChange={(values) => patch("beforeYouGo", values)}
+                />
+                {draft.beforeYouGo.length > 0 ? (
+                  <ul className="mt-3 grid gap-2">
+                    {draft.beforeYouGo.flatMap((id) => {
+                      const item = catalog.beforeYouGo.find((row) => row.id === id);
+                      if (!item) return [];
+                      return [
+                        <li
+                          key={item.id}
+                          className="rounded-lg border border-line bg-surface/40 p-2.5"
+                        >
+                          <p className="inline-flex items-start gap-2 text-sm font-medium text-navy">
+                            {item.iconUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={item.iconUrl} alt="" className="mt-0.5 size-4 rounded object-cover" />
+                            ) : null}
+                            <span>{item.title}</span>
+                          </p>
+                          {item.content ? (
+                            <p className="mt-1 text-xs leading-5 text-muted">{item.content}</p>
+                          ) : null}
+                        </li>,
+                      ];
+                    })}
+                  </ul>
+                ) : null}
+              </Field>
 
               <Field label="Travel styles">
                 <CatalogMultiSelect

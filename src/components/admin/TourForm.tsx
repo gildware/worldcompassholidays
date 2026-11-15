@@ -38,6 +38,7 @@ export type TourFormValues = {
   extraFaqs: FaqItem[];
   includes: string[];
   excludes: string[];
+  beforeYouGo: string[];
   itinerary: ItineraryItem[];
   surroundings: Surroundings;
   address: string;

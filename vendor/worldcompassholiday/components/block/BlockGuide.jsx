@@ -20,7 +20,7 @@ const defaultItems = [
   {
     id: "reply",
     title: "A person replies",
-    text: `Call or WhatsApp ${theme.contact.phone}. We answer from India.`,
+    text: `Call or WhatsApp ${theme.contact.phone}. We answer travellers from all over the world.`,
   },
 ];
 

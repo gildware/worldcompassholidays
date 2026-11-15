@@ -12,6 +12,9 @@ type DayItem = {
   dayNumber: number;
   title: string;
   description: string;
+  morning?: string;
+  afternoon?: string;
+  evening?: string;
   imageUrl: string;
 };
 
@@ -23,6 +26,7 @@ type FaqItem = {
 type LabeledItem = {
   title: string;
   iconUrl: string;
+  content?: string;
 };
 
 export type TourViewData = {
@@ -49,6 +53,7 @@ export type TourViewData = {
   days: DayItem[];
   includes: LabeledItem[];
   excludes: LabeledItem[];
+  beforeYouGo: LabeledItem[];
   styles: LabeledItem[];
   facilities: LabeledItem[];
   faqs: FaqItem[];
@@ -306,6 +311,10 @@ export function TourView({
           </Section>
         </div>
 
+        <Section title={`Before you go · ${tour.beforeYouGo.length}`}>
+          <DetailList items={tour.beforeYouGo} empty="No before-you-go tips." />
+        </Section>
+
         <div className="grid gap-3 sm:grid-cols-2">
           <Section title={`Travel styles · ${tour.styles.length}`}>
             <IconList items={tour.styles} empty="No travel styles." />
@@ -542,7 +551,25 @@ function Itinerary({ days }: { days: DayItem[] }) {
               </span>
               <p className="text-sm font-semibold text-navy">{itineraryTitle(day.title)}</p>
             </div>
-            {day.description ? (
+            {[
+              { label: "Morning", text: day.morning?.trim() ?? "" },
+              { label: "Afternoon", text: day.afternoon?.trim() ?? "" },
+              { label: "Evening", text: day.evening?.trim() ?? "" },
+            ]
+              .filter((period) => period.text)
+              .map((period) => (
+                <p
+                  key={period.label}
+                  className="mt-1 line-clamp-2 text-xs leading-5 whitespace-pre-wrap text-muted"
+                >
+                  <span className="font-medium text-navy">{period.label}: </span>
+                  {period.text}
+                </p>
+              ))}
+            {!day.morning?.trim() &&
+            !day.afternoon?.trim() &&
+            !day.evening?.trim() &&
+            day.description ? (
               <p className="mt-1 line-clamp-3 text-xs leading-5 whitespace-pre-wrap text-muted">
                 {day.description}
               </p>
@@ -566,6 +593,31 @@ function IconList({ items, empty }: { items: LabeledItem[]; empty: string }) {
         >
           <ItemIcon url={item.iconUrl} title={item.title} compact />
           {item.title}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function DetailList({ items, empty }: { items: LabeledItem[]; empty: string }) {
+  if (items.length === 0) return <Empty>{empty}</Empty>;
+
+  return (
+    <ul className="grid gap-2 sm:grid-cols-2">
+      {items.map((item, index) => (
+        <li
+          key={`${item.title}-${index}`}
+          className="rounded-lg border border-line bg-surface/40 p-2.5"
+        >
+          <p className="inline-flex items-start gap-2 text-sm font-medium text-navy">
+            <ItemIcon url={item.iconUrl} title={item.title} compact />
+            <span>{item.title}</span>
+          </p>
+          {item.content ? (
+            <p className="mt-1 line-clamp-4 text-xs leading-5 whitespace-pre-wrap text-muted">
+              {item.content}
+            </p>
+          ) : null}
         </li>
       ))}
     </ul>

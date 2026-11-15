@@ -348,7 +348,24 @@ export function TourSingle({ tour, mapApiKey }: { tour: TourSingleData; mapApiKe
                       <div className={`tour-detail__day-body${day.imageUrl ? " has-photo" : ""}`}>
                         <div>
                           <h3>{day.title}</h3>
-                          {day.description ? <p>{plainText(day.description)}</p> : null}
+                          {[
+                            { label: "Morning", text: day.morning?.trim() ?? "" },
+                            { label: "Afternoon", text: day.afternoon?.trim() ?? "" },
+                            { label: "Evening", text: day.evening?.trim() ?? "" },
+                          ]
+                            .filter((period) => period.text)
+                            .map((period) => (
+                              <p key={period.label}>
+                                <strong>{period.label}: </strong>
+                                {plainText(period.text)}
+                              </p>
+                            ))}
+                          {!day.morning?.trim() &&
+                          !day.afternoon?.trim() &&
+                          !day.evening?.trim() &&
+                          day.description ? (
+                            <p>{plainText(day.description)}</p>
+                          ) : null}
                         </div>
                         {day.imageUrl ? (
                           <Image

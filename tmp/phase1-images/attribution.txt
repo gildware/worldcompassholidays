@@ -1,0 +1,48 @@
+# Phase-1 tour/destination images 2026-11-13T05:31:16.729Z
+# Source: Wikimedia Commons (free licenses). See each Commons file page for photographer credit.
+
+destinations/haridwar.jpg  ←  File:Aarti at Har ki Pauri on Explore.jpg
+destinations/rishikesh.jpg  ←  File:Laxman Jhula, Rishikesh, Uttarkhand, India.jpg
+destinations/dehradun.jpg  ←  File:The himalayan city of Dehradun in north India.jpg
+destinations/kedarnath.jpg  ←  File:Kedarnath Temple in Uttarakhand, India, by Yogabrata Chakraborty.jpg
+destinations/badrinath.jpg  ←  File:Badrinath Temple, Uttarakhand (Photo- Vishwanath Negi).jpg
+destinations/yamunotri.jpg  ←  File:Yamunotri temple and ashram.jpg
+destinations/gangotri.jpg  ←  File:Gangotri temple in Uttarakhand..jpg
+destinations/guptkashi.jpg  ←  File:The relief reached from Dehradun to Guptkashi, Uttarakhand.jpg
+destinations/chopta.jpg  ←  File:Mighty Himalayas from tungnath.jpg
+destinations/manali.jpg  ←  File:Simsa Manali East Himachal Oct22 A7C 03328.jpg
+destinations/uttarakhand.jpg  ←  File:Himalaya Panorama Alok Prasad.jpg
+destinations/himachal.jpg  ←  File:Kee monastery Spiti Valley (edited).jpg
+tours/kedarnath-yatra-package-cover.jpg  ←  File:Way to Kedarnath Peak.jpg
+tours/kedarnath-yatra-package-g1.jpg  ←  File:A beautiful waterfall on the Kedarnath trek.jpg
+tours/kedarnath-yatra-package-g2.jpg  ←  File:Mandakini River uttarakhand.jpg
+tours/do-dham-yatra-kedarnath-badrinath-cover.jpg  ←  File:Mountain View From Badrinath.jpg
+tours/do-dham-yatra-kedarnath-badrinath-g1.jpg  ←  File:Kedarnath shrine.jpg
+tours/do-dham-yatra-kedarnath-badrinath-g2.jpg  ←  File:Mana Village badrinath.jpg
+tours/char-dham-yatra-from-haridwar-cover.jpg  ←  File:Gangotri Ganga Temple.jpg
+tours/char-dham-yatra-from-haridwar-g1.jpg  ←  File:Yamunotri Temple.jpg
+tours/char-dham-yatra-from-haridwar-g2.jpg  ←  File:Bhagirathi River at Gangotri WTK20150915-IMG 2713.jpg
+tours/char-dham-yatra-from-haridwar-g3.jpg  ←  File:Evening aarti at Har-ki-pauri, Haridwar.JPG
+tours/char-dham-yatra-by-helicopter-cover.jpg  ←  File:Nepal Tribeni Trek.jpg
+tours/char-dham-yatra-by-helicopter-g1.jpg  ←  File:Kedarnath temple, Uttrakhand 02.jpg
+tours/char-dham-yatra-by-helicopter-g2.jpg  ←  File:Part of Kipling trail in Dehradun Uttarakhand India.jpg
+tours/kashmir-great-lakes-trek-cover.jpg  ←  File:Shiva shrine, Gangabal Lake.jpg
+tours/kashmir-great-lakes-trek-g1.jpg  ←  File:Vishansar Lake, Sonmarg, Kashmir valley, India.jpg
+tours/kashmir-great-lakes-trek-g2.jpg  ←  File:Gadsar lake.jpg
+tours/kashmir-great-lakes-trek-g3.jpg  ←  File:Ancient Temple, Naranag, Jammu and Kashmir, India.jpg
+tours/tarsar-marsar-trek-cover.jpg  ←  File:Tarsar lake Aru.jpg
+tours/tarsar-marsar-trek-g1.jpg  ←  File:Man with horse, Aru Valley, Pahalgam, India.jpg
+tours/tarsar-marsar-trek-g2.jpg  ←  File:Tarsar Marsar Trek.jpg
+tours/hampta-pass-chandratal-trek-cover.jpg  ←  File:Mesmerising beauty of Hampta pass on Chandrataal Trek Himachal India.jpg
+tours/hampta-pass-chandratal-trek-g1.jpg  ←  File:Chandratal lake of Spiti valley.jpg
+tours/chopta-chandrashila-deoriatal-trek-cover.jpg  ←  File:Chandrashila temple.jpg
+tours/chopta-chandrashila-deoriatal-trek-g1.jpg  ←  File:Deoria Tal Chandrashila Chaukamba reflection.jpg
+tours/chopta-chandrashila-deoriatal-trek-g2.jpg  ←  File:Higest Shiv Temple In The World Tungnath Temple In Chopta Uttrakhand (242691741).jpeg
+tours/valley-of-flowers-hemkund-trek-cover.jpg  ←  File:Valley of flowers national park, Uttarakhand, India 03 (edit).jpg
+tours/valley-of-flowers-hemkund-trek-g1.jpg  ←  File:Hemkund Sahib Gurudwara with reflection on lake.jpg
+tours/valley-of-flowers-hemkund-trek-g2.jpg  ←  File:Govindghat (29336213897).jpg
+
+# Corrections
+tours/char-dham-yatra-by-helicopter-cover.jpg  ←  File:Kedarnath temple in uttarakhand.jpg
+destinations/guptkashi.jpg  ←  File:Mandakini near Guptakashi.JPG
+tours/hampta-pass-chandratal-trek-g2.jpg  ←  File:Thenu Lahaul Himachal Jul16 D32 13040.jpg

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sample Tour Format Preview — Classic Kashmir Triangle</title>
+  <style>
+    :root {
+      --bg:#f6f1e8; --ink:#1a1a1a; --muted:#5c564c; --card:#fffdf8;
+      --line:#e4d9c5; --accent:#0f5c4c; --soft:#e6f2ef; --warn:#9a3412;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      font-family:"Iowan Old Style", Palatino, Georgia, serif;
+      background:radial-gradient(ellipse at top,#efe4d0,transparent 40%),var(--bg);
+      color:var(--ink); line-height:1.45;
+    }
+    .wrap { max-width:980px; margin:0 auto; padding:32px 20px 80px; }
+    .eyebrow { font-family:system-ui,sans-serif; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:700; }
+    h1 { margin:8px 0 6px; font-size:clamp(1.8rem,4vw,2.6rem); line-height:1.1; }
+    .sub { color:var(--muted); max-width:70ch; }
+    .banner {
+      margin:16px 0; padding:12px 14px; background:#fff8e8; border-left:4px solid #b8860b;
+      font-family:system-ui,sans-serif; font-size:13px; color:var(--muted);
+    }
+    .nav { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0 20px; font-family:system-ui,sans-serif; font-size:13px; }
+    .nav a { color:var(--accent); }
+    .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+    .tab {
+      font-family:system-ui,sans-serif; font-size:13px; border:1px solid var(--line);
+      background:var(--card); border-radius:999px; padding:8px 14px; cursor:pointer;
+    }
+    .tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    section {
+      display:none; background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden;
+    }
+    section.active { display:block; }
+    .head { padding:16px 20px; background:linear-gradient(90deg,#eef6f3,#f3ebe0); border-bottom:1px solid var(--line); }
+    .head h2 { margin:0 0 4px; font-size:1.25rem; }
+    .head p { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--muted); }
+    .body { padding:18px 20px 22px; }
+    table { width:100%; border-collapse:collapse; font-size:0.95rem; }
+    th, td { text-align:left; padding:9px 8px; border-bottom:1px solid #eee4d4; vertical-align:top; }
+    th { width:28%; font-family:system-ui,sans-serif; font-size:12px; color:var(--muted); font-weight:600; }
+    .tag {
+      display:inline-block; margin:2px 4px 2px 0; padding:4px 9px; border-radius:999px;
+      background:#f3ebe0; font-family:system-ui,sans-serif; font-size:12px;
+    }
+    .day {
+      border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:10px; background:#faf7f1;
+    }
+    .day strong { display:block; margin-bottom:4px; }
+    .day p { margin:0; color:var(--muted); white-space:pre-wrap; }
+    .empty {
+      padding:18px; border:1px dashed var(--line); border-radius:12px; color:var(--muted);
+      font-family:system-ui,sans-serif; font-size:13px; background:#faf7f1;
+    }
+    .faq { margin-bottom:12px; }
+    .faq strong { display:block; }
+    .faq span { color:var(--muted); font-size:0.95rem; }
+    .prose p { margin:0 0 10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="eyebrow">Tour format · LOCKED</div>
+    <h1>Classic Kashmir Triangle</h1>
+    <p class="sub">
+      Canonical shape for every tour: admin 7 tabs, Morning/Afternoon/Evening days,
+      catalog-linked details (including Before you go), cover + gallery + per-day images.
+    </p>
+    <div class="banner">
+      Status: <strong>Locked</strong>. Live: <a href="/tours/classic-kashmir-triangle">/tours/classic-kashmir-triangle</a>.
+      Clone this structure for all Kashmir + popular India tours. Shared catalogs (category / styles / facilities / FAQs / includes / excludes / before you go) link by title.
+    </div>
+    <div class="nav">
+      <a href="/tour-planning-index.html">← Planning hub</a>
+      <a href="/tour-add-list.html">Tours list</a>
+      <a href="/tour-data-spec.html">Data spec</a>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="general">1 General</button>
+      <button class="tab" data-tab="itinerary">2 Itinerary</button>
+      <button class="tab" data-tab="content">3 Content</button>
+      <button class="tab" data-tab="pricing">4 Pricing</button>
+      <button class="tab" data-tab="details">5 Tour details</button>
+      <button class="tab" data-tab="images">6 Images</button>
+      <button class="tab" data-tab="seo">7 SEO</button>
+    </div>
+
+    <section id="general" class="active">
+      <div class="head"><h2>1 · General</h2><p>Title, duration, category, group size</p></div>
+      <div class="body">
+        <table>
+          <tr><th>Title</th><td>Classic Kashmir Triangle</td></tr>
+          <tr><th>Short description</th><td>Kashmir’s favourite first holiday — overnight in Gulmarg and Pahalgam, Mughal Gardens, Dal Lake Shikara, then Betaab and Aru. Private cab from ₹14,999 per person.</td></tr>
+          <tr><th>Category</th><td><span class="tag">Leisure</span></td></tr>
+          <tr><th>Availability</th><td>Always available</td></tr>
+          <tr><th>Duration</th><td>6 days · 5 nights · label “5 nights / 6 days”</td></tr>
+          <tr><th>Difficulty</th><td>easy</td></tr>
+          <tr><th>Min / max people</th><td>2 – 12</td></tr>
+          <tr><th>Min days before booking</th><td>3</td></tr>
+          <tr><th>Featured</th><td>Yes</td></tr>
+          <tr><th>YouTube</th><td>—</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="itinerary">
+      <div class="head"><h2>2 · Itinerary</h2><p>Destinations + original day-by-day plan</p></div>
+      <div class="body">
+        <table>
+          <tr><th>Destinations</th><td><span class="tag">kashmir</span><span class="tag">srinagar</span><span class="tag">gulmarg</span><span class="tag">pahalgam</span></td></tr>
+          <tr><th>Meeting point</th><td>Srinagar Airport (SXR) pickup</td></tr>
+          <tr><th>Map</th><td>34.0837, 74.7973 · zoom 9</td></tr>
+        </table>
+        <div style="margin-top:14px">
+          <div class="day"><strong>Day 1 — Touchdown in Srinagar · gardens and lake hour</strong><p>Meet your driver at Srinagar Airport and transfer to a centrally located hotel near Dalgate (or a deluxe houseboat if you upgraded). Settle in, freshen up, then visit the terraced Mughal gardens — Nishat, Shalimar, and Chashme Shahi — at an easy pace. As the light softens, enjoy a private one-hour Shikara on Dal Lake. Dinner at the hotel; overnight Srinagar.</p></div>
+          <div class="day"><strong>Day 2 — Drive to Gulmarg · meadow and Gondola</strong><p>After breakfast, drive via Tangmarg into Gulmarg (about 1.5–2 hours). Check in on or near the meadow. Ride Gondola Phase I to Kongdori when tickets are available locally; Phase II to Apharwat depends on weather and queue. Spend the afternoon on pine trails or at St. Mary’s Church. Dinner and overnight in Gulmarg so you wake on the meadow.</p></div>
+          <div class="day"><strong>Day 3 — Gulmarg to Pahalgam via the south road</strong><p>Checkout after breakfast and continue toward Pahalgam (typically 4–5 hours with photo stops). Pause at the Pampore saffron fields in season and the Awantipora ruins. Check in at a Lidder-side hotel. Evening free for a riverside walk and kahwa. Overnight Pahalgam.</p></div>
+          <div class="day"><strong>Day 4 — Pahalgam valleys — Betaab and Aru</strong><p>Use a local union cab (paid locally; outside vehicles are not allowed on this circuit) for Betaab Valley and Aru Valley. Optional add-ons the same day: Baisaran meadow or Chandanwari if time and weather allow. Return to the hotel for dinner. Overnight Pahalgam.</p></div>
+          <div class="day"><strong>Day 5 — Return to Srinagar · crafts and lake views</strong><p>Drive back to Srinagar (about 2.5–3 hours) and check into your return hotel. Optional visit to Shankaracharya for the wide lake panorama, then Boulevard / Lal Chowk for dry fruit, papier-mâché, and pashmina shopping with vetted shop suggestions on request. Dinner and overnight Srinagar.</p></div>
+          <div class="day"><strong>Day 6 — Departure transfer</strong><p>Breakfast at the hotel. Keep a comfortable buffer before domestic flights (we recommend 3 hours). Private transfer to Srinagar Airport. Tour ends.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="content">
+      <div class="head"><h2>3 · Content</h2><p>Rich HTML story</p></div>
+      <div class="body prose">
+        <p><strong>Why this itinerary works:</strong> you sleep in Gulmarg and Pahalgam instead of rushing both as long day trips from Srinagar. That means an early Gondola window and a full valley day without a six-hour return drive.</p>
+        <p><strong>Stays in this quote (or same category):</strong> 1N Srinagar near Dalgate; 1N Gulmarg meadow hotel; 1N Pahalgam riverside; 1N return Srinagar. Optional deluxe houseboat upgrade on night 1.</p>
+        <p><strong>Travel style:</strong> private Innova / Dzire, MAP meals on hotel nights, and clear notes on what you pay locally (Gondola, union cabs, lunches). Exact hotel names are confirmed in writing before you pay the balance.</p>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <div class="head"><h2>4 · Pricing</h2><p>Starting price and discounts</p></div>
+      <div class="body">
+        <table>
+          <tr><th>Price from</th><td>₹14,999 per person</td></tr>
+          <tr><th>Currency</th><td>INR</td></tr>
+          <tr><th>Discounts</th><td>Group of 6+ → 5% off</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="details">
+      <div class="head"><h2>5 · Tour details</h2><p>Shared catalogs + tour-only FAQs</p></div>
+      <div class="body">
+        <h3 style="margin:0 0 8px;font-size:1rem">Shared FAQs</h3>
+        <div class="faq"><strong>What is the best time for this tour?</strong><span> April–June blooms · Jul–Sep meadows · Dec–Feb snow in Gulmarg.</span></div>
+        <div class="faq"><strong>Is this a private or group tour?</strong><span> Private cab package; group departures on request.</span></div>
+        <div class="faq"><strong>Are flights included?</strong><span> No — airport transfers yes.</span></div>
+        <div class="faq"><strong>What extras are paid locally?</strong><span> Gondola, union cabs, ponies/sleds, lunches, shopping.</span></div>
+
+        <h3 style="margin:16px 0 8px;font-size:1rem">Tour-specific FAQs</h3>
+        <div class="faq"><strong>Which hotels are used on this package?</strong><span> Named 3★ category set; same-category substitute confirmed in writing if sold out.</span></div>
+        <div class="faq"><strong>How much should I budget for local extras?</strong><span> Gondola ~₹1.5–2.5k Phase I; union cab ~₹2–3.5k; lunch ~₹400–800 pp/day.</span></div>
+
+        <h3 style="margin:16px 0 8px;font-size:1rem">Includes</h3>
+        <div>
+          <span class="tag">Accommodation twin sharing</span>
+          <span class="tag">Breakfast + dinner (MAP)</span>
+          <span class="tag">Private vehicle</span>
+          <span class="tag">Airport pickup & drop</span>
+          <span class="tag">Driver allowance / tolls / parking</span>
+          <span class="tag">GST as quoted</span>
+          <span class="tag">Shikara ride</span>
+          <span class="tag">Airport meet-and-greet</span>
+        </div>
+
+        <h3 style="margin:16px 0 8px;font-size:1rem">Excludes</h3>
+        <div>
+          <span class="tag">Flights / trains</span>
+          <span class="tag">Lunch</span>
+          <span class="tag">Tips & personal</span>
+          <span class="tag">Travel insurance</span>
+          <span class="tag">Gondola tickets</span>
+          <span class="tag">Pahalgam union cabs</span>
+          <span class="tag">Anything not listed</span>
+        </div>
+
+        <h3 style="margin:16px 0 8px;font-size:1rem">Before you go</h3>
+        <div class="faq"><strong>Fitness</strong><span> Easy pace; full travel days and walking between stops.</span></div>
+        <div class="faq"><strong>Documents</strong><span> Government photo ID for hotels; phone backup copy.</span></div>
+        <div class="faq"><strong>Weather & kit</strong><span> Layers, sun protection, walkable shoes.</span></div>
+        <div class="faq"><strong>Arrival</strong><span> Be on time at SXR day 1; pickup details after confirm.</span></div>
+        <div class="faq"><strong>Rooms</strong><span> Twin share listed; solo needs single supplement.</span></div>
+        <div class="faq"><strong>Money on the road</strong><span> Cash for snacks, Gondola, union cab, lunch.</span></div>
+
+        <h3 style="margin:16px 0 8px;font-size:1rem">Travel styles</h3>
+        <div>
+          <span class="tag">Hill Stations</span>
+          <span class="tag">Family Friendly</span>
+          <span class="tag">Private / Independent</span>
+        </div>
+
+        <h3 style="margin:16px 0 8px;font-size:1rem">Facilities</h3>
+        <div>
+          <span class="tag">Private cab</span>
+          <span class="tag">Airport transfers</span>
+          <span class="tag">MAP meals (B/D)</span>
+          <span class="tag">Shikara ride</span>
+          <span class="tag">24×7 helpline</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="images">
+      <div class="head"><h2>6 · Images</h2><p>Cover + gallery + one photo per itinerary day</p></div>
+      <div class="body">
+        <table>
+          <tr><th>Cover / banner / SEO</th><td><code>tours/classic-kashmir-triangle-cover.jpg</code> — Dal Lake shikara</td></tr>
+          <tr><th>Gallery g1–g4</th><td>Gulmarg gondola · Pahalgam Lidder · Betaab Valley · Nishat Bagh</td></tr>
+          <tr><th>Day images d1–d6</th><td>Shalimar · Gondola · Lidder · Aru · Shankaracharya · Dal farewell</td></tr>
+        </table>
+        <div class="empty" style="margin-top:12px">
+          Rule: every photo must match the place/stop — not random stock.
+        </div>
+      </div>
+    </section>
+
+    <section id="seo">
+      <div class="head"><h2>7 · SEO</h2><p>Search + social fields</p></div>
+      <div class="body">
+        <table>
+          <tr><th>Indexable</th><td>Yes</td></tr>
+          <tr><th>SEO title</th><td>Classic Kashmir Triangle Package | 5N/6D Srinagar Gulmarg Pahalgam</td></tr>
+          <tr><th>SEO description</th><td>Book the Classic Kashmir Triangle — overnight Gulmarg and Pahalgam, Mughal Gardens, Shikara, Betaab and Aru. Private cab, MAP meals, from ₹14,999 pp.</td></tr>
+          <tr><th>Facebook title</th><td>Classic Kashmir Triangle — 5 nights private holiday</td></tr>
+          <tr><th>Facebook description</th><td>Sleep in Gulmarg and Pahalgam, not just day-trip them. Gardens, Shikara, Betaab & Aru with a private cab.</td></tr>
+          <tr><th>Twitter title</th><td>Classic Kashmir Triangle | 5N/6D</td></tr>
+          <tr><th>Twitter description</th><td>Srinagar · Gulmarg · Pahalgam private circuit with MAP meals. From ₹14,999 pp.</td></tr>
+          <tr><th>Published</th><td>Yes (format locked · live on site)</td></tr>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const tabs = document.getElementById("tabs");
+    tabs.addEventListener("click", (e) => {
+      const btn = e.target.closest(".tab");
+      if (!btn) return;
+      const id = btn.dataset.tab;
+      tabs.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t === btn));
+      document.querySelectorAll("section").forEach((s) => s.classList.toggle("active", s.id === id));
+    });
+  </script>
+</body>
+</html>

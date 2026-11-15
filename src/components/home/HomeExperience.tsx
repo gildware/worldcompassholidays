@@ -310,7 +310,6 @@ export function HomeExperience({
         headingId="home-tours"
       />
       <HomeFlipGrid
-        headingId="home-flip-mobile"
         tours={tours.map((tour) => ({
           id: tour.id,
           title: tour.title,

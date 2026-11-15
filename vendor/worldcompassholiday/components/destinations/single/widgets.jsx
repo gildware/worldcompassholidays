@@ -166,7 +166,7 @@ export function CategoryPills({ items }) {
             href={item.href}
             className={`destination-page__chip${isActive(item.href) ? " is-on" : ""}`}
             aria-current={isActive(item.href) ? "true" : undefined}
-            onClick={() => selectHref(item.href)}
+            onClick={(event) => selectHref(item.href, event)}
           >
             <i className={item.icon} />
             {item.name}

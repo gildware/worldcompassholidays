@@ -963,14 +963,9 @@
         ? `<a href="${esc(t.href)}">${esc(t.title)}</a>`
         : `<button type="button" data-open="${esc(t.id)}">${esc(t.title)}</button>`;
       let action = "";
-      if (st === "ok") {
-        action = t.href
-          ? `<a class="btn btn--small" href="${esc(t.href)}">See the tour</a>`
-          : `<button class="btn btn--small" type="button" data-open="${esc(t.id)}">Quick look</button>`;
-      } else {
+      if (st !== "ok") {
         const next = nextOpen(t, state.date);
-        const why = st === "sold" ? "Sold out on " + pretty(state.date) : "Does not run on " + DAY[parseIso(state.date).getDay()];
-        action = `<p class="warn">${esc(why)}</p>` + (next ? `<button class="btn btn--small" type="button" data-date="${next}">Next date · ${esc(pretty(next))}</button>` : `<p class="muted">No open date in the next 3 weeks</p>`);
+        action = (st === "sold" ? `<p class="warn">${esc("Sold out on " + pretty(state.date))}</p>` : "") + (next ? `<button class="btn btn--small" type="button" data-date="${next}">Next date · ${esc(pretty(next))}</button>` : "");
       }
       const cancelClass = cancel.kind === "yes" ? "ok" : cancel.kind === "no" ? "warn" : "muted";
       return `<article class="card${compared ? " is-compared" : ""}${st === "ok" ? "" : " is-dim"}">

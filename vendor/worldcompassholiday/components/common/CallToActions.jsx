@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 const CallToActions = ({
-  title = "Tell us the trip. We quote it before you pay.",
-  subtitle = "Tours, hotels, visas, airport meet and assist, and car or bike rental.",
-  buttonLabel = "Contact us",
+  title = "Tell us the trip.",
+  subtitle = "Full cost first — nothing booked until you approve.",
+  buttonLabel = "Get a quote",
 }) => {
   return (
     <section className="layout-pt-md layout-pb-md bg-dark-2">

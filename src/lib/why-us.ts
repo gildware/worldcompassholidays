@@ -63,7 +63,7 @@ export const whyUsReasons: WhyUsReason[] = [
     id: "support",
     title: "Help while you travel",
     short: "Call or WhatsApp if roads close, hotels change, or a pickup slips.",
-    long: `Ask for ${company.contactName} on ${company.phone}. We answer from India. When weather, traffic, or a stay changes mid-trip, you have one number — not a ticket queue.`,
+    long: `Ask for ${company.contactName} on ${company.phone}. We answer travellers from all over the world. When weather, traffic, or a stay changes mid-trip, you have one number — not a ticket queue.`,
   },
   {
     id: "custom",

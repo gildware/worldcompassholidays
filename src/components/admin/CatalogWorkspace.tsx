@@ -16,6 +16,7 @@ import { Modal } from "@/components/ui/Modal";
 import {
   catalogGroups,
   catalogKindHasAnswer,
+  catalogKindHasBlurb,
   catalogKindHasIcon,
   catalogKindHasNote,
   catalogKindLabel,
@@ -62,6 +63,10 @@ const KIND_HINTS: Record<CatalogKind, { label: string; hint: string }> = {
   exclude: {
     label: "Excludes",
     hint: "Items a tour can list as excluded. Each one has an icon and a title.",
+  },
+  before_you_go: {
+    label: "Before you go",
+    hint: "Prep tips a tour can show before travel. Each one has an icon, title, and short detail.",
   },
   hotel_amenity: {
     label: "Hotel amenities",
@@ -365,6 +370,8 @@ export function CatalogWorkspace({
               ? "A facility you can attach to any coach, such as charging points or a blanket."
               : activeKind && catalogKindHasAnswer(activeKind)
                 ? "Question and answer. Tours can reuse this."
+                : activeKind && catalogKindHasBlurb(activeKind)
+                  ? "Icon, title, and a short detail. Tours can reuse this in Before you go."
                 : activeKind && catalogKindHasIcon(activeKind)
                   ? "Icon and title. Tours can reuse this."
                   : "A title tours can reuse."
@@ -596,6 +603,18 @@ function CatalogItemForm({
             defaultValue={item?.content ?? ""}
             rows={4}
             placeholder="Answer"
+            className="!min-h-0 resize-y"
+            required
+          />
+        </Field>
+      ) : null}
+      {catalogKindHasBlurb(kind) ? (
+        <Field label="Detail" required>
+          <textarea
+            name="content"
+            defaultValue={item?.content ?? ""}
+            rows={3}
+            placeholder="Short prep tip travellers should read before the trip"
             className="!min-h-0 resize-y"
             required
           />

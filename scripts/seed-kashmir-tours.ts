@@ -3,14 +3,26 @@
  *
  *   npx tsx scripts/seed-kashmir-tours.ts
  *   npx tsx scripts/seed-kashmir-tours.ts --allow-remote
+ *   npx tsx scripts/seed-kashmir-tours.ts --allow-remote --upsert-imaged
+ *     → no wipe; upsert only tours that have cover+g1–g4 on disk; unpublish the rest
  */
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { loadEnvConfig } from "@next/env";
 import { PrismaClient } from "@prisma/client";
+import { indiaPhase1Tours } from "../src/lib/demo/india-phase1-tours";
+import { indiaPhase2Tours } from "../src/lib/demo/india-phase2-tours";
+import { indiaPhase3Tours } from "../src/lib/demo/india-phase3-tours";
 import { kashmirTours, type KashmirTour } from "../src/lib/demo/kashmir-tours";
 
 loadEnvConfig(process.cwd());
+
+const allTours: KashmirTour[] = [
+  ...kashmirTours,
+  ...indiaPhase1Tours,
+  ...indiaPhase2Tours,
+  ...indiaPhase3Tours,
+];
 
 const prisma = new PrismaClient();
 const uploads = path.join(process.cwd(), "public", "uploads");
@@ -164,8 +176,10 @@ const TOUR_COVER_KEYS: Record<string, string[]> = {
   ],
   "amarnath-yatra-group": [
     "tours/amarnath-yatra-cover.jpg",
-    "destinations/chandanwari.jpg",
-    "tours/amarnath-yatra-g1.jpg",
+    "tours/amarnath-yatra-group-g1.jpg",
+    "tours/amarnath-yatra-group-g2.jpg",
+    "tours/amarnath-yatra-group-g3.jpg",
+    "tours/amarnath-yatra-group-g4.jpg",
   ],
   "kashmir-vaishno-devi": [
     "tours/vaishno-devi-yatra-cover.jpg",
@@ -176,6 +190,51 @@ const TOUR_COVER_KEYS: Record<string, string[]> = {
     "destinations/yusmarg-3.jpg",
     "destinations/doodhpathri-4.jpg",
     "destinations/aru-valley.jpg",
+  ],
+  "kedarnath-yatra-package": [
+    "tours/kedarnath-yatra-package-cover.jpg",
+    "destinations/kedarnath.jpg",
+    "tours/kedarnath-yatra-package-g1.jpg",
+  ],
+  "do-dham-yatra-kedarnath-badrinath": [
+    "tours/do-dham-yatra-kedarnath-badrinath-cover.jpg",
+    "destinations/badrinath.jpg",
+    "destinations/kedarnath.jpg",
+  ],
+  "char-dham-yatra-from-haridwar": [
+    "tours/char-dham-yatra-from-haridwar-cover.jpg",
+    "destinations/yamunotri.jpg",
+    "destinations/gangotri.jpg",
+  ],
+  "char-dham-yatra-by-helicopter": [
+    "tours/char-dham-yatra-by-helicopter-cover.jpg",
+    "destinations/kedarnath.jpg",
+    "destinations/dehradun.jpg",
+  ],
+  "kashmir-great-lakes-trek": [
+    "tours/kashmir-great-lakes-trek-cover.jpg",
+    "tours/kashmir-great-lakes-trek-g1.jpg",
+    "destinations/sonamarg.jpg",
+  ],
+  "tarsar-marsar-trek": [
+    "tours/tarsar-marsar-trek-cover.jpg",
+    "tours/tarsar-marsar-trek-g1.jpg",
+    "destinations/aru-valley.jpg",
+  ],
+  "hampta-pass-chandratal-trek": [
+    "tours/hampta-pass-chandratal-trek-cover.jpg",
+    "tours/hampta-pass-chandratal-trek-g1.jpg",
+    "destinations/manali.jpg",
+  ],
+  "chopta-chandrashila-deoriatal-trek": [
+    "tours/chopta-chandrashila-deoriatal-trek-cover.jpg",
+    "tours/chopta-chandrashila-deoriatal-trek-g1.jpg",
+    "destinations/chopta.jpg",
+  ],
+  "valley-of-flowers-hemkund-trek": [
+    "tours/valley-of-flowers-hemkund-trek-cover.jpg",
+    "tours/valley-of-flowers-hemkund-trek-g1.jpg",
+    "destinations/uttarakhand.jpg",
   ],
 };
 
@@ -202,9 +261,19 @@ const TOUR_GALLERY_PLACES: Record<string, string[]> = {
   "hidden-valleys-gurez-bangus": ["bangus", "gurez", "doodhpathri", "lolab"],
   "deep-gurez-immersion": ["gurez", "bangus", "sonamarg", "naranag"],
   "grand-kashmir-circuit": ["gulmarg", "pahalgam", "sonamarg", "gurez"],
-  "amarnath-yatra-group": ["chandanwari", "pahalgam", "aru-valley", "srinagar"],
+  // Dedicated Amarnath route photos only — never fill from Srinagar/Pahalgam leisure stock.
+  "amarnath-yatra-group": [],
   "kashmir-vaishno-devi": ["srinagar", "gulmarg", "pahalgam", "sonamarg"],
   "classic-doodhpathri-yusmarg-addon": ["doodhpathri", "yusmarg", "gulmarg", "pahalgam"],
+  "kedarnath-yatra-package": ["kedarnath", "guptkashi", "haridwar", "rishikesh"],
+  "do-dham-yatra-kedarnath-badrinath": ["kedarnath", "badrinath", "haridwar", "guptkashi"],
+  "char-dham-yatra-from-haridwar": ["haridwar", "kedarnath", "badrinath", "yamunotri"],
+  "char-dham-yatra-by-helicopter": ["dehradun", "kedarnath", "badrinath", "gangotri"],
+  "kashmir-great-lakes-trek": ["sonamarg", "naranag", "gurez", "kashmir"],
+  "tarsar-marsar-trek": ["aru-valley", "pahalgam", "betaab-valley", "sonamarg"],
+  "hampta-pass-chandratal-trek": ["manali", "himachal", "himachal", "manali"],
+  "chopta-chandrashila-deoriatal-trek": ["chopta", "uttarakhand", "rishikesh", "haridwar"],
+  "valley-of-flowers-hemkund-trek": ["uttarakhand", "haridwar", "rishikesh", "chopta"],
 };
 
 function firstExisting(keys: string[]): LocalImage | null {
@@ -320,15 +389,32 @@ function upcomingDepartures(tour: KashmirTour, count: number) {
   });
 }
 
+function hasDedicatedImages(slug: string) {
+  const cover = localAsset(`tours/${slug}-cover.jpg`);
+  if (!cover) return false;
+  return ["g1", "g2", "g3", "g4"].every((suffix) =>
+    Boolean(localAsset(`tours/${slug}-${suffix}.jpg`)),
+  );
+}
+
 async function main() {
   assertDatabaseTarget();
 
-  if (kashmirTours.length === 0) {
-    throw new Error("Kashmir tour catalog is empty.");
+  if (allTours.length === 0) {
+    throw new Error("Tour catalog is empty.");
+  }
+
+  const upsertImaged = process.argv.includes("--upsert-imaged");
+  const toursToSeed = upsertImaged
+    ? allTours.filter((tour) => hasDedicatedImages(tour.slug))
+    : allTours;
+
+  if (upsertImaged && toursToSeed.length === 0) {
+    throw new Error("No catalog tours have dedicated cover+gallery images on disk.");
   }
 
   const neededSlugs = [
-    ...new Set(kashmirTours.flatMap((tour) => [tour.destinationSlug, ...tour.destinationSlugs])),
+    ...new Set(toursToSeed.flatMap((tour) => [tour.destinationSlug, ...tour.destinationSlugs])),
   ];
   const destinations = await prisma.destination.findMany({
     where: { slug: { in: neededSlugs } },
@@ -336,25 +422,32 @@ async function main() {
   });
   const destinationBySlug = new Map(destinations.map((row) => [row.slug, row.id]));
 
-  for (const tour of kashmirTours) {
+  for (const tour of toursToSeed) {
     if (!destinationBySlug.has(tour.destinationSlug)) {
       throw new Error(`Missing destination for tour ${tour.slug}: ${tour.destinationSlug}`);
     }
   }
 
-  const deletedDays = await prisma.itineraryDay.deleteMany({});
-  const deletedDepartures = await prisma.tourDeparture.deleteMany({});
-  const deletedLinks = await prisma.tourDestination.deleteMany({});
-  const deletedTours = await prisma.tour.deleteMany({});
-  console.log(
-    `Deleted ${deletedTours.count} tours, ${deletedDays.count} itinerary days, ${deletedDepartures.count} departures, ${deletedLinks.count} destination links.`,
-  );
+  if (!upsertImaged) {
+    const deletedDays = await prisma.itineraryDay.deleteMany({});
+    const deletedDepartures = await prisma.tourDeparture.deleteMany({});
+    const deletedLinks = await prisma.tourDestination.deleteMany({});
+    const deletedTours = await prisma.tour.deleteMany({});
+    console.log(
+      `Deleted ${deletedTours.count} tours, ${deletedDays.count} itinerary days, ${deletedDepartures.count} departures, ${deletedLinks.count} destination links.`,
+    );
+  } else {
+    console.log(
+      `Upsert-imaged mode: seeding ${toursToSeed.length}/${allTours.length} catalog tours with disk photos (no wipe).`,
+    );
+  }
 
   let withPhotos = 0;
   let withDepartures = 0;
   const coverUsage = new Map<string, number>();
+  const seededSlugs: string[] = [];
 
-  for (const tour of kashmirTours) {
+  for (const tour of toursToSeed) {
     const { cover, galleryItems } = resolveTourMedia(tour, coverUsage);
     if (!cover.key.includes("seed-kashmir")) withPhotos += 1;
 
@@ -395,73 +488,157 @@ async function main() {
     const departures = departureCount > 0 ? upcomingDepartures(tour, departureCount) : [];
     if (departures.length) withDepartures += 1;
 
-    const saved = await prisma.tour.create({
-      data: {
-        slug: tour.slug,
-        title: tour.title,
-        summary: tour.summary,
-        description,
-        category: tour.category,
-        durationDays: tour.durationDays,
-        durationUnit: "days",
-        durationLabel: tour.durationLabel,
-        difficulty: tour.difficulty,
-        maxGroupSize: tour.maxGroupSize,
-        minPeople: tour.category === "Honeymoon" ? 2 : 1,
-        priceFrom: tour.priceFrom,
-        currency: "INR",
-        published: true,
-        isFeatured: Boolean(tour.isFeatured),
-        destinationId: primaryDestinationId,
-        destinationIdsJson: JSON.stringify(linkIds),
-        mapLat: tour.mapLat,
-        mapLng: tour.mapLng,
-        mapZoom: 9,
-        imageUrl: cover.url,
-        imageKey: cover.key,
-        imageDriver: cover.driver,
-        featuredImageUrl: cover.url,
-        featuredImageKey: cover.key,
-        featuredImageDriver: cover.driver,
-        galleryJson: JSON.stringify(galleryItems),
-        includesJson: JSON.stringify(tour.includes),
-        excludesJson: JSON.stringify(tour.excludes),
-        faqsJson,
-        seoIndex: true,
-        seoTitle: `${tour.title} | Kashmir tour packages`,
-        seoDescription: tour.summary,
-        days: {
-          create: tour.days.map((day) => ({
-            dayNumber: day.dayNumber,
-            title: day.title,
-            description: day.description,
-          })),
-        },
-        destinationLinks: {
-          create: linkIds.map((destinationId) => ({ destinationId })),
-        },
-        departures: departures.length
-          ? {
-              create: departures,
-            }
-          : undefined,
-      },
-      select: {
-        slug: true,
-        _count: { select: { days: true, destinationLinks: true, departures: true } },
-      },
-    });
+    const defaultSeo =
+      tour.category === "Religious"
+        ? `${tour.title} | Pilgrimage tour package India`
+        : tour.category === "Trekking"
+          ? `${tour.title} | Himalayan trek package`
+          : `${tour.title} | Kashmir tour packages`;
 
+    const tourData = {
+      title: tour.title,
+      summary: tour.summary,
+      description,
+      category: tour.category,
+      durationDays: tour.durationDays,
+      durationUnit: "days",
+      durationLabel: tour.durationLabel,
+      difficulty: tour.difficulty,
+      maxGroupSize: tour.maxGroupSize,
+      minPeople: tour.category === "Honeymoon" ? 2 : 1,
+      priceFrom: tour.priceFrom,
+      currency: "INR",
+      published: true,
+      isFeatured: Boolean(tour.isFeatured),
+      destinationId: primaryDestinationId,
+      destinationIdsJson: JSON.stringify(linkIds),
+      mapLat: tour.mapLat,
+      mapLng: tour.mapLng,
+      mapZoom: 9,
+      imageUrl: cover.url,
+      imageKey: cover.key,
+      imageDriver: cover.driver,
+      featuredImageUrl: cover.url,
+      featuredImageKey: cover.key,
+      featuredImageDriver: cover.driver,
+      galleryJson: JSON.stringify(galleryItems),
+      includesJson: JSON.stringify(tour.includes),
+      excludesJson: JSON.stringify(tour.excludes),
+      faqsJson,
+      seoIndex: true,
+      seoTitle: tour.seoTitle || defaultSeo,
+      seoDescription: tour.seoDescription || tour.summary,
+    };
+
+    const existing = upsertImaged
+      ? await prisma.tour.findUnique({ where: { slug: tour.slug }, select: { id: true } })
+      : null;
+
+    let saved: {
+      slug: string;
+      _count: { days: number; destinationLinks: number; departures: number };
+    };
+
+    if (existing) {
+      await prisma.itineraryDay.deleteMany({ where: { tourId: existing.id } });
+      await prisma.tourDeparture.deleteMany({ where: { tourId: existing.id } });
+      await prisma.tourDestination.deleteMany({ where: { tourId: existing.id } });
+      saved = await prisma.tour.update({
+        where: { id: existing.id },
+        data: {
+          ...tourData,
+          days: {
+            create: tour.days.map((day) => {
+              const dayPhoto =
+                localAsset(`tours/${tour.slug}-d${day.dayNumber}.jpg`) ??
+                localAsset(`tours/${tour.slug}-day${day.dayNumber}.jpg`);
+              return {
+                dayNumber: day.dayNumber,
+                title: day.title,
+                description: day.description,
+                imageUrl: dayPhoto?.url ?? "",
+                imageKey: dayPhoto?.key ?? "",
+                imageDriver: dayPhoto?.driver ?? "local",
+              };
+            }),
+          },
+          destinationLinks: {
+            create: linkIds.map((destinationId) => ({ destinationId })),
+          },
+          departures: departures.length ? { create: departures } : undefined,
+        },
+        select: {
+          slug: true,
+          _count: { select: { days: true, destinationLinks: true, departures: true } },
+        },
+      });
+    } else {
+      saved = await prisma.tour.create({
+        data: {
+          slug: tour.slug,
+          ...tourData,
+          days: {
+            create: tour.days.map((day) => {
+              const dayPhoto =
+                localAsset(`tours/${tour.slug}-d${day.dayNumber}.jpg`) ??
+                localAsset(`tours/${tour.slug}-day${day.dayNumber}.jpg`);
+              return {
+                dayNumber: day.dayNumber,
+                title: day.title,
+                description: day.description,
+                imageUrl: dayPhoto?.url ?? "",
+                imageKey: dayPhoto?.key ?? "",
+                imageDriver: dayPhoto?.driver ?? "local",
+              };
+            }),
+          },
+          destinationLinks: {
+            create: linkIds.map((destinationId) => ({ destinationId })),
+          },
+          departures: departures.length
+            ? {
+                create: departures,
+              }
+            : undefined,
+        },
+        select: {
+          slug: true,
+          _count: { select: { days: true, destinationLinks: true, departures: true } },
+        },
+      });
+    }
+
+    seededSlugs.push(saved.slug);
     console.log(
       `  + ${saved.slug} (${saved._count.days} days, ${saved._count.departures} departures, ${galleryItems.length + 1} photos)`,
     );
   }
 
+  if (upsertImaged) {
+    // Unpublish any DB tour that lacks dedicated cover+4 gallery on disk
+    const allDb = await prisma.tour.findMany({ select: { id: true, slug: true, published: true } });
+    let unpublished = 0;
+    for (const row of allDb) {
+      if (hasDedicatedImages(row.slug)) continue;
+      if (!row.published) continue;
+      await prisma.tour.update({
+        where: { id: row.id },
+        data: { published: false, isFeatured: false },
+      });
+      unpublished += 1;
+    }
+    const published = await prisma.tour.count({ where: { published: true } });
+    console.log(
+      `Upserted ${seededSlugs.length} imaged catalog tours. Unpublished ${unpublished} without images. Live published=${published}.`,
+    );
+    return;
+  }
+
   const total = await prisma.tour.count();
   const days = await prisma.itineraryDay.count();
   const deps = await prisma.tourDeparture.count();
-  if (total !== kashmirTours.length) {
-    throw new Error(`Expected ${kashmirTours.length} tours; found ${total}.`);
+  if (total !== allTours.length) {
+    throw new Error(`Expected ${allTours.length} tours; found ${total}.`);
   }
 
   console.log(

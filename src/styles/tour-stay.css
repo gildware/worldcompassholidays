@@ -96,10 +96,11 @@ a.road-btn:hover { background: var(--blue-dark); color: #fff; }
 .road-crumb a { text-decoration: none; }
 .road-crumb a:hover { text-decoration: underline; }
 
-.road-hero { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; padding: 18px 0 14px; }
+.road-hero { display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 18px 0 14px; }
 .road-eyebrow { color: var(--blue); font-size: 13px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
-.road h1 { font-size: clamp(40px, 5vw, 64px); line-height: 0.98; max-width: 16ch; }
-.road-place { display: flex; flex-wrap: wrap; gap: 8px 14px; color: var(--muted); margin-top: 12px; font-size: 15.5px; }
+.road h1 { width: 100%; font-size: clamp(40px, 5vw, 64px); line-height: 1.05; margin-bottom: 14px; }
+.road-hero__meta { display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%; }
+.road-place { display: flex; flex-wrap: wrap; gap: 8px 14px; color: var(--muted); margin: 0; font-size: 15.5px; }
 .road-place a { color: var(--ink); }
 
 .road-gallery {
@@ -137,7 +138,10 @@ a.road-btn:hover { background: var(--blue-dark); color: #fff; }
   border-bottom: 1px solid var(--line);
   overflow-x: auto;
   scroll-padding-inline: 12px; overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
+.road-sub::-webkit-scrollbar { display: none; }
 .road-sub a {
   flex: 0 0 auto; text-decoration: none; color: var(--muted); font-size: 14.5px; font-weight: 600;
   padding: 14px 0 12px; border-bottom: 2px solid transparent;
@@ -151,6 +155,7 @@ a.road-btn:hover { background: var(--blue-dark); color: #fff; }
 
 .road-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 36px; align-items: start; padding: 8px 0 20px; }
 .road-main { min-width: 0; }
+.road-aside { min-width: 0; }
 .road-section { padding: 28px 0; border-top: 1px solid var(--line); scroll-margin-top: 168px; }
 .road-section h2 { font-size: clamp(28px, 3vw, 36px); margin-bottom: 8px; }
 .road-lede { color: var(--muted); max-width: 68ch; margin-top: 8px; }
@@ -160,12 +165,47 @@ a.road-btn:hover { background: var(--blue-dark); color: #fff; }
 .road-stat, .road-hi article, .road-amen article {
   background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px;
 }
-.road-stat b { display: block; font-size: 16px; font-family: var(--sans); font-weight: 650; letter-spacing: 0; }
+.road-stat { display: grid; gap: 6px; align-content: start; }
+.road-card-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex: 0 0 auto;
+  display: block;
+}
+.road-stat b,
+.road-stat__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-family: var(--sans);
+  font-weight: 650;
+  letter-spacing: 0;
+}
 .road-stat span, .road-hi p, .road-amen li { color: var(--muted); font-size: 14.5px; }
 .road-hi { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .road-hi h3, .road-amen h3 { font-family: var(--sans); font-size: 15.5px; font-weight: 650; letter-spacing: 0; margin-bottom: 4px; }
+.road-hi h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.road-hi h3 span { min-width: 0; }
 .road-amen { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.road-amen ul { padding-left: 18px; display: grid; gap: 4px; }
+.road-amen ul { padding-left: 0; display: grid; gap: 8px; list-style: none; }
+.road-amen-list li { display: flex; align-items: flex-start; gap: 10px; }
+.road-styles { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.road-style-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--line); background: var(--card); border-radius: 999px;
+  padding: 6px 12px 6px 8px; font-size: 13.5px; font-family: var(--sans);
+}
+.road-style-chip img { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; }
+.road-eyebrow--with-icon { display: inline-flex; align-items: center; gap: 8px; }
+.road-cat-icon { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; }
+.road-faq__title { display: inline-flex; align-items: flex-start; gap: 10px; text-align: left; }
 
 .road-dates { display: grid; gap: 8px; margin-top: 14px; }
 .road-dep {
@@ -181,30 +221,211 @@ a.road-btn:hover { background: var(--blue-dark); color: #fff; }
 .road-day { border-bottom: 1px solid var(--line); }
 .road-day summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 16px; padding: 16px 0; }
 .road-day summary::-webkit-details-marker { display: none; }
-.road-day summary strong { font-size: 17px; }
-.road-day summary span { color: var(--soft); font-size: 13px; }
-.road-day summary::after { content: "+"; color: var(--soft); margin-left: 12px; }
+.road-day-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35em;
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.35;
+}
+.road-day-title strong {
+  font-family: var(--serif);
+  font-size: 1.05em;
+  font-weight: 600;
+  color: var(--blue);
+  letter-spacing: -0.02em;
+}
+.road-day-name {
+  color: var(--ink);
+  font-weight: 560;
+}
+.road-day-name::before {
+  content: "·";
+  margin-right: 0.35em;
+  color: var(--soft);
+  font-weight: 500;
+}
+.road-day summary::after { content: "+"; color: var(--soft); margin-left: 12px; flex-shrink: 0; }
 .road-day[open] summary::after { content: "–"; }
+.road-day[open] .road-day-title strong { color: var(--blue-dark); }
 .road-day-body { display: grid; gap: 12px; padding: 0 0 16px; }
-.road-beat { display: grid; grid-template-columns: 120px 1fr; gap: 12px; }
-.road-beat span { color: var(--soft); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; padding-top: 3px; }
-.road-beat p { color: var(--muted); }
+.road-day-body.has-photo {
+  grid-template-columns: minmax(180px, 240px) 1fr;
+  gap: 18px;
+  align-items: start;
+}
+.road-day-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 14px;
+  display: block;
+}
+.road-day-copy { display: grid; gap: 8px; min-width: 0; }
+.road-beat {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.road-beat strong {
+  display: inline;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-right: 8px;
+}
 .road-callout { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; color: var(--muted); }
 
 .road-split { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 .road-split h3 { font-family: var(--sans); font-size: 15px; letter-spacing: 0; font-weight: 700; margin-bottom: 8px; }
-.road-split ul { display: grid; gap: 6px; padding-left: 18px; color: var(--muted); }
-.road-ok li::marker { color: var(--green); }
-.road-no li::marker { color: var(--danger); }
+.road-split ul { display: grid; gap: 10px; padding-left: 0; list-style: none; color: var(--muted); }
 
-.road-pack { display: grid; gap: 8px; margin-top: 14px; }
-.road-pack label { display: flex; gap: 10px; align-items: flex-start; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
-.road-pack input { margin-top: 3px; }
+.road-section--included h2 { color: #0f5c4c; }
+.road-section--excluded h2 { color: #9a3412; }
+
+.road-panel {
+  border-radius: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+}
+.road-panel--included {
+  background: #eef8f4;
+  border-color: #b7ddd0;
+}
+.road-panel--excluded {
+  background: #fff5f0;
+  border-color: #f0c7b4;
+}
+
+.road-ok,
+.road-no {
+  display: grid;
+  gap: 12px;
+  padding-left: 0;
+  list-style: none;
+  margin: 0;
+}
+.road-ok li,
+.road-no li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 15px;
+}
+.road-ok li span { color: #1f4f43; }
+.road-no li span { color: #7a341f; }
+
+.road-panel--included .road-list-icon,
+.road-panel--included .road-list-fallback {
+  background: #dff3ea;
+}
+.road-panel--excluded .road-list-icon,
+.road-panel--excluded .road-list-fallback {
+  background: #ffe6db;
+}
+
+.road-list-icon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  margin-top: 1px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #fff;
+}
+.road-list-fallback {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  margin-top: 1px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+.road-list-fallback--ok { color: var(--green); background: color-mix(in srgb, var(--green) 12%, #fff); }
+.road-list-fallback--no { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, #fff); }
+
+.road-pack {
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fff 0%, color-mix(in srgb, var(--paper) 55%, #fff) 100%);
+  box-shadow: 0 10px 28px rgba(48, 36, 18, 0.04);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.road-pack__head { margin-bottom: 14px; }
+.road-pack__head h3 {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  margin: 0 0 4px;
+}
+.road-pack__head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14.5px;
+  max-width: 48ch;
+}
+.road-pack__list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.road-pack__list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 550;
+  line-height: 1.35;
+}
+.road-pack__mark {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--blue) 75%, #fff);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 12%, transparent);
+}
+@media (max-width: 640px) {
+  .road-pack { padding: 16px; }
+  .road-pack__head h3 { font-size: 22px; }
+  .road-pack__list { grid-template-columns: 1fr; }
+}
 
 .road-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 22px; }
-.road-facts div { padding-top: 10px; border-top: 1px solid var(--line); }
-.road-facts strong { display: block; font-size: 14px; font-family: var(--sans); letter-spacing: 0; }
-.road-facts span { color: var(--muted); font-size: 14.5px; }
+.road-facts > div { padding-top: 10px; border-top: 1px solid var(--line); }
+.road-facts__title {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  font-family: var(--sans);
+  letter-spacing: 0;
+}
+.road-facts__title .road-list-icon { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 1px; }
+.road-facts > div > span { display: block; color: var(--muted); font-size: 14.5px; margin-top: 6px; }
 .road details.road-faq { border-bottom: 1px solid var(--line); }
 .road .road-faq summary { cursor: pointer; padding: 14px 0; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
 .road .road-faq summary::-webkit-details-marker { display: none; }
@@ -215,8 +436,20 @@ a.road-btn:hover { background: var(--blue-dark); color: #fff; }
 .road-map { margin-top: 14px; border: 0; width: 100%; height: 280px; border-radius: 18px; background: #e7e1d8; }
 
 .road-book {
-  position: sticky; top: 166px; max-height: calc(100vh - 186px); overflow: auto;
+  /* Desktop pin is applied via .is-pinned (fixed) so the card never slides under the tabs at FAQ. */
+  --road-book-top: calc(var(--road-topbar-h) + 90px + 56px);
+  position: relative;
+  max-height: calc(100vh - var(--road-topbar-h) - 90px - 76px);
+  overflow: auto;
+  overscroll-behavior: contain;
   background: #fff; border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 18px 18px 16px;
+}
+@media (min-width: 1025px) {
+  .road-book.is-pinned {
+    position: fixed;
+    z-index: 30;
+    top: var(--road-book-top);
+  }
 }
 .road-handle, .road-sheet-head { display: none; }
 .road-price { font-size: 42px; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
@@ -465,7 +698,8 @@ body .road .road-dialog textarea {
     object-fit: cover;
     display: block;
   }
-  .road-beat { grid-template-columns: 1fr; gap: 2px; }
+  .road-day-body.has-photo { grid-template-columns: 1fr; gap: 12px; }
+  .road-day-img { max-height: 220px; aspect-ratio: 16 / 10; }
   .road-sub-total { display: none; }
   .road-book {
     position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 60;

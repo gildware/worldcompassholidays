@@ -5,6 +5,7 @@ export const catalogKinds = [
   "faq",
   "include",
   "exclude",
+  "before_you_go",
   "hotel_amenity",
   "room_feature",
   "room_amenity",
@@ -29,7 +30,7 @@ export const catalogGroups = [
     id: "tours",
     label: "Tours",
     description: "Lists used when adding or editing a tour.",
-    kinds: ["category", "style", "facility", "faq", "include", "exclude"],
+    kinds: ["category", "style", "facility", "faq", "include", "exclude", "before_you_go"],
   },
   {
     id: "hotels",
@@ -69,6 +70,7 @@ export function catalogKindLabel(kind: CatalogKind) {
   if (kind === "faq") return "FAQ";
   if (kind === "include") return "Include";
   if (kind === "exclude") return "Exclude";
+  if (kind === "before_you_go") return "Before you go";
   if (kind === "hotel_amenity") return "Hotel amenity";
   if (kind === "room_feature") return "Room feature";
   if (kind === "room_amenity") return "Room amenity";
@@ -107,6 +109,7 @@ export function catalogKindHasIcon(kind: CatalogKind) {
     kind === "facility" ||
     kind === "include" ||
     kind === "exclude" ||
+    kind === "before_you_go" ||
     kind === "hotel_amenity" ||
     kind === "room_feature" ||
     kind === "room_amenity" ||
@@ -116,6 +119,11 @@ export function catalogKindHasIcon(kind: CatalogKind) {
 
 export function catalogKindHasAnswer(kind: CatalogKind) {
   return kind === "faq" || kind === "hotel_faq";
+}
+
+/** Short body text shown under the title (Before you go tips). */
+export function catalogKindHasBlurb(kind: CatalogKind) {
+  return kind === "before_you_go";
 }
 
 /** Optional boarding note stored on a bus location. */

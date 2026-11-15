@@ -347,9 +347,9 @@ export const defaultHomePageContent: HomePageContent = {
     ],
   },
   cta: {
-    title: "Tell us the trip. We quote it before you pay.",
-    subtitle: "Tours, hotels, buses, visas, airport meet and assist, and car or bike rental.",
-    buttonLabel: "Contact us",
+    title: "Tell us the trip.",
+    subtitle: "Full cost first — nothing booked until you approve.",
+    buttonLabel: "Get a quote",
   },
   why: {
     items: [

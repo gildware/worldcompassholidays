@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Coach request card — demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,500&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #102a43;
+        --muted: #5b6f6a;
+        --line: #b7d4cb;
+        --paper: #ffffff;
+        --blue: #0e7490;
+        --blue-deep: #0f5f75;
+        --teal: #0f766e;
+        --amber: #c2410c;
+        --slate: #475569;
+        --surface: #eef8f4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "DM Sans", system-ui, sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(900px 420px at 10% -10%, #c8ebe2 0%, transparent 55%),
+          radial-gradient(700px 360px at 100% 0%, #dff5ef 0%, transparent 50%),
+          var(--surface);
+      }
+
+      .page {
+        width: calc(100% - 16px);
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 28px 0 56px;
+      }
+
+      .page__eyebrow {
+        margin: 0 0 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--blue);
+      }
+
+      .page__title {
+        margin: 0 0 8px;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: clamp(1.7rem, 3vw, 2.2rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+
+      .page__lead {
+        margin: 0 0 22px;
+        max-width: 52ch;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      /* —— Card —— */
+      .coach {
+        display: block;
+        width: 100%;
+        min-height: 320px;
+        overflow: hidden;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow:
+          0 1px 0 rgba(20, 35, 58, 0.04),
+          0 24px 48px rgba(14, 116, 144, 0.12);
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+      }
+
+      .coach:hover {
+        transform: translateY(-3px);
+        border-color: #86b8ab;
+        box-shadow:
+          0 1px 0 rgba(20, 35, 58, 0.04),
+          0 30px 56px rgba(14, 116, 144, 0.18);
+      }
+
+      .coach:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 3px;
+        box-shadow:
+          0 0 0 3px rgba(14, 116, 144, 0.28),
+          0 28px 52px rgba(14, 116, 144, 0.16);
+      }
+
+      .coach__main {
+        position: relative;
+        display: block;
+        min-height: 320px;
+        height: 100%;
+        padding: 0;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .coach__brand {
+        position: absolute;
+        top: 22px;
+        left: 22px;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: calc(100% - 44px);
+        pointer-events: none;
+      }
+
+      .coach__brand svg {
+        width: 40px;
+        height: 28px;
+        flex: 0 0 auto;
+        color: var(--blue);
+        filter: drop-shadow(0 2px 8px rgba(14, 116, 144, 0.28));
+      }
+
+      .coach__brand-title {
+        margin: 0;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: clamp(1.65rem, 2.6vw, 2.15rem);
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1.05;
+        color: var(--ink);
+        text-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.92),
+          0 10px 28px rgba(16, 42, 67, 0.16);
+      }
+
+      .coach__action {
+        position: absolute;
+        right: 18px;
+        bottom: 16px;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        max-width: calc(100% - 36px);
+        pointer-events: none;
+      }
+
+      .coach__map {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        border-radius: 0;
+        overflow: hidden;
+        background:
+          linear-gradient(165deg, #c8ebe2 0%, #eef8f4 42%, #d7efe9 100%);
+        border: 0;
+        isolation: isolate;
+      }
+
+      .coach__map canvas,
+      .coach__map .pin-label-layer {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .coach__map .pin-label-layer {
+        position: absolute !important;
+        inset: 0;
+        z-index: 3;
+        pointer-events: none;
+        overflow: hidden;
+      }
+
+      .coach__map-overlay {
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background:
+          radial-gradient(120% 80% at 50% 0%, transparent 45%, rgba(223, 245, 239, 0.22) 100%);
+      }
+
+      .amenity-label {
+        transform: translate(-50%, -120%);
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+        color: var(--amenity, #0e7490);
+        font-size: 0.5rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        pointer-events: none;
+        user-select: none;
+        text-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.95),
+          0 2px 6px rgba(16, 42, 67, 0.12);
+        opacity: 0.88;
+      }
+
+      .pin-heading {
+        transform: translate(-50%, -108%);
+        white-space: nowrap;
+        text-align: center;
+        pointer-events: none;
+        user-select: none;
+        cursor: default;
+      }
+
+      .pin-heading span {
+        display: block;
+        margin-bottom: 1px;
+        font-size: 0.58rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        text-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.92),
+          0 2px 8px rgba(16, 42, 67, 0.12);
+      }
+
+      .pin-heading strong {
+        display: inline-block;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: 0.98rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        color: var(--ink);
+        text-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.95),
+          0 4px 14px rgba(16, 42, 67, 0.18);
+      }
+
+      .pin-heading--end span {
+        color: var(--teal);
+      }
+
+      .coach__cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 188px;
+        min-height: 46px;
+        padding: 12px 18px;
+        border: 0;
+        border-radius: 12px;
+        background: var(--blue);
+        color: #fff;
+        font: inherit;
+        font-size: 0.95rem;
+        font-weight: 700;
+        box-shadow: 0 12px 28px rgba(14, 116, 144, 0.34);
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.2s ease, transform 0.2s ease;
+        pointer-events: none;
+      }
+
+      .coach__note {
+        margin: 0;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: rgba(16, 42, 67, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(8px);
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        line-height: 1.2;
+      }
+
+      .coach__cta-arrow {
+        transition: transform 0.22s ease;
+      }
+
+      .coach:hover .coach__cta,
+      .coach:focus-visible .coach__cta {
+        background: var(--blue-deep);
+        transform: translateY(-1px);
+      }
+
+      .coach:hover .coach__cta-arrow,
+      .coach:focus-visible .coach__cta-arrow {
+        transform: translateX(3px);
+      }
+
+      .notes {
+        margin-top: 22px;
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .notes article {
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid var(--line);
+      }
+
+      .notes h3 {
+        margin: 0 0 4px;
+        font-size: 0.86rem;
+      }
+
+      .notes p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.82rem;
+        line-height: 1.4;
+      }
+
+      @media (max-width: 860px) {
+        .coach {
+          min-height: 0;
+        }
+
+        .coach__main {
+          min-height: 260px;
+          height: min(62vw, 320px);
+        }
+
+        .coach__brand {
+          top: 16px;
+          left: 16px;
+          gap: 10px;
+        }
+
+        .coach__brand svg {
+          width: 34px;
+          height: 24px;
+        }
+
+        .coach__brand-title {
+          font-size: clamp(1.4rem, 5.4vw, 1.75rem);
+        }
+
+        .coach__action {
+          right: 14px;
+          bottom: 14px;
+        }
+
+        .coach__cta {
+          min-width: 0;
+          min-height: 44px;
+          padding: 11px 16px;
+          font-size: 0.9rem;
+        }
+
+        .notes {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .coach__action {
+          left: 14px;
+          right: 14px;
+          align-items: stretch;
+        }
+
+        .coach__cta {
+          width: 100%;
+        }
+
+        .coach__note {
+          align-self: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <p class="page__eyebrow">Standalone demo</p>
+      <h1 class="page__title">Coach request card</h1>
+      <p class="page__lead">
+        3D coach ride from your city to anywhere — soft terrain, glowing route, and a looping journey you can review before wiring into the home section.
+      </p>
+
+      <a class="coach" href="/buses/request" aria-label="Hire a private coach — request a custom quote">
+        <div class="coach__main">
+          <div class="coach__brand">
+            <svg viewBox="0 0 56 40" fill="none" aria-hidden="true">
+              <path
+                d="M6 16.5C6 12.4 9.4 9 13.5 9h26c5.3 0 9.5 4.2 9.5 9.5V27a3 3 0 0 1-3 3h-1.2a4.3 4.3 0 0 1-8.3 0H19.5a4.3 4.3 0 0 1-8.3 0H8a3 3 0 0 1-3-3v-5.5A5 5 0 0 1 6 16.5Z"
+                fill="currentColor"
+                opacity=".14"
+              />
+              <path
+                d="M6 16.5C6 12.4 9.4 9 13.5 9h26c5.3 0 9.5 4.2 9.5 9.5V27a3 3 0 0 1-3 3h-1.2a4.3 4.3 0 0 1-8.3 0H19.5a4.3 4.3 0 0 1-8.3 0H8a3 3 0 0 1-3-3v-5.5A5 5 0 0 1 6 16.5Z"
+                stroke="currentColor"
+                stroke-width="1.9"
+                stroke-linejoin="round"
+              />
+              <path d="M5 19.5h46" stroke="currentColor" stroke-width="1.9" />
+              <rect x="12" y="12" width="8" height="5.5" rx="1.2" fill="currentColor" opacity=".3" />
+              <rect x="23" y="12" width="8" height="5.5" rx="1.2" fill="currentColor" opacity=".3" />
+              <rect x="34" y="12" width="8" height="5.5" rx="1.2" fill="currentColor" opacity=".3" />
+              <circle cx="15.2" cy="30" r="3.1" stroke="currentColor" stroke-width="1.9" />
+              <circle cx="40.8" cy="30" r="3.1" stroke="currentColor" stroke-width="1.9" />
+            </svg>
+            <p class="coach__brand-title">Hire a bus</p>
+          </div>
+
+          <div class="coach__map" id="bus-scene" role="img" aria-label="Illustrated coach route from your city to anywhere">
+            <div class="coach__map-overlay"></div>
+          </div>
+
+          <div class="coach__action">
+            <span class="coach__cta">
+              Request a bus
+              <svg class="coach__cta-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+            <p class="coach__note">Usually within ~2 hrs</p>
+          </div>
+        </div>
+      </a>
+
+      <section class="notes" aria-label="Demo notes">
+        <article>
+          <h3>3D route</h3>
+          <p>Low-poly coach rides a winding road from the start pin to arrival, with a glowing trail behind it.</p>
+        </article>
+        <article>
+          <h3>Looping journey</h3>
+          <p>The trip pauses at both ends, then returns so the motion stays readable in a card.</p>
+        </article>
+        <article>
+          <h3>Next</h3>
+          <p>Approve this demo, then we port the same card into the home buses empty state.</p>
+        </article>
+      </section>
+    </main>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+      import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+
+      const host = document.getElementById("bus-scene");
+      if (!host) throw new Error("Missing #bus-scene");
+
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setClearColor(0x000000, 0);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      host.prepend(renderer.domElement);
+
+      const labelRenderer = new CSS2DRenderer();
+      labelRenderer.domElement.className = "pin-label-layer";
+      host.appendChild(labelRenderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(0xd9eee9, 18, 42);
+
+      const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+      camera.position.set(0.6, 10.4, 15.2);
+      camera.lookAt(0, 0.2, 0);
+
+      const hemi = new THREE.HemisphereLight(0xf3fffb, 0x7aa89c, 1.15);
+      scene.add(hemi);
+
+      const key = new THREE.DirectionalLight(0xffffff, 1.35);
+      key.position.set(6, 12, 8);
+      scene.add(key);
+
+      const fill = new THREE.DirectionalLight(0x9ad7ef, 0.55);
+      fill.position.set(-8, 4, -4);
+      scene.add(fill);
+
+      // Soft ground disk
+      const ground = new THREE.Mesh(
+        new THREE.CircleGeometry(18, 64),
+        new THREE.MeshStandardMaterial({
+          color: 0xcfe8e1,
+          roughness: 1,
+          metalness: 0,
+        })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -0.02;
+      scene.add(ground);
+
+      // Gentle hills
+      const hillMat = new THREE.MeshStandardMaterial({
+        color: 0xa9cfc4,
+        roughness: 1,
+        metalness: 0,
+      });
+      [
+        [-7.5, 0.35, -4.2, 3.2, 0.9, 2.4],
+        [6.8, 0.28, -3.4, 2.8, 0.7, 2.1],
+        [1.2, 0.22, -6.5, 4.4, 0.55, 2.6],
+        [-3.4, 0.18, 5.8, 2.6, 0.45, 1.8],
+      ].forEach(([x, y, z, sx, sy, sz]) => {
+        const hill = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), hillMat);
+        hill.scale.set(sx, sy, sz);
+        hill.position.set(x, y, z);
+        scene.add(hill);
+      });
+
+      // Route control points (world XZ)
+      const routePoints = [
+        new THREE.Vector3(-7.4, 0.05, 2.6),
+        new THREE.Vector3(-4.8, 0.05, 0.2),
+        new THREE.Vector3(-2.4, 0.05, -2.1),
+        new THREE.Vector3(0.2, 0.05, -0.4),
+        new THREE.Vector3(2.6, 0.05, 2.2),
+        new THREE.Vector3(5.0, 0.05, 0.6),
+        new THREE.Vector3(7.2, 0.05, -1.8),
+      ];
+      const curve = new THREE.CatmullRomCurve3(routePoints, false, "catmullrom", 0.45);
+      const samples = curve.getSpacedPoints(180);
+
+      function buildRoadRibbon(pts, width) {
+        const half = width / 2;
+        const left = [];
+        const right = [];
+        for (let i = 0; i < pts.length; i++) {
+          const p = pts[i];
+          const prev = pts[Math.max(0, i - 1)];
+          const next = pts[Math.min(pts.length - 1, i + 1)];
+          const dir = new THREE.Vector3().subVectors(next, prev).setY(0).normalize();
+          const side = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(half);
+          left.push(p.clone().add(side));
+          right.push(p.clone().sub(side));
+        }
+
+        const positions = [];
+        const uvs = [];
+        const indices = [];
+        for (let i = 0; i < pts.length; i++) {
+          const l = left[i];
+          const r = right[i];
+          positions.push(l.x, l.y, l.z, r.x, r.y, r.z);
+          const u = i / (pts.length - 1);
+          uvs.push(0, u, 1, u);
+          if (i < pts.length - 1) {
+            const a = i * 2;
+            indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+          }
+        }
+
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+        geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+        geo.setIndex(indices);
+        geo.computeVertexNormals();
+        return geo;
+      }
+
+      const roadBed = new THREE.Mesh(
+        buildRoadRibbon(samples, 1.55),
+        new THREE.MeshStandardMaterial({
+          color: 0xf2faf7,
+          roughness: 0.92,
+          metalness: 0.02,
+          side: THREE.DoubleSide,
+        })
+      );
+      roadBed.position.y = 0.01;
+      scene.add(roadBed);
+
+      const shoulder = new THREE.Mesh(
+        buildRoadRibbon(samples, 2.15),
+        new THREE.MeshStandardMaterial({
+          color: 0x8fb8ac,
+          roughness: 1,
+          metalness: 0,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.55,
+        })
+      );
+      shoulder.position.y = 0.005;
+      scene.add(shoulder);
+
+      // Dashed center line
+      const dashMat = new THREE.MeshBasicMaterial({ color: 0x5f8f84 });
+      for (let i = 0; i < 42; i++) {
+        const t = (i + 0.5) / 42;
+        const p = curve.getPointAt(t);
+        const tangent = curve.getTangentAt(t).normalize();
+        const dash = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.02, 0.42), dashMat);
+        dash.position.copy(p).add(new THREE.Vector3(0, 0.03, 0));
+        dash.lookAt(p.clone().add(tangent));
+        scene.add(dash);
+      }
+
+      // Progress ribbon (bright route behind the bus)
+      const progressRibbon = new THREE.Mesh(
+        buildRoadRibbon(samples, 0.42),
+        new THREE.MeshBasicMaterial({
+          color: 0x0e7490,
+          transparent: true,
+          opacity: 0.85,
+          side: THREE.DoubleSide,
+        })
+      );
+      progressRibbon.position.y = 0.04;
+      scene.add(progressRibbon);
+
+      function makePinHeading(eyebrow, title, end = false) {
+        const el = document.createElement("div");
+        el.className = end ? "pin-heading pin-heading--end" : "pin-heading";
+        el.innerHTML = `<span>${eyebrow}</span><strong>${title}</strong>`;
+        const obj = new CSS2DObject(el);
+        obj.position.set(0, 1.62, 0);
+        return obj;
+      }
+
+      function makePin(color, glow = true) {
+        const g = new THREE.Group();
+        const stem = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.06, 0.1, 1.15, 16),
+          new THREE.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.15 })
+        );
+        stem.position.y = 0.58;
+        g.add(stem);
+
+        const head = new THREE.Mesh(
+          new THREE.SphereGeometry(0.28, 24, 16),
+          new THREE.MeshStandardMaterial({
+            color,
+            roughness: 0.35,
+            metalness: 0.2,
+            emissive: glow ? color : 0x000000,
+            emissiveIntensity: glow ? 0.25 : 0,
+          })
+        );
+        head.position.y = 1.28;
+        g.add(head);
+
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(0.35, 0.55, 32),
+          new THREE.MeshBasicMaterial({
+            color,
+            transparent: true,
+            opacity: 0.35,
+            side: THREE.DoubleSide,
+          })
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 0.03;
+        g.add(ring);
+
+        const base = new THREE.Mesh(
+          new THREE.CircleGeometry(0.28, 24),
+          new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 })
+        );
+        base.rotation.x = -Math.PI / 2;
+        base.position.y = 0.04;
+        g.add(base);
+
+        return g;
+      }
+
+      const startPin = makePin(0x0369a1);
+      startPin.position.copy(routePoints[0]);
+      startPin.add(makePinHeading("From", "Your city"));
+      scene.add(startPin);
+
+      const endPin = makePin(0x0f766e);
+      endPin.position.copy(routePoints[routePoints.length - 1]);
+      endPin.add(makePinHeading("To", "Destination", true));
+      scene.add(endPin);
+
+      // Roadside amenity markers
+      function makeAmenity(color, x, z) {
+        const g = new THREE.Group();
+        const pole = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.035, 0.035, 0.7, 10),
+          new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.7 })
+        );
+        pole.position.y = 0.35;
+        g.add(pole);
+        const board = new THREE.Mesh(
+          new THREE.BoxGeometry(0.42, 0.42, 0.08),
+          new THREE.MeshStandardMaterial({
+            color,
+            roughness: 0.5,
+            metalness: 0.1,
+            emissive: color,
+            emissiveIntensity: 0.15,
+          })
+        );
+        board.position.y = 0.82;
+        g.add(board);
+        const cap = new THREE.Mesh(
+          new THREE.SphereGeometry(0.08, 12, 10),
+          new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            emissive: color,
+            emissiveIntensity: 0.35,
+            roughness: 0.4,
+          })
+        );
+        cap.position.y = 1.08;
+        g.add(cap);
+        g.position.set(x, 0, z);
+        return g;
+      }
+
+      const amenities = [
+        [0xc2410c, -2.1, 3.1, "Food"],
+        [0xb45309, 4.9, -2.4, "View"],
+      ];
+      amenities.forEach(([color, x, z, label]) => {
+        const a = makeAmenity(color, x, z);
+        const el = document.createElement("div");
+        el.className = "amenity-label";
+        el.setAttribute("aria-hidden", "true");
+        el.style.setProperty("--amenity", "#" + color.toString(16).padStart(6, "0"));
+        el.textContent = label;
+        const tag = new CSS2DObject(el);
+        tag.position.set(0, 1.35, 0);
+        a.add(tag);
+        scene.add(a);
+      });
+
+      function createBus() {
+        const bus = new THREE.Group();
+
+        const bodyMat = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: 0.38,
+          metalness: 0.18,
+        });
+        const accentMat = new THREE.MeshStandardMaterial({
+          color: 0x0e7490,
+          roughness: 0.4,
+          metalness: 0.25,
+          emissive: 0x0e7490,
+          emissiveIntensity: 0.08,
+        });
+        const glassMat = new THREE.MeshStandardMaterial({
+          color: 0x9ad7ef,
+          roughness: 0.15,
+          metalness: 0.4,
+          transparent: true,
+          opacity: 0.85,
+        });
+        const darkMat = new THREE.MeshStandardMaterial({
+          color: 0x1e293b,
+          roughness: 0.55,
+          metalness: 0.2,
+        });
+
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.52, 2.35), bodyMat);
+        body.position.y = 0.48;
+        bus.add(body);
+
+        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.98, 0.1, 2.36), accentMat);
+        stripe.position.y = 0.42;
+        bus.add(stripe);
+
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.08, 2.1), accentMat);
+        roof.position.y = 0.78;
+        bus.add(roof);
+
+        // Nose toward -Z so Object3D.lookAt() faces travel direction
+        const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.34, 0.55), glassMat);
+        cabin.position.set(0, 0.58, -0.95);
+        bus.add(cabin);
+
+        for (const z of [-0.45, 0.05, 0.55]) {
+          const win = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.22, 0.28), glassMat);
+          win.position.set(0, 0.58, z);
+          bus.add(win);
+        }
+
+        const bumperF = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.12, 0.12), darkMat);
+        bumperF.position.set(0, 0.28, -1.22);
+        bus.add(bumperF);
+        const bumperR = bumperF.clone();
+        bumperR.position.z = 1.22;
+        bus.add(bumperR);
+
+        const lightGeo = new THREE.SphereGeometry(0.06, 12, 10);
+        const lightMat = new THREE.MeshStandardMaterial({
+          color: 0xfff1c1,
+          emissive: 0xffd56a,
+          emissiveIntensity: 0.9,
+        });
+        [-0.28, 0.28].forEach((x) => {
+          const light = new THREE.Mesh(lightGeo, lightMat);
+          light.position.set(x, 0.36, -1.22);
+          bus.add(light);
+        });
+
+        const wheelGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.14, 18);
+        wheelGeo.rotateZ(Math.PI / 2);
+        const wheelMat = new THREE.MeshStandardMaterial({
+          color: 0x111827,
+          roughness: 0.85,
+          metalness: 0.1,
+        });
+        const hubMat = new THREE.MeshStandardMaterial({
+          color: 0xcbd5e1,
+          roughness: 0.4,
+          metalness: 0.5,
+        });
+
+        const wheels = [];
+        [
+          [-0.48, 0.18, 0.72],
+          [0.48, 0.18, 0.72],
+          [-0.48, 0.18, -0.72],
+          [0.48, 0.18, -0.72],
+        ].forEach(([x, y, z]) => {
+          const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+          wheel.position.set(x, y, z);
+          bus.add(wheel);
+          wheels.push(wheel);
+          const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.15, 12), hubMat);
+          hub.rotation.z = Math.PI / 2;
+          hub.position.set(x, y, z);
+          bus.add(hub);
+        });
+
+        const shadow = new THREE.Mesh(
+          new THREE.CircleGeometry(0.85, 24),
+          new THREE.MeshBasicMaterial({
+            color: 0x0e7490,
+            transparent: true,
+            opacity: 0.16,
+          })
+        );
+        shadow.rotation.x = -Math.PI / 2;
+        shadow.position.y = 0.02;
+        shadow.scale.set(0.7, 1.4, 1);
+        bus.add(shadow);
+
+        bus.userData.wheels = wheels;
+        return bus;
+      }
+
+      const bus = createBus();
+      scene.add(bus);
+
+      // Tiny floating cloud sprites (soft spheres)
+      const cloudMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 1,
+        transparent: true,
+        opacity: 0.55,
+      });
+      const clouds = [];
+      [
+        [-5, 4.2, -6, 1.8],
+        [3.5, 4.8, -7, 2.2],
+        [7, 3.8, -2, 1.4],
+      ].forEach(([x, y, z, s]) => {
+        const c = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), cloudMat);
+        c.scale.set(s, s * 0.45, s * 0.7);
+        c.position.set(x, y, z);
+        scene.add(c);
+        clouds.push(c);
+      });
+
+      function resize() {
+        const { clientWidth: w, clientHeight: h } = host;
+        renderer.setSize(w, h, false);
+        labelRenderer.setSize(w, h);
+        camera.aspect = w / Math.max(h, 1);
+        camera.updateProjectionMatrix();
+      }
+      resize();
+      window.addEventListener("resize", resize);
+      if (typeof ResizeObserver !== "undefined") {
+        new ResizeObserver(resize).observe(host);
+      }
+
+      const clock = new THREE.Clock();
+      const CYCLE = 8; // seconds for full loop
+      const tmpUp = new THREE.Vector3(0, 1, 0);
+      const lookTarget = new THREE.Vector3();
+
+      function tripProgress(t) {
+        // Hold at start, ease to end, hold, ease back
+        const x = (t % CYCLE) / CYCLE;
+        if (x < 0.06) return 0;
+        if (x < 0.46) {
+          const u = (x - 0.06) / 0.4;
+          return u * u * (3 - 2 * u);
+        }
+        if (x < 0.56) return 1;
+        if (x < 0.96) {
+          const u = (x - 0.56) / 0.4;
+          const s = u * u * (3 - 2 * u);
+          return 1 - s;
+        }
+        return 0;
+      }
+
+      function placeBus(u) {
+        const p = curve.getPointAt(u);
+        const tangent = curve.getTangentAt(u).normalize();
+        bus.position.copy(p);
+        lookTarget.copy(p).add(tangent);
+        bus.up.copy(tmpUp);
+        bus.lookAt(lookTarget);
+      }
+
+      // Initial pose
+      placeBus(reduceMotion ? 0.35 : 0);
+
+      function updateTrail(u) {
+        const count = Math.max(2, Math.floor(u * (samples.length - 1)) + 1);
+        // Rebuild a short ribbon up to the bus by hiding unused verts via drawRange on indexed geo
+        const indexCount = (count - 1) * 6;
+        progressRibbon.geometry.setDrawRange(0, indexCount);
+      }
+
+      function animate() {
+        const elapsed = clock.getElapsedTime();
+        const u = reduceMotion ? 0.35 : tripProgress(elapsed);
+
+        placeBus(u);
+        updateTrail(u);
+
+        if (!reduceMotion) {
+          const speed = u > 0.02 && u < 0.98 ? 10 : 0;
+          bus.userData.wheels.forEach((w) => {
+            w.rotation.x -= speed * 0.04;
+          });
+          clouds.forEach((c, i) => {
+            c.position.x += Math.sin(elapsed * 0.15 + i) * 0.002;
+          });
+          startPin.scale.setScalar(1 + Math.sin(elapsed * 2.2) * 0.03);
+          const endRing = endPin.children.find((c) => c.geometry && c.geometry.type === "RingGeometry");
+          if (endRing) {
+            endRing.scale.setScalar(1 + (u > 0.92 ? Math.sin(elapsed * 4) * 0.12 : 0));
+          }
+        }
+
+        // Subtle camera drift
+        if (!reduceMotion) {
+          camera.position.x = 0.6 + Math.sin(elapsed * 0.18) * 0.45;
+          camera.position.y = 10.4 + Math.sin(elapsed * 0.22) * 0.12;
+          camera.lookAt(0, 0.2, 0);
+        }
+
+        renderer.render(scene, camera);
+        labelRenderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    </script>
+  </body>
+</html>

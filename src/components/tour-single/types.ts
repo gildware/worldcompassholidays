@@ -2,6 +2,9 @@ export type TourDay = {
   dayNumber: number;
   title: string;
   description: string;
+  morning?: string;
+  afternoon?: string;
+  evening?: string;
   imageUrl: string;
 };
 

@@ -26,7 +26,6 @@ import {
   groupLabel,
   hiddenCounts,
   money,
-  nextOpen,
   pass,
   partyQuote,
   partyTotal,
@@ -43,7 +42,6 @@ import {
   statusOf,
   uniqueValues,
   visibleTours,
-  weekday,
   whoLabel,
 } from "@/components/tour-list/catalog/logic";
 import type { CatalogGuest, CatalogQuery, CatalogSort, CatalogTour } from "@/components/tour-list/catalog/types";
@@ -61,8 +59,6 @@ const SORT_LABEL: Record<CatalogSort, string> = {
   short: "Shortest",
   long: "Longest",
 };
-
-const DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function tourRequestHref(query: CatalogQuery) {
   const params = new URLSearchParams();
@@ -335,10 +331,6 @@ export function TourCatalog({
     setFiltersOpen(false);
     filterReturn.current?.focus();
     filterReturn.current = null;
-  }
-
-  function jumpDate(iso: string) {
-    setQuery((current) => ({ ...current, date: iso, page: 1 }));
   }
 
   function onPrice(which: "min" | "max", value: number) {
@@ -937,7 +929,22 @@ export function TourCatalog({
 
           <section id="results" ref={resultsRef} aria-labelledby="count">
             <div className="toolbar">
-              <p className="sort-note">{sortCopy(query)}</p>
+              <label className="sr-only" htmlFor="tour-q">
+                Search by tour name
+              </label>
+              <input
+                id="tour-q"
+                className="find"
+                type="search"
+                placeholder="Search by name"
+                autoComplete="off"
+                enterKeyHint="search"
+                value={qInput}
+                onChange={(event) => {
+                  setQInput(event.target.value);
+                  setMenu(null);
+                }}
+              />
               <div className="toolbar__controls">
                 <div className="sort" data-picker>
                   <span>Sort</span>
@@ -965,6 +972,7 @@ export function TourCatalog({
                 </div>
               </div>
             </div>
+            <p className="sort-note">{sortCopy(query)}</p>
             {insight && (!query.showOff || !query.showSold) ? (
               <div className="insight">
                 <p>
@@ -1005,7 +1013,6 @@ export function TourCatalog({
                     eager={index < 2}
                     badge={badgeFor(tour, topId, query)}
                     onSave={() => void favorites.toggle("tour", tour.id)}
-                    onDate={jumpDate}
                     onCompare={(on) => toggleCompare(tour.id, on)}
                   />
                 ))}
@@ -1460,7 +1467,6 @@ function TourCard({
   eager,
   badge,
   onSave,
-  onDate,
   onCompare,
 }: {
   tour: CatalogTour;
@@ -1471,17 +1477,14 @@ function TourCard({
   eager: boolean;
   badge: { text: string; hot: boolean } | null;
   onSave: () => void;
-  onDate: (iso: string) => void;
   onCompare: (on: boolean) => void;
 }) {
   const status = statusOf(tour, query.date);
-  const cancel = cancelInfo(tour, query, today);
   const place = tour.place === tour.region ? tour.place : `${tour.place}, ${tour.region}`;
   const placeShort = tour.place || tour.region;
   const duration = durationLabel(tour);
   const group = groupLabel(tour);
   const bits = [duration, group].filter(Boolean);
-  const next = status === "ok" ? null : nextOpen(tour, query.date);
   const block = partyBlock({
     mode: "group",
     adults: query.adults,
@@ -1509,45 +1512,37 @@ function TourCard({
         <h2>
           <Link prefetch={false} href={tour.href}>{tour.title}</Link>
         </h2>
-        {tour.reviews > 0 ? (
-          <div className="score">
-            <b className={scoreClass(tour.rating)}>{tour.rating.toFixed(1)}</b>
-            <span>
-              <strong>{scoreWords(tour.rating)}</strong>
-              <span>{reviewCount(tour.reviews)} reviews</span>
-            </span>
-          </div>
-        ) : null}
-        {bits.length ? <p className="meta">{bits.join(" · ")}</p> : null}
-        <ul className="m-facts" aria-label="Tour details">
-          {duration ? <li><span>{duration}</span></li> : null}
-          {group ? <li><span>{group}</span></li> : null}
-        </ul>
+        <div className="card-mid">
+          {tour.reviews > 0 ? (
+            <div className="score">
+              <b className={scoreClass(tour.rating)}>{tour.rating.toFixed(1)}</b>
+              <span>
+                <strong>{scoreWords(tour.rating)}</strong>
+                <span>{reviewCount(tour.reviews)} reviews</span>
+              </span>
+            </div>
+          ) : null}
+          {bits.length ? <p className="meta">{bits.join(" · ")}</p> : null}
+          <ul className="m-facts" aria-label="Tour details">
+            {duration ? <li><span>{duration}</span></li> : null}
+            {group ? <li><span>{group}</span></li> : null}
+          </ul>
+        </div>
       </div>
       <div className="buy">
-        <p className="total">{money(quote.total, currency)}</p>
-        <p className="sub">{priceDetail(tour, query)}</p>
-        <p className={cancel.kind === "yes" ? "ok" : cancel.kind === "no" ? "warn" : "muted"}>{cancel.text}</p>
+        <div className="buy__price">
+          <p className="total">{money(quote.total, currency)}</p>
+          <p className="sub">{priceDetail(tour, query)}</p>
+        </div>
         {block ? <p className="warn">{block}</p> : null}
-        {status === "ok" ? (
-          <Link prefetch={false} className="btn btn--small" href={tour.href}>
-            See the tour
-          </Link>
-        ) : (
-          <>
-            <p className="warn">{status === "sold" ? `Sold out on ${prettyDate(query.date)}` : `Does not run on ${DAY[weekday(query.date)]}`}</p>
-            {next ? (
-              <button className="btn btn--small" type="button" onClick={() => onDate(next)}>
-                Next date · {prettyDate(next)}
-              </button>
-            ) : (
-              <p className="muted">No open date in the next 3 weeks</p>
-            )}
-          </>
-        )}
-        <label className="cmp">
-          <input type="checkbox" checked={compared} onChange={(event) => onCompare(event.target.checked)} /> Compare
-        </label>
+        {status === "sold" ? (
+          <p className="warn">{`Sold out on ${prettyDate(query.date)}`}</p>
+        ) : null}
+        <div className="buy__actions">
+          <label className="cmp">
+            <input type="checkbox" checked={compared} onChange={(event) => onCompare(event.target.checked)} /> Compare
+          </label>
+        </div>
       </div>
     </article>
   );

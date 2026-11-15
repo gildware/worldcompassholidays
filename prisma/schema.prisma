@@ -70,6 +70,7 @@ model Tour {
   faqsJson            String          @default("[]")
   includesJson        String          @default("[]")
   excludesJson        String          @default("[]")
+  beforeYouGoJson     String          @default("[]")
   surroundingsJson    String          @default("{\"education\":[],\"health\":[],\"transportation\":[]}")
   address             String          @default("")
   mapLat              String          @default("")
@@ -157,6 +158,9 @@ model ItineraryDay {
   dayNumber   Int
   title       String
   description String @default("")
+  morning     String @default("")
+  afternoon   String @default("")
+  evening     String @default("")
   imageUrl    String @default("")
   imageKey    String @default("")
   imageDriver String @default("local")

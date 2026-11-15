@@ -169,7 +169,6 @@ export function HomeDesktop({
                   </div>
                 </div>
                 <HomeFlipGrid
-                  headingId="home-flip-desktop"
                   tours={tours.map((tour) => ({
                     id: tour.id,
                     title: tour.title,

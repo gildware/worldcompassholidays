@@ -37,6 +37,7 @@ type TourRecord = {
   faqsJson: string;
   includesJson: string;
   excludesJson: string;
+  beforeYouGoJson: string;
   surroundingsJson: string;
   address: string;
   mapLat: string;
@@ -65,6 +66,9 @@ type TourRecord = {
     dayNumber: number;
     title: string;
     description: string;
+    morning?: string;
+    afternoon?: string;
+    evening?: string;
     imageUrl: string;
     imageKey: string;
     imageDriver: string;
@@ -90,6 +94,9 @@ export function mapTourToFormValues(tour: TourRecord): TourFormValues {
     dayNumber: day.dayNumber,
     title: itineraryTitle(day.title),
     description: day.description,
+    morning: day.morning ?? "",
+    afternoon: day.afternoon ?? "",
+    evening: day.evening ?? "",
     imageUrl: day.imageUrl,
     imageKey: day.imageKey,
     imageDriver:
@@ -126,6 +133,7 @@ export function mapTourToFormValues(tour: TourRecord): TourFormValues {
     extraFaqs: localFaqs(parseJsonArray<unknown>(tour.faqsJson)),
     includes: selectionKeys(parseJsonArray<unknown>(tour.includesJson)),
     excludes: selectionKeys(parseJsonArray<unknown>(tour.excludesJson)),
+    beforeYouGo: selectionKeys(parseJsonArray<unknown>(tour.beforeYouGoJson)),
     itinerary,
     destinationId: destinationIds[0] ?? tour.destinationId ?? "",
     surroundings: parseSurroundings(tour.surroundingsJson),

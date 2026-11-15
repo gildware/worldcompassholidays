@@ -391,10 +391,8 @@ export type HomeFlipCard = {
 
 export function HomeFlipGrid({
   tours,
-  headingId,
 }: {
   tours: HomeFlipCard[];
-  headingId: string;
 }) {
   const calm = useCalm();
   const [flipped, setFlipped] = useState<Record<string, boolean>>({});
@@ -402,12 +400,6 @@ export function HomeFlipGrid({
 
   return (
     <div className={`${shell(calm)} hic-block`}>
-      <div className="hic-head">
-        <div>
-          <p className="hic-kicker">Flip</p>
-          <h2 id={headingId}>Tap a tour to read the plan</h2>
-        </div>
-      </div>
       <div className="hic-row">
         {tours.map((tour) => {
           const open = Boolean(flipped[tour.id]);

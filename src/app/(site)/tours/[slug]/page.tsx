@@ -12,7 +12,7 @@ import { prisma } from "@/lib/db";
 import { firebaseWebConfig } from "@/lib/firebase/config";
 import { cached } from "@/lib/ttl-cache";
 import { formatMoney } from "@/lib/format";
-import { resolveFaqs, resolveTitles } from "@/lib/hotels/labels";
+import { resolveCatalogItems, resolveFaqs } from "@/lib/hotels/labels";
 import { parseMapPoint } from "@/lib/maps";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
@@ -136,12 +136,19 @@ export default async function TourPage({ params }: Props) {
   const similarRows = similarPool.filter((row) => row.id !== tour.id).slice(0, 8);
 
   const images = galleryUrls(tour.imageUrl, tour.featuredImageUrl, tour.galleryJson);
-  const includes = resolveTitles(tour.includesJson, catalog.includes);
-  const excludes = resolveTitles(tour.excludesJson, catalog.excludes);
-  const facilities = resolveTitles(tour.facilitiesJson, catalog.facilities);
-  const styles = resolveTitles(tour.travelStylesJson, catalog.styles);
+  const includes = resolveCatalogItems(tour.includesJson, catalog.includes);
+  const excludes = resolveCatalogItems(tour.excludesJson, catalog.excludes);
+  const beforeYouGo = resolveCatalogItems(tour.beforeYouGoJson, catalog.beforeYouGo);
+  const facilities = resolveCatalogItems(tour.facilitiesJson, catalog.facilities);
+  const styles = resolveCatalogItems(tour.travelStylesJson, catalog.styles);
   const faqs = resolveFaqs(tour.faqsJson, catalog.faqs);
-  const haystack = `${tour.title} ${tour.summary} ${plainText(tour.description)} ${includes.join(" ")}`;
+  const categoryOption =
+    catalog.categories.find(
+      (item) =>
+        item.id === tour.categoryId ||
+        item.title.toLowerCase() === tour.category.trim().toLowerCase(),
+    ) ?? null;
+  const haystack = `${tour.title} ${tour.summary} ${plainText(tour.description)} ${includes.map((item) => item.title).join(" ")}`;
   const languages = languageNames.filter((name) => haystack.toLowerCase().includes(name.toLowerCase()));
   const unit = parseDurationUnit(tour.durationUnit);
   const durationLabel = durationText(tour.durationDays, unit, tour.durationLabel);
@@ -168,7 +175,8 @@ export default async function TourPage({ params }: Props) {
     slug: tour.slug,
     location: place?.name ?? "",
     destinationHref: place?.slug ? `/destinations/${place.slug}` : "/tours",
-    category: tour.category.trim() || styles[0] || "",
+    category: tour.category.trim() || styles[0]?.title || "",
+    categoryIconUrl: categoryOption?.iconUrl ?? "",
     durationLabel,
     durationDays: tour.durationDays,
     difficulty: tour.difficulty.trim(),
@@ -185,13 +193,18 @@ export default async function TourPage({ params }: Props) {
     description: plainText(tour.description),
     includes,
     excludes,
-    facilities: facilities.length > 0 ? facilities : styles,
+    beforeYouGo,
+    facilities,
+    styles,
     languages,
     faqs,
     days: tour.days.map((day) => ({
       dayNumber: day.dayNumber,
       title: day.title,
-      description: plainText(day.description),
+      description: plainText(day.description ?? ""),
+      morning: plainText(day.morning ?? ""),
+      afternoon: plainText(day.afternoon ?? ""),
+      evening: plainText(day.evening ?? ""),
       imageUrl: day.imageUrl,
     })),
     departures: openDepartures.map((item) => {

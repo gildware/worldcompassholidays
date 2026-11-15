@@ -1,0 +1,35 @@
+---
+description: Locked tour data + page format (Classic Kashmir Triangle)
+globs: **/*tour*
+alwaysApply: false
+---
+
+# Tour format — LOCKED
+
+Approved against **Classic Kashmir Triangle** (`/tours/classic-kashmir-triangle`).
+Do not invent new admin tabs, public sections, or image slots.
+
+## Source of truth
+
+- Code constants: `src/lib/tours/format.ts`
+- Full example: `src/lib/demo/sample-tour-classic-kashmir.ts`
+- Admin UI: `TourTabsForm` 7 steps (order fixed)
+- Public UI: `TourStay` sections
+
+## Required shape (every tour)
+
+1. **General** — title, summary, category, availability, duration days/nights + label, difficulty, min/max people
+2. **Itinerary** — destinations, map pin, pickup address; each day: title + **Morning / Afternoon / Evening** + place-matched day image
+3. **Content** — HTML description (why book, stays, how to book)
+4. **Pricing** — INR priceFrom; optional discounts
+5. **Tour details** — catalog links: FAQs, includes, excludes, **before_you_go**, travel styles, facilities (+ tour-specific FAQs when needed)
+6. **Images** — cover + ≥4 gallery shots + one image per itinerary day. **Place-matched only**: every photo must show that tour’s stop/region (e.g. Ranthambore ≠ Kashmir meadows; Nag Tibba ≠ Kedarnath; Tulian ≠ California/Nepal). Prefer Wikimedia Commons with place keywords in the search. **Never** use unrelated `localFallbacks` to “fill a slot” — if Commons fails, keep searching place-specific titles or leave the slot unset and fail the fetch. **Every tour must use different images** — never reuse another tour’s Commons source or identical bytes. Use `scripts/lib/tour-image-uniqueness.ts` when fetching.
+7. **SEO** — seoTitle, seoDescription, indexable; publish only when media is complete
+
+## Public page
+
+Keep **Before you go** and **FAQ** as separate sections. Do not merge them.
+
+## When adding tours
+
+Clone this structure. Original itinerary copy only (never scrape). Match media to stops (`{slug}-cover.jpg`, `-g1…g4.jpg`, `-d{n}.jpg`).

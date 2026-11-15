@@ -1,0 +1,25 @@
+CONSOLE info %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=hxmvgS9ryWRtbekN_MqMe' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=hxmvgS9ryWRtbekN_MqMe' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=hxmvgS9ryWRtbekN_MqMe' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=hxmvgS9ryWRtbekN_MqMe' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+PAGE {"path":"/","renderers":0,"anyFiber":"NEXTJS-PORTAL:__reactContainer$puhrm6w0ytn","nextF":0}
+CONSOLE info %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=Ne-kIWzxcvwrQK17scXRW' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=Ne-kIWzxcvwrQK17scXRW' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=Ne-kIWzxcvwrQK17scXRW' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=Ne-kIWzxcvwrQK17scXRW' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+PAGE {"path":"/destinations","renderers":0,"anyFiber":"NEXTJS-PORTAL:__reactContainer$dlicamt7gad","nextF":0}
+CONSOLE info %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=WaTXQNlsaYVADSGjQXnNq' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=WaTXQNlsaYVADSGjQXnNq' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=WaTXQNlsaYVADSGjQXnNq' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+PAGE {"path":"/admin/login","renderers":0,"anyFiber":"NEXTJS-PORTAL:__reactContainer$osmrbbs7tys","nextF":0}
+CONSOLE info %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=_IArBKsgsBcCwn7c28fBw' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+CONSOLE info %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=bqe0Z4683vHVZVnHtqpzo' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+CONSOLE info %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=Taa5-2ANOkZlw69Xh5cR7' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:3000/_next/hmr?id=Taa5-2ANOkZlw69Xh5cR7' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE
+PAGE {"path":"/admin/destinations","renderers":0,"anyFiber":"NEXTJS-PORTAL:__reactContainer$ap1y2ew2s6a","nextF":0}

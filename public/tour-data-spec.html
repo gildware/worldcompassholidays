@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Page 2 — Tour Data Spec (Tabs + Shared Catalogs)</title>
+  <style>
+    :root {
+      --bg:#f6f1e8; --ink:#1a1a1a; --muted:#5c564c; --card:#fffdf8;
+      --line:#e4d9c5; --accent:#0f5c4c; --soft:#e6f2ef; --warn:#9a3412;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin:0;
+      font-family:"Iowan Old Style", Palatino, Georgia, serif;
+      background: radial-gradient(ellipse at top right, #d9ebe4, transparent 40%), var(--bg);
+      color:var(--ink); line-height:1.45;
+    }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 80px; }
+    header { margin-bottom:22px; padding-bottom:18px; border-bottom:1px solid var(--line); }
+    .eyebrow { font-family:system-ui,sans-serif; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:700; }
+    h1 { margin:8px 0; font-size:clamp(1.9rem,4vw,2.8rem); line-height:1.1; }
+    .sub { color:var(--muted); max-width:72ch; }
+    .nav { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; font-family:system-ui,sans-serif; font-size:13px; }
+    .nav a { color:var(--accent); }
+    .toc { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .toc a {
+      font-family:system-ui,sans-serif; font-size:13px; text-decoration:none; color:var(--ink);
+      background:var(--card); border:1px solid var(--line); border-radius:999px; padding:6px 12px;
+    }
+    section {
+      margin-top:26px; background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden;
+    }
+    .head {
+      padding:16px 20px; background:linear-gradient(90deg,#eef6f3,#f3ebe0); border-bottom:1px solid var(--line);
+    }
+    .head h2 { margin:0 0 4px; font-size:1.3rem; }
+    .head p { margin:0; color:var(--muted); font-family:system-ui,sans-serif; font-size:13px; }
+    .body { padding:16px 20px 20px; }
+    table { width:100%; border-collapse:collapse; font-size:0.95rem; }
+    th, td { text-align:left; padding:9px 10px; border-bottom:1px solid #eee4d4; vertical-align:top; }
+    th { font-family:system-ui,sans-serif; font-size:12px; color:var(--muted); }
+    .req { color:var(--warn); font-family:system-ui,sans-serif; font-size:11px; font-weight:700; }
+    .opt { color:#065f46; font-family:system-ui,sans-serif; font-size:11px; font-weight:700; }
+    .grid { display:grid; gap:10px; }
+    @media(min-width:760px){ .grid.cols-2 { grid-template-columns:1fr 1fr; } .grid.cols-3 { grid-template-columns:1fr 1fr 1fr; } }
+    .chip {
+      background:#faf7f1; border:1px solid var(--line); border-radius:12px; padding:10px 12px;
+      font-family:system-ui,sans-serif; font-size:13px;
+    }
+    .chip strong { display:block; font-family:Georgia,serif; font-size:0.98rem; margin-bottom:2px; }
+    .chip span { color:var(--muted); font-size:12px; }
+    .note {
+      margin-top:8px; padding:12px 14px; background:var(--soft); border-radius:12px;
+      font-family:system-ui,sans-serif; font-size:13px; color:var(--muted);
+    }
+    .warnbox {
+      margin-top:12px; padding:12px 14px; background:#fff8e8; border-left:4px solid #b8860b;
+      font-family:system-ui,sans-serif; font-size:13px; color:var(--muted);
+    }
+    .tag {
+      display:inline-block; margin:2px 4px 2px 0; padding:3px 8px; border-radius:999px;
+      background:#f3ebe0; font-family:system-ui,sans-serif; font-size:12px;
+    }
+    h3 { margin:18px 0 8px; font-size:1.05rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow">Page 2 · LOCKED data shape</div>
+      <h1>What each tour must contain</h1>
+      <p class="sub">
+        Locked against Classic Kashmir Triangle. Matches admin Tour form (7 steps). Shared catalogs
+        (Categories, Travel styles, Facilities, FAQs, Includes, Excludes, Before you go)
+        each have <strong>icon + title</strong> (and content where needed) and are reused across tours.
+      </p>
+      <div class="nav">
+        <a href="/tour-planning-index.html">← Planning hub</a>
+        <a href="/tour-add-list.html">← Page 1 · Tours list</a>
+      </div>
+      <div class="toc">
+        <a href="#tabs">7 tabs</a>
+        <a href="#categories">Categories</a>
+        <a href="#styles">Travel styles</a>
+        <a href="#facilities">Facilities</a>
+        <a href="#faqs">FAQs</a>
+        <a href="#includes">Includes</a>
+        <a href="#excludes">Excludes</a>
+        <a href="#itinerary-rules">Itinerary rules</a>
+      </div>
+    </header>
+
+    <!-- 7 TABS -->
+    <section id="tabs">
+      <div class="head">
+        <h2>Per-tour data — 7 admin tabs</h2>
+        <p>Every tour we add must fill these. Required fields marked in red.</p>
+      </div>
+      <div class="body">
+
+        <h3>1 · General</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Need</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Title</td><td class="req">Required</td><td>Public tour name</td></tr>
+            <tr><td>Short description (summary)</td><td class="req">Required</td><td>Card blurb, ~1–2 lines</td></tr>
+            <tr><td>Category</td><td class="req">Required</td><td>Pick 1 from shared Categories</td></tr>
+            <tr><td>Availability (always / date range)</td><td class="req">Required</td><td>Seasonal treks/yatras use dates</td></tr>
+            <tr><td>Duration value + unit</td><td class="req">Required</td><td>Days / nights / hours</td></tr>
+            <tr><td>Duration label</td><td class="opt">Recommended</td><td>e.g. “5 nights / 6 days”</td></tr>
+            <tr><td>Difficulty</td><td class="req">Required</td><td>easy / moderate / difficult</td></tr>
+            <tr><td>Min people / Max group size</td><td class="opt">Recommended</td><td>Private vs group</td></tr>
+            <tr><td>Min days before booking</td><td class="opt">Optional</td><td>Lead time</td></tr>
+            <tr><td>Featured flag</td><td class="opt">Optional</td><td>Homepage / highlights</td></tr>
+            <tr><td>YouTube URL</td><td class="opt">Optional</td><td>Promo video</td></tr>
+          </tbody>
+        </table>
+
+        <h3>2 · Itinerary</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Need</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Destination(s)</td><td class="req">Required</td><td>Link one or more destinations</td></tr>
+            <tr><td>Day-by-day plan</td><td class="req">Required</td><td>Each day: dayNumber, title, Morning / Afternoon / Evening</td></tr>
+            <tr><td>Day image</td><td class="req">Required</td><td>One place-matched photo per day (<code>{slug}-dN.jpg</code>)</td></tr>
+            <tr><td>Map lat / lng / zoom</td><td class="req">Required</td><td>Usually inherited from primary destination</td></tr>
+            <tr><td>Address / meeting point</td><td class="opt">Recommended</td><td>Pickup city / airport</td></tr>
+          </tbody>
+        </table>
+        <div class="note">
+          Itinerary text must be <strong>original / rewritten</strong> — never paste competitor copy. Public itineraries are structure reference only.
+        </div>
+
+        <h3>3 · Content</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Need</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Rich description (HTML)</td><td class="req">Required</td><td>Why book, highlights, stay notes</td></tr>
+            <tr><td>Surroundings (optional blocks)</td><td class="opt">Optional</td><td>Only if useful</td></tr>
+          </tbody>
+        </table>
+
+        <h3>4 · Pricing</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Need</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Price from</td><td class="req">Required</td><td>Per person starting price</td></tr>
+            <tr><td>Currency</td><td class="req">Required</td><td>INR default</td></tr>
+            <tr><td>Discounts</td><td class="opt">Optional</td><td>Early bird / group / seasonal</td></tr>
+          </tbody>
+        </table>
+
+        <h3>5 · Tour details</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Need</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Shared FAQs (multi-select)</td><td class="req">Required</td><td>Pick from shared FAQ catalog</td></tr>
+            <tr><td>Tour-specific FAQs</td><td class="opt">Recommended</td><td>Only when unique to this tour</td></tr>
+            <tr><td>Includes (multi-select)</td><td class="req">Required</td><td>From shared Includes catalog</td></tr>
+            <tr><td>Excludes (multi-select)</td><td class="req">Required</td><td>From shared Excludes catalog</td></tr>
+            <tr><td>Before you go (multi-select)</td><td class="req">Required</td><td>From shared Before you go catalog (icons + tips)</td></tr>
+            <tr><td>Travel styles (multi-select)</td><td class="req">Required</td><td>1–3 styles typical</td></tr>
+            <tr><td>Facilities (multi-select)</td><td class="opt">Recommended</td><td>Tour-relevant amenities only</td></tr>
+          </tbody>
+        </table>
+
+        <h3>6 · Images</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Need</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Banner image</td><td class="req">Required</td><td>Full-width tour page top (may reuse cover)</td></tr>
+            <tr><td>Cover / card image</td><td class="req">Required</td><td><code>{slug}-cover.jpg</code> — place-accurate hero</td></tr>
+            <tr><td>Gallery images</td><td class="req">Required</td><td>≥4 shots across the circuit (<code>-g1…g4</code>)</td></tr>
+            <tr><td>Per-day itinerary images</td><td class="req">Required</td><td>Matched to that day’s stops — not random</td></tr>
+            <tr><td>SEO / social image</td><td class="opt">Recommended</td><td>Defaults to cover</td></tr>
+          </tbody>
+        </table>
+
+        <h3>7 · SEO</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Need</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>SEO title</td><td class="req">Required</td><td>Unique, destination + duration</td></tr>
+            <tr><td>SEO description</td><td class="req">Required</td><td>≥ 10 chars, benefit + CTA</td></tr>
+            <tr><td>Indexable flag</td><td class="req">Required</td><td>Default true</td></tr>
+            <tr><td>Facebook / Twitter title & description</td><td class="opt">Optional</td><td>Can mirror SEO</td></tr>
+            <tr><td>Published</td><td class="req">Required</td><td>Draft vs live</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section id="categories">
+      <div class="head">
+        <h2>Tour categories <span style="font-weight:400;font-size:0.9rem;color:#5c564c">(shared · icon + image + title)</span></h2>
+        <p>One category per tour. Proposed final set for your agency (keeps current list, drops none useful).</p>
+      </div>
+      <div class="body">
+        <div class="grid cols-3">
+          <div class="chip"><strong>Religious</strong><span>Yatras, temple circuits, multi-faith pilgrimages</span></div>
+          <div class="chip"><strong>Trekking</strong><span>Day hikes to multi-day Himalayan treks</span></div>
+          <div class="chip"><strong>Camping</strong><span>Desert, lakeside, beach, alpine camps</span></div>
+          <div class="chip"><strong>Leisure</strong><span>Classic holiday circuits & sightseeing</span></div>
+          <div class="chip"><strong>Honeymoon</strong><span>Couples / romance packages</span></div>
+          <div class="chip"><strong>Family</strong><span>Kid-friendly & multi-gen itineraries</span></div>
+          <div class="chip"><strong>Adventure</strong><span>Rafting, skiing, bike, scuba, ATV</span></div>
+          <div class="chip"><strong>Winter</strong><span>Snow tours & winter specials</span></div>
+          <div class="chip"><strong>Offbeat</strong><span>Gurez, Spiti-style hidden valleys</span></div>
+          <div class="chip"><strong>Luxury</strong><span>Premium stays / slow pacing</span></div>
+          <div class="chip"><strong>Road trip</strong><span>Highway expeditions, self-drive style</span></div>
+          <div class="chip"><strong>City trips</strong><span>Short city / weekend breaks</span></div>
+          <div class="chip"><strong>Ecotourism</strong><span>Wildlife safari & nature parks</span></div>
+          <div class="chip"><strong>Escorted tour</strong><span>Fixed-departure group with TM</span></div>
+          <div class="chip"><strong>Cultural</strong><span>Festivals, heritage, folk experiences</span></div>
+        </div>
+        <div class="warnbox">
+          Suggest adding later if needed: <strong>Wellness</strong> (Ayurveda/Yoga). For now map wellness tours → Leisure or Cultural.
+          Each category needs: title + icon + cover image in Configuration.
+        </div>
+      </div>
+    </section>
+
+    <!-- TRAVEL STYLES -->
+    <section id="styles">
+      <div class="head">
+        <h2>Travel styles <span style="font-weight:400;font-size:0.9rem;color:#5c564c">(shared · multi-select)</span></h2>
+        <p>Current list is weak for India tours. Proposed replacement below — approve / edit.</p>
+      </div>
+      <div class="body">
+        <p style="color:var(--muted);font-family:system-ui,sans-serif;font-size:13px;margin-top:0">
+          Current in code: Cultural · Nature & Adventure · Marine · Independent · Activities · Festival & Events · Special Interest
+        </p>
+        <h3>Proposed (better for your catalog)</h3>
+        <div class="grid cols-3">
+          <div class="chip"><strong>Nature & Adventure</strong><span>Treks, rafting, bike, camps</span></div>
+          <div class="chip"><strong>Cultural / Heritage</strong><span>Temples, forts, folk, cities</span></div>
+          <div class="chip"><strong>Spiritual</strong><span>Yatras & faith journeys</span></div>
+          <div class="chip"><strong>Romantic</strong><span>Honeymoon / couples</span></div>
+          <div class="chip"><strong>Family Friendly</strong><span>Kids & multi-gen pacing</span></div>
+          <div class="chip"><strong>Wildlife</strong><span>Safari & national parks</span></div>
+          <div class="chip"><strong>Beach & Islands</strong><span>Goa, Andaman, Kerala coast</span></div>
+          <div class="chip"><strong>Hill Stations</strong><span>Shimla, Manali, Ooty, Kashmir hills</span></div>
+          <div class="chip"><strong>Festival & Events</strong><span>Rann Utsav, Holi, Pushkar</span></div>
+          <div class="chip"><strong>Wellness</strong><span>Yoga, Ayurveda</span></div>
+          <div class="chip"><strong>Group / Escorted</strong><span>Fixed departures</span></div>
+          <div class="chip"><strong>Private / Independent</strong><span>Private cab holidays</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FACILITIES -->
+    <section id="facilities">
+      <div class="head">
+        <h2>Facilities <span style="font-weight:400;font-size:0.9rem;color:#5c564c">(shared · tour amenities)</span></h2>
+        <p>Current list looks hotel-like (Golf Cages, Aerobics Room). Propose tour-relevant facilities.</p>
+      </div>
+      <div class="body">
+        <p style="color:var(--muted);font-family:system-ui,sans-serif;font-size:13px;margin-top:0">
+          Current: Wifi · Gymnasium · Mountain Bike · Satellite Office · Staff Lounge · Golf Cages · Aerobics Room
+        </p>
+        <h3>Proposed facilities</h3>
+        <div>
+          <span class="tag">Private cab</span>
+          <span class="tag">Airport transfers</span>
+          <span class="tag">Tour manager</span>
+          <span class="tag">Local guide</span>
+          <span class="tag">MAP meals (B/D)</span>
+          <span class="tag">Houseboat stay</span>
+          <span class="tag">Camping gear</span>
+          <span class="tag">Sleeping bag</span>
+          <span class="tag">Trek leader</span>
+          <span class="tag">First aid kit</span>
+          <span class="tag">Oxygen support</span>
+          <span class="tag">Permits arranged</span>
+          <span class="tag">Pure veg meals</span>
+          <span class="tag">Wi‑Fi (where available)</span>
+          <span class="tag">Bonfire (seasonal)</span>
+          <span class="tag">Shikara ride</span>
+          <span class="tag">Gondola assistance</span>
+          <span class="tag">Helmet / safety gear</span>
+          <span class="tag">Bike rental</span>
+          <span class="tag">Porter / mule (add-on)</span>
+          <span class="tag">Medical support desk</span>
+          <span class="tag">24×7 helpline</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQS -->
+    <section id="faqs">
+      <div class="head">
+        <h2>Shared FAQs <span style="font-weight:400;font-size:0.9rem;color:#5c564c">(icon + title + answer)</span></h2>
+        <p>Reusable across many tours. Tour-specific questions stay as “extra FAQs” on the tour.</p>
+      </div>
+      <div class="body">
+        <h3>Proposed shared FAQ library</h3>
+        <div class="grid cols-2">
+          <div class="chip"><strong>What is the best time for this tour?</strong><span>Season answer varies — keep as template; customize per tour when needed</span></div>
+          <div class="chip"><strong>Is this a private or group tour?</strong><span>Private cab vs fixed departure</span></div>
+          <div class="chip"><strong>Are flights included?</strong><span>Usually no — clarify</span></div>
+          <div class="chip"><strong>What is the hotel / stay category?</strong><span>3★ / 4★ / houseboat / camp</span></div>
+          <div class="chip"><strong>Can seniors join?</strong><span>Pace & altitude notes</span></div>
+          <div class="chip"><strong>Is this suitable for kids?</strong><span>Age guidance</span></div>
+          <div class="chip"><strong>What fitness level is required?</strong><span>Especially treks</span></div>
+          <div class="chip"><strong>Are permits included?</strong><span>Forest / inner line / yatra</span></div>
+          <div class="chip"><strong>What about altitude sickness?</strong><span>Ladakh / high treks</span></div>
+          <div class="chip"><strong>Are meals included?</strong><span>MAP / AP / trek meals</span></div>
+          <div class="chip"><strong>What extras are paid locally?</strong><span>Gondola, union cabs, ponies</span></div>
+          <div class="chip"><strong>Is travel insurance mandatory?</strong><span>Treks / high altitude</span></div>
+          <div class="chip"><strong>What is the cancellation policy?</strong><span>Shared policy text</span></div>
+          <div class="chip"><strong>Can itinerary change due to weather?</strong><span>Winter / mountains</span></div>
+          <div class="chip"><strong>Do you arrange VIP / special darshan?</strong><span>Religious tours</span></div>
+          <div class="chip"><strong>Is helicopter ticket guaranteed?</strong><span>Amarnath / Char Dham / Kedarnath</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INCLUDES -->
+    <section id="includes">
+      <div class="head">
+        <h2>Shared Includes <span style="font-weight:400;font-size:0.9rem;color:#5c564c">(icon + title)</span></h2>
+        <p>Pick a set per tour. Keep titles short and reusable.</p>
+      </div>
+      <div class="body">
+        <div>
+          <span class="tag">Accommodation as per itinerary (twin sharing)</span>
+          <span class="tag">Daily breakfast</span>
+          <span class="tag">Breakfast + dinner (MAP)</span>
+          <span class="tag">All trek meals on trail days</span>
+          <span class="tag">Private vehicle for transfers & sightseeing</span>
+          <span class="tag">Airport pickup & drop</span>
+          <span class="tag">Driver allowance, tolls & parking</span>
+          <span class="tag">GST as quoted</span>
+          <span class="tag">Shikara ride (where listed)</span>
+          <span class="tag">Local guide / tour manager</span>
+          <span class="tag">Certified trek leader</span>
+          <span class="tag">Camping equipment (tents, mats, sleeping bags)</span>
+          <span class="tag">Forest / trek permits</span>
+          <span class="tag">First-aid kit</span>
+          <span class="tag">Oxygen cylinder support (high altitude)</span>
+          <span class="tag">Yatra registration assistance</span>
+          <span class="tag">Safari jeep entry (where listed)</span>
+          <span class="tag">Houseboat night (where listed)</span>
+          <span class="tag">Welcome amenities / honeymoon décor (where listed)</span>
+          <span class="tag">Bike rental with mechanic support (bike tours)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXCLUDES -->
+    <section id="excludes">
+      <div class="head">
+        <h2>Shared Excludes <span style="font-weight:400;font-size:0.9rem;color:#5c564c">(icon + title)</span></h2>
+        <p>Always be explicit — builds trust and reduces support load.</p>
+      </div>
+      <div class="body">
+        <div>
+          <span class="tag">Flights / trains to starting point</span>
+          <span class="tag">Lunch (unless listed)</span>
+          <span class="tag">Tips & personal expenses</span>
+          <span class="tag">Laundry</span>
+          <span class="tag">Travel insurance</span>
+          <span class="tag">Entry fees not listed</span>
+          <span class="tag">Gulmarg Gondola tickets</span>
+          <span class="tag">Pahalgam union sightseeing cabs</span>
+          <span class="tag">Sonamarg pony / sled to Thajiwas / Zero Point</span>
+          <span class="tag">Helicopter tickets (unless heli package)</span>
+          <span class="tag">Pony / palki / porter for shrine trek</span>
+          <span class="tag">VIP / special darshan tickets</span>
+          <span class="tag">Personal trekking gear</span>
+          <span class="tag">Porter for personal bags (add-on)</span>
+          <span class="tag">Emergency evacuation costs</span>
+          <span class="tag">Anything not mentioned in includes</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ITINERARY RULES -->
+    <section id="itinerary-rules">
+      <div class="head">
+        <h2>Itinerary writing rules (copyright-safe)</h2>
+        <p>How we will generate day-by-day content after you approve Page 1 + Page 2.</p>
+      </div>
+      <div class="body">
+        <div class="grid">
+          <div class="chip">
+            <strong>1. Never copy competitor text</strong>
+            <span>Public itineraries = structure only (day order / places). All titles and paragraphs rewritten in our voice.</span>
+          </div>
+          <div class="chip">
+            <strong>2. If online itinerary exists</strong>
+            <span>Use place sequence as reference → regenerate original day titles + descriptions + stay notes.</span>
+          </div>
+          <div class="chip">
+            <strong>3. If no online itinerary</strong>
+            <span>Create a practical operator itinerary from destination logic (drive times, overnight bases, buffer days).</span>
+          </div>
+          <div class="chip">
+            <strong>4. Every day must include</strong>
+            <span>dayNumber · short title · 2–5 sentence description (transfers, key visits, overnight place).</span>
+          </div>
+          <div class="chip">
+            <strong>5. Already-on-site tours</strong>
+            <span>Keep existing itineraries unless you ask for a rewrite pass for consistency.</span>
+          </div>
+        </div>
+        <div class="warnbox">
+          Next step after your OK: lock Page 1 tour list + Page 2 catalogs, then generate original itineraries + seed shared Categories / Styles / Facilities / FAQs / Includes / Excludes with icons.
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

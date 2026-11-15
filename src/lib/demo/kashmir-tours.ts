@@ -33,6 +33,9 @@ export type KashmirTour = {
   excludes: string[];
   faqs: { title: string; content: string }[];
   days: KashmirTourDay[];
+  /** Overrides default "{title} | Kashmir tour packages" SEO title. */
+  seoTitle?: string;
+  seoDescription?: string;
   coverPrompt: string;
   galleryPrompts: [string, string, string, string];
 };
@@ -91,15 +94,15 @@ export const kashmirTours: KashmirTour[] = [
     stays: [
       "1N Hotel Royal Batoo or similar (Srinagar / Dalgate)",
       "1N Apple Tree Resorts or similar (Gulmarg)",
-      "1N White Villa Resort or similar (Pahalgam)",
+      "2N White Villa Resort or similar (Pahalgam)",
       "1N Hotel Asian Park or similar (return Srinagar)",
       "Optional upgrade: 1N deluxe Dal Lake houseboat on night 1",
     ],
     openDepartures: 6,
     summary:
-      "Kashmir’s #1 first trip — overnight in Gulmarg and Pahalgam, Mughal Gardens, Shikara, Betaab & Aru. Private cab from ₹14,999 pp.",
+      "Kashmir’s #1 first trip — overnight Gulmarg and 2 nights Pahalgam, Mughal Gardens, Shikara, Betaab & Aru. Own cab, twin share, from ₹14,999 pp (min. 2).",
     description:
-      "<p><strong>Why travellers book this:</strong> you sleep in the mountains, not only day-trip them. One night in Gulmarg means an early Gondola without the Srinagar rush; one night in Pahalgam means Betaab and Aru without a 6-hour round trip.</p><p><strong>Stays in this quote:</strong> Hotel Royal Batoo (or similar) near Dalgate, Apple Tree Resorts (or similar) in Gulmarg, White Villa Resort (or similar) by the Lidder, then Hotel Asian Park (or similar) on return. Houseboat upgrade available for night 1.</p><p>Private Innova/Swift Dzire throughout. Gondola tickets and Pahalgam union cabs are paid locally — we list exact extras before you confirm.</p>",
+      "<p><strong>Why travellers book this:</strong> you sleep in the mountains, not only day-trip them. One night in Gulmarg means an early Gondola without the Srinagar rush; two nights in Pahalgam means Betaab and Aru without a 6-hour round trip.</p><p><strong>Stays (5 nights):</strong> Hotel Royal Batoo (or similar) near Dalgate, Apple Tree Resorts (or similar) in Gulmarg, White Villa Resort (or similar) by the Lidder for 2 nights, then Hotel Asian Park (or similar) on return. Houseboat upgrade available for night 1.</p><p>Private Innova/Swift Dzire for your party. Breakfast and dinner at the hotel each night. Gondola tickets and Pahalgam union cabs are paid locally — we list exact extras before you confirm. Send a request first; nothing is charged until you accept.</p>",
     durationDays: 6,
     durationNights: 5,
     durationLabel: "5 nights / 6 days",
@@ -120,7 +123,7 @@ export const kashmirTours: KashmirTour[] = [
       {
         title: "Which hotels will I get?",
         content:
-          "The quote uses Hotel Royal Batoo (Srinagar), Apple Tree Resorts (Gulmarg), White Villa Resort (Pahalgam), and Hotel Asian Park (return) or the same star category if a date is sold out. Exact names are confirmed in writing before payment.",
+          "The quote uses Hotel Royal Batoo (Srinagar), Apple Tree Resorts (Gulmarg), White Villa Resort (Pahalgam — 2 nights), and Hotel Asian Park (return) or the same star category if a date is sold out. Exact names are confirmed in writing before payment.",
       },
       {
         title: "How much should I budget for extras?",
@@ -1303,12 +1306,12 @@ export const kashmirTours: KashmirTour[] = [
       { dayNumber: 5, title: "Return Srinagar", description: "Rest day after the Yatra." },
       { dayNumber: 6, title: "Departure", description: "Airport or onward transfer." },
     ],
-    coverPrompt: prompt("Amarnath Yatra path", "snowy mountain pilgrimage trail at dawn pilgrims distant"),
+    coverPrompt: prompt("Amarnath Holy Cave", "pilgrims on snow path toward Amarnath cave"),
     galleryPrompts: [
-      prompt("Chandanwari", "Amarnath base landscape Lidder"),
-      prompt("Kashmir glacier path", "ice and rock holy cave approach"),
-      prompt("Pahalgam base", "tented pilgrimage staging"),
-      prompt("Sheshnag landscape", "alpine lake on Yatra route"),
+      prompt("Sheshnag Lake", "glacial lake on Amarnath Yatra route"),
+      prompt("Baltal Amarnath", "Baltal base camp valley during Amarnath Yatra"),
+      prompt("Amarnath trail", "pilgrims on Amarnath cave approach path"),
+      prompt("Amarnath Holy Cave", "Amarnath cave shrine exterior"),
     ],
   },
   {
