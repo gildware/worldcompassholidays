@@ -109,7 +109,7 @@ function word(map: Map<string, string>, english: string) {
   return value && value !== english ? value : english;
 }
 
-function applyTemplates(source: string, map: Map<string, string>) {
+function applyTemplates(source: string, map: Map<string, string>): string {
   let   match = source.match(/^(\d+) days$/);
   if (match) return `${match[1]} ${word(map, "days")}`;
   match = source.match(/^(\d+)[–-](\d+) days$/);
