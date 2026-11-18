@@ -1,5 +1,7 @@
 import { modules } from "@/config/modules";
 import { prisma } from "@/lib/db";
+import { isLocale } from "@/i18n/locales";
+import { loadCopyMap, withHotelCopy, withNameCopy, withPlaceCopy, withTourCopy, withVehicleCopy } from "@/lib/i18n/content";
 import { clipText, plainText } from "@/lib/seo";
 import { prepareQuery, scoreSearch, tokenVariants } from "@/lib/search/rank";
 import type { SearchHit, SearchKind } from "@/lib/search/types";
@@ -151,6 +153,7 @@ async function searchHotels(text: string[]): Promise<ScoredHit[]> {
     },
     take: 40,
     select: {
+      id: true,
       slug: true,
       name: true,
       summary: true,
@@ -163,7 +166,7 @@ async function searchHotels(text: string[]): Promise<ScoredHit[]> {
       featuredImageUrl: true,
       galleryJson: true,
       isFeatured: true,
-      destination: { select: { name: true, region: true, country: true } },
+      destination: { select: { id: true, name: true, region: true, country: true, summary: true } },
       rooms: {
         where: { active: true },
         orderBy: { pricePerNight: "asc" },
@@ -221,6 +224,7 @@ async function searchVehicles(kind: "car" | "bike", text: string[]): Promise<Sco
     },
     take: 40,
     select: {
+      id: true,
       slug: true,
       name: true,
       summary: true,
@@ -230,9 +234,9 @@ async function searchVehicles(kind: "car" | "bike", text: string[]): Promise<Sco
       seats: true,
       pricePerDay: true,
       currency: true,
-      destination: { select: { name: true, region: true, country: true } },
-      vehicleType: { select: { name: true } },
-      transmission: { select: { name: true } },
+      destination: { select: { id: true, name: true, region: true, country: true, summary: true } },
+      vehicleType: { select: { id: true, name: true } },
+      transmission: { select: { id: true, name: true } },
       images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
     },
   });
@@ -278,6 +282,144 @@ const enabled: Record<SearchKind, boolean> = {
   car: modules.cars,
   bike: modules.bikes,
 };
+
+export async function localizeTourHits(hits: SearchHit[], locale: string): Promise<SearchHit[]> {
+  if (!isLocale(locale) || locale === "en") return hits;
+  const slugs = hits.filter((hit) => hit.kind === "tour").map((hit) => hit.slug);
+  const tours = slugs.length === 0 ? [] : await prisma.tour.findMany({
+    where: { slug: { in: slugs }, published: true },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      summary: true,
+      description: true,
+      category: true,
+      durationLabel: true,
+      address: true,
+      destination: { select: { id: true, name: true, summary: true } },
+    },
+  });
+  const [copies, placeCopies] = await Promise.all([
+    loadCopyMap("tour", tours.map((tour) => tour.id), locale),
+    loadCopyMap(
+      "destination",
+      tours.flatMap((tour) => (tour.destination ? [tour.destination.id] : [])),
+      locale,
+    ),
+  ]);
+  const hotelSlugs = hits.filter((hit) => hit.kind === "hotel").map((hit) => hit.slug);
+  const rideSlugs = hits.filter((hit) => hit.kind === "car" || hit.kind === "bike").map((hit) => hit.slug);
+  const [hotels, vehicles] = await Promise.all([
+    hotelSlugs.length
+      ? prisma.hotel.findMany({
+          where: { slug: { in: hotelSlugs }, published: true },
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            summary: true,
+            description: true,
+            destination: { select: { id: true, name: true, summary: true } },
+          },
+        })
+      : Promise.resolve([]),
+    rideSlugs.length
+      ? prisma.vehicle.findMany({
+          where: { slug: { in: rideSlugs }, published: true },
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            summary: true,
+            description: true,
+            vehicleType: { select: { id: true, name: true } },
+            transmission: { select: { id: true, name: true } },
+            destination: { select: { id: true, name: true, summary: true } },
+          },
+        })
+      : Promise.resolve([]),
+  ]);
+  const [hotelCopies, vehicleCopies, extraPlaces, configCopies] = await Promise.all([
+    loadCopyMap("hotel", hotels.map((hotel) => hotel.id), locale),
+    loadCopyMap("vehicle", vehicles.map((vehicle) => vehicle.id), locale),
+    loadCopyMap(
+      "destination",
+      [
+        ...hotels.flatMap((hotel) => (hotel.destination ? [hotel.destination.id] : [])),
+        ...vehicles.flatMap((vehicle) => (vehicle.destination ? [vehicle.destination.id] : [])),
+      ],
+      locale,
+    ),
+    loadCopyMap(
+      "rentalConfig",
+      vehicles.flatMap((vehicle) =>
+        [vehicle.vehicleType?.id, vehicle.transmission?.id].filter((id): id is string => Boolean(id)),
+      ),
+      locale,
+    ),
+  ]);
+  const hotelsBySlug = new Map(hotels.map((hotel) => [hotel.slug, hotel]));
+  const vehiclesBySlug = new Map(vehicles.map((vehicle) => [vehicle.slug, vehicle]));
+
+  const bySlug = new Map(tours.map((tour) => [tour.slug, tour]));
+  return hits.map((hit) => {
+    if (hit.kind === "hotel") {
+      const hotel = hotelsBySlug.get(hit.slug);
+      if (!hotel) return hit;
+      const localized = withHotelCopy(hotel, hotelCopies.get(hotel.id));
+      const place = hotel.destination
+        ? withPlaceCopy(hotel.destination, extraPlaces.get(hotel.destination.id))
+        : null;
+      const blurb = plainText(localized.summary || localized.description);
+      return {
+        ...hit,
+        title: localized.name,
+        place: place?.name || hit.place,
+        blurb: blurb ? clipText(blurb, 110) : hit.blurb,
+      };
+    }
+    if (hit.kind === "car" || hit.kind === "bike") {
+      const vehicle = vehiclesBySlug.get(hit.slug);
+      if (!vehicle) return hit;
+      const localized = withVehicleCopy(vehicle, vehicleCopies.get(vehicle.id));
+      const place = vehicle.destination
+        ? withPlaceCopy(vehicle.destination, extraPlaces.get(vehicle.destination.id))
+        : null;
+      const typeName = vehicle.vehicleType
+        ? withNameCopy(vehicle.vehicleType, configCopies.get(vehicle.vehicleType.id)).name
+        : "";
+      const transmissionName = vehicle.transmission
+        ? withNameCopy(vehicle.transmission, configCopies.get(vehicle.transmission.id)).name
+        : "";
+      const blurb = plainText(localized.summary || localized.description);
+      return {
+        ...hit,
+        title: localized.name,
+        place: place?.name || hit.place,
+        style: typeName || hit.style,
+        detail: hit.kind === "bike" ? transmissionName || hit.detail : hit.detail,
+        blurb: blurb ? clipText(blurb, 110) : hit.blurb,
+      };
+    }
+    if (hit.kind !== "tour") return hit;
+    const tour = bySlug.get(hit.slug);
+    if (!tour) return hit;
+    const localized = withTourCopy(tour, copies.get(tour.id));
+    const place = tour.destination
+      ? withPlaceCopy(tour.destination, placeCopies.get(tour.destination.id))
+      : null;
+    const blurb = plainText(localized.summary || localized.description);
+    return {
+      ...hit,
+      title: localized.title,
+      place: place?.name || hit.place,
+      style: localized.category.trim() || hit.style,
+      detail: localized.durationLabel.trim() || hit.detail,
+      blurb: blurb ? clipText(blurb, 110) : hit.blurb,
+    };
+  });
+}
 
 export async function searchCatalog(rawQuery: string): Promise<SearchHit[]> {
   const query = rawQuery.trim().slice(0, 80);

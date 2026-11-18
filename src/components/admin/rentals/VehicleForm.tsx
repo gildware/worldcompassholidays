@@ -4,11 +4,14 @@ import { useActionState, useEffect, useMemo, useRef, useState, useTransition, ty
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveVehicle } from "@/actions/rental-admin";
+import { LanguageTabs } from "@/components/admin/LanguageTabs";
 import { Field } from "@/components/forms/Field";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import { tourImageFrames } from "@/lib/tours/image-frames";
 import { MultiSearchableSelect, SearchableSelect } from "@/components/ui/SearchableSelect";
+import type { Locale } from "@/i18n/locales";
+import { copyFilled, type CopyMap } from "@/lib/i18n/content";
 import { initialFormState } from "@/lib/forms";
 import { appliesToFleet, fleetLabel, vehicleBaseStatuses, vehicleStatusLabel } from "@/lib/rentals/labels";
 
@@ -112,6 +115,7 @@ export function VehicleForm({
   documents,
   calendar,
   lockKind = false,
+  translations = {},
 }: {
   values: VehicleFormValues;
   kinds: Array<"car" | "bike">;
@@ -132,6 +136,7 @@ export function VehicleForm({
   documents?: ReactNode;
   calendar?: ReactNode;
   lockKind?: boolean;
+  translations?: CopyMap;
 }) {
   const isEdit = Boolean(values.id);
   const steps = useMemo(
@@ -146,6 +151,11 @@ export function VehicleForm({
   const [step, setStep] = useState(() =>
     Math.min(Math.max(initialStep, 0), steps.length - 1),
   );
+  const [locale, setLocale] = useState<Locale>("en");
+  const [copies, setCopies] = useState<CopyMap>(translations);
+  const [name, setName] = useState(values.name);
+  const [summary, setSummary] = useState(values.summary);
+  const [description, setDescription] = useState(values.description);
   const [vehicleId, setVehicleId] = useState(values.id ?? "");
   const [kind, setKind] = useState(values.kind);
   const [status, setStatus] = useState(values.status);
@@ -237,6 +247,29 @@ export function VehicleForm({
     }
   }, [kind, router, state, step, steps.length, values.id]);
 
+  function text(key: "name" | "summary" | "description") {
+    if (locale === "en") {
+      if (key === "name") return name;
+      if (key === "summary") return summary;
+      return description;
+    }
+    const value = copies[locale]?.[key];
+    return typeof value === "string" ? value : "";
+  }
+
+  function patchText(key: "name" | "summary" | "description", value: string) {
+    if (locale !== "en") {
+      setCopies((current) => ({
+        ...current,
+        [locale]: { ...(current[locale] ?? {}), [key]: value },
+      }));
+      return;
+    }
+    if (key === "name") setName(value);
+    else if (key === "summary") setSummary(value);
+    else setDescription(value);
+  }
+
   function validateStep(index: number) {
     const form = formRef.current;
     const errors: Record<string, string> = {};
@@ -324,6 +357,24 @@ export function VehicleForm({
 
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 overflow-hidden">
+      <div className="shrink-0 space-y-2">
+        <LanguageTabs
+          locale={locale}
+          onChange={setLocale}
+          filled={{
+            fr: copyFilled(copies.fr),
+            hi: copyFilled(copies.hi),
+            he: copyFilled(copies.he),
+            ar: copyFilled(copies.ar),
+            ur: copyFilled(copies.ur),
+          }}
+        />
+        {locale !== "en" ? (
+          <p className="text-xs text-muted">
+            Optional. A blank name, summary, or description stays in English on the site. Price, dates, and photos are shared.
+          </p>
+        ) : null}
+      </div>
       <ol className="flex w-full min-w-0 shrink-0 gap-2 overflow-x-auto pb-0.5">
         {steps.map((item, index) => {
           const active = index === step;
@@ -366,6 +417,10 @@ export function VehicleForm({
       >
         {vehicleId ? <input type="hidden" name="id" value={vehicleId} /> : null}
         <input type="hidden" name="intent" defaultValue="continue" />
+        <input type="hidden" name="name" value={name} />
+        <input type="hidden" name="summary" value={summary} />
+        <input type="hidden" name="description" value={description} />
+        <input type="hidden" name="translationsJson" value={JSON.stringify(copies)} />
         <input type="hidden" name="imagesJson" value={JSON.stringify(images)} />
 
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
@@ -385,7 +440,12 @@ export function VehicleForm({
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
           <div className={current.id === "vehicle" ? "grid gap-4 md:grid-cols-2" : "hidden"}>
             <Field label="Name" name="name" required error={fieldErrors.name}>
-              <input name="name" defaultValue={values.name} className="!h-10" />
+              <input
+                value={text("name")}
+                placeholder={locale === "en" ? undefined : name}
+                onChange={(event) => patchText("name", event.target.value)}
+                className="!h-10"
+              />
             </Field>
             <Field label="Registration number" name="registrationNumber" required error={fieldErrors.registrationNumber}>
               <input
@@ -495,7 +555,12 @@ export function VehicleForm({
               </Field>
             </div>
             <Field label="Summary" hint="Shown on cards and the detail page.">
-              <input name="summary" defaultValue={values.summary} className="!h-10" />
+              <input
+                value={text("summary")}
+                placeholder={locale === "en" ? undefined : summary}
+                onChange={(event) => patchText("summary", event.target.value)}
+                className="!h-10"
+              />
             </Field>
             <Field label="Status">
               <SearchableSelect
@@ -513,7 +578,13 @@ export function VehicleForm({
             </Field>
             <div className="md:col-span-2">
               <Field label="Description">
-                <textarea name="description" defaultValue={values.description} rows={4} className="!min-h-0 resize-y" />
+                <textarea
+                  value={text("description")}
+                  placeholder={locale === "en" ? undefined : description}
+                  onChange={(event) => patchText("description", event.target.value)}
+                  rows={4}
+                  className="!min-h-0 resize-y"
+                />
               </Field>
             </div>
           </div>

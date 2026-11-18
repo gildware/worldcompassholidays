@@ -169,7 +169,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  text-align: left;
+  text-align: start;
 }
 
 .home-plan__toggle strong {
@@ -238,7 +238,7 @@
   color: #fff;
   background: transparent;
   padding: 0;
-  text-align: left;
+  text-align: start;
   box-shadow: 0 16px 36px rgba(5, 16, 54, 0.2);
   transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.45s ease;
 }

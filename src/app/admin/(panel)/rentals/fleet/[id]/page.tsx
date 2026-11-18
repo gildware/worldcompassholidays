@@ -10,6 +10,7 @@ import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { expiryState } from "@/lib/rentals/availability";
 import { blockingBookingStatuses, fleetKinds } from "@/lib/rentals/labels";
+import { loadOwnerCopies } from "@/lib/i18n/content";
 import { configsOf, getRentalSetup } from "@/lib/rentals/setup";
 
 type Props = {
@@ -48,13 +49,14 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
   const kind = fleetKinds().includes(vehicle.kind as "car" | "bike")
     ? (vehicle.kind as "car" | "bike")
     : "car";
-  const [setup, relatedVehicles] = await Promise.all([
+  const [setup, relatedVehicles, translations] = await Promise.all([
     getRentalSetup(kind),
     prisma.vehicle.findMany({
       where: { kind, id: { not: vehicle.id } },
       orderBy: { name: "asc" },
       select: { id: true, name: true, registrationNumber: true, published: true },
     }),
+    loadOwnerCopies("vehicle", vehicle.id),
   ]);
   const manage = can(user, "vehicles.manage");
 
@@ -199,6 +201,7 @@ export default async function EditVehiclePage({ params, searchParams }: Props) {
           systemDelivery={setup.settings.allowHomeDelivery}
           documents={documents}
           calendar={calendar}
+          translations={translations}
         />
       ) : (
         <div className="grid min-h-0 flex-1 gap-6 overflow-y-auto">

@@ -12,7 +12,10 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 import { Button } from "@/components/ui/Button";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { LanguageTabs } from "@/components/admin/LanguageTabs";
 import { LocationMapPicker } from "@/components/admin/LocationMapPicker";
+import type { Locale } from "@/i18n/locales";
+import { copyFilled, type CopyMap } from "@/lib/i18n/content";
 import { countries } from "@/lib/data/countries";
 import { initialFormState } from "@/lib/forms";
 import type { UploadedImage } from "@/lib/storage/types";
@@ -34,6 +37,10 @@ export type DestinationFormValues = {
   parentId: string | null;
 };
 
+function textValue(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
 export type DestinationParentOption = {
   id: string;
   label: string;
@@ -45,6 +52,7 @@ export function DestinationForm({
   mapApiKey,
   published = true,
   popular = false,
+  translations = {},
   onCancel,
   onSuccess,
 }: {
@@ -53,6 +61,7 @@ export function DestinationForm({
   mapApiKey: string;
   published?: boolean;
   popular?: boolean;
+  translations?: CopyMap;
   onCancel?: () => void;
   onSuccess?: (message: string) => void;
 }) {
@@ -70,6 +79,8 @@ export function DestinationForm({
     : null;
   const [image, setImage] = useState<UploadedImage | null>(initialImage);
   const [imageBusy, setImageBusy] = useState(false);
+  const [locale, setLocale] = useState<Locale>("en");
+  const [copies, setCopies] = useState<CopyMap>(translations);
   const [name, setName] = useState(destination?.name ?? "");
   const [parentId, setParentId] = useState(destination?.parentId ?? "");
   const [region, setRegion] = useState(destination?.region ?? "");
@@ -91,7 +102,8 @@ export function DestinationForm({
       popular !== destination.popular ||
       image?.url !== initialImage?.url ||
       image?.key !== initialImage?.key ||
-      image?.driver !== initialImage?.driver
+      image?.driver !== initialImage?.driver ||
+      JSON.stringify(copies) !== JSON.stringify(translations)
     : true;
 
   const onSuccessRef = useRef(onSuccess);
@@ -113,6 +125,21 @@ export function DestinationForm({
       }}
     >
       <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto px-5 py-5 sm:px-6">
+      <LanguageTabs
+        locale={locale}
+        onChange={setLocale}
+        filled={{
+          fr: copyFilled(copies.fr),
+          hi: copyFilled(copies.hi),
+          he: copyFilled(copies.he),
+          ar: copyFilled(copies.ar),
+          ur: copyFilled(copies.ur),
+        }}
+      />
+      <input type="hidden" name="translationsJson" value={JSON.stringify(copies)} />
+      {locale !== "en" ? (
+        <p className="text-xs text-muted">Optional. A blank name or summary stays in English on the site.</p>
+      ) : null}
       {destination ? (
         <input type="hidden" name="destinationId" value={destination.id} />
       ) : null}
@@ -123,12 +150,22 @@ export function DestinationForm({
       <div className="grid items-start gap-5 sm:grid-cols-[minmax(0,1fr)_16rem]">
         <div className="grid gap-3">
           <Field label="Name" help="destination.name">
+            <input type="hidden" name="name" value={name} />
             <input
-              name="name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              required
-              placeholder="e.g. Kashmir"
+              value={locale === "en" ? name : textValue(copies[locale]?.name)}
+              onChange={(event) => {
+                const value = event.target.value;
+                if (locale === "en") {
+                  setName(value);
+                  return;
+                }
+                setCopies((current) => ({
+                  ...current,
+                  [locale]: { ...(current[locale] ?? {}), name: value },
+                }));
+              }}
+              required={locale === "en"}
+              placeholder={locale === "en" ? "e.g. Kashmir" : name || "Name"}
               autoComplete="off"
               className="!h-10"
             />
@@ -151,29 +188,54 @@ export function DestinationForm({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Region">
+              <input type="hidden" name="region" value={region} />
               <input
-                name="region"
-                value={region}
-                onChange={(event) => setRegion(event.target.value)}
-                required
-                placeholder="e.g. Jammu and Kashmir"
+                value={locale === "en" ? region : textValue(copies[locale]?.region)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  if (locale === "en") {
+                    setRegion(value);
+                    return;
+                  }
+                  setCopies((current) => ({
+                    ...current,
+                    [locale]: { ...(current[locale] ?? {}), region: value },
+                  }));
+                }}
+                required={locale === "en"}
+                placeholder={locale === "en" ? "e.g. Jammu and Kashmir" : region || "Region"}
                 className="!h-10"
               />
             </Field>
             <Field label="Country">
-              <SearchableSelect
-                name="country"
-                value={country}
-                onChange={setCountry}
-                required
-                placeholder="Choose a country"
-                searchPlaceholder="Search countries"
-                options={countries.map((country) => ({
-                  value: country,
-                  label: country,
-                }))}
-                className="!h-10"
-              />
+              <input type="hidden" name="country" value={country} required={locale === "en"} />
+              {locale === "en" ? (
+                <SearchableSelect
+                  value={country}
+                  onChange={setCountry}
+                  required
+                  placeholder="Choose a country"
+                  searchPlaceholder="Search countries"
+                  options={countries.map((item) => ({
+                    value: item,
+                    label: item,
+                  }))}
+                  className="!h-10"
+                />
+              ) : (
+                <input
+                  value={textValue(copies[locale]?.country)}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setCopies((current) => ({
+                      ...current,
+                      [locale]: { ...(current[locale] ?? {}), country: value },
+                    }));
+                  }}
+                  placeholder={country || "Country"}
+                  className="!h-10"
+                />
+              )}
             </Field>
           </div>
         </div>
@@ -197,7 +259,19 @@ export function DestinationForm({
           >
             <input type="hidden" name="summary" value={summary} />
             <div className="overflow-hidden rounded-lg border border-line bg-white">
-              <HtmlEditor value={summary} onChange={setSummary} />
+              <HtmlEditor
+                value={locale === "en" ? summary : textValue(copies[locale]?.summary)}
+                onChange={(html) => {
+                  if (locale === "en") {
+                    setSummary(html);
+                    return;
+                  }
+                  setCopies((current) => ({
+                    ...current,
+                    [locale]: { ...(current[locale] ?? {}), summary: html },
+                  }));
+                }}
+              />
             </div>
           </Field>
         </div>

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { PriceSlider } from "@/components/hotel-list/sidebar/PriceSlider";
-import { formatMoney } from "@/lib/format";
+import { useFormatMoney } from "@/components/i18n/I18nProvider";
 
 type Choice = { value: string; label: string };
 type Place = { id: string; name: string; address: string };
@@ -141,11 +141,12 @@ export function FilterPriceField({
   currency: string;
   onChange: (next: [number, number]) => void;
 }) {
+  const money = useFormatMoney();
   return (
     <FilterSheetSection label="Price">
       <div className="filter-sheet__price">
-        <span>{formatMoney(low, currency)}</span>
-        <span>{formatMoney(high, currency)}</span>
+        <span>{money(low, currency)}</span>
+        <span>{money(high, currency)}</span>
       </div>
       <PriceSlider
         price={[low, high]}

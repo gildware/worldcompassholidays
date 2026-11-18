@@ -3,10 +3,13 @@ import Link from "next/link";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { EnquiryForm } from "@/components/site/EnquiryForm";
 import { PageIntro } from "@/components/site/PageIntro";
+import { getDocumentLocale, getMessages } from "@/i18n/get-locale";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getSiteSettings, type SiteSettings } from "@/lib/brand";
+import { company } from "@/lib/company";
 import { enquiryInterests } from "@/lib/navigation";
 import { absoluteUrl, graphLd, organizationNode, pageMetadata, phoneE164, siteOrigin } from "@/lib/seo";
+import { whatsAppHref } from "@/lib/visa";
 
 const contactDescription =
   "Call, WhatsApp, or send a trip enquiry to World Compass Holidays. We reply with a plan and a clear price before you pay — tours, hotels, rentals, visas, and airport assist.";
@@ -18,17 +21,32 @@ export const metadata: Metadata = pageMetadata({
   keywords: ["contact World Compass Holidays", "trip enquiry India", "travel WhatsApp India"],
 });
 
-const officeMapEmbed = "https://maps.google.com/maps?q=India&z=5&output=embed";
+const israelOffice = {
+  country: "Israel",
+  contact: "Omer",
+  phone: "+972 54 564 7635",
+  mapQuery: "Israel",
+} as const;
+
+function officeMapEmbed(query: string) {
+  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=5&output=embed`;
+}
+
+function officeMapLink(query: string) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
 
 export default async function ContactPage({
   searchParams,
 }: {
   searchParams: Promise<{ sent?: string }>;
 }) {
-  const [{ sent }, user, settings] = await Promise.all([
+  const [{ sent }, user, settings, copy, documentLocale] = await Promise.all([
     searchParams,
     getCurrentUser(),
     getSiteSettings(),
+    getMessages(),
+    getDocumentLocale(),
   ]);
   const customer =
     user?.scope === "customer"
@@ -49,10 +67,18 @@ export default async function ContactPage({
           },
         ])}
       />
-      <div className="h-[180px] overflow-hidden bg-[#f9f9f9] lg:h-[260px]">
+      <div className="grid h-[280px] grid-cols-2 overflow-hidden bg-[#f9f9f9] sm:h-[360px] lg:h-[420px]">
         <iframe
           title="Map of India"
-          src={officeMapEmbed}
+          src={officeMapEmbed("India")}
+          className="h-full w-full border-0"
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          allowFullScreen
+        />
+        <iframe
+          title="Map of Israel"
+          src={officeMapEmbed(israelOffice.mapQuery)}
           className="h-full w-full border-0"
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
@@ -60,23 +86,27 @@ export default async function ContactPage({
         />
       </div>
 
-      <section className="relative z-10 mx-auto max-w-[1320px] px-5 pt-6 pb-8 lg:pt-0">
-        <div className="lg:w-[calc(50%-1.25rem)]">
-          <ContactDetails settings={settings} />
-        </div>
-        <div className="relative z-10 mt-6 rounded bg-white px-5 py-5 shadow-[0px_10px_60px_rgba(5,16,54,0.05)] lg:absolute lg:top-[-130px] lg:right-5 lg:mt-0 lg:w-[42%] lg:px-6 lg:py-6">
+      <section className="relative z-10 mx-auto grid max-w-[1320px] items-start gap-6 px-5 py-8 lg:grid-cols-2 lg:gap-10">
+        <ContactDetails settings={settings} />
+        <div className="rounded bg-white px-5 py-5 shadow-[0px_10px_60px_rgba(5,16,54,0.05)] lg:px-6 lg:py-6">
           <PageIntro
             compact
-            eyebrow="Contact"
-            title="Tell us what you want to book"
-            description="Tours, hotels, visas, and rentals start as an enquiry. We quote the price before you pay."
+            eyebrow={copy.contactForm.eyebrow}
+            title={copy.contactForm.title}
+            description={copy.contactForm.description}
           />
           <div className="mt-4">
             <EnquiryForm
               compact
-              interests={enquiryInterests()}
+              interests={enquiryInterests().map((item) => ({
+                value: item.value,
+                label: copy.contactForm.interests[item.value as keyof typeof copy.contactForm.interests] || item.label,
+              }))}
               sent={sent === "1"}
               customer={customer}
+              copy={copy.contactForm}
+              locale={documentLocale.locale}
+              dir={documentLocale.dir}
             />
           </div>
         </div>
@@ -86,24 +116,16 @@ export default async function ContactPage({
 }
 
 function ContactDetails({ settings }: { settings: SiteSettings }) {
-  const officeMapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`;
+  const offices = [
+    {
+      country: "India",
+      contact: company.contactName,
+      phone: settings.phone,
+      mapQuery: settings.address.trim() || "India",
+    },
+    israelOffice,
+  ];
   const contactDetails = [
-    {
-      title: "Based in",
-      icon: "pin" as const,
-      value: settings.address,
-      href: officeMapLink,
-      hint: "Open the map",
-      external: true,
-    },
-    {
-      title: "Phone and WhatsApp",
-      icon: "phone" as const,
-      value: settings.phone,
-      href: `tel:${phoneE164(settings.phone)}`,
-      hint: "Call now",
-      external: false,
-    },
     {
       title: "Email",
       icon: "mail" as const,
@@ -131,6 +153,38 @@ function ContactDetails({ settings }: { settings: SiteSettings }) {
         .
       </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        {offices.map((office) => {
+          const whatsapp = whatsAppHref(office.phone);
+          const label = `${office.country} office`;
+          return (
+            <article
+              key={office.country}
+              className="flex min-w-0 flex-col rounded-xl border border-line bg-white p-5 shadow-[0px_10px_60px_rgba(5,16,54,0.05)]"
+            >
+              <span className="flex size-11 items-center justify-center rounded-full bg-brand-soft text-brand">
+                <ContactIcon name="pin" />
+              </span>
+              <p className="mt-3 text-sm text-muted">{label}</p>
+              <p className="mt-1 text-base font-medium leading-6">{office.contact}</p>
+              <a href={`tel:${phoneE164(office.phone)}`} className="mt-2 break-words text-sm font-medium text-brand">
+                {office.phone}
+              </a>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
+                <a href={`tel:${phoneE164(office.phone)}`} className="text-brand">
+                  Call
+                </a>
+                {whatsapp ? (
+                  <a href={whatsapp} target="_blank" rel="noreferrer" className="text-brand">
+                    WhatsApp
+                  </a>
+                ) : null}
+                <a href={officeMapLink(office.mapQuery)} target="_blank" rel="noreferrer" className="text-brand">
+                  Map
+                </a>
+              </div>
+            </article>
+          );
+        })}
         {contactDetails.map((item) => (
           <a
             key={item.title}

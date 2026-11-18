@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { deleteOwnerCopies, saveOwnerCopies } from "@/lib/i18n/content";
 import { clearTtlCache } from "@/lib/ttl-cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -529,6 +530,7 @@ export async function createTour(
 
     await syncItinerary(tour.id, payload.itinerary);
     await syncDestinations(tour.id, links.destinationIds);
+    await saveOwnerCopies("tour", tour.id, String(formData.get("translationsJson") ?? ""));
     for (const destination of links.destinations) {
       revalidateTourPaths(destination.slug);
     }
@@ -648,6 +650,7 @@ export async function updateTour(
 
   await syncItinerary(tourId, payload.itinerary);
   await syncDestinations(tourId, links.destinationIds);
+  await saveOwnerCopies("tour", tourId, String(formData.get("translationsJson") ?? ""));
   await deleteEntityMedia(
     "tours",
     [],
@@ -714,6 +717,7 @@ export async function deleteTour(formData: FormData) {
 
   const images = tourImages(tour);
   await prisma.tour.delete({ where: { id: tourId } });
+  await deleteOwnerCopies("tour", tourId);
   await deleteEntityMedia("tours", [tour.slug, tour.id], images);
 
   revalidateTourPaths(tour.destination?.slug);

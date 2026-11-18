@@ -7,7 +7,7 @@ import { PlaceFields, startingPlace, type PlaceValue } from "@/components/rental
 import { RentalIcon, type RentalIconName } from "@/components/rentals/rental-icons";
 import { Modal } from "@/components/ui/Modal";
 import { formatPhone } from "@/lib/auth/phone";
-import { formatMoney } from "@/lib/format";
+import { useFormatMoney } from "@/components/i18n/I18nProvider";
 import { parseMapPoint } from "@/lib/maps";
 import {
   earliestPickupLocal,
@@ -218,6 +218,7 @@ function BookRentalModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const money = useFormatMoney();
   const [pickup, setPickup] = useState(() => resolvePickupLocal(booking.defaultPickup));
   const [ret, setRet] = useState(() =>
     resolveReturnLocal(resolvePickupLocal(booking.defaultPickup), booking.defaultReturn),
@@ -451,7 +452,7 @@ function BookRentalModal({
                     <RentalIcon name={on ? "check" : "tag"} />
                     <span>{addon.name}</span>
                     <strong>
-                      {formatMoney(addon.price, booking.currency)}
+                      {money(addon.price, booking.currency)}
                       {addon.priceUnit === "per_day" ? " / day" : ""}
                     </strong>
                   </button>
@@ -461,7 +462,7 @@ function BookRentalModal({
           ) : null}
           {days > 0 ? (
             <p className="rental-book__estimate">
-              About {formatMoney(days * booking.pricePerDay, booking.currency)} for {days}{" "}
+              About {money(days * booking.pricePerDay, booking.currency)} for {days}{" "}
               {days === 1 ? "day" : "days"} at the daily rate.
               Weekly rates, tax, and the deposit are confirmed before you submit.
             </p>

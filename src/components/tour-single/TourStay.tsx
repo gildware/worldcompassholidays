@@ -10,6 +10,7 @@ import { usePhotoSwipe } from "@/hooks/usePhotoSwipe";
 import { useSectionTabs } from "@/hooks/useSectionTabs";
 import { canonicalPhone, formatPhone } from "@/lib/auth/phone";
 import { initialFormState } from "@/lib/forms";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { formatMoney } from "@/lib/format";
 import { plainText } from "@/lib/seo";
 import { partyBlock, quoteTour } from "@/lib/tours/quote";
@@ -77,10 +78,6 @@ export type TourStayData = {
 };
 
 type Guest = { name: string; email: string; phone: string } | null;
-
-function money(amount: number, currency: string) {
-  return formatMoney(Math.round(amount), currency);
-}
 
 function paceLabel(value: string) {
   const trimmed = value.trim();
@@ -198,6 +195,8 @@ export function TourStay({
   firebaseConfig?: FirebaseOptions | null;
   defaultCountry?: string;
 }) {
+  const { locale } = useI18n();
+  const money = (amount: number, currency: string) => formatMoney(Math.round(amount), currency, locale);
   const currency = tour.currency || "INR";
   const photos = tour.images.length > 0 ? tour.images : [];
   const visible = photos.slice(0, 5);

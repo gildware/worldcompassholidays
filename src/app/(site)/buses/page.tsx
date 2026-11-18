@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { BusCatalog } from "@/components/bus/BusCatalog";
 import { BusRequestScreen } from "@/components/bus/BusRequestScreen";
 import { readBusQuery } from "@/components/bus/query";
+import { getUserLocale } from "@/i18n/get-locale";
+import { loadCopyMap, translated, withCatalogCopy } from "@/lib/i18n/content";
 import { modules } from "@/config/modules";
 import { loadBusFacilities } from "@/lib/bus-catalog";
 import { busAmenityLabels } from "@/lib/buses";
@@ -49,27 +51,48 @@ export default async function BusesPage({
     loadBusFacilities(),
   ]);
 
+  const locale = await getUserLocale();
+  const [routeCopies, busCopies, facilityCopies] = await Promise.all([
+    loadCopyMap("busRoute", routes.map((route) => route.id), locale),
+    loadCopyMap(
+      "bus",
+      routes.flatMap((route) => (route.bus ? [route.bus.id] : [])),
+      locale,
+    ),
+    loadCopyMap(
+      "catalog",
+      facilities.map((item) => item.id),
+      locale,
+    ),
+  ]);
+  const spokenFacilities = withCatalogCopy(
+    facilities.map((item) => ({ ...item, content: "" })),
+    facilityCopies,
+  );
+
   return (
     <BusCatalog
       initial={initial}
       routes={routes.map((route) => {
         const coach = route.bus;
+        const routeCopy = routeCopies.get(route.id);
+        const busCopy = coach ? busCopies.get(coach.id) : undefined;
         return {
           id: route.id,
           slug: route.slug,
-          name: coach?.name || route.name,
-          fromCity: route.fromCity,
-          toCity: route.toCity,
-          operator: coach?.operator || route.operator,
+          name: translated(coach?.name || route.name, busCopy?.name ?? routeCopy?.name),
+          fromCity: translated(route.fromCity, routeCopy?.fromCity),
+          toCity: translated(route.toCity, routeCopy?.toCity),
+          operator: translated(coach?.operator || route.operator, busCopy?.operator ?? routeCopy?.operator),
           coachType: coach?.coachType || route.coachType,
-          pickup: route.pickup,
-          dropoff: route.dropoff,
+          pickup: translated(route.pickup, routeCopy?.pickup),
+          dropoff: translated(route.dropoff, routeCopy?.dropoff),
           departTime: route.departTime,
           arriveTime: route.arriveTime,
           duration: route.duration,
           fareFrom: route.fareFrom,
           imageUrl: coach?.imageUrl || route.imageUrl,
-          amenities: busAmenityLabels(coach?.amenitiesJson || route.amenitiesJson, facilities),
+          amenities: busAmenityLabels(coach?.amenitiesJson || route.amenitiesJson, spokenFacilities),
         };
       })}
     />

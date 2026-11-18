@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import type { ContactFormCopy } from "@/i18n/contact-form";
+import { isLocale, type Locale } from "@/i18n/locales";
+import { getMessagesFor, getUserLocale } from "@/i18n/get-locale";
 import { prisma } from "@/lib/db";
 import { deskWhatsAppHref } from "@/lib/brand";
 import { firstIssue, type FormState } from "@/lib/forms";
@@ -11,22 +14,28 @@ import { revalidateCustomerBooking } from "@/lib/account-revalidate";
 import { detailsWithEnquiryReceived } from "@/lib/booking-activity";
 import { bookingReference } from "@/lib/bookings";
 import { websiteEnquiryKind } from "@/lib/enquiries";
+import { toEnglish } from "@/lib/i18n/to-english";
 import { enquiryInterests } from "@/lib/navigation";
-import { emailField } from "@/lib/validation";
 
-const enquirySchema = z.object({
-  name: z.string().trim().min(2, "Enter your name").max(80, "That name is too long"),
-  email: emailField,
-  phone: z
-    .string()
-    .trim()
-    .min(1, "Enter a phone number")
-    .max(30, "That phone number is too long")
-    .regex(/^[0-9+\-\s()]+$/, "Use digits, spaces, and + for the country code")
-    .refine((value) => value.replace(/\D/g, "").length >= 8, "Enter a phone number with the country code"),
-  interest: z.string().trim(),
-  message: z.string().trim().min(10, "Tell us a little more").max(2000, "Keep the message under 2000 characters"),
-});
+function enquirySchema(copy: ContactFormCopy) {
+  return z.object({
+    name: z.string().trim().min(2, copy.errors.name).max(80, copy.errors.nameLong),
+    email: z.string().trim().toLowerCase().pipe(z.email(copy.errors.email)),
+    phone: z
+      .string()
+      .trim()
+      .min(1, copy.errors.phone)
+      .max(30, copy.errors.phoneLong)
+      .regex(/^[0-9+\-\s()]+$/, copy.errors.phoneFormat)
+      .refine((value) => value.replace(/\D/g, "").length >= 8, copy.errors.phoneShort),
+    interest: z.string().trim(),
+    message: z.string().trim().min(10, copy.errors.message).max(2000, copy.errors.messageLong),
+  });
+}
+
+function sameText(left: string, right: string) {
+  return left.trim().toLocaleLowerCase("en") === right.trim().toLocaleLowerCase("en");
+}
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value : "";
@@ -44,18 +53,27 @@ function fieldErrors(error: z.ZodError) {
 function enquiryWhatsAppText(input: {
   reference: string;
   name: string;
+  nameEn: string;
   email: string;
   phone: string;
   interest: string;
+  interestSource: string;
   message: string;
+  messageEn: string;
+  locale: Locale;
 }) {
-  const lines = [
-    `Trip enquiry ${input.reference}`,
-    `Name: ${input.name}`,
-    `Email: ${input.email}`,
-  ];
+  const lines = [`Trip enquiry ${input.reference}`, `Language: ${input.locale}`, `Name: ${input.name}`];
+  if (input.nameEn && !sameText(input.nameEn, input.name)) lines.push(`Name in English: ${input.nameEn}`);
+  lines.push(`Email: ${input.email}`);
   if (input.phone) lines.push(`Phone: ${input.phone}`);
-  lines.push(`About: ${input.interest}`, input.message);
+  lines.push(`About: ${input.interest}`);
+  if (input.interestSource && !sameText(input.interestSource, input.interest)) {
+    lines.push(`About as submitted: ${input.interestSource}`);
+  }
+  lines.push(input.message);
+  if (input.messageEn && !sameText(input.messageEn, input.message)) {
+    lines.push("", "English:", input.messageEn);
+  }
   return lines.join("\n");
 }
 
@@ -65,6 +83,9 @@ export async function submitEnquiry(
 ): Promise<FormState> {
   const user = await getCurrentUser();
   const customer = user?.scope === "customer" ? user : null;
+  const submittedLocale = text(formData.get("locale"));
+  const locale: Locale = isLocale(submittedLocale) ? submittedLocale : await getUserLocale();
+  const copy = (await getMessagesFor(locale)).contactForm;
   const values = {
     name: customer?.name ?? text(formData.get("name")),
     email: customer?.email ?? text(formData.get("email")),
@@ -73,7 +94,7 @@ export async function submitEnquiry(
     message: text(formData.get("message")),
   };
 
-  const parsed = enquirySchema.safeParse(values);
+  const parsed = enquirySchema(copy).safeParse(values);
   if (!parsed.success) {
     return {
       error: firstIssue(parsed.error),
@@ -86,12 +107,18 @@ export async function submitEnquiry(
   const interest = interests.find((item) => item.value === parsed.data.interest);
   if (!interest) {
     return {
-      error: "Choose what you want to book",
-      fields: { interest: "Choose what you want to book" },
+      error: copy.errors.interest,
+      fields: { interest: copy.errors.interest },
       values,
     };
   }
 
+  const interestSource =
+    copy.interests[parsed.data.interest as keyof ContactFormCopy["interests"]] || interest.label;
+  const [nameEn, messageEn] = await Promise.all([
+    toEnglish(parsed.data.name, locale),
+    toEnglish(parsed.data.message, locale),
+  ]);
   const channel = text(formData.get("channel")) === "whatsapp" ? "whatsapp" : "form";
   const booking = await prisma.booking.create({
     data: {
@@ -99,12 +126,16 @@ export async function submitEnquiry(
       module: parsed.data.interest,
       status: "enquiry",
       title: `${interest.label} enquiry`,
-      notes: parsed.data.message,
+      notes: messageEn || parsed.data.message,
       details: detailsWithEnquiryReceived({
         kind: websiteEnquiryKind,
         interest: parsed.data.interest,
         interestLabel: interest.label,
+        interestLabelSource: interestSource,
         message: parsed.data.message,
+        messageEn,
+        contactNameEn: nameEn,
+        locale,
         channel,
       }),
       contactName: parsed.data.name,
@@ -123,10 +154,14 @@ export async function submitEnquiry(
     const message = enquiryWhatsAppText({
       reference: booking.reference,
       name: parsed.data.name,
+      nameEn,
       email: parsed.data.email,
       phone: parsed.data.phone,
       interest: interest.label,
+      interestSource,
       message: parsed.data.message,
+      messageEn,
+      locale,
     });
     return {
       error: null,

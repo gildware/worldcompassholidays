@@ -8,6 +8,8 @@ import { mapApiKey } from "@/lib/map-key";
 import { PriceBreakdown } from "@/components/rentals/PriceBreakdown";
 import { modules } from "@/config/modules";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getUserLocale } from "@/i18n/get-locale";
+import { loadCopyMap, translated, withVehicleCopy } from "@/lib/i18n/content";
 import { prisma } from "@/lib/db";
 import { handoverModes, unavailableReason } from "@/lib/rentals/availability";
 import { findAvailabilityConflicts } from "@/lib/rentals/availability";
@@ -68,6 +70,28 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
   }
 
   const setup = await getRentalSetup(vehicle.kind === "bike" ? "bike" : "car");
+  const locale = await getUserLocale();
+  const [vehicleCopies, configCopies, locationCopies] = await Promise.all([
+    loadCopyMap("vehicle", [vehicle.id], locale),
+    loadCopyMap(
+      "rentalConfig",
+      [
+        ...vehicle.addonLinks.map((link) => link.config.id),
+        ...vehicle.features.map((feature) => feature.config.id),
+        ...setup.configs.map((config) => config.id),
+      ],
+      locale,
+    ),
+    loadCopyMap(
+      "rentalLocation",
+      [
+        ...vehicle.locationLinks.map((link) => link.location.id),
+        ...setup.locations.map((location) => location.id),
+      ],
+      locale,
+    ),
+  ]);
+  const spokenVehicle = withVehicleCopy(vehicle, vehicleCopies.get(vehicle.id));
   const user = await getCurrentUser();
   const profile =
     user?.scope === "customer"
@@ -82,11 +106,26 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
     vehiclePickup: vehicle.allowCounterPickup,
     vehicleDelivery: vehicle.allowHomeDelivery,
   });
-  const locations =
+  const locations = (
     vehicle.locationLinks.length > 0
       ? vehicle.locationLinks.map((link) => link.location).filter((location) => location.active)
-      : setup.locations.filter((location) => location.active);
-  const addons = vehicle.addonLinks.map((link) => link.config).filter((addon) => addon.active);
+      : setup.locations.filter((location) => location.active)
+  ).map((location) => {
+    const copy = locationCopies.get(location.id);
+    return {
+      ...location,
+      name: translated(location.name, copy?.name),
+      address: translated(location.address, copy?.address),
+    };
+  });
+  const addons = vehicle.addonLinks
+    .map((link) => link.config)
+    .filter((addon) => addon.active)
+    .map((addon) => ({
+      ...addon,
+      name: translated(addon.name, configCopies.get(addon.id)?.name),
+      description: translated(addon.description, configCopies.get(addon.id)?.description),
+    }));
   const pickupRaw = one(query.pickup);
   const returnRaw = one(query.return);
   const pickup = resolvePickupLocal(pickupRaw);
@@ -190,7 +229,11 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
     vehicle.kind,
     vehicle.features.map((feature) => feature.config),
     setup.configs,
-  );
+  ).map((document) => ({
+    ...document,
+    name: translated(document.name, configCopies.get(document.id)?.name),
+    description: translated(document.description, configCopies.get(document.id)?.description),
+  }));
   const savedDocuments = (user?.scope === "customer" ? await listProfileDocuments(user.id) : []).filter((item) =>
     docTypes.some((document) => document.id === item.configId),
   );
@@ -199,7 +242,7 @@ export default async function BookRentalPage({ params, searchParams }: Props) {
     <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 lg:grid-cols-[1.1fr_0.9fr]">
       <div className="grid gap-6">
         <div>
-          <p className="text-sm text-brand">Book {vehicle.name}</p>
+          <p className="text-sm text-brand">Book {spokenVehicle.name}</p>
           <p className="mt-1 text-sm font-medium tracking-wide text-navy">{vehicle.registrationNumber}</p>
           <h1 className="mt-2 text-3xl font-semibold">Trip details</h1>
         </div>

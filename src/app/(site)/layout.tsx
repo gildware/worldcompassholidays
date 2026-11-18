@@ -1,14 +1,16 @@
 import { PublicHeader } from "@/components/worldcompassholiday/PublicHeader";
 import { HomeFooter } from "@/components/worldcompassholiday/HomeFooter";
+import { getMessages } from "@/i18n/get-locale";
 import { getPublicNav } from "@/lib/navigation";
 import "@/styles/worldcompassholiday-home.css";
 
-export default function SiteLayout({
+export default async function SiteLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const items = getPublicNav();
+  const copy = await getMessages();
+  const items = getPublicNav(copy.nav);
 
   return (
     <div className="site-shell">

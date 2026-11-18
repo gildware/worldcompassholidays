@@ -156,7 +156,8 @@
 
   .mobile-app-header__actions {
     display: flex;
-    gap: 8px;
+    align-items: center;
+    gap: 10px;
   }
 
   .mobile-app-header__icon {

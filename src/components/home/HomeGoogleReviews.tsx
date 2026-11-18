@@ -1,3 +1,5 @@
+import { getUiDictionary, getUserLocale } from "@/i18n/get-locale";
+import { localizeCopy } from "@/i18n/home-copy";
 import { withGoogleReviewId, type GoogleReviewsSummary } from "@/lib/google-reviews";
 import type { HomeReviewsContent } from "@/lib/home-page";
 import "./home-google-reviews.css";
@@ -15,7 +17,7 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-export function HomeGoogleReviews({
+export async function HomeGoogleReviews({
   data,
   config,
   headingId,
@@ -32,10 +34,18 @@ export function HomeGoogleReviews({
     .filter((review) => !hidden.has(review.id));
   if (!cards.length && data.total <= 0) return null;
 
+  const locale = await getUserLocale();
+  const dictionary = await getUiDictionary();
+  const t = (value: string) => localizeCopy(value, locale, dictionary);
+  const reviewCount =
+    data.total === 1
+      ? `1 ${t("Google review")}`
+      : `${data.total} ${t("Google reviews")}`;
+
   return (
     <section className="home-g-reviews" aria-labelledby={headingId}>
       <header className="home-g-reviews__head">
-        <p className="home-g-reviews__kicker">Google reviews</p>
+        <p className="home-g-reviews__kicker">{t("Google reviews")}</p>
         <h2 id={headingId}>{config.title}</h2>
         {config.subtitle ? <p>{config.subtitle}</p> : null}
       </header>
@@ -45,7 +55,7 @@ export function HomeGoogleReviews({
           <strong>{data.rating > 0 ? data.rating.toFixed(1) : "—"}</strong>
           <Stars rating={data.rating} />
           <span>
-            {data.total} Google review{data.total === 1 ? "" : "s"}
+            {reviewCount}
           </span>
         </div>
         <a
@@ -54,7 +64,7 @@ export function HomeGoogleReviews({
           target="_blank"
           rel="noopener noreferrer"
         >
-          See all on Google
+          {t("See all on Google")}
           <span aria-hidden="true">↗</span>
         </a>
       </div>
@@ -85,11 +95,11 @@ export function HomeGoogleReviews({
                   )}
                   <div>
                     {review.authorUrl ? (
-                      <a href={review.authorUrl} target="_blank" rel="noopener noreferrer">
+                      <a href={review.authorUrl} target="_blank" rel="noopener noreferrer" dir="auto">
                         {review.authorName}
                       </a>
                     ) : (
-                      <strong>{review.authorName}</strong>
+                      <strong dir="auto">{review.authorName}</strong>
                     )}
                     <div className="home-g-reviews__meta">
                       <Stars rating={review.rating} />
@@ -97,7 +107,7 @@ export function HomeGoogleReviews({
                     </div>
                   </div>
                 </div>
-                {review.text ? <p>{review.text}</p> : <p className="is-quiet">Rated on Google</p>}
+                {review.text ? <p dir="auto">{review.text}</p> : <p className="is-quiet">Rated on Google</p>}
               </li>
             ))}
           </ul>

@@ -6,6 +6,8 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { favoriteIds } from "@/lib/favorites";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
+import { getUserLocale } from "@/i18n/get-locale";
+import { loadCopyMap, translated, withNameCopy, withPlaceCopy, withVehicleCopy } from "@/lib/i18n/content";
 import { fleetPhotoUrl, isCatalogPlaceholder, resolveRideCover } from "@/lib/catalog-media";
 import { fleetKinds } from "@/lib/rentals/labels";
 import { logListingSearch } from "@/lib/search/log";
@@ -64,16 +66,16 @@ export async function RentalListing({
           pricePerDay: true,
           currency: true,
           securityDeposit: true,
-          vehicleType: { select: { name: true } },
-          fuelType: { select: { name: true } },
-          transmission: { select: { name: true } },
-          destination: { select: { name: true } },
+          vehicleType: { select: { id: true, name: true } },
+          fuelType: { select: { id: true, name: true } },
+          transmission: { select: { id: true, name: true } },
+          destination: { select: { id: true, name: true, summary: true } },
           images: { orderBy: { sortOrder: "asc" }, select: { url: true } },
           features: {
-            select: { config: { select: { name: true, kind: true, active: true, sortOrder: true } } },
+            select: { config: { select: { id: true, name: true, kind: true, active: true, sortOrder: true } } },
           },
           locationLinks: {
-            select: { location: { select: { name: true, active: true, fleet: true } } },
+            select: { location: { select: { id: true, name: true, active: true, fleet: true } } },
           },
         },
         orderBy: [{ pricePerDay: "asc" }, { name: "asc" }],
@@ -104,18 +106,56 @@ export async function RentalListing({
   ]);
   const favoriteKind: FavoriteKind | FavoriteKind[] = kind === "bike" ? "bike" : kind === "car" ? "car" : ["car", "bike"];
   const savedIds = user?.scope === "customer" ? await favoriteIds(user.id, favoriteKind) : [];
+  const locale = await getUserLocale();
+  const configIds = [
+    ...new Set(
+      vehicles.flatMap((vehicle) => [
+        vehicle.vehicleType?.id,
+        vehicle.fuelType?.id,
+        vehicle.transmission?.id,
+        ...vehicle.features.map((feature) => feature.config.id),
+      ]),
+    ),
+  ].filter((id): id is string => Boolean(id));
+  const locationIds = [
+    ...new Set([
+      ...vehicles.flatMap((vehicle) => vehicle.locationLinks.map((link) => link.location.id)),
+      ...rentalLocations.map((location) => location.id),
+    ]),
+  ];
+  const [vehicleCopies, placeCopies, configCopies, locationCopies] = await Promise.all([
+    loadCopyMap("vehicle", vehicles.map((vehicle) => vehicle.id), locale),
+    loadCopyMap(
+      "destination",
+      vehicles.flatMap((vehicle) => (vehicle.destination ? [vehicle.destination.id] : [])),
+      locale,
+    ),
+    loadCopyMap("rentalConfig", configIds, locale),
+    loadCopyMap("rentalLocation", locationIds, locale),
+  ]);
 
-  const cars: CarListCard[] = vehicles.map((vehicle) => {
+  const cars: CarListCard[] = vehicles.map((row) => {
+    const vehicle = withVehicleCopy(row, vehicleCopies.get(row.id));
+    const place = row.destination ? withPlaceCopy(row.destination, placeCopies.get(row.destination.id)) : null;
+    const typeName = row.vehicleType
+      ? withNameCopy(row.vehicleType, configCopies.get(row.vehicleType.id)).name
+      : "";
+    const fuelName = row.fuelType ? withNameCopy(row.fuelType, configCopies.get(row.fuelType.id)).name : "";
+    const transmissionName = row.transmission
+      ? withNameCopy(row.transmission, configCopies.get(row.transmission.id)).name
+      : "";
     const linked = vehicle.features
       .map((feature) => feature.config)
       .filter((feature) => feature.active)
       .sort((a, b) => a.sortOrder - b.sortOrder);
-    const features = linked.filter((feature) => feature.kind === "feature").map((feature) => feature.name);
-    const transmission = vehicle.transmission?.name ?? "";
+    const features = linked
+      .filter((feature) => feature.kind === "feature")
+      .map((feature) => withNameCopy(feature, configCopies.get(feature.id)).name);
+    const transmission = transmissionName;
     const pickupNames = vehicle.locationLinks
       .map((link) => link.location)
       .filter((location) => location.active && (!kind || location.fleet === vehicle.kind))
-      .map((location) => location.name);
+      .map((location) => translated(location.name, locationCopies.get(location.id)?.name));
     const locations = [...new Set(pickupNames)];
     const specs = [
       ...(features.some(isAirConditioning) ? ["With air conditioning"] : []),
@@ -130,17 +170,19 @@ export async function RentalListing({
       slug: vehicle.slug,
       name: vehicle.name,
       kind: vehicle.kind,
-      location: pickupNames[0] || vehicle.destination?.name || "",
+      location: pickupNames[0] || place?.name || "",
       locations,
-      category: vehicle.vehicleType?.name || (vehicle.kind === "bike" ? "Bike" : "Car"),
+      category: typeName || (vehicle.kind === "bike" ? "Bike" : "Car"),
       brand: vehicle.brand,
       seats: vehicle.seats,
       luggage: vehicle.luggage ?? 0,
       transmission,
       mileage: vehicle.includedKmPerDay > 0 ? "Limited" : "Unlimited",
       mileageLabel: vehicle.includedKmPerDay > 0 ? `${vehicle.includedKmPerDay} km included` : "Unlimited km",
-      fuel: vehicle.fuelType?.name ?? "",
-      tags: linked.filter((feature) => feature.kind === "tag").map((feature) => feature.name),
+      fuel: fuelName,
+      tags: linked
+        .filter((feature) => feature.kind === "tag")
+        .map((feature) => withNameCopy(feature, configCopies.get(feature.id)).name),
       specs,
       images: (() => {
         const live = [
@@ -174,8 +216,8 @@ export async function RentalListing({
 
   const locations: CarListLocation[] = rentalLocations.map((location) => ({
     id: location.id,
-    name: location.name,
-    address: location.address,
+    name: translated(location.name, locationCopies.get(location.id)?.name),
+    address: translated(location.address, locationCopies.get(location.id)?.address),
     lat: coord(location.mapLat),
     lng: coord(location.mapLng),
   }));

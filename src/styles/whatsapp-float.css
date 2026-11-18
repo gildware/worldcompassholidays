@@ -54,6 +54,18 @@
   }
 }
 
+html[dir="rtl"] .whatsapp-float {
+  right: auto;
+  left: max(20px, env(safe-area-inset-left, 0px));
+}
+
+@media (max-width: 1024px) {
+  html[dir="rtl"] .whatsapp-float {
+    right: auto;
+    left: max(16px, env(safe-area-inset-left, 0px));
+  }
+}
+
 @media print {
   .whatsapp-float {
     display: none;

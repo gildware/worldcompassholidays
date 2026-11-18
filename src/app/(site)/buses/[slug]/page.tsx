@@ -10,6 +10,7 @@ import { loadBusFacilities, loadBusLocations, matchBusPlace } from "@/lib/bus-ca
 import { mapApiKey } from "@/lib/map-key";
 import { arrivesNextDay, busAmenityLabels, coachLabel, parseGallery } from "@/lib/buses";
 import { prisma } from "@/lib/db";
+import { getUserLocale } from "@/i18n/get-locale";
 import { formatMoney } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
 
@@ -64,6 +65,7 @@ export default async function BusDetailsPage({ params }: Props) {
     loadBusLocations(),
   ]);
   if (!route || !route.published) notFound();
+  const locale = await getUserLocale();
   const signedIn = user?.scope === "customer";
   const loginHref = `/login?next=${encodeURIComponent(`/buses/${route.slug}`)}`;
 
@@ -105,7 +107,7 @@ export default async function BusDetailsPage({ params }: Props) {
               </p>
             </div>
             <div className="bus-run__hero-side">
-              <b>{route.fareFrom ? formatMoney(route.fareFrom) : "On request"}</b>
+              <b>{route.fareFrom ? formatMoney(route.fareFrom, "INR", locale) : "On request"}</b>
               <small>Indicative fare</small>
               <BusBookLink className="bus-btn" signedIn={signedIn} loginHref={loginHref} />
             </div>
@@ -189,7 +191,7 @@ export default async function BusDetailsPage({ params }: Props) {
               toCity={route.toCity}
               coach={coachType}
               slug={route.slug}
-              fare={route.fareFrom ? formatMoney(route.fareFrom) : "On request"}
+              fare={route.fareFrom ? formatMoney(route.fareFrom, "INR", locale) : "On request"}
               signedIn={signedIn}
               loginHref={loginHref}
             />
@@ -207,7 +209,7 @@ export default async function BusDetailsPage({ params }: Props) {
                       <p>
                         {item.departTime} · {coachLabel(item.bus?.coachType || item.coachType)}
                       </p>
-                      <p>{item.fareFrom ? formatMoney(item.fareFrom) : "On request"}</p>
+                      <p>{item.fareFrom ? formatMoney(item.fareFrom, "INR", locale) : "On request"}</p>
                     </div>
                   </Link>
                 ))}

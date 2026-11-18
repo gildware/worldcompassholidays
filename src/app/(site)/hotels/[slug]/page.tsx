@@ -5,6 +5,8 @@ import type { HotelListLocation } from "@/components/hotel-list/types";
 import type { HotelRoomCard, HotelSingleData, SimilarHotelCard } from "@/components/hotel-single/types";
 import { modules } from "@/config/modules";
 import { prisma } from "@/lib/db";
+import { getUserLocale } from "@/i18n/get-locale";
+import { loadCopyMap, loadOwnerCopies, withCatalogCopy, withHotelCopy, withPlaceCopy } from "@/lib/i18n/content";
 import { cached } from "@/lib/ttl-cache";
 import { formatMoney } from "@/lib/format";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -68,7 +70,7 @@ function loadSimilarHotels() {
   return cached("hotel-similar", 30_000, () =>
     prisma.hotel.findMany({
       where: { published: true },
-      include: { destination: { select: { name: true } } },
+      include: { destination: { select: { id: true, name: true, summary: true } } },
       orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
       take: 12,
     }),
@@ -77,7 +79,10 @@ function loadSimilarHotels() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const hotel = await loadHotel(slug);
+  const locale = await getUserLocale();
+  const loaded = await loadHotel(slug);
+  const copy = loaded && locale !== "en" ? (await loadOwnerCopies("hotel", loaded.id))[locale] : undefined;
+  const hotel = loaded ? withHotelCopy(loaded, copy) : null;
   if (!hotel?.published) return privateMetadata("Hotel");
   const place = hotel.destination?.name;
   const stars = hotel.starRating > 0 ? `${hotel.starRating}-star ` : "";
@@ -112,13 +117,14 @@ export default async function HotelPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
 
-  const [hotel, catalog, destinations, user, settings, similarPool] = await Promise.all([
+  const locale = await getUserLocale();
+  const [loadedHotel, catalog, destinations, user, settings, similarPool] = await Promise.all([
     loadHotel(slug),
     loadHotelCatalog(),
     cached("hotel-detail-places", 30_000, () =>
       prisma.destination.findMany({
         where: { published: true, hotels: { some: { published: true } } },
-        select: { id: true, name: true, region: true, country: true },
+        select: { id: true, name: true, region: true, country: true, summary: true },
         orderBy: { name: "asc" },
       }),
     ),
@@ -126,7 +132,36 @@ export default async function HotelPage({ params, searchParams }: Props) {
     getHotelSettings(),
     loadSimilarHotels(),
   ]);
-  if (!hotel || !hotel.published) notFound();
+  if (!loadedHotel || !loadedHotel.published) notFound();
+  const catalogItems = [
+    ...catalog.amenities,
+    ...catalog.roomAmenities,
+    ...catalog.features,
+    ...catalog.faqs,
+  ];
+  const [hotelCopyMap, catalogCopies, placeCopies] = await Promise.all([
+    loadCopyMap("hotel", [loadedHotel.id, ...similarPool.map((item) => item.id)], locale),
+    loadCopyMap(
+      "catalog",
+      catalogItems.map((item) => item.id),
+      locale,
+    ),
+    loadCopyMap(
+      "destination",
+      [
+        ...destinations.map((place) => place.id),
+        ...(loadedHotel.destination ? [loadedHotel.destination.id] : []),
+      ],
+      locale,
+    ),
+  ]);
+  const spokenCatalog = {
+    amenities: withCatalogCopy(catalog.amenities, catalogCopies),
+    roomAmenities: withCatalogCopy(catalog.roomAmenities, catalogCopies),
+    features: withCatalogCopy(catalog.features, catalogCopies),
+    faqs: withCatalogCopy(catalog.faqs, catalogCopies),
+  };
+  const hotel = withHotelCopy(loadedHotel, hotelCopyMap.get(loadedHotel.id));
   recordCatalogView("hotel", hotel.id);
   const saved = user?.scope === "customer" ? await isFavorited(user.id, "hotel", hotel.id) : false;
 
@@ -136,8 +171,8 @@ export default async function HotelPage({ params, searchParams }: Props) {
     item?.url ? [item.url] : [],
   );
   const images = [...new Set([hotel.imageUrl, hotel.featuredImageUrl, ...gallery].filter(Boolean))];
-  const amenities = amenityNames(hotel.amenitiesJson, catalog.amenities);
-  const faqs = resolveFaqs(hotel.faqsJson, catalog.faqs);
+  const amenities = amenityNames(hotel.amenitiesJson, spokenCatalog.amenities);
+  const faqs = resolveFaqs(hotel.faqsJson, spokenCatalog.faqs);
   const freeCancellation = /free cancellation/i.test(hotel.cancellationPolicy);
   const mapUrl =
     hotel.mapLat && hotel.mapLng
@@ -146,8 +181,8 @@ export default async function HotelPage({ params, searchParams }: Props) {
 
   const rooms: HotelRoomCard[] = hotel.rooms.map((room) => {
     const features = [
-      ...resolveTitles(room.featuresJson, catalog.features),
-      ...resolveTitles(room.amenitiesJson, catalog.roomAmenities),
+      ...resolveTitles(room.featuresJson, spokenCatalog.features),
+      ...resolveTitles(room.amenitiesJson, spokenCatalog.roomAmenities),
     ];
     const roomImages = [...new Set([room.imageUrl, ...images].filter(Boolean))];
     return {
@@ -169,35 +204,44 @@ export default async function HotelPage({ params, searchParams }: Props) {
     };
   });
 
-  const similar: SimilarHotelCard[] = similarRows.map((item) => ({
+  const similar: SimilarHotelCard[] = similarRows.map((row) => {
+    const item = withHotelCopy(row, hotelCopyMap.get(row.id));
+    const place = item.destination ? withPlaceCopy(item.destination, placeCopies.get(item.destination.id)) : null;
+    return {
     id: item.id,
     slug: item.slug,
     name: item.name,
-    location: item.destination?.name ?? "",
+    location: place?.name ?? "",
     image: item.featuredImageUrl || item.imageUrl || "/img/general/map.svg",
-    priceLabel: formatMoney(item.priceFrom, item.currency || "INR"),
+    priceLabel: formatMoney(item.priceFrom, item.currency || "INR", locale),
     score: item.starRating > 0 ? item.starRating.toFixed(1) : "",
     scoreLabel: ratingLabels[item.starRating] ?? "",
-  }));
+  };
+  });
 
-  const locations: HotelListLocation[] = destinations.map((destination) => ({
-    id: destination.id,
-    name: destination.name,
-    address: [destination.region, destination.country].filter(Boolean).join(", "),
-  }));
+  const locations: HotelListLocation[] = destinations.map((destination) => {
+    const place = withPlaceCopy(destination, placeCopies.get(destination.id));
+    return {
+    id: place.id,
+    name: place.name,
+    address: [place.region, place.country].filter(Boolean).join(", "),
+    };
+  });
 
   const data: HotelSingleData = {
     id: hotel.id,
     name: hotel.name,
     slug: hotel.slug,
-    location: hotel.destination?.name ?? "",
+    location: hotel.destination
+      ? withPlaceCopy(hotel.destination, placeCopies.get(hotel.destination.id)).name
+      : "",
     destinationHref: hotel.destination ? `/destinations/${hotel.destination.slug}` : "/hotels",
     address: hotel.address,
     summary: hotel.summary,
     description: hotel.description,
     stars: hotel.starRating,
     scoreLabel: ratingLabels[hotel.starRating] ?? "",
-    priceLabel: formatMoney(hotel.priceFrom, hotel.currency || "INR"),
+    priceLabel: formatMoney(hotel.priceFrom, hotel.currency || "INR", locale),
     images: images.length > 0 ? images : ["/img/general/map.svg"],
     mapUrl,
     mapLat: hotel.mapLat,
@@ -276,7 +320,7 @@ export default async function HotelPage({ params, searchParams }: Props) {
                 }
               : {}),
             ...(hotel.priceFrom > 0
-              ? { priceRange: formatMoney(hotel.priceFrom, hotel.currency || "INR") }
+              ? { priceRange: formatMoney(hotel.priceFrom, hotel.currency || "INR", locale) }
               : {}),
           },
         ])}

@@ -176,13 +176,29 @@
   line-height: 1.35;
 }
 
-.destination-page__prose ul {
+.worldcompassholiday-page .destination-page__prose ul,
+.worldcompassholiday-page .destination-page__prose ol,
+.destination-page__prose ul,
+.destination-page__prose ol {
   margin: 0 0 14px;
-  padding-left: 1.2rem;
+  padding-inline-start: 1.2rem;
+  padding-inline-end: 0;
+  list-style: disc;
+  text-align: start;
 }
 
+.worldcompassholiday-page .destination-page__prose ol,
+.destination-page__prose ol {
+  list-style: decimal;
+}
+
+.worldcompassholiday-page .destination-page__prose li,
 .destination-page__prose li {
+  display: list-item;
   margin: 0 0 6px;
+  padding: 0;
+  list-style: inherit;
+  text-align: start;
 }
 
 .destination-page__intro-map {

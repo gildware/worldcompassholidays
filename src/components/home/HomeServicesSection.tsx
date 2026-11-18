@@ -1,4 +1,6 @@
 import { GlowLink } from "@/components/home/HomeInteractive";
+import { getUiDictionary, getUserLocale } from "@/i18n/get-locale";
+import { localizeCopy } from "@/i18n/home-copy";
 import type { HomeServiceGroup, HomeServiceItem, HomeServicesContent } from "@/lib/home-page";
 import "@/styles/home-services.css";
 
@@ -41,7 +43,17 @@ function cardSrc(item: HomeServiceItem) {
   return item.image?.url || item.imageUrl;
 }
 
-function ServiceCard({ item, spot }: { item: HomeServiceItem; spot?: boolean }) {
+function ServiceCard({
+  item,
+  spot,
+  service,
+  view,
+}: {
+  item: HomeServiceItem;
+  spot?: boolean;
+  service: string;
+  view: string;
+}) {
   const src = cardSrc(item);
   if (spot) {
     return (
@@ -55,7 +67,7 @@ function ServiceCard({ item, spot }: { item: HomeServiceItem; spot?: boolean }) 
         <span className="hic-spot__shade" />
         {item.description ? <span className="hic-spot__more">{item.description}</span> : null}
         <span className="hic-spot__label">
-          <small>Service</small>
+          <small>{service}</small>
           <strong>{item.title}</strong>
         </span>
       </GlowLink>
@@ -75,7 +87,7 @@ function ServiceCard({ item, spot }: { item: HomeServiceItem; spot?: boolean }) 
       <div className="home-services__body">
         <strong>{item.title}</strong>
         {item.description ? <p>{item.description}</p> : null}
-        <span className="home-services__go">View {item.title}</span>
+        <span className="home-services__go">{view} {item.title}</span>
       </div>
     </GlowLink>
   );
@@ -85,10 +97,14 @@ function GroupBlock({
   group,
   embedded,
   part,
+  service,
+  view,
 }: {
   group: HomeServiceGroup & { style: string };
   embedded: boolean;
   part: HomeServicePart;
+  service: string;
+  view: string;
 }) {
   const showTitle = part !== "overview";
   return (
@@ -97,14 +113,14 @@ function GroupBlock({
       {group.subtitle && showTitle ? <p className="home-services__group-lead">{group.subtitle}</p> : null}
       <div className="home-services__grid">
         {group.items.map((item) => (
-          <ServiceCard key={item.id} item={item} spot={group.style === "tiles"} />
+          <ServiceCard key={item.id} item={item} spot={group.style === "tiles"} service={service} view={view} />
         ))}
       </div>
     </div>
   );
 }
 
-export function HomeServicesSection({
+export async function HomeServicesSection({
   headingId = "home-services",
   services,
   part = "overview",
@@ -118,6 +134,10 @@ export function HomeServicesSection({
 }) {
   const groups = visibleGroups(services, part);
   if (!groups.length) return null;
+  const locale = await getUserLocale();
+  const dictionary = await getUiDictionary();
+  const service = localizeCopy("Service", locale, dictionary);
+  const view = localizeCopy("View", locale, dictionary);
 
   const classes = [
     "home-services",
@@ -128,7 +148,7 @@ export function HomeServicesSection({
     .join(" ");
 
   const groupsView = groups.map((group) => (
-    <GroupBlock key={group.id} group={group} embedded={embedded} part={part} />
+    <GroupBlock key={group.id} group={group} embedded={embedded} part={part} service={service} view={view} />
   ));
 
   if (embedded) {

@@ -47,6 +47,7 @@ import {
   transmissionOptions,
   yesNoOptions,
 } from "@/lib/custom-request";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { initialFormState } from "@/lib/forms";
 
 export type ServiceKind = "tour" | "car" | "bike";
@@ -194,6 +195,7 @@ export function ServiceRequestForm({
   firebaseConfig?: FirebaseOptions | null;
   defaultCountry?: string;
 }) {
+  const { locale } = useI18n();
   const text = copy[kind];
   const isCar = kind === "car";
   const formId = `${kind}-request-form`;
@@ -519,7 +521,7 @@ export function ServiceRequestForm({
                 <ReviewLine label="Pickup city" icon="pin" value={destination || "Not provided"} />
                 <ReviewLine label="Pickup point" icon="route" value={pickupPoint || "Not provided"} />
                 <ReviewLine label="Drop-off" icon="pin" value={dropMode === "other" && dropoffCity ? dropoffCity : "Same city"} />
-                <ReviewLine label="Dates" icon="calendar" value={`${prettyDate(start)} – ${prettyDate(end)}${days ? ` · ${plural(days, "day")}` : ""}`} />
+                <ReviewLine label="Dates" icon="calendar" value={`${prettyDate(start, locale)} – ${prettyDate(end, locale)}${days ? ` · ${plural(days, "day")}` : ""}`} />
                 {isCar ? <ReviewLine label="Pickup time" icon="clock" value={pickupTime ? timeLabel(pickupTime) : "Not selected"} /> : null}
                 {itemName ? <ReviewLine label={isCar ? "Car" : "Bike"} icon={isCar ? "car" : "bike"} value={itemName} /> : null}
               </ReviewSection>

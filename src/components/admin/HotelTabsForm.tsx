@@ -4,6 +4,9 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { useRouter } from "next/navigation";
 import { saveHotel } from "@/actions/hotels";
 import { HtmlEditor } from "@/components/admin/HtmlEditor";
+import { LanguageTabs } from "@/components/admin/LanguageTabs";
+import type { Locale } from "@/i18n/locales";
+import { copyFilled, type CopyMap } from "@/lib/i18n/content";
 import { LocationMapPicker } from "@/components/admin/LocationMapPicker";
 import { Field } from "@/components/forms/Field";
 import { FormMessage } from "@/components/forms/FormMessage";
@@ -236,19 +239,34 @@ function catalogOptions(items: CatalogOption[]) {
   return items.map((item) => ({ value: item.id, label: item.title }));
 }
 
+const hotelTextFields = new Set([
+  "name",
+  "summary",
+  "description",
+  "address",
+  "cancellationPolicy",
+  "houseRules",
+  "seoTitle",
+  "seoDescription",
+]);
+
 export function HotelTabsForm({
   destinations,
   catalog,
   hotel,
   mapApiKey,
+  translations = {},
 }: {
   destinations: HotelDestinationOption[];
   catalog: HotelCatalog;
   hotel?: HotelFormValues;
   mapApiKey: string;
+  translations?: CopyMap;
 }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
+  const [locale, setLocale] = useState<Locale>("en");
+  const [copies, setCopies] = useState<CopyMap>(translations);
   const [draft, setDraft] = useState<Draft>(() =>
     hotel ? fromHotel(hotel) : emptyDraft(),
   );
@@ -308,10 +326,54 @@ export function HotelTabsForm({
   }, [step, fieldErrors]);
 
   function patch<K extends keyof Draft>(key: K, value: Draft[K]) {
+    if (locale !== "en" && hotelTextFields.has(String(key))) {
+      setCopies((current) => ({
+        ...current,
+        [locale]: { ...(current[locale] ?? {}), [key]: value },
+      }));
+      return;
+    }
     setDraft((current) => ({ ...current, [key]: value }));
   }
 
+  function text(key: "name" | "summary" | "description" | "address" | "cancellationPolicy" | "houseRules" | "seoTitle" | "seoDescription") {
+    if (locale === "en") return draft[key];
+    const value = copies[locale]?.[key];
+    return typeof value === "string" ? value : "";
+  }
+
+  function roomText(clientId: string, field: "name" | "summary") {
+    if (locale === "en") return "";
+    const rooms = Array.isArray(copies[locale]?.rooms)
+      ? (copies[locale]?.rooms as { clientId?: string; name?: string; summary?: string }[])
+      : [];
+    const found = rooms.find((room) => room.clientId === clientId);
+    return found?.[field] ?? "";
+  }
+
   function updateRoom(clientId: string, next: Partial<RoomDraft>) {
+    const textOnly = Object.keys(next).every((key) => key === "name" || key === "summary");
+    if (locale !== "en" && textOnly) {
+      setCopies((current) => {
+        const rooms = Array.isArray(current[locale]?.rooms)
+          ? [...(current[locale]?.rooms as { clientId: string; name: string; summary: string }[])]
+          : [];
+        const existing = rooms.find((room) => room.clientId === clientId) ?? {
+          clientId,
+          name: "",
+          summary: "",
+        };
+        const updated = { ...existing, ...next };
+        return {
+          ...current,
+          [locale]: {
+            ...(current[locale] ?? {}),
+            rooms: [...rooms.filter((room) => room.clientId !== clientId), updated],
+          },
+        };
+      });
+      return;
+    }
     setDraft((current) => ({
       ...current,
       rooms: current.rooms.map((room) =>
@@ -409,6 +471,7 @@ export function HotelTabsForm({
   function buildFormData(publish: boolean) {
     const formData = new FormData();
     if (hotelId) formData.set("hotelId", hotelId);
+    formData.set("translationsJson", JSON.stringify(copies));
     formData.set("name", draft.name.trim());
     formData.set("summary", draft.summary.trim());
     formData.set("description", draft.description);
@@ -493,7 +556,23 @@ export function HotelTabsForm({
 
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 overflow-hidden">
-      <div className="shrink-0">
+      <div className="shrink-0 space-y-2">
+        <LanguageTabs
+          locale={locale}
+          onChange={setLocale}
+          filled={{
+            fr: copyFilled(copies.fr),
+            hi: copyFilled(copies.hi),
+            he: copyFilled(copies.he),
+            ar: copyFilled(copies.ar),
+            ur: copyFilled(copies.ur),
+          }}
+        />
+        {locale !== "en" ? (
+          <p className="text-xs text-muted">
+            Optional. A blank field stays in English on the site. Price, dates, and photos are shared.
+          </p>
+        ) : null}
         <Stepper current={step} onJump={setStep} />
       </div>
       <FormMessage state={state} />
@@ -516,7 +595,8 @@ export function HotelTabsForm({
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Hotel name" required name="name" error={fieldErrors.name}>
                 <input
-                  value={draft.name}
+                  value={text("name")}
+                  placeholder={locale === "en" ? undefined : draft.name}
                   onChange={(event) => patch("name", event.target.value)}
                   autoComplete="off"
                 />
@@ -605,7 +685,8 @@ export function HotelTabsForm({
                   hint="Shown on hotel cards."
                 >
                   <textarea
-                    value={draft.summary}
+                    value={text("summary")}
+                    placeholder={locale === "en" ? undefined : draft.summary}
                     rows={3}
                     className="!min-h-0"
                     onChange={(event) => patch("summary", event.target.value)}
@@ -619,7 +700,8 @@ export function HotelTabsForm({
             <div className="grid gap-4">
               <Field label="Address" name="address">
                 <input
-                  value={draft.address}
+                  value={text("address")}
+                  placeholder={locale === "en" ? undefined : draft.address}
                   onChange={(event) => patch("address", event.target.value)}
                 />
               </Field>
@@ -643,7 +725,7 @@ export function HotelTabsForm({
           {currentStepId === "content" ? (
             <div className="tour-html-editor min-h-80">
               <HtmlEditor
-                value={draft.description}
+                value={text("description")}
                 onChange={(value) => patch("description", value)}
               />
             </div>
@@ -667,7 +749,8 @@ export function HotelTabsForm({
               </Field>
               <Field label="Cancellation policy">
                 <textarea
-                  value={draft.cancellationPolicy}
+                  value={text("cancellationPolicy")}
+                  placeholder={locale === "en" ? undefined : draft.cancellationPolicy}
                   rows={4}
                   className="!min-h-0"
                   onChange={(event) => patch("cancellationPolicy", event.target.value)}
@@ -675,7 +758,8 @@ export function HotelTabsForm({
               </Field>
               <Field label="House rules">
                 <textarea
-                  value={draft.houseRules}
+                  value={text("houseRules")}
+                  placeholder={locale === "en" ? undefined : draft.houseRules}
                   rows={4}
                   className="!min-h-0"
                   onChange={(event) => patch("houseRules", event.target.value)}
@@ -762,6 +846,7 @@ export function HotelTabsForm({
                 <Button
                   type="button"
                   size="sm"
+                  className={locale === "en" ? undefined : "hidden"}
                   onClick={() => patch("rooms", [...draft.rooms, blankRoom()])}
                 >
                   Add room
@@ -788,7 +873,7 @@ export function HotelTabsForm({
                     </p>
                     <button
                       type="button"
-                      className="text-xs font-medium text-red-700"
+                      className={locale === "en" ? "text-xs font-medium text-red-700" : "hidden"}
                       onClick={() =>
                         patch(
                           "rooms",
@@ -802,7 +887,8 @@ export function HotelTabsForm({
                   <div className="grid gap-3 md:grid-cols-2">
                     <Field label="Room name" required name={`room-${index}-name`} error={fieldErrors[`room-${index}-name`]}>
                       <input
-                        value={room.name}
+                        value={locale === "en" ? room.name : roomText(room.clientId, "name")}
+                        placeholder={locale === "en" ? undefined : room.name}
                         onChange={(event) => updateRoom(room.clientId, { name: event.target.value })}
                       />
                     </Field>
@@ -906,7 +992,8 @@ export function HotelTabsForm({
                   </div>
                   <Field label="Short note">
                     <textarea
-                      value={room.summary}
+                      value={locale === "en" ? room.summary : roomText(room.clientId, "summary")}
+                      placeholder={locale === "en" ? undefined : room.summary}
                       rows={2}
                       className="!min-h-0"
                       onChange={(event) => updateRoom(room.clientId, { summary: event.target.value })}
@@ -1055,7 +1142,8 @@ export function HotelTabsForm({
               </label>
               <Field label="SEO title" required name="seoTitle" error={fieldErrors.seoTitle}>
                 <input
-                  value={draft.seoTitle}
+                  value={text("seoTitle")}
+                  placeholder={locale === "en" ? undefined : draft.seoTitle}
                   onChange={(event) => patch("seoTitle", event.target.value)}
                 />
               </Field>
@@ -1066,7 +1154,8 @@ export function HotelTabsForm({
                 error={fieldErrors.seoDescription}
               >
                 <textarea
-                  value={draft.seoDescription}
+                  value={text("seoDescription")}
+                  placeholder={locale === "en" ? undefined : draft.seoDescription}
                   rows={3}
                   className="!min-h-0"
                   onChange={(event) => patch("seoDescription", event.target.value)}

@@ -205,12 +205,12 @@ a.road-btn:hover { background: var(--blue-dark); color: #fff; }
 .road-style-chip img { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; }
 .road-eyebrow--with-icon { display: inline-flex; align-items: center; gap: 8px; }
 .road-cat-icon { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; }
-.road-faq__title { display: inline-flex; align-items: flex-start; gap: 10px; text-align: left; }
+.road-faq__title { display: inline-flex; align-items: flex-start; gap: 10px; text-align: start; }
 
 .road-dates { display: grid; gap: 8px; margin-top: 14px; }
 .road-dep {
   display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; align-items: center;
-  text-align: left; width: 100%;
+  text-align: start; width: 100%;
   border: 1px solid var(--line); background: #fff; border-radius: 16px; padding: 12px 14px;
 }
 .road-dep.is-on { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
@@ -243,7 +243,7 @@ a.road-btn:hover { background: var(--blue-dark); color: #fff; }
 }
 .road-day-name::before {
   content: "·";
-  margin-right: 0.35em;
+  margin-inline-end: 0.35em;
   color: var(--soft);
   font-weight: 500;
 }
@@ -276,7 +276,7 @@ a.road-btn:hover { background: var(--blue-dark); color: #fff; }
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  margin-right: 8px;
+  margin-inline-end: 8px;
 }
 .road-callout { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; color: var(--muted); }
 

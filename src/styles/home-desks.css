@@ -214,7 +214,7 @@
 
 .hx-visa__body li {
   position: relative;
-  padding-left: 14px;
+  padding-inline-start: 14px;
   font-size: 0.8rem;
   line-height: 1.35;
   color: var(--navy, #051036);
@@ -223,7 +223,7 @@
 .hx-visa__body li::before {
   content: "";
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 0.45em;
   width: 6px;
   height: 6px;
@@ -960,13 +960,18 @@ a.home-fleet-card__btn:focus-visible {
 .ride-promo__body li,
 .worldcompassholiday-page .ride-promo__body li,
 .home-x .ride-promo__body li {
+  position: relative;
+  padding-inline-start: 12px;
   font-size: 0.78rem;
   line-height: 1.35;
   color: rgba(255, 255, 255, 0.92);
 }
 
 .ride-promo__body li::before {
-  content: "· ";
+  content: "·";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
 }
 
 .ride-promo__cta,

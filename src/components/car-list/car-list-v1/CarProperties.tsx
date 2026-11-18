@@ -6,7 +6,7 @@ import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { CarListCard } from "@/components/car-list/types";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
-import { formatMoney } from "@/lib/format";
+import { useFormatMoney } from "@/components/i18n/I18nProvider";
 
 export function CarProperties({
   cars,
@@ -19,6 +19,7 @@ export function CarProperties({
   savedIds?: string[];
   signedIn?: boolean;
 }) {
+  const money = useFormatMoney();
   if (cars.length === 0) {
     return (
       <div className="col-12">
@@ -131,7 +132,7 @@ export function CarProperties({
                       <div className="mt-20">
                         <div className="d-flex items-center">
                           <i className="icon-check text-10" />
-                          <div className="text-14 fw-500 text-green-2 ml-10">Free Cancellation</div>
+                          <div className="text-14 fw-500 text-green-2 ml-10">Free cancellation</div>
                         </div>
                       </div>
                     ) : null}
@@ -140,7 +141,7 @@ export function CarProperties({
 
                 <div className="col-md-auto text-right md:text-left">
                   <div className="text-22 lh-12 fw-600 mt-70 md:mt-20">
-                    {formatMoney(item.price, item.currency)}
+                    {money(item.price, item.currency)}
                   </div>
                   <div className="text-14 text-light-1 mt-5">Total</div>
                   <Link prefetch={false}

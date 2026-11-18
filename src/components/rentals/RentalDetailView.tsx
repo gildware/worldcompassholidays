@@ -3,7 +3,8 @@ import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { BookNowButton, RentalBookProvider, type RentalBookingOptions } from "@/components/rentals/BookRentalModal";
 import { RentalGallery } from "@/components/rentals/RentalGallery";
 import { iconForFeature, RentalIcon, type RentalIconName } from "@/components/rentals/rental-icons";
-import { formatMoney } from "@/lib/format";
+import { getUserLocale } from "@/i18n/get-locale";
+import { formatMoney, formatNumber } from "@/lib/format";
 import type { RentalQuote } from "@/lib/rentals/pricing";
 
 type Fact = { label: string; value: string; icon: RentalIconName };
@@ -63,11 +64,12 @@ export type RentalDetailViewProps = {
   };
 };
 
-function pricedLine(label: string, currency: string) {
-  return label.replace(/× (\d+)$/, (_, amount: string) => `× ${formatMoney(Number(amount), currency)}`);
+function pricedLine(label: string, currency: string, locale: Awaited<ReturnType<typeof getUserLocale>>) {
+  return label.replace(/× (\d+)$/, (_, amount: string) => `× ${formatMoney(Number(amount), currency, locale)}`);
 }
 
-export function RentalDetailView(props: RentalDetailViewProps) {
+export async function RentalDetailView(props: RentalDetailViewProps) {
+  const locale = await getUserLocale();
   const {
     name,
     summary,
@@ -105,7 +107,7 @@ export function RentalDetailView(props: RentalDetailViewProps) {
     favorite,
   } = props;
   const tripKm = quote && includedKmPerDay > 0 ? includedKmPerDay * quote.days : 0;
-  const headline = quote ? formatMoney(quote.totalAmount, currency) : formatMoney(pricePerDay, currency);
+  const headline = quote ? formatMoney(quote.totalAmount, currency, locale) : formatMoney(pricePerDay, currency, locale);
   const headlineUnit = quote ? `for ${quote.days} day${quote.days === 1 ? "" : "s"}` : "/ day";
 
   return (
@@ -208,7 +210,7 @@ export function RentalDetailView(props: RentalDetailViewProps) {
               <h2>The rate</h2>
               <div className="rental-rate">
                 <p>
-                  <strong>{formatMoney(pricePerDay, currency)}</strong>
+                  <strong>{formatMoney(pricePerDay, currency, locale)}</strong>
                   <span>per day, before dates</span>
                 </p>
                 <ul>
@@ -227,7 +229,7 @@ export function RentalDetailView(props: RentalDetailViewProps) {
                       <RentalIcon name="tag" />
                       <span>{addon.name}</span>
                       <strong>
-                        {formatMoney(addon.price, currency)}
+                        {formatMoney(addon.price, currency, locale)}
                         {addon.priceUnit === "per_day" ? " / day" : " once"}
                       </strong>
                     </li>
@@ -309,32 +311,32 @@ export function RentalDetailView(props: RentalDetailViewProps) {
               {quote
                 ? quote.lines.map((line) => (
                     <div key={line.label}>
-                      <dt>{pricedLine(line.label, currency)}</dt>
-                      <dd>{formatMoney(line.amount, currency)}</dd>
+                      <dt>{pricedLine(line.label, currency, locale)}</dt>
+                      <dd>{formatMoney(line.amount, currency, locale)}</dd>
                     </div>
                   ))
                 : (
                     <div>
                       <dt>Daily rate</dt>
-                      <dd>{formatMoney(pricePerDay, currency)}</dd>
+                      <dd>{formatMoney(pricePerDay, currency, locale)}</dd>
                     </div>
                   )}
               {quote && quote.taxAmount > 0 ? (
                 <div>
                   <dt>Tax ({quote.taxPercent}%)</dt>
-                  <dd>{formatMoney(quote.taxAmount, currency)}</dd>
+                  <dd>{formatMoney(quote.taxAmount, currency, locale)}</dd>
                 </div>
               ) : null}
               {securityDeposit > 0 ? (
                 <div>
                   <dt>Refundable deposit</dt>
-                  <dd>{formatMoney(securityDeposit, currency)}</dd>
+                  <dd>{formatMoney(securityDeposit, currency, locale)}</dd>
                 </div>
               ) : null}
               {quote ? (
                 <div className="is-total">
                   <dt>Due now</dt>
-                  <dd>{formatMoney(quote.amountDue, currency)}</dd>
+                  <dd>{formatMoney(quote.amountDue, currency, locale)}</dd>
                 </div>
               ) : null}
             </dl>
@@ -342,11 +344,11 @@ export function RentalDetailView(props: RentalDetailViewProps) {
             <ul className="rental-detail__fine">
               <li>
                 {includedKmPerDay > 0
-                  ? `${includedKmPerDay} km included per day${tripKm > 0 ? ` · ${tripKm.toLocaleString("en-IN")} km on this trip` : ""}`
+                  ? `${formatNumber(includedKmPerDay, locale)} km included per day${tripKm > 0 ? ` · ${formatNumber(tripKm, locale)} km on this trip` : ""}`
                   : "Unlimited kilometres"}
               </li>
-              {extraKmCharge > 0 ? <li>{formatMoney(extraKmCharge, currency)} per extra km</li> : null}
-              {lateReturnCharge > 0 ? <li>Late return {formatMoney(lateReturnCharge, currency)} an hour</li> : null}
+              {extraKmCharge > 0 ? <li>{formatMoney(extraKmCharge, currency, locale)} per extra km</li> : null}
+              {lateReturnCharge > 0 ? <li>Late return {formatMoney(lateReturnCharge, currency, locale)} an hour</li> : null}
             </ul>
 
             <BookNowButton

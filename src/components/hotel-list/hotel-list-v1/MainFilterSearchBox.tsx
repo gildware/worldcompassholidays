@@ -13,7 +13,7 @@ import {
 } from "@/components/listing/FilterSheet";
 import type { HotelListFilters } from "@/components/hotel-list/hotel-list-v1/query";
 import type { HotelListLocation } from "@/components/hotel-list/types";
-import { formatMoney } from "@/lib/format";
+import { useFormatMoney } from "@/components/i18n/I18nProvider";
 
 type FilterOption = {
   value: string;
@@ -143,6 +143,7 @@ export function MainFilterSearchBox({
   onClear: () => void;
   sheet?: boolean;
 }) {
+  const money = useFormatMoney();
   const setPrice = (next: [number, number]) => onFilters({ ...filters, price: clampPrice(next, priceMin, priceMax) });
   const low = Math.min(filters.price[0], filters.price[1]);
   const high = Math.max(filters.price[0], filters.price[1]);
@@ -203,7 +204,7 @@ export function MainFilterSearchBox({
           />
         </FilterMenu>
 
-        <FilterMenu label="Price" wide summary={`${formatMoney(low, currency)} – ${formatMoney(high, currency)}`}>
+        <FilterMenu label="Price" wide summary={`${money(low, currency)} – ${money(high, currency)}`}>
           <div className="tour-price-range">
             <label className="tour-price-range__field">
               <span>Min</span>

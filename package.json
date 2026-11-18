@@ -8,6 +8,7 @@
     "build": "next build && serwist build serwist.config.mjs",
     "start": "next start",
     "lint": "eslint",
+    "i18n:audit": "tsx scripts/audit-ui-phrases.ts",
     "format": "prettier --write .",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",

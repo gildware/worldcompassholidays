@@ -8,10 +8,13 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { loadTourCatalog } from "@/lib/catalog-query";
 import { favoriteIds } from "@/lib/favorites";
 import { prisma } from "@/lib/db";
+import { getUserLocale } from "@/i18n/get-locale";
+import { loadCopyMap, withCatalogCopy, withPlaceCopy, withTourCopy } from "@/lib/i18n/content";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { cached } from "@/lib/ttl-cache";
 import { logListingSearch } from "@/lib/search/log";
-import { toCatalogTour } from "@/lib/tours/catalog-card";
+import { localizeCatalogTour, toCatalogTour } from "@/lib/tours/catalog-card";
+import { resolveTitles } from "@/lib/hotels/labels";
 
 export const metadata: Metadata = pageMetadata({
   title: "India Tours & Holiday Packages",
@@ -33,9 +36,9 @@ export default async function ToursPage({
       prisma.tour.findMany({
       where: { published: true },
       include: {
-        destination: { select: { name: true, region: true, country: true } },
+        destination: { select: { id: true, name: true, region: true, country: true } },
         destinationLinks: {
-          include: { destination: { select: { name: true, region: true, country: true } } },
+          include: { destination: { select: { id: true, name: true, region: true, country: true } } },
           take: 1,
         },
         days: { orderBy: { dayNumber: "asc" }, select: { dayNumber: true, title: true, description: true } },
@@ -48,13 +51,43 @@ export default async function ToursPage({
     getCurrentUser(),
   ]);
 
-  const tours = rows.map((tour) =>
-    toCatalogTour(
-      { ...tour, destination: tour.destination ?? tour.destinationLinks[0]?.destination ?? null },
-      catalog.includes,
-      catalog.excludes,
+  const locale = await getUserLocale();
+  const placeIds = [
+    ...new Set(
+      rows.flatMap((tour) => {
+        const place = tour.destination ?? tour.destinationLinks[0]?.destination ?? null;
+        return place ? [place.id] : [];
+      }),
     ),
-  );
+  ];
+  const [copies, catalogCopies, placeCopies] = await Promise.all([
+    loadCopyMap("tour", rows.map((tour) => tour.id), locale),
+    loadCopyMap(
+      "catalog",
+      [...catalog.includes, ...catalog.excludes].map((item) => item.id),
+      locale,
+    ),
+    loadCopyMap("destination", placeIds, locale),
+  ]);
+  const includes = withCatalogCopy(catalog.includes, catalogCopies);
+  const excludes = withCatalogCopy(catalog.excludes, catalogCopies);
+  const tours = rows.map((tour) => {
+    const place = tour.destination ?? tour.destinationLinks[0]?.destination ?? null;
+    const source = { ...tour, destination: place };
+    const card = toCatalogTour(source, catalog.includes, catalog.excludes);
+    const localized = withTourCopy(source, copies.get(tour.id));
+    const named = place
+      ? withPlaceCopy({ ...place, summary: "" }, placeCopies.get(place.id))
+      : null;
+    return localizeCatalogTour(
+      card,
+      localized,
+      resolveTitles(tour.includesJson, includes),
+      resolveTitles(tour.excludesJson, excludes),
+      locale,
+      named,
+    );
+  });
   const today = catalogToday();
   const featured = tours.find((tour) => tour.featured) ?? tours[0] ?? null;
   const customer = user?.scope === "customer" ? { name: user.name, email: user.email, phone: user.phone } : null;

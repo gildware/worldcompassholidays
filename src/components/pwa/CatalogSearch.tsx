@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, type RefObject } from "react";
-import { formatMoney } from "@/lib/format";
+import { useFormatMoney, useI18n } from "@/components/i18n/I18nProvider";
+import { localizeCopy } from "@/i18n/home-copy";
 import { hasSearchableQuery, queryTokens, tokenVariants } from "@/lib/search/rank";
 import { searchKinds, type SearchHit, type SearchKind } from "@/lib/search/types";
 
@@ -139,6 +140,10 @@ export function CatalogSearch({
   inputRef: RefObject<HTMLInputElement | null>;
 }) {
   const listId = useId();
+  const { locale, dictionary } = useI18n();
+  const money = useFormatMoney();
+  const searchLabel = localizeCopy("Search tours, cars, bikes, and hotels", locale, dictionary);
+  const searchPlaceholder = localizeCopy("Search tours, cars, bikes, hotels", locale, dictionary);
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -192,7 +197,7 @@ export function CatalogSearch({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [open, query, retry]);
+  }, [locale, open, query, retry]);
 
   const counts = useMemo(() => {
     const tally = { all: hits.length, tour: 0, car: 0, bike: 0, hotel: 0 };
@@ -259,7 +264,7 @@ export function CatalogSearch({
                   ? `${counts.all} matches`
                   : `${visible.length} ${kindLabel[filter].toLowerCase()}`
                 : "No matches"
-              : "Search tours, cars, bikes, and hotels";
+              : searchLabel;
 
   return (
     <div className="catalog-search">
@@ -269,14 +274,14 @@ export function CatalogSearch({
           <path d="M16 16l4 4" />
         </svg>
         <label className="sr-only" htmlFor={`${listId}-q`}>
-          Search tours, cars, bikes, and hotels
+          {searchLabel}
         </label>
         <input
           id={`${listId}-q`}
           ref={inputRef}
           type="search"
           value={query}
-          placeholder="Search tours, cars, bikes, hotels"
+          placeholder={searchPlaceholder}
           autoComplete="off"
           autoCapitalize="off"
           autoCorrect="off"
@@ -480,7 +485,7 @@ export function CatalogSearch({
                         ) : null}
                         {hit.price > 0 ? (
                           <span className="catalog-search__price">
-                            {formatMoney(hit.price, hit.currency)}
+                            {money(hit.price, hit.currency)}
                             <small>{priceNote[hit.kind]}</small>
                           </span>
                         ) : null}

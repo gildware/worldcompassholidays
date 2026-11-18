@@ -26,6 +26,8 @@
 /build
 
 # misc
+scripts/.tour-i18n-cache.json
+scripts/.ui-phrase-cache.json
 .DS_Store
 *.pem
 

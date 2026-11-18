@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { HomeDesktop } from "@/components/home/HomeDesktop";
 import { HomeExperience } from "@/components/home/HomeExperience";
 import { type HomeBus } from "@/components/home/HomeBusSection";
-import { type HomeRide } from "@/components/home/HomeFleetSection";
+import { type HomeRide } from "@/components/home/home-ride-data";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { durationChoices } from "@/components/tour-list/tour-list-v2/query";
 import type { TourListLocation } from "@/components/tour-list/types";
@@ -16,42 +16,46 @@ import { favoriteIds } from "@/lib/favorites";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getGoogleReviewsForPlace } from "@/lib/google-reviews";
 import { getHomePageContent, orderByIds, type HomeRailConfig } from "@/lib/home-page";
+import { getMessages, getUiDictionary, getUserLocale } from "@/i18n/get-locale";
+import { loadCopyMap, withHotelCopy, withNameCopy, withPlaceCopy, withTourCopy, withVehicleCopy } from "@/lib/i18n/content";
+import { localizeCopy, localizeHome } from "@/i18n/home-copy";
 import { getPublicNav } from "@/lib/navigation";
 import { resolveRideCover, stayImageList } from "@/lib/catalog-media";
+import { formatNumber } from "@/lib/format";
 import { clipText, graphLd, organizationNode, pageMetadata, plainText, websiteNode } from "@/lib/seo";
 import { cached } from "@/lib/ttl-cache";
+
+function counted(count: number, one: string, many: string, t: (value: string) => string, locale: Parameters<typeof formatNumber>[1]) {
+  return `${formatNumber(count, locale)} ${t(count === 1 ? one : many)}`;
+}
 
 function popularHoverText(
   counts: { hotels: number; rentals: number; tours: number },
   region: string,
   country: string,
+  t: (value: string) => string,
+  locale: Parameters<typeof formatNumber>[1],
 ) {
   const parts = [
-    counts.hotels
-      ? `${counts.hotels} Hotel${counts.hotels === 1 ? "" : "s"}`
-      : null,
-    counts.rentals
-      ? `${counts.rentals} Rental${counts.rentals === 1 ? "" : "s"}`
-      : null,
-    counts.tours ? `${counts.tours} Tour${counts.tours === 1 ? "" : "s"}` : null,
+    counts.hotels ? counted(counts.hotels, "Hotel", "Hotels", t, locale) : null,
+    counts.rentals ? counted(counts.rentals, "rental", "rentals", t, locale) : null,
+    counts.tours ? counted(counts.tours, "tour", "tours", t, locale) : null,
   ].filter((part): part is string => Boolean(part));
 
   return parts.length > 0 ? parts.join(" - ") : `${region}, ${country}`;
 }
 
-function destinationMeta(counts: {
-  hotels: number;
-  rentals: number;
-  tours: number;
-}) {
+function destinationMeta(
+  counts: { hotels: number; rentals: number; tours: number },
+  t: (value: string) => string,
+  locale: Parameters<typeof formatNumber>[1],
+) {
   const parts = [
-    counts.tours ? `${counts.tours} tour${counts.tours === 1 ? "" : "s"}` : null,
-    counts.hotels ? `${counts.hotels} stay${counts.hotels === 1 ? "" : "s"}` : null,
-    counts.rentals
-      ? `${counts.rentals} rental${counts.rentals === 1 ? "" : "s"}`
-      : null,
+    counts.tours ? counted(counts.tours, "tour", "tours", t, locale) : null,
+    counts.hotels ? counted(counts.hotels, "stay", "stays", t, locale) : null,
+    counts.rentals ? counted(counts.rentals, "rental", "rentals", t, locale) : null,
   ].filter((part): part is string => Boolean(part));
-  return parts.length > 0 ? parts.join(" · ") : "Explore";
+  return parts.length > 0 ? parts.join(" · ") : t("Explore");
 }
 
 function label(value: string) {
@@ -184,9 +188,13 @@ function railWhere(rail: HomeRailConfig, auto: Record<string, unknown>) {
 }
 
 export default async function Page() {
-  const items = getPublicNav();
+  const copy = await getMessages();
+  const locale = await getUserLocale();
+  const dictionary = await getUiDictionary();
+  const t = (value: string) => localizeCopy(value, locale, dictionary);
+  const items = getPublicNav(copy.nav);
   const user = await getCurrentUser();
-  const home = await getHomePageContent();
+  const home = localizeHome(await getHomePageContent(), locale, dictionary);
   const reviewsEnabled = home.sections.some((section) => section.id === "reviews" && section.enabled);
   const googleReviews =
     reviewsEnabled && home.reviews.placeId.trim()
@@ -297,7 +305,7 @@ export default async function Page() {
             imageUrl: true,
             featuredImageUrl: true,
             isFeatured: true,
-            destination: { select: { name: true } },
+            destination: { select: { id: true, name: true } },
           },
         }).then((rows) =>
           home.tours.mode === "manual" && home.tours.ids.length
@@ -321,7 +329,7 @@ export default async function Page() {
             summary: true,
             starRating: true,
             galleryJson: true,
-            destination: { select: { name: true } },
+            destination: { select: { id: true, name: true } },
           },
         }).then((rows) =>
           home.hotels.mode === "manual" && home.hotels.ids.length
@@ -341,9 +349,9 @@ export default async function Page() {
             seats: true,
             pricePerDay: true,
             currency: true,
-            destination: { select: { name: true } },
-            vehicleType: { select: { name: true } },
-            transmission: { select: { name: true } },
+            destination: { select: { id: true, name: true } },
+            vehicleType: { select: { id: true, name: true } },
+            transmission: { select: { id: true, name: true } },
             images: {
               orderBy: { sortOrder: "asc" },
               take: 1,
@@ -368,9 +376,9 @@ export default async function Page() {
             seats: true,
             pricePerDay: true,
             currency: true,
-            destination: { select: { name: true } },
-            vehicleType: { select: { name: true } },
-            transmission: { select: { name: true } },
+            destination: { select: { id: true, name: true } },
+            vehicleType: { select: { id: true, name: true } },
+            transmission: { select: { id: true, name: true } },
             images: {
               orderBy: { sortOrder: "asc" },
               take: 1,
@@ -447,11 +455,65 @@ export default async function Page() {
     ? await favoriteIds(signedInCustomer.id, ["tour", "hotel", "car", "bike"])
     : [];
   const coverUrl = home.hero.image?.url || brand.covers[0]?.url || "";
-  const mappedDestinations = popularDestinations.map((destination) => ({
+  const rides = [...featuredCars, ...featuredBikes];
+  const [tourCopies, placeCopies, hotelCopies, vehicleCopies, configCopies] = await Promise.all([
+    loadCopyMap("tour", featuredTours.map((tour) => tour.id), locale),
+    loadCopyMap(
+      "destination",
+      [
+        ...new Set([
+          ...featuredTours.flatMap((tour) => (tour.destination ? [tour.destination.id] : [])),
+          ...featuredHotels.flatMap((hotel) => (hotel.destination ? [hotel.destination.id] : [])),
+          ...rides.flatMap((ride) => (ride.destination ? [ride.destination.id] : [])),
+          ...popularDestinations.map((destination) => destination.id),
+        ]),
+      ],
+      locale,
+    ),
+    loadCopyMap("hotel", featuredHotels.map((hotel) => hotel.id), locale),
+    loadCopyMap("vehicle", rides.map((ride) => ride.id), locale),
+    loadCopyMap(
+      "rentalConfig",
+      rides.flatMap((ride) => [ride.vehicleType?.id, ride.transmission?.id].filter((id): id is string => Boolean(id))),
+      locale,
+    ),
+  ]);
+  const spokenTours = featuredTours.map((tour) => {
+    const localized = withTourCopy({ ...tour, description: "" }, tourCopies.get(tour.id));
+    const destination = tour.destination
+      ? withPlaceCopy({ ...tour.destination, summary: "" }, placeCopies.get(tour.destination.id))
+      : null;
+    return { ...localized, destination };
+  });
+  const spokenHotels = featuredHotels.map((hotel) => {
+    const localized = withHotelCopy({ ...hotel, description: "" }, hotelCopies.get(hotel.id));
+    const destination = hotel.destination
+      ? withPlaceCopy({ ...hotel.destination, summary: "" }, placeCopies.get(hotel.destination.id))
+      : null;
+    return { ...localized, destination };
+  });
+  const spokenRides = new Map(
+    rides.map((ride) => {
+      const named = withVehicleCopy(ride, vehicleCopies.get(ride.id));
+      const destination = ride.destination
+        ? withPlaceCopy({ ...ride.destination, summary: "" }, placeCopies.get(ride.destination.id))
+        : null;
+      const vehicleType = ride.vehicleType
+        ? withNameCopy(ride.vehicleType, configCopies.get(ride.vehicleType.id))
+        : null;
+      const transmission = ride.transmission
+        ? withNameCopy(ride.transmission, configCopies.get(ride.transmission.id))
+        : null;
+      return [ride.id, { ...named, destination, vehicleType, transmission }] as const;
+    }),
+  );
+  const mappedDestinations = popularDestinations.map((destination) => {
+    const named = withPlaceCopy({ ...destination, summary: "" }, placeCopies.get(destination.id));
+    return {
     id: destination.id,
     slug: destination.slug,
-    name: destination.name,
-    region: destination.region,
+    name: named.name,
+    region: named.region,
     imageUrl: destination.imageUrl,
     hoverText: popularHoverText(
       {
@@ -462,8 +524,10 @@ export default async function Page() {
           ...destination.tourLinks.map((link) => link.tourId),
         ]).size,
       },
-      destination.region,
-      destination.country,
+      named.region,
+      named.country,
+      t,
+      locale,
     ),
     meta: destinationMeta({
       hotels: destination._count.hotels,
@@ -472,8 +536,9 @@ export default async function Page() {
         ...destination.tours.map((tour) => tour.id),
         ...destination.tourLinks.map((link) => link.tourId),
       ]).size,
-    }),
-  }));
+    }, t, locale),
+  };
+  });
 
   return (
     <>
@@ -486,7 +551,7 @@ export default async function Page() {
           contactPhone={brand.phone}
           tourCatalog={tourCatalog}
           destinations={mappedDestinations}
-          tours={featuredTours.map((tour) => {
+          tours={spokenTours.map((tour) => {
             const duration = tourDurationLabel(tour);
             const plan = tourPlanCopy(tour, duration);
             return {
@@ -500,7 +565,7 @@ export default async function Page() {
             image:
               tour.featuredImageUrl || tour.imageUrl || "/img/tours/header-bg.jpg",
             badge: tour.isFeatured
-              ? "Featured"
+              ? t("Featured")
               : tour.category.trim()
                 ? tour.category.trim()
                 : undefined,
@@ -508,7 +573,7 @@ export default async function Page() {
             chips: plan.chips,
           };
           })}
-          hotels={featuredHotels.map((hotel) => {
+          hotels={spokenHotels.map((hotel) => {
             const place = hotel.destination?.name || "";
             const images = stayImages(
               hotel.featuredImageUrl,
@@ -530,8 +595,8 @@ export default async function Page() {
             stars: hotel.starRating || 0,
           };
           })}
-          cars={featuredCars.map((car) => toRide({ ...car, kind: "car" }, "/img/cars/car-rental-banner.jpg"))}
-          bikes={featuredBikes.map((bike) => toRide({ ...bike, kind: "bike" }, "/img/bikes/bike-rental-banner.jpg"))}
+          cars={featuredCars.map((car) => toRide({ ...(spokenRides.get(car.id) ?? car), kind: "car" }, "/img/cars/car-rental-banner.jpg"))}
+          bikes={featuredBikes.map((bike) => toRide({ ...(spokenRides.get(bike.id) ?? bike), kind: "bike" }, "/img/bikes/bike-rental-banner.jpg"))}
           buses={mappedBuses}
           showCars={modules.cars}
           showBikes={modules.bikes}
@@ -549,7 +614,7 @@ export default async function Page() {
           content={home}
           coverUrl={coverUrl}
           destinations={mappedDestinations}
-          tours={featuredTours.map((tour) => {
+          tours={spokenTours.map((tour) => {
             const duration = tourDurationLabel(tour);
             const plan = tourPlanCopy(tour, duration);
             return {
@@ -565,7 +630,7 @@ export default async function Page() {
             chips: plan.chips,
           };
           })}
-          hotels={featuredHotels.map((hotel) => {
+          hotels={spokenHotels.map((hotel) => {
             const place = hotel.destination?.name || "";
             const images = stayImages(
               hotel.featuredImageUrl,
@@ -587,14 +652,15 @@ export default async function Page() {
             stars: hotel.starRating || 0,
           };
           })}
-          cars={featuredCars.map((car) => toRide({ ...car, kind: "car" }, "/img/cars/car-rental-banner.jpg"))}
-          bikes={featuredBikes.map((bike) => toRide({ ...bike, kind: "bike" }, "/img/bikes/bike-rental-banner.jpg"))}
+          cars={featuredCars.map((car) => toRide({ ...(spokenRides.get(car.id) ?? car), kind: "car" }, "/img/cars/car-rental-banner.jpg"))}
+          bikes={featuredBikes.map((bike) => toRide({ ...(spokenRides.get(bike.id) ?? bike), kind: "bike" }, "/img/bikes/bike-rental-banner.jpg"))}
           buses={mappedBuses}
           showCars={modules.cars}
           showBikes={modules.bikes}
           showBuses={modules.buses}
           savedIds={savedIds}
           signedIn={Boolean(signedInCustomer)}
+          locale={locale}
           googleReviews={googleReviews}
         />
         <HomeFooter items={items} />

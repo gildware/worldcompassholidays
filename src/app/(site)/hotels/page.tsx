@@ -13,6 +13,8 @@ import { getHotelSettings } from "@/lib/hotels/settings";
 import { readStayState, type StayListHotel, type StayPlace } from "@/lib/hotels/stay-list";
 import { parseJsonArray, type GalleryItem } from "@/lib/tours/json";
 import { logListingSearch } from "@/lib/search/log";
+import { getUserLocale } from "@/i18n/get-locale";
+import { loadCopyMap, withCatalogCopy, withHotelCopy, withPlaceCopy } from "@/lib/i18n/content";
 import { pageMetadata } from "@/lib/seo";
 import { cached } from "@/lib/ttl-cache";
 
@@ -68,7 +70,7 @@ export default async function HotelsPage({
       prisma.hotel.findMany({
       where: { published: true },
       include: {
-        destination: { select: { name: true, slug: true } },
+        destination: { select: { id: true, name: true, slug: true, region: true, country: true } },
         rooms: {
           where: { active: true },
           orderBy: { pricePerNight: "asc" },
@@ -81,15 +83,35 @@ export default async function HotelsPage({
     cached("hotel-places", 20_000, () =>
       prisma.destination.findMany({
       where: { published: true, hotels: { some: { published: true } } },
-      select: { id: true, name: true, slug: true },
+      select: { id: true, name: true, slug: true, region: true, country: true, summary: true },
       orderBy: { name: "asc" },
       }),
     ),
     getCurrentUser(),
   ]);
   const savedIds = user?.scope === "customer" ? await favoriteIds(user.id, "hotel") : [];
+  const locale = await getUserLocale();
+  const [hotelCopies, placeCopies, amenityCopies] = await Promise.all([
+    loadCopyMap("hotel", rows.map((hotel) => hotel.id), locale),
+    loadCopyMap(
+      "destination",
+      destinations.flatMap((place) => (place.id ? [place.id] : [])),
+      locale,
+    ),
+    loadCopyMap(
+      "catalog",
+      catalog.amenities.map((item) => item.id),
+      locale,
+    ),
+  ]);
+  const amenities = withCatalogCopy(catalog.amenities, amenityCopies);
+  const placesById = new Map(
+    destinations.map((place) => [place.id, withPlaceCopy(place, placeCopies.get(place.id))]),
+  );
 
-  const hotels: StayListHotel[] = rows.map((hotel) => {
+  const hotels: StayListHotel[] = rows.map((row) => {
+    const hotel = withHotelCopy(row, hotelCopies.get(row.id));
+    const place = hotel.destination ? placesById.get(hotel.destination.id) : null;
     const room = hotel.rooms[0];
     const gallery = parseJsonArray<GalleryItem>(hotel.galleryJson).flatMap((item) =>
       item?.url ? [item.url] : [],
@@ -97,8 +119,8 @@ export default async function HotelsPage({
     const images = [...new Set([hotel.imageUrl, hotel.featuredImageUrl, ...gallery].filter(Boolean))];
     const lat = Number(hotel.mapLat);
     const lng = Number(hotel.mapLng);
-    const town = hotel.destination?.name ?? "";
-    const area = hotel.address.split(",")[0]?.trim() || town;
+    const town = place?.name ?? "";
+    const area = row.address.split(",")[0]?.trim() || town;
     const lead = cancelLead(hotel.cancellationPolicy);
     const nightly = room?.pricePerNight || hotel.priceFrom;
     const photos = (images.length ? images : ["/img/general/map.svg"]).map((src) => ({
@@ -127,7 +149,7 @@ export default async function HotelsPage({
       cancelDays: lead ?? 2,
       pay: false,
       left: null,
-      amenities: amenityNames(hotel.amenitiesJson, catalog.amenities),
+      amenities: amenityNames(hotel.amenitiesJson, amenities),
       line: plain(hotel.summary),
       photos,
       roomName: room?.name ?? "",
@@ -136,7 +158,7 @@ export default async function HotelsPage({
 
   const places: StayPlace[] = destinations.map((destination) => ({
     id: destination.slug,
-    name: destination.name,
+    name: placesById.get(destination.id)?.name ?? destination.name,
   }));
   if (hotels.some((hotel) => hotel.townId === "other")) places.push({ id: "other", name: "Other" });
 

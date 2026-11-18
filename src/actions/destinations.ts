@@ -14,6 +14,7 @@ import { deleteEntityMedia } from "@/lib/storage/cleanup";
 import { readUploadedImage, validateUploadedImage } from "@/lib/storage/form";
 import { parentAssignmentError } from "@/lib/destinations";
 import { readMapFields } from "@/lib/maps";
+import { deleteOwnerCopies, saveOwnerCopies } from "@/lib/i18n/content";
 import { uniqueSlug } from "@/lib/slug";
 
 const destinationSchema = z.object({
@@ -117,7 +118,7 @@ export async function createDestination(
     ),
   );
 
-  await prisma.destination.create({
+  const created = await prisma.destination.create({
     data: {
       name: parsed.data.name,
       region: parsed.data.region,
@@ -136,6 +137,7 @@ export async function createDestination(
     },
   });
 
+  await saveOwnerCopies("destination", created.id, String(formData.get("translationsJson") ?? ""));
   revalidateDestinationPaths(slug);
   if (parent.parentId) {
     const parentRow = await prisma.destination.findUnique({
@@ -225,6 +227,7 @@ export async function updateDestination(
     });
   }
 
+  await saveOwnerCopies("destination", destinationId, String(formData.get("translationsJson") ?? ""));
   revalidateDestinationPaths(existing.slug);
   revalidateDestinationPaths(slug);
   const parentIds = [existing.parentId, parent.parentId].filter(
@@ -309,6 +312,7 @@ export async function deleteDestination(formData: FormData) {
   }
 
   await prisma.destination.delete({ where: { id: destinationId } });
+  await deleteOwnerCopies("destination", destinationId);
   await deleteEntityMedia(
     "destinations",
     [destination.slug, destination.id],

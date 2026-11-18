@@ -860,6 +860,30 @@ model Page {
   updatedAt     DateTime     @updatedAt
 }
 
+/// Optional text for a public record in one language. English stays on the record itself.
+model ContentTranslation {
+  id        String   @id @default(cuid())
+  ownerType String
+  ownerId   String
+  locale    String
+  field     String   @default("copy")
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@unique([ownerType, ownerId, locale, field])
+  @@index([ownerType, locale])
+}
+
+/// A staff-written replacement for one interface line. English stays in the app catalog.
+model UiPhrase {
+  key       String
+  locale    String
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@id([key, locale])
+}
+
 /// Customer search / filter activity shown in Admin → Searches.
 model SearchEvent {
   id          String   @id @default(cuid())

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isLocale, localeDir, localeEnglishName } from "@/i18n/locales";
 import { enquiryFactGroups, enquiryFilters, enquiryStatusLabel, enquiryStatusTone, type EnquiryView } from "@/lib/enquiries";
 import { formatDate, formatDateTime } from "@/lib/format";
 
@@ -204,7 +205,16 @@ function EnquiryTable({
   );
 }
 
-export function EnquiryFacts({ enquiry, footer }: { enquiry: EnquiryView; footer?: React.ReactNode }) {
+export function EnquiryFacts({
+  enquiry,
+  footer,
+  bilingual = false,
+}: {
+  enquiry: EnquiryView;
+  footer?: React.ReactNode;
+  /** Admin desk: show the submitted wording and its English rendering. */
+  bilingual?: boolean;
+}) {
   const groups = enquiryFactGroups
     .map((group) => ({ group, facts: enquiry.facts.filter((fact) => fact.group === group) }))
     .filter((section) => section.facts.length > 0);
@@ -238,8 +248,34 @@ export function EnquiryFacts({ enquiry, footer }: { enquiry: EnquiryView; footer
       value: enquiry.channel === "whatsapp" ? "WhatsApp" : "Website form",
     });
   }
+  const languageName = enquiry.sourceLocale ? localeEnglishName(enquiry.sourceLocale) : "";
+  const originalDir = isLocale(enquiry.sourceLocale) ? localeDir(enquiry.sourceLocale) : "auto";
+  const showBoth = bilingual && Boolean(languageName) && enquiry.sourceLocale !== "en";
+  const englishNote =
+    showBoth && enquiry.englishNote && enquiry.englishNote.trim().toLocaleLowerCase("en") !== enquiry.note.trim().toLocaleLowerCase("en")
+      ? enquiry.englishNote
+      : "";
+  const englishName =
+    showBoth && enquiry.englishName && enquiry.englishName.trim().toLocaleLowerCase("en") !== enquiry.contactName.trim().toLocaleLowerCase("en")
+      ? enquiry.englishName
+      : "";
   if (enquiry.note) {
-    cards.push({ key: "note", group: "Note", label: "Customer note", value: enquiry.note, wide: true });
+    cards.push({
+      key: "note",
+      group: "Note",
+      label: showBoth ? `Customer note · ${languageName}` : "Customer note",
+      value: enquiry.note,
+      wide: true,
+    });
+    if (showBoth) {
+      cards.push({
+        key: "note-en",
+        group: "Note",
+        label: "English",
+        value: englishNote || "English rendering is not available. The original message is saved.",
+        wide: true,
+      });
+    }
   }
 
   return (
@@ -273,14 +309,48 @@ export function EnquiryFacts({ enquiry, footer }: { enquiry: EnquiryView; footer
             <p className={`text-[10px] font-semibold uppercase tracking-wide ${factLabelClass[card.group] ?? "text-muted"}`}>
               {card.group} · {card.label}
             </p>
-            <p className={`mt-0.5 break-words text-sm font-semibold leading-snug ${card.group === "Note" ? "whitespace-pre-line font-medium" : ""}`}>
+            <p
+              className={`mt-0.5 break-words text-sm font-semibold leading-snug ${card.group === "Note" ? "whitespace-pre-line font-medium" : ""}`}
+              lang={
+                (card.key === "note" || card.key === "contact-name") && enquiry.sourceLocale
+                  ? enquiry.sourceLocale
+                  : card.key === "note-en"
+                    ? "en"
+                    : card.label === "About" && enquiry.sourceLocale
+                      ? showBoth
+                        ? "en"
+                        : enquiry.sourceLocale
+                      : undefined
+              }
+              dir={
+                card.key === "note" ||
+                card.key === "contact-name" ||
+                (card.label === "About" && !showBoth && enquiry.sourceInterest)
+                  ? originalDir
+                  : card.key === "note-en" || (card.label === "About" && showBoth)
+                    ? "ltr"
+                    : undefined
+              }
+            >
               {card.href ? (
                 <a href={card.href} className="underline-offset-2 hover:underline">
-                  {card.value}
+                  {card.label === "About" && !showBoth && enquiry.sourceInterest ? enquiry.sourceInterest : card.value}
                 </a>
+              ) : card.label === "About" && !showBoth && enquiry.sourceInterest ? (
+                enquiry.sourceInterest
               ) : (
                 card.value
               )}
+              {card.key === "contact-name" && englishName ? (
+                <span className="mt-1 block text-xs font-medium" dir="ltr" lang="en">
+                  English: {englishName}
+                </span>
+              ) : null}
+              {card.label === "About" && showBoth && enquiry.sourceInterest && enquiry.sourceInterest !== card.value ? (
+                <span className="mt-1 block text-xs font-medium" lang={enquiry.sourceLocale} dir={originalDir}>
+                  As submitted: {enquiry.sourceInterest}
+                </span>
+              ) : null}
             </p>
           </article>
         ))}

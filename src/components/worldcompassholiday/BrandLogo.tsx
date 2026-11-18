@@ -22,23 +22,19 @@ export function BrandLogo({
   className?: string;
   logoUrl?: string | null;
 }) {
+  const lockupClass = ["brand-lockup", tone === "dark" ? "is-dark" : "", className]
+    .filter(Boolean)
+    .join(" ");
+
   if (logoUrl) {
     return (
-      <span
-        className={["brand-lockup", tone === "dark" ? "is-dark" : "", className]
-          .filter(Boolean)
-          .join(" ")}
-      >
+      <span className={lockupClass} translate="no" data-skip-i18n="">
         <img src={logoUrl} alt="World Compass Holidays" className="brand-logo-img" />
       </span>
     );
   }
   return (
-    <span
-      className={["brand-lockup", tone === "dark" ? "is-dark" : "", className]
-        .filter(Boolean)
-        .join(" ")}
-    >
+    <span className={lockupClass} translate="no" data-skip-i18n="">
       <BrandMark />
       <span className="brand-word">
         <span className="brand-word__name">World Compass</span>

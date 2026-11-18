@@ -5,6 +5,7 @@ import { clearTtlCache } from "@/lib/ttl-cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { deleteOwnerCopies, saveOwnerCopies } from "@/lib/i18n/content";
 import { firstIssue, type FormState } from "@/lib/forms";
 import { requirePermission } from "@/lib/auth/guards";
 import { slugify, uniqueSlug } from "@/lib/slug";
@@ -700,6 +701,8 @@ export async function saveVehicle(
     );
   }
 
+  await saveOwnerCopies("vehicle", vehicle.id, String(formData.get("translationsJson") ?? ""));
+
   revalidateFleet(vehicle.slug);
   if (intent === "continue") {
     return { error: null, success: "Saved.", vehicleId: vehicle.id };
@@ -726,6 +729,7 @@ export async function deleteVehicle(
     include: { images: true, documents: true },
   });
   if (!vehicle) return { error: "Vehicle not found." };
+  await deleteOwnerCopies("vehicle", vehicle.id);
   await prisma.vehicle.delete({ where: { id } });
   await deleteEntityMedia(
     "vehicles",

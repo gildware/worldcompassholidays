@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { DestinationCatalog } from "@/components/destination-list/catalog/DestinationCatalog";
 import { readDestQuery } from "@/components/destination-list/catalog/logic";
 import type { DestinationListCard } from "@/components/destination-list/types";
+import { getUserLocale } from "@/i18n/get-locale";
+import { loadCopyMap, translated, withPlaceCopy } from "@/lib/i18n/content";
 import { prisma } from "@/lib/db";
 import { parseMapPoint } from "@/lib/maps";
 import { logListingSearch } from "@/lib/search/log";
@@ -31,10 +33,10 @@ export default async function DestinationsPage({
       where: { published: true },
       orderBy: [{ popular: "desc" }, { name: "asc" }],
       include: {
-        parent: { select: { name: true } },
+        parent: { select: { id: true, name: true } },
         children: {
           where: { published: true },
-          select: { name: true },
+          select: { id: true, name: true },
           orderBy: { name: "asc" },
         },
         _count: {
@@ -48,7 +50,18 @@ export default async function DestinationsPage({
     }),
   );
 
-  const destinations: DestinationListCard[] = rows.map((destination) => {
+  const locale = await getUserLocale();
+  const placeCopies = await loadCopyMap(
+    "destination",
+    rows.flatMap((destination) => [
+      destination.id,
+      ...(destination.parent ? [destination.parent.id] : []),
+      ...destination.children.map((child) => child.id),
+    ]),
+    locale,
+  );
+  const destinations: DestinationListCard[] = rows.map((row) => {
+    const destination = withPlaceCopy(row, placeCopies.get(row.id));
     const point = parseMapPoint(destination.mapLat, destination.mapLng, destination.mapZoom);
     return {
       id: destination.id,
@@ -58,8 +71,12 @@ export default async function DestinationsPage({
       country: destination.country,
       summary: clipText(destination.summary, 140),
       imageUrl: destination.imageUrl,
-      parentName: destination.parent?.name ?? "",
-      placeNames: destination.children.map((child) => child.name),
+      parentName: destination.parent
+        ? translated(destination.parent.name, placeCopies.get(destination.parent.id)?.name)
+        : "",
+      placeNames: destination.children.map((child) =>
+        translated(child.name, placeCopies.get(child.id)?.name),
+      ),
       popular: destination.popular,
       lat: point?.lat ?? null,
       lng: point?.lng ?? null,

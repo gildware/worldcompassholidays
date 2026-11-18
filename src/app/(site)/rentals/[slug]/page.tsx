@@ -6,6 +6,8 @@ import { fleetPhotoUrl, isCatalogPlaceholder } from "@/lib/catalog-media";
 import { prisma } from "@/lib/db";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getUserLocale } from "@/i18n/get-locale";
+import { loadCopyMap, translated, withPlaceCopy, withVehicleCopy } from "@/lib/i18n/content";
 import { isFavorited } from "@/lib/favorites";
 import { mapApiKey } from "@/lib/map-key";
 import { documentsRequiredToBook } from "@/lib/rentals/booking-documents";
@@ -50,21 +52,31 @@ function one(value: string | string[] | undefined) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const vehicle = await prisma.vehicle.findUnique({
+  const locale = await getUserLocale();
+  const loaded = await prisma.vehicle.findUnique({
     where: { slug },
     select: {
+      id: true,
       name: true,
       summary: true,
       description: true,
       kind: true,
       published: true,
-      destination: { select: { name: true } },
+      destination: { select: { id: true, name: true, summary: true } },
       images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
     },
   });
-  if (!vehicle?.published) return privateMetadata("Rental");
+  if (!loaded?.published) return privateMetadata("Rental");
+  const [vehicleCopies, placeCopies] = await Promise.all([
+    loadCopyMap("vehicle", [loaded.id], locale),
+    loadCopyMap("destination", loaded.destination ? [loaded.destination.id] : [], locale),
+  ]);
+  const vehicle = withVehicleCopy(loaded, vehicleCopies.get(loaded.id));
+  const placeRecord = loaded.destination
+    ? withPlaceCopy(loaded.destination, placeCopies.get(loaded.destination.id))
+    : null;
   const noun = vehicle.kind === "bike" ? "Bike Rental" : "Car Rental";
-  const place = vehicle.destination?.name;
+  const place = placeRecord?.name;
   const title = vehicle.name.toLowerCase().includes("rental")
     ? vehicle.name
     : place
@@ -104,9 +116,9 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
           related: {
             include: {
               images: { orderBy: { sortOrder: "asc" }, take: 1 },
-              vehicleType: { select: { name: true } },
-              transmission: { select: { name: true } },
-              fuelType: { select: { name: true } },
+              vehicleType: { select: { id: true, name: true } },
+              transmission: { select: { id: true, name: true } },
+              fuelType: { select: { id: true, name: true } },
             },
           },
         },
@@ -152,6 +164,49 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
       : setup.locations.filter((location) => location.active);
   const rules = setup.policies.filter((policy) => policy.kind === "rule" && policy.active);
   const cancellations = setup.policies.filter((policy) => policy.kind === "cancellation" && policy.active);
+  const locale = await getUserLocale();
+  const relatedVehicles = vehicle.relatedLinks.map((link) => link.related);
+  const configIds = [
+    vehicle.vehicleType?.id,
+    vehicle.fuelType?.id,
+    vehicle.transmission?.id,
+    ...vehicle.features.map((feature) => feature.config.id),
+    ...vehicle.addonLinks.map((link) => link.config.id),
+    ...relatedVehicles.flatMap((item) => [item.vehicleType?.id, item.transmission?.id, item.fuelType?.id]),
+  ].filter((id): id is string => Boolean(id));
+  const [vehicleCopies, placeCopies, configCopies, locationCopies] = await Promise.all([
+    loadCopyMap("vehicle", [vehicle.id, ...relatedVehicles.map((item) => item.id)], locale),
+    loadCopyMap("destination", [vehicle.destination.id], locale),
+    loadCopyMap("rentalConfig", configIds, locale),
+    loadCopyMap(
+      "rentalLocation",
+      locations.map((location) => location.id),
+      locale,
+    ),
+  ]);
+  const spoken = withVehicleCopy(vehicle, vehicleCopies.get(vehicle.id));
+  const placeName = withPlaceCopy(vehicle.destination, placeCopies.get(vehicle.destination.id)).name;
+  const named = <T extends { id: string; name: string; description?: string }>(item: T) => {
+    const copy = configCopies.get(item.id);
+    return {
+      ...item,
+      name: translated(item.name, copy?.name),
+      ...(item.description !== undefined
+        ? { description: translated(item.description, copy?.description) }
+        : {}),
+    };
+  };
+  const spokenFeatures = features.map(named);
+  const spokenExcluded = excluded.map(named);
+  const spokenAddons = addons.map(named);
+  const spokenLocations = locations.map((location) => {
+    const copy = locationCopies.get(location.id);
+    return {
+      ...location,
+      name: translated(location.name, copy?.name),
+      address: translated(location.address, copy?.address),
+    };
+  });
 
   const fact = (
     label: string,
@@ -162,13 +217,13 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
     ...fact("Brand", vehicle.brand, "brand"),
     ...fact("Model", vehicle.modelName, "brand"),
     ...fact("Year", vehicle.year ? String(vehicle.year) : "", "calendar"),
-    ...fact("Available in", vehicle.destination.name, "pin"),
+    ...fact("Available in", placeName, "pin"),
   ];
   const specFacts = [
-    ...fact("Type", vehicle.vehicleType?.name, "specs"),
+    ...fact("Type", vehicle.vehicleType ? named(vehicle.vehicleType).name : "", "specs"),
     ...fact("Seats", String(vehicle.seats), "seat"),
-    ...fact("Transmission", vehicle.transmission?.name, "gear"),
-    ...fact("Fuel", vehicle.fuelType?.name, "fuel"),
+    ...fact("Transmission", vehicle.transmission ? named(vehicle.transmission).name : "", "gear"),
+    ...fact("Fuel", vehicle.fuelType ? named(vehicle.fuelType).name : "", "fuel"),
     ...fact("Doors", vehicle.doors ? String(vehicle.doors) : "", "specs"),
     ...fact("Luggage", vehicle.luggage ? String(vehicle.luggage) : "", "specs"),
     ...fact(
@@ -209,11 +264,11 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
     }
   }
 
-  const namedPlace = locations.find(
+  const namedPlace = spokenLocations.find(
     (location) => location.name.toLowerCase() === placeQuery.toLowerCase(),
   );
-  const place = placeQuery || locations[0]?.name || vehicle.destination.name;
-  const placeDetail = namedPlace?.address || (!placeQuery ? locations[0]?.address || "" : "");
+  const place = placeQuery || spokenLocations[0]?.name || placeName;
+  const placeDetail = namedPlace?.address || (!placeQuery ? spokenLocations[0]?.address || "" : "");
   const conflicts =
     pickupAt && returnAt
       ? await findAvailabilityConflicts({ vehicleId: vehicle.id, pickupAt, returnAt })
@@ -241,23 +296,23 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
   const path = `/rentals/${vehicle.slug}`;
   const fleetHref = vehicle.kind === "bike" ? "/rentals/bikes" : "/rentals/cars";
   const backHref = keptQuery ? `${fleetHref}?${keptQuery}` : fleetHref;
-  const money = (amount: number) => (amount > 0 ? formatMoney(amount, currency) : "Not set");
+  const money = (amount: number) => (amount > 0 ? formatMoney(amount, currency, locale) : "Not set");
   const prices = [
-    { label: "Daily price", value: formatMoney(vehicle.pricePerDay, currency) },
-    { label: "Weekly price", value: vehicle.pricePerWeek > 0 ? formatMoney(vehicle.pricePerWeek, currency) : "Billed at the daily rate" },
-    { label: "Monthly price", value: vehicle.pricePerMonth > 0 ? formatMoney(vehicle.pricePerMonth, currency) : "Billed at the daily rate" },
+    { label: "Daily price", value: formatMoney(vehicle.pricePerDay, currency, locale) },
+    { label: "Weekly price", value: vehicle.pricePerWeek > 0 ? formatMoney(vehicle.pricePerWeek, currency, locale) : "Billed at the daily rate" },
+    { label: "Monthly price", value: vehicle.pricePerMonth > 0 ? formatMoney(vehicle.pricePerMonth, currency, locale) : "Billed at the daily rate" },
     { label: "Security deposit", value: money(vehicle.securityDeposit) },
     ...(vehicle.extraKmCharge > 0
-      ? [{ label: "Per extra km", value: formatMoney(vehicle.extraKmCharge, currency) }]
+      ? [{ label: "Per extra km", value: formatMoney(vehicle.extraKmCharge, currency, locale) }]
       : []),
     ...(vehicle.lateReturnCharge > 0
-      ? [{ label: "Late return", value: `${formatMoney(vehicle.lateReturnCharge, currency)} / hour` }]
+      ? [{ label: "Late return", value: `${formatMoney(vehicle.lateReturnCharge, currency, locale)} / hour` }]
       : []),
     ...(vehicle.discountType === "percent" && vehicle.discountValue > 0
       ? [{ label: "Discount", value: `${vehicle.discountValue}% off the base rental` }]
       : []),
     ...(vehicle.discountType === "flat" && vehicle.discountValue > 0
-      ? [{ label: "Discount", value: `${formatMoney(vehicle.discountValue, currency)} off the base rental` }]
+      ? [{ label: "Discount", value: `${formatMoney(vehicle.discountValue, currency, locale)} off the base rental` }]
       : []),
   ];
   const documents = documentsRequiredToBook(
@@ -268,9 +323,9 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
   const savedDocuments =
     user?.scope === "customer" ? await listProfileDocuments(user.id) : [];
   const description =
-    vehicle.summary.trim() ||
-    plainText(vehicle.description) ||
-    `${vehicle.name} for rent in ${vehicle.destination.name}.`;
+    spoken.summary.trim() ||
+    plainText(spoken.description) ||
+    `${spoken.name} for rent in ${placeName}.`;
   const gallery = liveGalleryImages(vehicle.images);
 
   return (
@@ -281,11 +336,11 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
           breadcrumbNode([
             { name: "Home", path: "/" },
             { name: `${fleetLabel(vehicle.kind)} rental`, path: fleetHref },
-            { name: vehicle.name, path },
+            { name: spoken.name, path },
           ]),
           {
             "@type": vehicle.kind === "bike" ? "Motorcycle" : "Car",
-            name: vehicle.name,
+            name: spoken.name,
             description,
             url: absoluteUrl(path),
             ...(gallery[0]?.url ? { image: absoluteUrl(gallery[0].url) } : {}),
@@ -302,20 +357,20 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
         ])}
       />
       <RentalDetailView
-        name={vehicle.name}
-        summary={vehicle.summary}
-        description={vehicle.description}
-        kindLabel={[vehicle.brand, vehicle.vehicleType?.name || fleetLabel(vehicle.kind)].filter(Boolean).join(" · ")}
+        name={spoken.name}
+        summary={spoken.summary}
+        description={spoken.description}
+        kindLabel={[vehicle.brand, (vehicle.vehicleType ? named(vehicle.vehicleType).name : "") || fleetLabel(vehicle.kind)].filter(Boolean).join(" · ")}
         vehicleFacts={vehicleFacts}
         specFacts={specFacts}
         images={gallery}
-        included={features.map((feature) => ({ id: feature.id, name: feature.name }))}
-        excluded={excluded.map((feature) => ({ id: feature.id, name: feature.name }))}
+        included={spokenFeatures.map((feature) => ({ id: feature.id, name: feature.name }))}
+        excluded={spokenExcluded.map((feature) => ({ id: feature.id, name: feature.name }))}
         prices={prices}
         handover={{
           counter: modes.counter,
           delivery: modes.delivery,
-          locations: locations.map((location) => ({
+          locations: spokenLocations.map((location) => ({
             id: location.id,
             name: location.name,
             address: location.address,
@@ -326,7 +381,7 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
           name: rule.name,
           description: rule.description,
         }))}
-        addons={addons.map((addon) => ({
+        addons={spokenAddons.map((addon) => ({
           id: addon.id,
           name: addon.name,
           price: addon.price,
@@ -359,25 +414,28 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
         related={vehicle.relatedLinks
           .map((link) => link.related)
           .filter((item) => item.published && item.kind === vehicle.kind)
-          .map((item) => ({
+          .map((item) => {
+            const related = withVehicleCopy(item, vehicleCopies.get(item.id));
+            return {
             slug: item.slug,
-            name: item.name,
-            typeName: item.vehicleType?.name || "",
+            name: related.name,
+            typeName: item.vehicleType ? named(item.vehicleType).name : "",
             meta: [
               item.seats ? `${item.seats} seats` : "",
-              item.transmission?.name || "",
-              item.fuelType?.name || "",
+              item.transmission ? named(item.transmission).name : "",
+              item.fuelType ? named(item.fuelType).name : "",
             ]
               .filter(Boolean)
               .join(" · "),
-            priceLabel: formatMoney(item.pricePerDay, item.currency || currency),
+            priceLabel: formatMoney(item.pricePerDay, item.currency || currency, locale),
             imageUrl: item.images[0]?.url || "",
             href: keptQuery ? `/rentals/${item.slug}?${keptQuery}` : `/rentals/${item.slug}`,
-          }))}
+          };
+          })}
         booking={{
           slug: vehicle.slug,
           vehicleId: vehicle.id,
-          vehicleName: vehicle.name,
+          vehicleName: spoken.name,
           currency,
           pricePerDay: vehicle.pricePerDay,
           signedIn: user?.scope === "customer",
@@ -388,25 +446,28 @@ export default async function RentalDetailPage({ params, searchParams }: Props) 
           loginHref: `/login?next=${encodeURIComponent(`/rentals/${vehicle.slug}`)}`,
           counter: modes.counter,
           delivery: modes.delivery,
-          locations: locations.map((location) => ({
+          locations: spokenLocations.map((location) => ({
             id: location.id,
             name: location.name,
             address: location.address,
           })),
-          addons: addons.map((addon) => ({
+          addons: spokenAddons.map((addon) => ({
             id: addon.id,
             name: addon.name,
             price: addon.price,
             priceUnit: addon.priceUnit,
           })),
-          documents: documents.map((item) => ({
-            id: item.id,
-            name: item.name,
-            description: item.description,
-            requiresNumber: item.requiresNumber,
-            requiresIssueDate: item.requiresIssueDate,
-            requiresExpiry: item.requiresExpiry,
-          })),
+          documents: documents.map((item) => {
+            const spokenDocument = named(item);
+            return {
+              id: item.id,
+              name: spokenDocument.name,
+              description: spokenDocument.description,
+              requiresNumber: item.requiresNumber,
+              requiresIssueDate: item.requiresIssueDate,
+              requiresExpiry: item.requiresExpiry,
+            };
+          }),
           savedDocuments: savedDocuments.filter((item) => documents.some((document) => document.id === item.configId)),
           defaultPickup: bookingPickup,
           defaultReturn: bookingReturn,

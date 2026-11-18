@@ -147,3 +147,52 @@ export function toCatalogTour(
     })),
   };
 }
+
+const dayWord: Record<string, string> = {
+  fr: "Jour",
+  hi: "दिन",
+  he: "יום",
+  ar: "اليوم",
+  ur: "دن",
+};
+
+/** Swap visitor-facing copy after pace, style, and language have been read from English. */
+export function localizeCatalogTour(
+  card: CatalogTour,
+  tour: {
+    title: string;
+    summary: string;
+    description: string;
+    category: string;
+    address: string;
+    days?: { dayNumber: number; title: string }[];
+  },
+  includes: string[],
+  excludes: string[],
+  locale: string,
+  place?: { name: string; region?: string; country?: string } | null,
+): CatalogTour {
+  const story = plainText(tour.description) || tour.summary.trim() || card.story;
+  const word = dayWord[locale] ?? "Day";
+  const timeline = tour.days
+    ?.filter((day) => day.title.trim())
+    .map((day) => `${word} ${day.dayNumber}: ${day.title.trim()}`);
+  const address = tour.address.trim();
+  const placeName = place?.name.trim() || "";
+  const region = place ? place.region || place.country || placeName : "";
+  return {
+    ...card,
+    title: tour.title.trim() || card.title,
+    alt: tour.title.trim() || card.alt,
+    category: tour.category.trim() || card.category,
+    mention: tour.summary.trim() || card.mention,
+    story,
+    timeline: timeline && timeline.length ? timeline : card.timeline,
+    includes: includes.length ? includes : card.includes,
+    excludes: excludes.length ? excludes : card.excludes,
+    meet: address || card.meet,
+    meetShort: address || card.meetShort,
+    ...(placeName ? { place: placeName } : {}),
+    ...(region ? { region } : {}),
+  };
+}

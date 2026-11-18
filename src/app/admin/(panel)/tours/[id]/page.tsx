@@ -7,6 +7,7 @@ import { requirePermission } from "@/lib/auth/guards";
 import { loadTourCatalog } from "@/lib/catalog-query";
 import { destinationChoiceLabel } from "@/lib/destinations";
 import { prisma } from "@/lib/db";
+import { loadOwnerCopies } from "@/lib/i18n/content";
 import { mapTourToFormValues } from "@/lib/tours/map-form";
 
 export const metadata: Metadata = { title: "Edit tour" };
@@ -20,7 +21,7 @@ export default async function EditTourPage({
   await requirePermission("tours.manage");
   const { id } = await params;
 
-  const [tour, destinations, catalog] = await Promise.all([
+  const [tour, destinations, catalog, translations] = await Promise.all([
     prisma.tour.findUnique({
       where: { id },
       include: {
@@ -39,6 +40,7 @@ export default async function EditTourPage({
       },
     }),
     loadTourCatalog(),
+    loadOwnerCopies("tour", id),
   ]);
 
   if (!tour) notFound();
@@ -71,6 +73,7 @@ export default async function EditTourPage({
         }))}
         tour={mapTourToFormValues(tour)}
         catalog={catalog}
+        translations={translations}
       />
     </div>
   );

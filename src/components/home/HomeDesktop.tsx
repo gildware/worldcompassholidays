@@ -5,16 +5,17 @@ import { HomeInvite } from "@/components/home/HomeClose";
 import { HomeGoogleReviews } from "@/components/home/HomeGoogleReviews";
 import Hero1 from "@/components/hero/hero-1";
 import type { GoogleReviewsSummary } from "@/lib/google-reviews";
+import { HomeFleetSection } from "@/components/home/HomeFleetSection";
 import {
   bikeHomeFallback,
   carHomeFallback,
-  HomeFleetSection,
   type HomeRide,
-} from "@/components/home/HomeFleetSection";
+} from "@/components/home/home-ride-data";
 import { HomeBusSection, type HomeBus } from "@/components/home/HomeBusSection";
 import { hasServicePart, HomeServicesSection } from "@/components/home/HomeServicesSection";
 import { HomeFlipGrid, HomeStayGrid } from "@/components/home/HomeInteractive";
 import { formatMoney } from "@/lib/format";
+import type { Locale } from "@/i18n/locales";
 import type { HomePageContent } from "@/lib/home-page";
 
 export type HomeDesktopDestination = {
@@ -67,6 +68,7 @@ export function HomeDesktop({
   showBuses,
   savedIds,
   signedIn,
+  locale,
   googleReviews = null,
 }: {
   content: HomePageContent;
@@ -82,6 +84,7 @@ export function HomeDesktop({
   showBuses: boolean;
   savedIds: string[];
   signedIn: boolean;
+  locale: Locale;
   googleReviews?: GoogleReviewsSummary | null;
 }) {
   const servicesOn = content.sections.some((section) => section.id === "services" && section.enabled);
@@ -174,7 +177,7 @@ export function HomeDesktop({
                     title: tour.title,
                     place: tour.destinationName || "",
                     days: tour.duration || "",
-                    price: tour.priceFrom > 0 ? formatMoney(tour.priceFrom, tour.currency || "INR") : "",
+                    price: tour.priceFrom > 0 ? formatMoney(tour.priceFrom, tour.currency || "INR", locale) : "",
                     image: tour.image,
                     points: tour.chips?.length
                       ? tour.chips

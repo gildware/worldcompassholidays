@@ -16,6 +16,7 @@ import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Toggle } from "@/components/ui/Toggle";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { descendantIds } from "@/lib/destinations";
+import type { CopyMap } from "@/lib/i18n/content";
 import { clipText, plainText } from "@/lib/seo";
 
 type SortKey =
@@ -191,11 +192,13 @@ export function DestinationsWorkspace({
   canManage,
   mapApiKey,
   notice,
+  translations = {},
 }: {
   destinations: DestinationRow[];
   canManage: boolean;
   mapApiKey: string;
   notice?: "deleted" | "children" | "listings" | "added" | "saved" | null;
+  translations?: Record<string, CopyMap>;
 }) {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 300);
@@ -820,6 +823,7 @@ export function DestinationsWorkspace({
             mapApiKey={mapApiKey}
             published={published}
             popular={formPopular}
+            translations={translations[editing.id]}
             onCancel={closeEdit}
             onSuccess={(message) => afterSave(closeEdit, message)}
           />

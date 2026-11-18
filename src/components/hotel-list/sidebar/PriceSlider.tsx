@@ -1,7 +1,7 @@
 "use client";
 
 import Slider from "rc-slider";
-import { formatMoney } from "@/lib/format";
+import { useFormatMoney } from "@/components/i18n/I18nProvider";
 
 export function PriceSlider({
   price,
@@ -22,6 +22,7 @@ export function PriceSlider({
   title?: string;
   showReadout?: boolean;
 }) {
+  const money = useFormatMoney();
   const low = Math.min(price[0], price[1]);
   const high = Math.max(price[0], price[1]);
 
@@ -31,8 +32,8 @@ export function PriceSlider({
       {showReadout ? (
         <div className="d-flex justify-between mb-20">
           <div className="text-15 text-dark-1">
-            <span className="js-lower mx-1">{formatMoney(low, currency)}</span>-
-            <span className="js-upper mx-1">{formatMoney(high, currency)}</span>
+            <span className="js-lower mx-1">{money(low, currency)}</span>-
+            <span className="js-upper mx-1">{money(high, currency)}</span>
           </div>
         </div>
       ) : null}

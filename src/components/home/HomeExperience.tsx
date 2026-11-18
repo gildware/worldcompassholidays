@@ -5,8 +5,11 @@ import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { HomeInvite } from "@/components/home/HomeClose";
 import { HomeGoogleReviews } from "@/components/home/HomeGoogleReviews";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, formatNumber } from "@/lib/format";
+import type { Locale } from "@/i18n/locales";
 import type { GoogleReviewsSummary } from "@/lib/google-reviews";
+import { getUiDictionary, getUserLocale } from "@/i18n/get-locale";
+import { localizeCopy } from "@/i18n/home-copy";
 import { defaultHomePageContent, type HomePageContent } from "@/lib/home-page";
 import {
   HomeBusRequestCard,
@@ -15,12 +18,13 @@ import {
 } from "@/components/home/HomeBusSection";
 import { HomeFlipGrid, HomeStayGrid } from "@/components/home/HomeInteractive";
 import { HomeHeroSearch } from "@/components/home/HomeHeroSearch";
+import { HomeRidePromoCard } from "@/components/home/HomeFleetSection";
 import {
   bikeHomeFallback,
   carHomeFallback,
-  HomeRidePromoCard,
   type HomeRide,
-} from "@/components/home/HomeFleetSection";
+  type HomeRidePromo,
+} from "@/components/home/home-ride-data";
 import { hasServicePart, HomeServicesSection } from "@/components/home/HomeServicesSection";
 import type { TourListLocation } from "@/components/tour-list/types";
 import "@/styles/home-experience.css";
@@ -134,6 +138,11 @@ function RideRail({
   empty,
   savedIds,
   signedIn,
+  seatWord,
+  perDay,
+  viewLabel,
+  priceOnRequest,
+  locale,
 }: {
   id: string;
   title: string;
@@ -143,9 +152,14 @@ function RideRail({
   kind: FavoriteKind;
   kindLabel: string;
   items: HomeRide[];
-  empty: typeof carHomeFallback;
+  empty: HomeRidePromo;
   savedIds: string[];
   signedIn: boolean;
+  seatWord: string;
+  perDay: string;
+  viewLabel: string;
+  priceOnRequest: string;
+  locale: Locale;
 }) {
   const isCar = kind === "car";
 
@@ -189,20 +203,20 @@ function RideRail({
                   </Link>
                 </h3>
                 <p className="home-x__meta">
-                  {[ride.place, ride.seats ? `${ride.seats} seats` : ""].filter(Boolean).join(" · ")}
+                  {[ride.place, ride.seats ? `${formatNumber(ride.seats, locale)} ${seatWord}` : ""].filter(Boolean).join(" · ")}
                 </p>
                 <div className="home-x__ride-foot">
                   {ride.pricePerDay > 0 ? (
                     <p className="home-x__price">
-                      <strong>{formatMoney(ride.pricePerDay, ride.currency)}</strong> <small>/ day</small>
+                      <strong>{formatMoney(ride.pricePerDay, ride.currency, locale)}</strong> <small>{perDay}</small>
                     </p>
                   ) : (
                     <p className="home-x__price">
-                      <strong>Price on request</strong>
+                      <strong>{priceOnRequest}</strong>
                     </p>
                   )}
                   <Link prefetch={false} href={`/rentals/${ride.slug}`} className="home-x__ride-btn">
-                    View
+                    {viewLabel}
                   </Link>
                 </div>
               </div>
@@ -216,7 +230,7 @@ function RideRail({
   );
 }
 
-export function HomeExperience({
+export async function HomeExperience({
   destinations,
   tours,
   hotels,
@@ -250,6 +264,21 @@ export function HomeExperience({
   contactPhone?: string;
   googleReviews?: GoogleReviewsSummary | null;
 }) {
+  const locale = await getUserLocale();
+  const dictionary = await getUiDictionary();
+  const carLabel = localizeCopy("Car", locale, dictionary);
+  const bikeLabel = localizeCopy("Bike", locale, dictionary);
+  const seatWord = localizeCopy("seats", locale, dictionary);
+  const perDay = localizeCopy("/ day", locale, dictionary);
+  const viewLabel = localizeCopy("View", locale, dictionary);
+  const priceOnRequest = localizeCopy("Price on request", locale, dictionary);
+  const speakPromo = (promo: HomeRidePromo): HomeRidePromo => ({
+    ...promo,
+    title: localizeCopy(promo.title, locale, dictionary),
+    text: localizeCopy(promo.text, locale, dictionary),
+    points: (promo.points ?? []).map((point) => localizeCopy(point, locale, dictionary)),
+    cta: localizeCopy(promo.cta, locale, dictionary),
+  });
   const destRail = (
     destinations.length > 0 ? (
       <section key="destinations" className="home-x__rail" aria-labelledby="home-destinations">
@@ -315,7 +344,7 @@ export function HomeExperience({
           title: tour.title,
           place: tour.place,
           days: tour.duration,
-          price: tour.priceFrom > 0 ? formatMoney(tour.priceFrom, tour.currency) : "",
+          price: tour.priceFrom > 0 ? formatMoney(tour.priceFrom, tour.currency, locale) : "",
           image: tour.image,
           points: tour.chips?.length
             ? tour.chips
@@ -400,11 +429,16 @@ export function HomeExperience({
               href="/rentals/cars"
               linkLabel={content.cars.linkLabel}
               kind="car"
-              kindLabel="Car"
+              kindLabel={carLabel}
               items={cars}
-              empty={carHomeFallback}
+              empty={speakPromo(carHomeFallback)}
               savedIds={savedIds}
               signedIn={signedIn}
+              seatWord={seatWord}
+              perDay={perDay}
+              viewLabel={viewLabel}
+              priceOnRequest={priceOnRequest}
+              locale={locale}
             />
             </Fragment>
           );
@@ -420,11 +454,16 @@ export function HomeExperience({
               href="/rentals/bikes"
               linkLabel={content.bikes.linkLabel}
               kind="bike"
-              kindLabel="Bike"
+              kindLabel={bikeLabel}
               items={bikes}
-              empty={bikeHomeFallback}
+              empty={speakPromo(bikeHomeFallback)}
               savedIds={savedIds}
               signedIn={signedIn}
+              seatWord={seatWord}
+              perDay={perDay}
+              viewLabel={viewLabel}
+              priceOnRequest={priceOnRequest}
+              locale={locale}
             />
             </Fragment>
           );

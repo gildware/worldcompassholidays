@@ -8,6 +8,33 @@ import {
   type PriceDiscount,
 } from "@/lib/tours/json";
 
+function normalizeDiscount(row: unknown): PriceDiscount | null {
+  if (!row || typeof row !== "object") return null;
+  const item = row as Record<string, unknown>;
+  const value = Number(item.value);
+  if (!Number.isFinite(value) || value < 0) return null;
+  if (item.kind === "single" || item.kind === "group") {
+    const mode = item.mode === "amount" ? "amount" : "percent";
+    const minPeople = Number(item.minPeople);
+    return {
+      kind: item.kind,
+      minPeople: item.kind === "group" ? Math.max(2, Number.isFinite(minPeople) ? minPeople : 2) : 1,
+      mode,
+      value,
+    };
+  }
+  if (item.type !== "percent" && item.type !== "amount") return null;
+  const name = typeof item.name === "string" ? item.name : "";
+  const people = Number(name.match(/(\d+)/)?.[1] ?? 0);
+  const group = /group/i.test(name) || people >= 2;
+  return {
+    kind: group ? "group" : "single",
+    minPeople: group ? Math.max(2, people || 2) : 1,
+    mode: item.type === "amount" ? "amount" : "percent",
+    value,
+  };
+}
+
 type TourRecord = {
   id: string;
   title: string;
@@ -115,7 +142,10 @@ export function mapTourToFormValues(tour: TourRecord): TourFormValues {
     durationDays: tour.durationDays,
     durationUnit,
     durationLabel: tour.durationLabel,
-    discounts: parseJsonArray<PriceDiscount>(tour.discountsJson),
+    discounts: parseJsonArray<unknown>(tour.discountsJson).flatMap((row) => {
+      const discount = normalizeDiscount(row);
+      return discount ? [discount] : [];
+    }),
     destinationIds,
     difficulty: tour.difficulty,
     minPeople: tour.minPeople,

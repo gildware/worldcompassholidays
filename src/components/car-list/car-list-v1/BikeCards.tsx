@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRef, useState, type PointerEvent, type ReactNode } from "react";
 import type { CarListCard } from "@/components/car-list/types";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
-import { formatMoney } from "@/lib/format";
+import { useFormatMoney } from "@/components/i18n/I18nProvider";
 import { tagColor } from "@/lib/rentals/tag-colors";
 
 function Mini({ children }: { children: ReactNode }) {
@@ -314,6 +314,7 @@ function BikeCard({
   saved: boolean;
   signedIn: boolean;
 }) {
+  const money = useFormatMoney();
   const dragged = useRef(false);
   const query = detailQuery ? `?${detailQuery}` : "";
   const href = `/rentals/${item.slug}${query}`;
@@ -392,7 +393,7 @@ function BikeCard({
       </div>
       <div className="bike-card__foot">
         <p className="bike-card__price">
-          <strong>{formatMoney(item.price, item.currency)}</strong>
+          <strong>{money(item.price, item.currency)}</strong>
           <span>/ day</span>
         </p>
         <span className="bike-card__book">View more</span>

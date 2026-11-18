@@ -157,6 +157,10 @@ export type EnquiryView = {
   note: string;
   image: string;
   channel: string;
+  sourceLocale: string;
+  englishNote: string;
+  englishName: string;
+  sourceInterest: string;
 };
 
 function text(details: Record<string, unknown>, key: string) {
@@ -390,5 +394,9 @@ export function toEnquiryView(booking: {
     note: text(parsed, "message") || text(parsed, "note") || (booking.notes ?? "").trim(),
     image: "",
     channel: text(parsed, "channel"),
+    sourceLocale: text(parsed, "locale"),
+    englishNote: text(parsed, "messageEn"),
+    englishName: text(parsed, "contactNameEn"),
+    sourceInterest: text(parsed, "interestLabelSource"),
   };
 }

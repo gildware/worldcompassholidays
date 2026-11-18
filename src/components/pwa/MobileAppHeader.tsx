@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { CatalogSearch } from "@/components/pwa/CatalogSearch";
 import { BrandMark } from "@/components/worldcompassholiday/BrandLogo";
 
@@ -36,6 +38,7 @@ function AccountIcon() {
 
 export function MobileAppHeader() {
   const pathname = usePathname() || "/";
+  const { messages } = useI18n();
   const [openPath, setOpenPath] = useState(pathname);
   const [open, setOpen] = useState(false);
   if (pathname !== openPath) {
@@ -105,10 +108,11 @@ export function MobileAppHeader() {
         </Link>
 
         <div className="mobile-app-header__actions">
+          <LanguageSwitcher />
           <button
             type="button"
             className="mobile-app-header__icon"
-            aria-label={open ? "Close search" : "Search"}
+            aria-label={open ? messages.header.closeSearch : messages.header.search}
             aria-expanded={open}
             onClick={toggleSearch}
           >
@@ -117,7 +121,7 @@ export function MobileAppHeader() {
           <Link prefetch={false}
             href="/account"
             className={`mobile-app-header__icon${pathname.startsWith("/account") ? " is-active" : ""}`}
-            aria-label="Account"
+            aria-label={messages.header.account}
             aria-current={pathname.startsWith("/account") ? "page" : undefined}
           >
             <AccountIcon />

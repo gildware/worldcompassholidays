@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { FavoriteHeart, useFavoriteList } from "@/components/favorites/FavoriteButton";
 import { createPortal } from "react-dom";
+import { useCopy, useFormatMoney, useFormatNumber, useI18n } from "@/components/i18n/I18nProvider";
 import { useLazySlice } from "@/hooks/useLazySlice";
+import type { Locale } from "@/i18n/locales";
+import { intlLocale } from "@/lib/format";
 import { usePhotoSwipe } from "@/hooks/usePhotoSwipe";
 import {
   activeFilters,
@@ -167,6 +170,9 @@ export function HotelStayList({
   );
   const wifiEverywhere = pool.length > 0 && pool.every((hotel) => hotel.amenities.some((name) => isWifi(name)));
   const gst = taxEnabled && currency === "INR";
+  const t = useCopy();
+  const formatPrice = useFormatMoney();
+  const formatCount = useFormatNumber();
 
   useEffect(() => {
     const next = clampStay(state, today, bounds);
@@ -466,7 +472,7 @@ export function HotelStayList({
             ] as [string, boolean[], string[]]]
           : []),
         ["Stars", bestFlags(compared.map((hotel) => hotel.stars), false), compared.map((hotel) => (hotel.stars ? `${hotel.stars} star` : "Unrated"))],
-        ["Distance", bestFlags(compared.map((hotel) => distance.get(hotel.id) ?? Number.POSITIVE_INFINITY), true), compared.map((hotel) => whereLine(hotel, distance.get(hotel.id) ?? null, centreName) || hotel.town)],
+        ["Distance", bestFlags(compared.map((hotel) => distance.get(hotel.id) ?? Number.POSITIVE_INFINITY), true), compared.map((hotel) => whereLine({ ...hotel, area: t(hotel.area) }, distance.get(hotel.id) ?? null, centreName) || hotel.town)],
         ["Breakfast", bestFlags(compared.map((hotel) => (hotel.breakfast ? 1 : 0)), false), compared.map((hotel) => (hotel.breakfast ? "Included" : "Not included"))],
         ["Cancellation", bestFlags(compared.map((hotel) => (refundable(hotel, state.checkin, today) ? 1 : 0)), false), compared.map((hotel) => cancelFact(hotel, state.checkin, today).text)],
         ...(picks.hasPay
@@ -476,7 +482,7 @@ export function HotelStayList({
               compared.map((hotel) => (hotel.pay ? "Yes" : "Pay now")),
             ] as [string, boolean[], string[]]]
           : []),
-        ["Type", compared.map(() => false), compared.map((hotel) => [hotel.type, hotel.area].filter(Boolean).join(" · "))],
+        ["Type", compared.map(() => false), compared.map((hotel) => [t(hotel.type), t(hotel.area)].filter(Boolean).join(" · "))],
         ...amenityNames.flatMap((name) => {
           if (compared.every((hotel) => hotel.amenities.includes(name) === compared[0].amenities.includes(name))) return [];
           return [[
@@ -841,7 +847,7 @@ export function HotelStayList({
                   return (
                     <label className="sl-check" key={area}>
                       <input type="checkbox" checked={checked} disabled={count === 0 && !checked} onChange={() => patch({ areas: toggleValue(state.areas, area) })} />
-                      <span>{area}</span>
+                      <span>{t(area)}</span>
                       <span className="n">{count}</span>
                     </label>
                   );
@@ -896,7 +902,7 @@ export function HotelStayList({
 
           <div className="sl-results" id="results" inert={filtersOpen}>
             <header className="sl-head">
-              <p className="sl-eyebrow">{rangeLabel(state.checkin, state.checkout)} · {nights} night{nights > 1 ? "s" : ""} · {guestText(state.adults, state.children, state.rooms)}</p>
+              <p className="sl-eyebrow">{rangeLabel(state.checkin, state.checkout)} · {formatCount(nights)} {t(nights > 1 ? "nights" : "night")} · {guestText(state.adults, state.children, state.rooms)}</p>
               <div className="sl-head__row">
                 <h1>{placeName}</h1>
               </div>
@@ -931,7 +937,7 @@ export function HotelStayList({
               ))}
               {filters.filter(([key]) => !covered.has(key)).map(([key, label]) => (
                 <button key={key} className="sl-chip is-on" type="button" onClick={() => setState((current) => clearOne(current, key))}>
-                  {label} <span className="x" aria-hidden="true">×</span><span className="sl-sr">Remove</span>
+                  {key.startsWith("area:") ? t(label) : label} <span className="x" aria-hidden="true">×</span><span className="sl-sr">Remove</span>
                 </button>
               ))}
               {filters.length ? (
@@ -942,19 +948,19 @@ export function HotelStayList({
               <div className="sl-insight">
                 {cheapest.id === highest.id ? (
                   <>
-                    <button className="sl-textlink" type="button" onClick={() => jump(cheapest.id)}>{cheapest.name}</button>
+                    <button className="sl-textlink" type="button" onClick={() => jump(cheapest.id)}>{t(cheapest.name)}</button>
                     {picks.hasScores
-                      ? ` is both the highest guest score and the lowest total, ${money(totalOf(cheapest), cheapest.currency)}.`
-                      : ` is both a top star rating and the lowest total, ${money(totalOf(cheapest), cheapest.currency)}.`}
+                      ? ` is both the highest guest score and the lowest total, ${formatPrice(totalOf(cheapest), cheapest.currency)}.`
+                      : ` is both a top star rating and the lowest total, ${formatPrice(totalOf(cheapest), cheapest.currency)}.`}
                   </>
                 ) : (
                   <>
-                    Lowest total is <button className="sl-textlink" type="button" onClick={() => jump(cheapest.id)}>{cheapest.name}</button> at {money(totalOf(cheapest), cheapest.currency)}.
+                    Lowest total is <button className="sl-textlink" type="button" onClick={() => jump(cheapest.id)}>{t(cheapest.name)}</button> at {formatPrice(totalOf(cheapest), cheapest.currency)}.
                     {" "}
                     {picks.hasScores && highest.score != null ? (
-                      <>Highest guest score is <button className="sl-textlink" type="button" onClick={() => jump(highest.id)}>{highest.name}</button> at {highest.score.toFixed(1)}.</>
+                      <>Highest guest score is <button className="sl-textlink" type="button" onClick={() => jump(highest.id)}>{t(highest.name)}</button> at {highest.score.toFixed(1)}.</>
                     ) : (
-                      <>Highest star rating is <button className="sl-textlink" type="button" onClick={() => jump(highest.id)}>{highest.name}</button>.</>
+                      <>Highest star rating is <button className="sl-textlink" type="button" onClick={() => jump(highest.id)}>{t(highest.name)}</button>.</>
                     )}
                   </>
                 )}
@@ -1072,8 +1078,8 @@ export function HotelStayList({
             {compared.map((hotel) => (
               <div className="sl-slot" key={hotel.id}>
                 <img src={hotel.photos[0]?.src || "/img/general/map.svg"} alt="" />
-                <span>{hotel.name}</span>
-                <button type="button" aria-label={`Remove ${hotel.name} from compare`} onClick={() => toggleCompare(hotel.id)}>×</button>
+                <span>{t(hotel.name)}</span>
+                <button type="button" aria-label={`Remove ${t(hotel.name)} from compare`} onClick={() => toggleCompare(hotel.id)}>×</button>
               </div>
             ))}
           </div>
@@ -1104,7 +1110,7 @@ export function HotelStayList({
                     <th key={hotel.id}>
                       <div className="sl-compare-hotel">
                         {hotel.photos[0] ? <img src={hotel.photos[0].src} alt="" /> : null}
-                        <span>{hotel.name}</span>
+                        <span>{t(hotel.name)}</span>
                         <Link prefetch={false} href={stayHref(hotel, state)}>See availability</Link>
                       </div>
                     </th>
@@ -1244,15 +1250,18 @@ function StayCard({
       onPhoto(next);
     },
   });
+  const t = useCopy();
+  const formatPrice = useFormatMoney();
+  const formatCount = useFormatNumber();
+  const name = t(hotel.name);
   const bits = [
     state.breakfast && hotel.breakfast ? "breakfast" : "",
     state.cancel && refundable(hotel, state.checkin, today) ? "free cancellation" : "",
     state.pay && hotel.pay ? "pay at the property" : "",
     ...state.amenities.filter((name) => hotel.amenities.includes(name)).map((name) => name.toLowerCase()),
   ].filter(Boolean);
-  const nightLine = state.rooms > 1
-    ? `${money(hotel.nightly, hotel.currency)} × ${nights} nights × ${state.rooms} rooms`
-    : `${money(hotel.nightly, hotel.currency)} × ${nights} night${nights > 1 ? "s" : ""}`;
+  const nightWord = t(nights > 1 ? "nights" : "night");
+  const place = whereLine({ ...hotel, area: t(hotel.area) }, km, centreName);
   const stars = hotel.stars > 0 ? "★".repeat(Math.min(5, hotel.stars)) + "☆".repeat(Math.max(0, 5 - hotel.stars)) : "";
 
   return (
@@ -1267,7 +1276,7 @@ function StayCard({
           prefetch={false}
           className="sl-shot"
           href={href}
-          aria-label={`Photos of ${hotel.name}`}
+          aria-label={`Photos of ${name}`}
           draggable={false}
           onClick={(event) => {
             if (!swipe.didSwipe()) return;
@@ -1278,12 +1287,12 @@ function StayCard({
             <img src={shot.src} alt={shot.alt} width={900} height={600} fetchPriority={index === 0 ? "high" : undefined} loading={index === 0 ? undefined : "lazy"} decoding="async" draggable={false} />
           ) : null}
         </Link>
-        <button className={`sl-save fav-btn fav-btn--icon${saved ? " is-on" : ""}`} type="button" aria-pressed={saved} aria-label={`${saved ? "Remove" : "Add"} ${hotel.name} ${saved ? "from" : "to"} favorites`} onClick={onSave}>
+        <button className={`sl-save fav-btn fav-btn--icon${saved ? " is-on" : ""}`} type="button" aria-pressed={saved} aria-label={`${saved ? "Remove" : "Add"} ${name} ${saved ? "from" : "to"} favorites`} onClick={onSave}>
           <FavoriteHeart filled={saved} />
         </button>
         {favourite ? <span className="sl-badge">Guest favourite</span> : null}
         {many ? (
-          <div className="sl-dots" role="tablist" aria-label={`Photos of ${hotel.name}`}>
+          <div className="sl-dots" role="tablist" aria-label={`Photos of ${name}`}>
             {hotel.photos.map((item, photoIndex) => (
               <button
                 key={`${hotel.id}-${item.src}-${photoIndex}`}
@@ -1300,10 +1309,10 @@ function StayCard({
       </div>
       <div className="sl-body">
         <div>
-          <p className="sl-kicker">{hotel.type}{favourite ? <span className="sl-fav"> · Guest favourite</span> : null}</p>
-          <h2><Link prefetch={false} href={href}>{hotel.name}</Link></h2>
+          <p className="sl-kicker">{t(hotel.type)}{favourite ? <span className="sl-fav"> · Guest favourite</span> : null}</p>
+          <h2><Link prefetch={false} href={href}>{name}</Link></h2>
           {stars ? <p className="sl-stars" aria-label={`${hotel.stars} of 5 stars`}>{stars}</p> : null}
-          <p className="sl-where">{whereLine(hotel, km, centreName)}</p>
+          <p className="sl-where">{place}</p>
           {hotel.score != null ? (
             <div className="sl-score">
               <b className={scoreTone(hotel.score)}>{hotel.score.toFixed(1)}</b>
@@ -1321,7 +1330,7 @@ function StayCard({
             {hotel.pay ? <li>Pay at the property</li> : null}
           </ul>
           <ul className="m-facts" aria-label="Stay details">
-            {whereLine(hotel, km, centreName) ? <li><span>{whereLine(hotel, km, centreName)}</span></li> : null}
+            {place ? <li><span>{place}</span></li> : null}
             {hotel.stars > 0 ? <li><span>{`${hotel.stars}-star`}</span></li> : null}
             {hotel.breakfast ? <li className="is-ok"><span>Breakfast included</span></li> : null}
           </ul>
@@ -1336,15 +1345,20 @@ function StayCard({
           ) : null}
         </div>
         <div className="sl-side">
-          <p className="sl-total">{money(total.total, hotel.currency)}</p>
-          <p className="sl-sub">{nightLine}</p>
+          <p className="sl-total">{formatPrice(total.total, hotel.currency)}</p>
+          <p className="sl-sub">
+            {formatPrice(hotel.nightly, hotel.currency)}
+            {" × "}
+            {formatCount(nights)} {nightWord}
+            {state.rooms > 1 ? <>{" × "}{formatCount(state.rooms)} {t("rooms")}</> : null}
+          </p>
           <p className="sl-sub">{total.tax ? "GST included" : "Total for these dates"}</p>
-          {hotel.left != null && hotel.left <= 3 ? <p className="sl-warn">{hotel.left} room{hotel.left === 1 ? "" : "s"} left at this rate</p> : null}
+          {hotel.left != null && hotel.left <= 3 ? <p className="sl-warn">{formatCount(hotel.left)} {t(hotel.left === 1 ? "room" : "rooms")} left at this rate</p> : null}
           <details className="sl-breakdown">
             <summary>Price breakdown</summary>
-            <p><span>{hotel.roomName || "Rooms"}</span><span>{money(total.roomSum, hotel.currency)}</span></p>
-            {total.tax ? <p><span>GST 18%</span><span>{money(total.tax, hotel.currency)}</span></p> : null}
-            <p><span>Total</span><span>{money(total.total, hotel.currency)}</span></p>
+            <p><span>{t(hotel.roomName || "Rooms")}</span><span>{formatPrice(total.roomSum, hotel.currency)}</span></p>
+            {total.tax ? <p><span>GST 18%</span><span>{formatPrice(total.tax, hotel.currency)}</span></p> : null}
+            <p><span>Total</span><span>{formatPrice(total.total, hotel.currency)}</span></p>
           </details>
           <Link prefetch={false} className="sl-btn" href={href}>See availability</Link>
           <label className="sl-cmp">
@@ -1356,8 +1370,12 @@ function StayCard({
   );
 }
 
-export function prettyStayDate(iso: string) {
-  return parseISO(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+function dateTag(locale?: Locale) {
+  return locale && locale !== "en" ? intlLocale(locale) : "en-GB";
+}
+
+export function prettyStayDate(iso: string, locale?: Locale) {
+  return parseISO(iso).toLocaleDateString(dateTag(locale), { day: "numeric", month: "short", year: "numeric" });
 }
 
 function GoldStar() {
@@ -1524,6 +1542,7 @@ export function DateMenu({
   onClose?: () => void;
   label?: string;
 }) {
+  const { locale } = useI18n();
   const selected = parseISO(value);
   const earliest = parseISO(min);
   const [cursor, setCursor] = useState(() => new Date(selected.getFullYear(), selected.getMonth(), 1));
@@ -1533,7 +1552,10 @@ export function DateMenu({
   const lead = (new Date(year, month, 1).getDay() + 6) % 7;
   const count = new Date(year, month + 1, 0).getDate();
   const days = Array.from({ length: lead + count }, (_, index) => (index < lead ? null : index - lead + 1));
-  const title = cursor.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const title = cursor.toLocaleDateString(dateTag(locale), { month: "long", year: "numeric" });
+  const weekdays = Array.from({ length: 7 }, (_, index) =>
+    new Date(2024, 0, index + 1).toLocaleDateString(dateTag(locale), { weekday: locale === "en" ? "short" : "narrow" }),
+  );
   const previous = new Date(year, month - 1, 1);
   const previousBlocked = new Date(year, month, 0) < earliest;
   const sheet = Boolean(onClose) && mobile === true;
@@ -1577,8 +1599,8 @@ export function DateMenu({
           <button type="button" aria-label="Next month" onClick={() => setCursor(new Date(year, month + 1, 1))}>›</button>
         </div>
         <div className="sl-cal__grid" role="grid">
-          {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day) => (
-            <span className="sl-cal__dow" key={day}>{day}</span>
+          {(locale === "en" ? ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"] : weekdays).map((day, index) => (
+            <span className="sl-cal__dow" key={`${index}-${day}`}>{day}</span>
           ))}
           {days.map((day, index) => {
             if (day == null) return <span key={`empty-${index}`} />;
@@ -1586,7 +1608,7 @@ export function DateMenu({
             const iso = toISO(date);
             const disabled = date < earliest;
             return (
-              <button key={iso} type="button" disabled={disabled} className={iso === value ? "is-on" : ""} aria-label={prettyStayDate(iso)} aria-pressed={iso === value} onClick={() => onPick(iso)}>
+              <button key={iso} type="button" disabled={disabled} className={iso === value ? "is-on" : ""} aria-label={prettyStayDate(iso, locale)} aria-pressed={iso === value} onClick={() => onPick(iso)}>
                 {day}
               </button>
             );

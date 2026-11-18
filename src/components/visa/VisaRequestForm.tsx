@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import type { FirebaseOptions } from "firebase/app";
 import { submitVisaRequest } from "@/actions/visa";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
 import {
   FieldMessage,
@@ -82,6 +83,7 @@ export function VisaRequestForm({
   firebaseConfig?: FirebaseOptions | null;
   defaultCountry?: string;
 }) {
+  const { locale } = useI18n();
   const [state, action, pending] = useActionState(submitVisaRequest, initialFormState);
   const [whatsappState, setWhatsappState] = useState<FormState | null>(null);
   const [whatsappPending, setWhatsappPending] = useState(false);
@@ -429,8 +431,8 @@ export function VisaRequestForm({
                 <ReviewLine label="Visa type" icon={optionIcon(visaType)} value={visaTypeLabel(visaType)} />
               </ReviewSection>
               <ReviewSection title="Dates & party" icon="calendar" onEdit={() => setStep(1)}>
-                <ReviewLine label="Departure" icon="cal-in" value={prettyDate(departure)} />
-                <ReviewLine label="Return" icon="cal-out" value={prettyDate(returnDate)} />
+                <ReviewLine label="Departure" icon="cal-in" value={prettyDate(departure, locale)} />
+                <ReviewLine label="Return" icon="cal-out" value={prettyDate(returnDate, locale)} />
                 <ReviewLine
                   label="Travellers"
                   icon="adults"
@@ -438,7 +440,7 @@ export function VisaRequestForm({
                 />
               </ReviewSection>
               <ReviewSection title="Other details" icon="note" onEdit={() => setStep(2)}>
-                <ReviewLine label="Note" icon="note" value={message || "None"} />
+                <ReviewLine label="Note" icon="note" value={message || "None"} skipValue={Boolean(message)} />
               </ReviewSection>
             </div>
             <p className="hotel-guide-reassurance">

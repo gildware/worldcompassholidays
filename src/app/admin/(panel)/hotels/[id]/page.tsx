@@ -7,6 +7,7 @@ import { requirePermission } from "@/lib/auth/guards";
 import { loadHotelCatalog } from "@/lib/catalog-query";
 import { destinationChoiceLabel } from "@/lib/destinations";
 import { prisma } from "@/lib/db";
+import { loadOwnerCopies } from "@/lib/i18n/content";
 import { mapHotelToFormValues } from "@/lib/hotels/map-form";
 import { mapApiKey } from "@/lib/map-key";
 
@@ -21,7 +22,7 @@ export default async function EditHotelPage({
   await requirePermission("hotels.manage");
   const { id } = await params;
 
-  const [hotel, destinations, catalog] = await Promise.all([
+  const [hotel, destinations, catalog, translations] = await Promise.all([
     prisma.hotel.findUnique({
       where: { id },
       include: { rooms: { orderBy: { sortOrder: "asc" } } },
@@ -38,6 +39,7 @@ export default async function EditHotelPage({
       },
     }),
     loadHotelCatalog(),
+    loadOwnerCopies("hotel", id),
   ]);
 
   if (!hotel) notFound();
@@ -55,6 +57,7 @@ export default async function EditHotelPage({
         mapApiKey={mapApiKey()}
         catalog={catalog}
         hotel={mapHotelToFormValues(hotel)}
+        translations={translations}
         destinations={destinations.map((destination) => ({
           id: destination.id,
           name: destinationChoiceLabel(destination.name, destination.parent?.name),

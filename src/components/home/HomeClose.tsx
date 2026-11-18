@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { WhyUsIcon } from "@/components/company/WhyUsIcons";
 import { theme } from "@/config/theme";
+import { getUiDictionary, getUserLocale } from "@/i18n/get-locale";
+import { localizeCopy } from "@/i18n/home-copy";
 import type { HomePageContent, HomeWhyItem } from "@/lib/home-page";
 import { phoneE164 } from "@/lib/seo";
 import { whatsAppHref } from "@/lib/visa";
@@ -90,7 +92,7 @@ export function HomePromises({
   );
 }
 
-export function HomeInvite({
+export async function HomeInvite({
   cta,
   contactPhone,
   headingId,
@@ -102,13 +104,16 @@ export function HomeInvite({
   const phone = contactPhone || theme.contact.phone;
   const callHref = `tel:${phoneE164(phone)}`;
   const whatsapp = whatsAppHref(phone);
+  const locale = await getUserLocale();
+  const dictionary = await getUiDictionary();
+  const t = (value: string) => localizeCopy(value, locale, dictionary);
 
   return (
     <section className="home-invite" aria-labelledby={headingId}>
       <div className="home-invite__panel">
         <header className="home-invite__head">
           <div className="home-invite__copy">
-            <p className="home-invite__kicker">Quote first</p>
+            <p className="home-invite__kicker">{t("Quote first")}</p>
             <h2 id={headingId}>{cta.title}</h2>
             <p>{cta.subtitle}</p>
           </div>
@@ -119,10 +124,10 @@ export function HomeInvite({
             <p className="home-invite__note">
               {whatsapp ? (
                 <>
-                  <a href={callHref}>Call</a>
+                  <a href={callHref}>{t("Call")}</a>
                   {" · "}
                   <a href={whatsapp} target="_blank" rel="noreferrer">
-                    WhatsApp {phone}
+                    {t("WhatsApp")} {phone}
                   </a>
                 </>
               ) : (
@@ -136,14 +141,14 @@ export function HomeInvite({
           {inviteSteps.map((step, index) => (
             <li
               key={step.title}
-              aria-label={`${index + 1}. ${step.title}. ${step.text}`}
+              aria-label={`${index + 1}. ${t(step.title)}. ${t(step.text)}`}
             >
               <span className="home-invite__step-num" aria-hidden>
                 {index + 1}
               </span>
               <div aria-hidden>
-                <strong>{step.title}</strong>
-                <p>{step.text}</p>
+                <strong>{t(step.title)}</strong>
+                <p>{t(step.text)}</p>
               </div>
             </li>
           ))}

@@ -99,7 +99,7 @@
 .worldcompassholiday-page .hb-request__points li,
 .home-x .hb-request__points li {
   position: relative;
-  padding-left: 16px;
+  padding-inline-start: 16px;
   font-size: 0.84rem;
   font-weight: 600;
   line-height: 1.35;
@@ -109,7 +109,7 @@
 .hb-request__points li::before {
   content: "";
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 0.55em;
   width: 6px;
   height: 6px;

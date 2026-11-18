@@ -4,42 +4,43 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useI18n } from "@/components/i18n/I18nProvider";
 
 type TabIcon = "home" | "hotels" | "tours" | "bikes" | "cars" | "buses" | "more" | "account" | "visa" | "meet" | "about" | "help" | "contact" | "pages";
 
 const tabs: {
   href: string;
-  label: string;
+  label: "home" | "stays" | "tours" | "bikes" | "cars";
   match: (p: string) => boolean;
   icon: TabIcon;
 }[] = [
   {
     href: "/",
-    label: "Home",
+    label: "home",
     match: (p) => p === "/",
     icon: "home",
   },
   {
     href: "/hotels",
-    label: "Stays",
+    label: "stays",
     match: (p) => p === "/hotels" || p.startsWith("/hotels/"),
     icon: "hotels",
   },
   {
     href: "/tours",
-    label: "Tours",
+    label: "tours",
     match: (p) => p === "/tours" || p.startsWith("/tours/"),
     icon: "tours",
   },
   {
     href: "/rentals/bikes",
-    label: "Bikes",
+    label: "bikes",
     match: (p) => p.startsWith("/rentals/bikes"),
     icon: "bikes",
   },
   {
     href: "/rentals/cars",
-    label: "Cars",
+    label: "cars",
     match: (p) => p.startsWith("/rentals/cars"),
     icon: "cars",
   },
@@ -47,55 +48,55 @@ const tabs: {
 
 const moreLinks: {
   href: string;
-  label: string;
+  label: "buses" | "bookings" | "visa" | "meet" | "about" | "help" | "contact" | "pages";
   icon: TabIcon;
   match: (p: string) => boolean;
 }[] = [
   {
     href: "/buses",
-    label: "Find a bus",
+    label: "buses",
     icon: "buses",
     match: (p) => p === "/buses" || p.startsWith("/buses/"),
   },
   {
     href: "/account",
-    label: "See your bookings",
+    label: "bookings",
     icon: "account",
     match: (p) => p === "/account" || p.startsWith("/account/"),
   },
   {
     href: "/visa-services",
-    label: "Apply for a visa",
+    label: "visa",
     icon: "visa",
     match: (p) => p === "/visa-services" || p.startsWith("/visa-services/"),
   },
   {
     href: "/meet-and-assist",
-    label: "Request a greeter",
+    label: "meet",
     icon: "meet",
     match: (p) => p === "/meet-and-assist" || p.startsWith("/meet-and-assist/"),
   },
   {
     href: "/about",
-    label: "Read about us",
+    label: "about",
     icon: "about",
     match: (p) => p === "/about",
   },
   {
     href: "/help",
-    label: "Get help",
+    label: "help",
     icon: "help",
     match: (p) => p === "/help",
   },
   {
     href: "/contact",
-    label: "Send an enquiry",
+    label: "contact",
     icon: "contact",
     match: (p) => p === "/contact",
   },
   {
     href: "/sitemap",
-    label: "See all pages",
+    label: "pages",
     icon: "pages",
     match: (p) =>
       p === "/sitemap" ||
@@ -225,6 +226,7 @@ function TabGlyph({ name }: { name: TabIcon }) {
 
 export function MobileTabBar() {
   const pathname = usePathname() || "/";
+  const { messages } = useI18n();
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
   const moreId = useId();
@@ -253,7 +255,7 @@ export function MobileTabBar() {
   if (pathname.startsWith("/admin")) return null;
 
   return (
-    <nav className="mobile-tabbar app-chrome-mobile" aria-label="Primary">
+    <nav className="mobile-tabbar app-chrome-mobile" aria-label={messages.nav.home}>
       {tabs.map((tab) => {
         const active = tab.match(pathname);
         return (
@@ -266,7 +268,7 @@ export function MobileTabBar() {
             <span className="mobile-tabbar__icon">
               <TabGlyph name={tab.icon} />
             </span>
-            <span className="mobile-tabbar__label">{tab.label}</span>
+            <span className="mobile-tabbar__label">{messages.tabs[tab.label]}</span>
           </Link>
         );
       })}
@@ -276,7 +278,7 @@ export function MobileTabBar() {
               <button
                 type="button"
                 className="mobile-tabbar__backdrop"
-                aria-label="Close menu"
+                aria-label={messages.header.closeMenu}
                 onClick={() => setMoreOpen(false)}
               />,
               document.body,
@@ -297,7 +299,7 @@ export function MobileTabBar() {
                   <span className="mobile-tabbar__icon">
                     <TabGlyph name={item.icon} />
                   </span>
-                  <span>{item.label}</span>
+                  <span>{messages.more[item.label]}</span>
                 </Link>
               );
             })}
@@ -313,7 +315,7 @@ export function MobileTabBar() {
           <span className="mobile-tabbar__icon">
             <TabGlyph name="more" />
           </span>
-          <span className="mobile-tabbar__label">More</span>
+          <span className="mobile-tabbar__label">{messages.tabs.more}</span>
         </button>
       </div>
     </nav>

@@ -4,9 +4,12 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { createPortal } from "react-dom";
 import { DateMenu, prettyStayDate } from "@/components/hotel-list/stay-list/HotelStayList";
 import { SearchableSelect, type SelectOption } from "@/components/ui/SearchableSelect";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { formatPhone } from "@/lib/auth/phone";
 import { company } from "@/lib/company";
 import { isBudgetValue, type BudgetBand, type RequestOption } from "@/lib/custom-request";
+import { intlLocale } from "@/lib/format";
+import type { Locale } from "@/i18n/locales";
 import { whatsAppHref } from "@/lib/visa";
 
 const glyphs: Record<string, string> = {
@@ -123,9 +126,10 @@ export function nextDayIso(iso: string) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function prettyDate(iso: string) {
+export function prettyDate(iso: string, locale: Locale = "en") {
   if (!iso) return "Not selected";
-  return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${iso}T00:00:00`));
+  const tag = locale === "en" ? "en-IN" : intlLocale(locale);
+  return new Intl.DateTimeFormat(tag, { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${iso}T00:00:00`));
 }
 
 export function clampCount(value: string | undefined, fallback: string, min: number, max: number) {
@@ -361,7 +365,7 @@ export function GuideActions({
             className="hotel-guide-primary"
             onClick={() => deferGuideStep(onContinue)}
           >
-            Continue <span aria-hidden="true">→</span>
+            Continue <span className="hotel-guide-arrow" aria-hidden="true">→</span>
           </button>
         </div>
       ) : (
@@ -394,7 +398,7 @@ export function GuideTextField({ name, label, icon, placeholder, value, onChange
     <div className={`hotel-guide-field${wide ? " hotel-guide-field-wide" : ""}`} id={`${name}-field`}>
       <label htmlFor={id} className={icon ? "has-icon" : undefined}>{icon ? <Glyph name={icon} /> : null}{label}</label>
       <div className={`hotel-request-control mt-5${error ? " is-invalid" : ""}`}>
-        <input id={id} type={type} placeholder={placeholder} autoComplete={autoComplete} value={value} onChange={(event) => onChange(event.target.value)} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} />
+        <input id={id} type={type} dir={type === "tel" || type === "email" ? "ltr" : undefined} placeholder={placeholder} autoComplete={autoComplete} value={value} onChange={(event) => onChange(event.target.value)} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} />
       </div>
       <FieldMessage id={`${id}-error`} message={error} />
     </div>
@@ -474,6 +478,7 @@ export function GuideCityField({
 }
 
 export function GuideDateField({ name, label, icon = "calendar", value, min, error, onPick }: { name: string; label: string; icon?: string; value: string; min: string; error?: string; onPick: (iso: string) => void }) {
+  const { locale } = useI18n();
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -515,7 +520,7 @@ export function GuideDateField({ name, label, icon = "calendar", value, min, err
       <div ref={ref} className={`stay-list hr-stay-date mt-5${error ? " is-invalid" : ""}`} data-picker>
         <div className="sl-field">
           <button id={`guide-${name}`} className="sl-who" type="button" aria-haspopup="dialog" aria-expanded={open} aria-describedby={error ? `guide-${name}-error` : undefined} onClick={() => setOpen((current) => !current)}>
-            <strong>{value ? prettyStayDate(value) : "Select date"}</strong>
+            <strong>{value ? prettyStayDate(value, locale) : "Select date"}</strong>
           </button>
           {open && position ? createPortal(
             <div className="stay-list hr-cal-pop" style={{ top: position.top, bottom: position.bottom, left: position.left }} data-picker>
@@ -660,8 +665,8 @@ export function ReviewSection({ title, icon, onEdit, children }: { title: string
   );
 }
 
-export function ReviewLine({ label, icon, value }: { label: string; icon: string; value: string }) {
-  return <div className="hotel-guide-review-line"><dt><Glyph name={icon} />{label}</dt><dd>{value}</dd></div>;
+export function ReviewLine({ label, icon, value, skipValue = false }: { label: string; icon: string; value: string; skipValue?: boolean }) {
+  return <div className="hotel-guide-review-line"><dt><Glyph name={icon} />{label}</dt><dd>{skipValue ? <span data-skip-i18n>{value}</span> : value}</dd></div>;
 }
 
 export function GuideContact({
@@ -684,7 +689,7 @@ export function GuideContact({
   if (customer) {
     return (
       <div className="hotel-guide-contact-summary">
-        <span>Submitting as <strong>{customer.name}</strong></span>
+        <span>Submitting as <strong data-skip-i18n>{customer.name}</strong></span>
         {customer.phone ? (
           <span>{formatPhone(customer.phone) || customer.phone}</span>
         ) : (

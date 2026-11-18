@@ -1,6 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { Noto_Naskh_Arabic, Noto_Sans_Devanagari, Noto_Sans_Hebrew } from "next/font/google";
 import { theme } from "@/config/theme";
+import { DocumentLocale } from "@/components/i18n/DocumentLocale";
+import { I18nProvider } from "@/components/i18n/I18nProvider";
+import { PhraseApplier } from "@/components/i18n/PhraseApplier";
+import { getDocumentLocale, getMessages, getPathname, getUiDictionary, getUserLocale } from "@/i18n/get-locale";
+import { localeDir, type Locale } from "@/i18n/locales";
 import { RotatingFavicon } from "@/components/worldcompassholiday/RotatingFavicon";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { ViewportReset } from "@/components/pwa/ViewportReset";
@@ -21,9 +27,40 @@ import "@/styles/whatsapp-float.css";
 import "@/components/tour-list/catalog/tour-catalog.css";
 import "@/styles/hotel-list-stay.css";
 import "@/styles/listing-app.css";
+import "@/styles/locale.css";
 
 // Pages read the live database. A production image must not freeze that data at build time.
 export const dynamic = "force-dynamic";
+
+const arabic = Noto_Naskh_Arabic({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["arabic"],
+  variable: "--font-arabic",
+  display: "swap",
+});
+
+const hebrew = Noto_Sans_Hebrew({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["hebrew"],
+  variable: "--font-hebrew",
+  display: "swap",
+});
+
+const hindi = Noto_Sans_Devanagari({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["devanagari"],
+  variable: "--font-devanagari",
+  display: "swap",
+});
+
+const ogLocale: Record<Locale, string> = {
+  en: "en_IN",
+  fr: "fr_FR",
+  hi: "hi_IN",
+  he: "he_IL",
+  ar: "ar_SA",
+  ur: "ur_PK",
+};
 
 const jost = localFont({
   src: [
@@ -60,7 +97,7 @@ const shareImage = {
   height: defaultShareImage.height,
 };
 
-export const metadata: Metadata = {
+const metadataBase: Metadata = {
   metadataBase: new URL(siteOrigin()),
   title: {
     default: defaultTitle,
@@ -120,6 +157,17 @@ export const metadata: Metadata = {
   },
 };
 
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale } = await getDocumentLocale();
+  return {
+    ...metadataBase,
+    openGraph: {
+      ...metadataBase.openGraph,
+      locale: ogLocale[locale],
+    },
+  };
+}
+
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: theme.colors.navy },
@@ -140,6 +188,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const appearance = await getSiteSettings();
+  const userLocale = await getUserLocale();
+  const documentLocale = await getDocumentLocale();
+  const pathname = await getPathname();
+  const copy = await getMessages();
+  const dictionary = pathname.startsWith("/admin") ? {} : await getUiDictionary();
   const style = {
     "--navy": theme.colors.navy,
     "--blue": appearance.primaryColor,
@@ -152,26 +205,36 @@ export default async function RootLayout({
   } as React.CSSProperties;
 
   return (
-    <html lang="en" className={`${jost.variable} min-h-dvh`} style={style}>
+    <html
+      lang={documentLocale.locale}
+      dir={documentLocale.dir}
+      className={`${jost.variable} ${arabic.variable} ${hebrew.variable} ${hindi.variable} min-h-dvh`}
+      style={style}
+      suppressHydrationWarning
+    >
       <body className="flex min-h-dvh flex-col antialiased">
-        <SerwistProvider
-          swUrl="/sw.js"
-          disable={process.env.NODE_ENV === "development"}
-          register
-          cacheOnNavigation={false}
-          reloadOnOnline
-        >
-          <RotatingFavicon />
-          <ViewportReset />
-          <KeyboardAvoid />
-          <FavoriteToast />
-          {/* Phone/tablet chrome on every public page; CSS hides on desktop */}
-          <MobileAppHeader />
-          {children}
-          <MobileTabBar />
-          <WhatsAppFloat phone={appearance.whatsapp} />
-          <InstallPrompt />
-        </SerwistProvider>
+        <I18nProvider locale={userLocale} messages={copy} dictionary={dictionary}>
+          <PhraseApplier />
+          <DocumentLocale locale={userLocale} dir={localeDir(userLocale)} />
+          <SerwistProvider
+            swUrl="/sw.js"
+            disable={process.env.NODE_ENV === "development"}
+            register
+            cacheOnNavigation={false}
+            reloadOnOnline
+          >
+            <RotatingFavicon />
+            <ViewportReset />
+            <KeyboardAvoid />
+            <FavoriteToast />
+            {/* Phone/tablet chrome on every public page; CSS hides on desktop */}
+            <MobileAppHeader />
+            {children}
+            <MobileTabBar />
+            <WhatsAppFloat phone={appearance.whatsapp} />
+            <InstallPrompt />
+          </SerwistProvider>
+        </I18nProvider>
       </body>
     </html>
   );

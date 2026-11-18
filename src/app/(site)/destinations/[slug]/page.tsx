@@ -30,6 +30,17 @@ import {
   privateMetadata,
 } from "@/lib/seo";
 import { parseJsonArray, type GalleryItem } from "@/lib/tours/json";
+import { getUserLocale } from "@/i18n/get-locale";
+import {
+  loadCopyMap,
+  loadOwnerCopies,
+  translated,
+  withHotelCopy,
+  withNameCopy,
+  withPlaceCopy,
+  withTourCopy,
+  withVehicleCopy,
+} from "@/lib/i18n/content";
 import "@/styles/destination-page.css";
 
 type Props = {
@@ -38,10 +49,13 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const destination = await prisma.destination.findUnique({
+  const locale = await getUserLocale();
+  const loaded = await prisma.destination.findUnique({
     where: { slug },
-    select: { name: true, summary: true, region: true, country: true, imageUrl: true, published: true },
+    select: { id: true, name: true, summary: true, region: true, country: true, imageUrl: true, published: true },
   });
+  const copy = loaded && locale !== "en" ? (await loadOwnerCopies("destination", loaded.id))[locale] : undefined;
+  const destination = loaded ? withPlaceCopy(loaded, copy) : null;
   if (!destination?.published) return privateMetadata("Destination");
   const place = [destination.region, destination.country].filter(Boolean).join(", ");
   const description =
@@ -85,10 +99,11 @@ function slideImages(...groups: Array<string | GalleryItem[] | undefined>) {
 
 export default async function DestinationPage({ params }: Props) {
   const { slug } = await params;
-  const destination = await prisma.destination.findUnique({
+  const locale = await getUserLocale();
+  const loadedPlace = await prisma.destination.findUnique({
     where: { slug },
     include: {
-      parent: { select: { name: true, slug: true, published: true } },
+      parent: { select: { id: true, name: true, slug: true, published: true } },
       children: {
         where: { published: true },
         orderBy: { name: "asc" },
@@ -100,14 +115,47 @@ export default async function DestinationPage({ params }: Props) {
         orderBy: { name: "asc" },
         include: {
           images: { orderBy: { sortOrder: "asc" } },
-          transmission: { select: { name: true } },
+          transmission: { select: { id: true, name: true } },
         },
       },
       busRoutes: { where: { published: true }, orderBy: { name: "asc" } },
     },
   });
 
-  if (!destination || !destination.published) notFound();
+  if (!loadedPlace || !loadedPlace.published) notFound();
+  const placeCopy = locale === "en" ? undefined : (await loadOwnerCopies("destination", loadedPlace.id))[locale];
+  const destination = withPlaceCopy(loadedPlace, placeCopy);
+  const [hotelCopies, vehicleCopies, childCopies, parentCopies, configCopies, routeCopies] = await Promise.all([
+    loadCopyMap(
+      "hotel",
+      loadedPlace.hotels.map((hotel) => hotel.id),
+      locale,
+    ),
+    loadCopyMap(
+      "vehicle",
+      loadedPlace.vehicles.map((vehicle) => vehicle.id),
+      locale,
+    ),
+    loadCopyMap(
+      "destination",
+      loadedPlace.children.map((child) => child.id),
+      locale,
+    ),
+    loadCopyMap("destination", loadedPlace.parent ? [loadedPlace.parent.id] : [], locale),
+    loadCopyMap(
+      "rentalConfig",
+      loadedPlace.vehicles.flatMap((vehicle) => (vehicle.transmission ? [vehicle.transmission.id] : [])),
+      locale,
+    ),
+    loadCopyMap(
+      "busRoute",
+      loadedPlace.busRoutes.map((route) => route.id),
+      locale,
+    ),
+  ]);
+  const parentName = loadedPlace.parent
+    ? withPlaceCopy({ ...loadedPlace.parent, summary: "" }, parentCopies.get(loadedPlace.parent.id)).name
+    : "";
 
   const linkedTours = await prisma.tour.findMany({
     where: {
@@ -117,18 +165,23 @@ export default async function DestinationPage({ params }: Props) {
     },
     orderBy: { title: "asc" },
   });
-  const tours = [...destination.tours, ...linkedTours].sort((a, b) =>
-    a.title.localeCompare(b.title),
+  const tourCopies = await loadCopyMap(
+    "tour",
+    [...destination.tours, ...linkedTours].map((tour) => tour.id),
+    locale,
   );
+  const tours = [...destination.tours, ...linkedTours]
+    .map((tour) => withTourCopy(tour, tourCopies.get(tour.id)))
+    .sort((a, b) => a.title.localeCompare(b.title));
 
   const nearbyRows = await prisma.destination.findMany({
     where: {
       published: true,
       NOT: { id: destination.id },
       OR: [
-        { region: destination.region },
-        { country: destination.country },
-        ...(destination.parentId ? [{ parentId: destination.parentId }] : []),
+        { region: loadedPlace.region },
+        { country: loadedPlace.country },
+        ...(loadedPlace.parentId ? [{ parentId: loadedPlace.parentId }] : []),
       ],
     },
     orderBy: { name: "asc" },
@@ -137,17 +190,22 @@ export default async function DestinationPage({ params }: Props) {
       _count: { select: { hotels: true, tours: true, vehicles: true } },
     },
   });
+  const nearbyCopies = await loadCopyMap(
+    "destination",
+    nearbyRows.map((row) => row.id),
+    locale,
+  );
   const nearby = nearbyRows
     .slice()
     .sort((a, b) => {
       const score = (row: typeof a) =>
-        (row.region === destination.region ? 0 : 2) +
-        (row.parentId && row.parentId === destination.parentId ? 0 : 1);
+        (row.region === loadedPlace.region ? 0 : 2) +
+        (row.parentId && row.parentId === loadedPlace.parentId ? 0 : 1);
       return score(a) - score(b) || a.name.localeCompare(b.name);
     })
     .map((row) => ({
       slug: row.slug,
-      name: row.name,
+      name: withPlaceCopy(row, nearbyCopies.get(row.id)).name,
       imageUrl: row.imageUrl,
       meta: listingMeta(row._count),
     }));
@@ -191,7 +249,7 @@ export default async function DestinationPage({ params }: Props) {
   const crumbs = [
     { href: "/destinations", label: "Destinations" },
     destination.parent?.published
-      ? { href: `/destinations/${destination.parent.slug}`, label: destination.parent.name }
+      ? { href: `/destinations/${destination.parent.slug}`, label: parentName }
       : { href: "/destinations", label: destination.country },
     { href: "", label: destination.name },
   ];
@@ -323,12 +381,14 @@ export default async function DestinationPage({ params }: Props) {
           moreHref="/hotels"
         >
           <HotelCards
-            hotels={destination.hotels.map((hotel) => ({
+            hotels={destination.hotels.map((row) => {
+              const hotel = withHotelCopy(row, hotelCopies.get(row.id));
+              return {
               id: hotel.id,
               href: `/hotels/${hotel.slug}`,
               title: hotel.name,
               location: hotel.address.trim() || placeLabel,
-              price: formatMoney(hotel.priceFrom, hotel.currency),
+              price: formatMoney(hotel.priceFrom, hotel.currency, locale),
               ratings: hotel.starRating > 0 ? hotel.starRating.toFixed(1) : "",
               reviews: "",
               tag: hotel.isFeatured ? "best seller" : "",
@@ -337,7 +397,8 @@ export default async function DestinationPage({ params }: Props) {
                 hotel.imageUrl,
                 parseJsonArray<GalleryItem>(hotel.galleryJson),
               ),
-            }))}
+            };
+            })}
           />
         </ListingSection>
       ) : null}
@@ -357,7 +418,7 @@ export default async function DestinationPage({ params }: Props) {
               location: placeLabel,
               duration: tour.durationLabel.trim() || `${tour.durationDays} days`,
               tourType: tour.category.trim(),
-              price: formatMoney(tour.priceFrom, tour.currency),
+              price: formatMoney(tour.priceFrom, tour.currency, locale),
               tag: tour.isFeatured ? "best seller" : "",
               slideImg: slideImages(
                 tour.imageUrl,
@@ -377,7 +438,9 @@ export default async function DestinationPage({ params }: Props) {
           moreHref="/rentals/cars"
         >
           <CarCards
-            cars={cars.map((vehicle) => ({
+            cars={cars.map((row) => {
+              const vehicle = withVehicleCopy(row, vehicleCopies.get(row.id));
+              return {
               id: vehicle.id,
               href: `/rentals/${vehicle.slug}`,
               title: vehicle.name,
@@ -385,11 +448,14 @@ export default async function DestinationPage({ params }: Props) {
               type: "Car",
               seat: String(vehicle.seats),
               luggage: vehicle.luggage ? String(vehicle.luggage) : "",
-              transmission: vehicle.transmission?.name ?? "",
-              price: formatMoney(vehicle.pricePerDay, vehicle.currency),
+              transmission: row.transmission
+                ? withNameCopy(row.transmission, configCopies.get(row.transmission.id)).name
+                : "",
+              price: formatMoney(vehicle.pricePerDay, vehicle.currency, locale),
               tag: "",
               slideImg: vehicle.images.map((image) => image.url),
-            }))}
+            };
+            })}
           />
         </ListingSection>
       ) : null}
@@ -402,7 +468,9 @@ export default async function DestinationPage({ params }: Props) {
           moreHref="/rentals/bikes"
         >
           <CarCards
-            cars={bikes.map((vehicle) => ({
+            cars={bikes.map((row) => {
+              const vehicle = withVehicleCopy(row, vehicleCopies.get(row.id));
+              return {
               id: vehicle.id,
               href: `/rentals/${vehicle.slug}`,
               title: vehicle.name,
@@ -410,11 +478,14 @@ export default async function DestinationPage({ params }: Props) {
               type: "Bike",
               seat: String(vehicle.seats),
               luggage: vehicle.luggage ? String(vehicle.luggage) : "",
-              transmission: vehicle.transmission?.name ?? "",
-              price: formatMoney(vehicle.pricePerDay, vehicle.currency),
+              transmission: row.transmission
+                ? withNameCopy(row.transmission, configCopies.get(row.transmission.id)).name
+                : "",
+              price: formatMoney(vehicle.pricePerDay, vehicle.currency, locale),
               tag: "",
               slideImg: vehicle.images.map((image) => image.url),
-            }))}
+            };
+            })}
           />
         </ListingSection>
       ) : null}
@@ -427,22 +498,29 @@ export default async function DestinationPage({ params }: Props) {
           moreHref="/buses"
         >
           <div className="row y-gap-30">
-            {destination.busRoutes.map((route) => (
+            {destination.busRoutes.map((route) => {
+              const copy = routeCopies.get(route.id);
+              const name = translated(route.name, copy?.name);
+              const fromCity = translated(route.fromCity, copy?.fromCity);
+              const toCity = translated(route.toCity, copy?.toCity);
+              const summary = translated(route.summary, copy?.summary);
+              return (
               <div className="col-lg-4 col-md-6" key={route.id}>
                 <Link
                   href={`/buses/${route.slug}`}
                   className="destination-page__bus-card rounded-4 border-light px-30 py-30 d-block"
                 >
-                  <h3 className="text-18 fw-500">{route.name}</h3>
+                  <h3 className="text-18 fw-500">{name}</h3>
                   <p className="text-15 text-light-1 mt-10">
-                    {route.fromCity} to {route.toCity}
+                    {fromCity} to {toCity}
                   </p>
-                  {route.summary ? (
-                    <p className="text-15 mt-10">{route.summary}</p>
+                  {summary ? (
+                    <p className="text-15 mt-10">{summary}</p>
                   ) : null}
                 </Link>
               </div>
-            ))}
+              );
+            })}
           </div>
         </ListingSection>
       ) : null}
@@ -461,7 +539,9 @@ export default async function DestinationPage({ params }: Props) {
               </div>
             </div>
             <div className="destination-page__listing-row pt-40">
-              <TopSights places={destination.children} />
+              <TopSights
+                places={destination.children.map((child) => withPlaceCopy(child, childCopies.get(child.id)))}
+              />
             </div>
           </div>
         </section>

@@ -5,6 +5,8 @@ import { modules } from "@/config/modules";
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { isLocale, type Locale } from "@/i18n/locales";
+import type { CopyMap } from "@/lib/i18n/content";
 import { mapApiKey } from "@/lib/map-key";
 
 export const metadata: Metadata = { title: "Destinations" };
@@ -18,7 +20,8 @@ export default async function AdminDestinationsPage({
   const params = await searchParams;
   const toastKind = (await cookies()).get("destination_toast")?.value;
 
-  const destinations = await prisma.destination.findMany({
+  const [destinations, translationRows] = await Promise.all([
+    prisma.destination.findMany({
     orderBy: { name: "asc" },
     include: {
       parent: { select: { name: true } },
@@ -32,7 +35,26 @@ export default async function AdminDestinationsPage({
         },
       },
     },
-  });
+    }),
+    prisma.contentTranslation.findMany({
+      where: { ownerType: "destination", field: "copy" },
+      select: { ownerId: true, locale: true, value: true },
+    }),
+  ]);
+
+  const translations: Record<string, CopyMap> = {};
+  for (const row of translationRows) {
+    if (!isLocale(row.locale) || row.locale === "en") continue;
+    try {
+      const value = JSON.parse(row.value) as unknown;
+      if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+      const current = translations[row.ownerId] ?? {};
+      current[row.locale as Locale] = value as Record<string, unknown>;
+      translations[row.ownerId] = current;
+    } catch {
+      continue;
+    }
+  }
 
   const notice = params.deleted
     ? "deleted"
@@ -51,6 +73,7 @@ export default async function AdminDestinationsPage({
       canManage={can(user, "destinations.manage")}
       mapApiKey={mapApiKey()}
       notice={notice}
+      translations={translations}
       destinations={destinations.map((destination) => {
         const linkedCount =
           destination._count.tours +

@@ -3,68 +3,39 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useCopy, useFormatMoney, useFormatNumber } from "@/components/i18n/I18nProvider";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
-import { formatMoney } from "@/lib/format";
+import {
+  bikeHomeFallback,
+  carHomeFallback,
+  type HomeRide,
+  type HomeRidePromo,
+} from "@/components/home/home-ride-data";
 import "@/styles/home-desks.css";
 
-export type HomeRide = {
-  id: string;
-  slug: string;
-  name: string;
-  place: string;
-  seats: number;
-  detail: string;
-  pricePerDay: number;
-  currency: string;
-  image: string;
-};
-
-export type HomeRidePromo = {
-  href: string;
-  title: string;
-  text: string;
-  points: readonly string[];
-  image: string;
-  cta: string;
-};
-
-export const carHomeFallback: HomeRidePromo = {
-  href: "/rentals/cars",
-  title: "Cars for the trip",
-  text: "Daily rates with clear pickup points before you reserve.",
-  points: ["City and airport pickup", "Seat count on each car", "Daily rates shown upfront"],
-  image: "/img/company/service-transfers.jpg",
-  cta: "Browse cars",
-};
+export type { HomeRide, HomeRidePromo };
+export { bikeHomeFallback, carHomeFallback };
 
 const carSectionArt = {
   src: "/img/company/service-transfers.jpg",
   alt: "Car for airport and city travel",
 } as const;
 
-export const bikeHomeFallback: HomeRidePromo = {
-  href: "/rentals/bikes",
-  title: "Bikes for the road",
-  text: "Scooters and motorcycles by the day, with a helmet on the hire.",
-  points: ["Scooter or motorcycle", "Helmet with the hire", "Mountain and coast routes"],
-  image: "/img/bikes/bike-rental-banner.jpg",
-  cta: "Browse bikes",
-};
-
 export function HomeRidePromoCard({ promo }: { promo: HomeRidePromo }) {
+  const t = useCopy();
   return (
     <Link prefetch={false} href={promo.href} className="ride-promo">
       <Image src={promo.image} alt="" fill sizes="(max-width: 1024px) 100vw, 1100px" />
       <div className="ride-promo__body">
-        <h3>{promo.title}</h3>
-        <p>{promo.text}</p>
+        <h3>{t(promo.title)}</h3>
+        <p>{t(promo.text)}</p>
         <ul>
-          {promo.points.map((point) => (
-            <li key={point}>{point}</li>
+          {(promo.points ?? []).map((point) => (
+            <li key={point}>{t(point)}</li>
           ))}
         </ul>
-        <span className="ride-promo__cta">{promo.cta}</span>
+        <span className="ride-promo__cta">{t(promo.cta)}</span>
       </div>
     </Link>
   );
@@ -86,6 +57,9 @@ function RideCard({
   eager: boolean;
 }) {
   const [broken, setBroken] = useState(false);
+  const t = useCopy();
+  const money = useFormatMoney();
+  const count = useFormatNumber();
   const href = `/rentals/${ride.slug}`;
   const fallback = kind === "bike" ? "/img/bikes/bike-rental-banner.jpg" : carSectionArt.src;
   const image = broken || !ride.image ? fallback : ride.image;
@@ -112,7 +86,7 @@ function RideCard({
             onError={() => setBroken(true)}
           />
         </Link>
-        <span className="home-fleet-card__badge">{kindLabel}</span>
+        <span className="home-fleet-card__badge">{t(kindLabel)}</span>
         <FavoriteButton
           kind={kind}
           itemId={ride.id}
@@ -131,20 +105,20 @@ function RideCard({
           </Link>
         </h3>
         <p className="home-fleet-card__meta">
-          {[ride.place, ride.seats ? `${ride.seats} seats` : ""].filter(Boolean).join(" · ")}
+          {[ride.place, ride.seats ? `${count(ride.seats)} ${t("seats")}` : ""].filter(Boolean).join(" · ")}
         </p>
         <div className="home-fleet-card__foot">
           {ride.pricePerDay > 0 ? (
             <p className="home-fleet-card__price">
-              <strong>{formatMoney(ride.pricePerDay, ride.currency)}</strong> <small>/ day</small>
+              <strong>{money(ride.pricePerDay, ride.currency)}</strong> <small>{t("/ day")}</small>
             </p>
           ) : (
             <p className="home-fleet-card__price">
-              <strong>Price on request</strong>
+              <strong>{t("Price on request")}</strong>
             </p>
           )}
           <Link prefetch={false} href={href} className="home-fleet-card__btn">
-            View
+            {t("View")}
           </Link>
         </div>
       </div>

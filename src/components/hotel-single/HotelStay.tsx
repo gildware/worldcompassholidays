@@ -9,15 +9,12 @@ import { StayMark } from "@/components/hotel-single/StayMark";
 import { usePhotoSwipe } from "@/hooks/usePhotoSwipe";
 import { useSectionTabs } from "@/hooks/useSectionTabs";
 import { initialFormState } from "@/lib/forms";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { formatMoney } from "@/lib/format";
 import { plainText } from "@/lib/seo";
 import "@/styles/hotel-stay.css";
 
 type Guest = { name: string; email: string; phone: string } | null;
-
-function money(amount: number, currency: string) {
-  return formatMoney(Math.round(amount), currency);
-}
 
 function parseISO(value: string) {
   const [year, month, day] = value.split("-").map(Number);
@@ -140,6 +137,8 @@ export function HotelStay({
   defaultRooms?: number;
   taxEnabled?: boolean;
 }) {
+  const { locale } = useI18n();
+  const money = (amount: number, currency: string) => formatMoney(Math.round(amount), currency, locale);
   const rooms = hotel.rooms.length > 0 ? hotel.rooms : [];
   const currency = rooms[0]?.currency || "INR";
   const [roomId, setRoomId] = useState(rooms[0]?.id ?? "");

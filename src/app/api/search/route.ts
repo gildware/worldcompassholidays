@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { searchCatalog } from "@/lib/search/catalog";
+import { getUserLocale } from "@/i18n/get-locale";
+import { localizeTourHits, searchCatalog } from "@/lib/search/catalog";
 import { recordSearch } from "@/lib/search/log";
 import { hasSearchableQuery } from "@/lib/search/rank";
 
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const hits = await searchCatalog(query);
+    const hits = await localizeTourHits(await searchCatalog(query), await getUserLocale());
     if (hasSearchableQuery(query)) {
       void recordSearch({
         query,

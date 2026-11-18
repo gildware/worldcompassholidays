@@ -568,14 +568,14 @@
 }
 
 .hic-flip__back li {
-  padding-left: 16px;
+  padding-inline-start: 16px;
   position: relative;
 }
 
 .hic-flip__back li::before {
   content: "";
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 0.55em;
   width: 7px;
   height: 7px;

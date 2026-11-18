@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { deleteOwnerCopies, saveOwnerCopies } from "@/lib/i18n/content";
 import { clearTtlCache } from "@/lib/ttl-cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -467,6 +468,7 @@ export async function saveHotel(
       await syncRooms(hotel.id, rooms);
       revalidateHotelPaths(destinationSlug);
       revalidatePath(`/hotels/${slug}`);
+      await saveOwnerCopies("hotel", hotel.id, String(formData.get("translationsJson") ?? ""));
       return {
         error: null,
         success: publishing ? "Hotel published." : "Draft saved.",
@@ -503,6 +505,7 @@ export async function saveHotel(
     revalidatePath(`/hotels/${existing.slug}`);
     revalidatePath(`/hotels/${slug}`);
     revalidatePath(`/admin/hotels/${hotelId}/view`);
+    await saveOwnerCopies("hotel", hotelId, String(formData.get("translationsJson") ?? ""));
     return {
       error: null,
       success: publishing ? "Hotel published." : "Draft saved.",
@@ -528,6 +531,7 @@ export async function deleteHotel(formData: FormData) {
 
   const images = hotelImages(hotel);
   await prisma.hotel.delete({ where: { id: hotelId } });
+  await deleteOwnerCopies("hotel", hotelId);
   await deleteEntityMedia("hotels", [hotel.slug, hotel.id], images);
   revalidateHotelPaths(hotel.destination?.slug);
   revalidatePath(`/hotels/${hotel.slug}`);

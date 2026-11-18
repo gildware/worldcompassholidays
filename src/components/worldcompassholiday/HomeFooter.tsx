@@ -1,15 +1,32 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/worldcompassholiday/BrandLogo";
 import { theme } from "@/config/theme";
+import { getMessages } from "@/i18n/get-locale";
 import { company, companyLinks, policyLinks } from "@/lib/company";
 import { getSiteSettings } from "@/lib/brand";
 import type { NavItem } from "@/lib/navigation";
 import { whatsAppHref } from "@/lib/visa";
 
+const companyLabelKey = {
+  "/about": "about",
+  "/why-us": "why",
+  "/help": "help",
+  "/sitemap": "pages",
+  "/terms": "terms",
+  "/privacy": "privacy",
+  "/cancellation": "cancellation",
+} as const;
+
+const policyLabelKey = {
+  "/terms": "terms",
+  "/privacy": "privacy",
+  "/cancellation": "cancellation",
+} as const;
+
 const exploreHrefs = ["/", "/destinations", "/tours", "/hotels", "/buses"];
 
 export async function HomeFooter({ items }: { items: NavItem[] }) {
-  const brand = await getSiteSettings();
+  const [brand, copy] = await Promise.all([getSiteSettings(), getMessages()]);
   const explore = items.filter((item) => exploreHrefs.includes(item.href));
   const services = items.filter((item) => !exploreHrefs.includes(item.href) && item.href !== "/contact");
   const phone = brand.phone.replace(/\s/g, "");
@@ -24,16 +41,16 @@ export async function HomeFooter({ items }: { items: NavItem[] }) {
           <Link prefetch={false} href="/" aria-label={theme.brandName}>
             <BrandLogo logoUrl={brand.logoUrl || null} />
           </Link>
-          <p>{theme.tagline}</p>
+          <p>{copy.footer.tagline}</p>
           <ul className="site-footer__reach">
             <li>
-              <a href={`tel:${phone}`}>
+              <a href={`tel:${phone}`} dir="ltr">
                 <PhoneIcon />
                 {brand.phone}
               </a>
             </li>
             <li>
-              <a href={`mailto:${brand.email}`}>
+              <a href={`mailto:${brand.email}`} dir="ltr">
                 <MailIcon />
                 {brand.email}
               </a>
@@ -88,8 +105,8 @@ export async function HomeFooter({ items }: { items: NavItem[] }) {
           ) : null}
         </div>
 
-        <nav aria-label="Explore">
-          <h2>Explore</h2>
+        <nav aria-label={copy.footer.explore}>
+          <h2>{copy.footer.explore}</h2>
           <ul>
             {explore.map((item) => (
               <li key={item.href}>
@@ -99,8 +116,8 @@ export async function HomeFooter({ items }: { items: NavItem[] }) {
           </ul>
         </nav>
 
-        <nav aria-label="Services">
-          <h2>Services</h2>
+        <nav aria-label={copy.footer.services}>
+          <h2>{copy.footer.services}</h2>
           <ul>
             {services.map((item) => (
               <li key={item.href}>
@@ -110,37 +127,37 @@ export async function HomeFooter({ items }: { items: NavItem[] }) {
           </ul>
         </nav>
 
-        <nav aria-label="Your trip">
-          <h2>Your trip</h2>
+        <nav aria-label={copy.footer.yourTrip}>
+          <h2>{copy.footer.yourTrip}</h2>
           <ul>
             <li>
-              <Link prefetch={false} href="/login">Sign in</Link>
+              <Link prefetch={false} href="/login">{copy.footer.signIn}</Link>
             </li>
             <li>
-              <Link prefetch={false} href="/account">See your bookings</Link>
+              <Link prefetch={false} href="/account">{copy.footer.bookings}</Link>
             </li>
             {showHotelRequest ? (
               <li>
-                <Link prefetch={false} href="/hotels/request">Find a hotel</Link>
+                <Link prefetch={false} href="/hotels/request">{copy.footer.findHotel}</Link>
               </li>
             ) : null}
             {showBusRequest ? (
               <li>
-                <Link prefetch={false} href="/buses/request">Request a bus</Link>
+                <Link prefetch={false} href="/buses/request">{copy.footer.requestBus}</Link>
               </li>
             ) : null}
             <li>
-              <Link prefetch={false} href="/contact">Send an enquiry</Link>
+              <Link prefetch={false} href="/contact">{copy.footer.contact}</Link>
             </li>
           </ul>
         </nav>
 
-        <nav aria-label="Company">
-          <h2>Company</h2>
+        <nav aria-label={copy.footer.company}>
+          <h2>{copy.footer.company}</h2>
           <ul>
             {companyLinks.map((item) => (
               <li key={item.href}>
-                <Link prefetch={false} href={item.href}>{item.label}</Link>
+                <Link prefetch={false} href={item.href}>{copy.company[companyLabelKey[item.href]]}</Link>
               </li>
             ))}
           </ul>
@@ -150,10 +167,10 @@ export async function HomeFooter({ items }: { items: NavItem[] }) {
         <span>
           © {new Date().getFullYear()} {theme.brandName}. {company.dmcLine}.
         </span>
-        <nav className="site-footer__legal" aria-label="Policies">
+        <nav className="site-footer__legal" aria-label={copy.footer.policies}>
           {policyLinks.map((item) => (
             <Link prefetch={false} key={item.href} href={item.href}>
-              {item.label}
+              {copy.policy[policyLabelKey[item.href]]}
             </Link>
           ))}
         </nav>

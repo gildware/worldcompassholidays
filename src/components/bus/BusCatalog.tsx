@@ -8,7 +8,7 @@ import { BusSearchBar } from "@/components/bus/BusSearchBar";
 import { useLazySlice } from "@/hooks/useLazySlice";
 import { arrivesNextDay, busCoachTypes, busTimeWindows, coachLabel, inTimeWindow, requestBusHref } from "@/lib/buses";
 import type { BusListItem, BusQuery, BusSort } from "@/components/bus/query";
-import { formatMoney } from "@/lib/format";
+import { useFormatMoney } from "@/components/i18n/I18nProvider";
 import { AskRequestLink } from "@/components/common/AskRequestLink";
 
 const SORTS: { value: BusSort; label: string }[] = [
@@ -87,6 +87,7 @@ function toggleValue(list: string[], value: string) {
 }
 
 export function BusCatalog({ routes, initial }: { routes: BusListItem[]; initial: BusQuery }) {
+  const money = useFormatMoney();
   const pathname = usePathname();
   const [query, setQuery] = useState(initial);
   const [qInput, setQInput] = useState(initial.q);
@@ -444,7 +445,7 @@ export function BusCatalog({ routes, initial }: { routes: BusListItem[]; initial
           {canPrice ? (
             <fieldset>
               <legend>
-                Fare <span>{priced ? `${formatMoney(min)} – ${formatMoney(max)}` : "Any fare"}</span>
+                Fare <span>{priced ? `${money(min)} – ${money(max)}` : "Any fare"}</span>
               </legend>
               <div className="hist" role="group" aria-label="Fare distribution">
                 {bins.map((bin) => {
@@ -455,7 +456,7 @@ export function BusCatalog({ routes, initial }: { routes: BusListItem[]; initial
                       type="button"
                       className={on ? "is-in" : ""}
                       style={{ height: `${bin.height}%` }}
-                      aria-label={`${bin.count} ${bin.count === 1 ? "bus" : "buses"} up to ${formatMoney(Math.round(bin.end))}`}
+                      aria-label={`${bin.count} ${bin.count === 1 ? "bus" : "buses"} up to ${money(Math.round(bin.end))}`}
                       onClick={() => setQuery((current) => ({ ...current, min: null, max: bin.end >= hi ? null : Math.round(bin.end) }))}
                     />
                   );
@@ -474,7 +475,7 @@ export function BusCatalog({ routes, initial }: { routes: BusListItem[]; initial
                 <input type="range" min={lo} max={hi} step={span > 500 ? 50 : 10} aria-label="Minimum fare" value={min} onChange={(event) => onPrice("min", Number(event.target.value))} />
                 <input type="range" min={lo} max={hi} step={span > 500 ? 50 : 10} aria-label="Maximum fare" value={max} onChange={(event) => onPrice("max", Number(event.target.value))} />
               </div>
-              <p className="hint">{priced ? `Listed fares in this band are ${formatMoney(min)} – ${formatMoney(max)}.` : "Drag either end. Fares are indicative."}</p>
+              <p className="hint">{priced ? `Listed fares in this band are ${money(min)} – ${money(max)}.` : "Drag either end. Fares are indicative."}</p>
             </fieldset>
           ) : null}
           <fieldset>
@@ -662,7 +663,7 @@ export function BusCatalog({ routes, initial }: { routes: BusListItem[]; initial
                       </div>
                       <div className="bus-run-card__pay">
                         <div>
-                          <b className={route.fareFrom ? undefined : "is-ask"}>{route.fareFrom ? formatMoney(route.fareFrom) : "On request"}</b>
+                          <b className={route.fareFrom ? undefined : "is-ask"}>{route.fareFrom ? money(route.fareFrom) : "On request"}</b>
                           <small>Indicative fare</small>
                         </div>
                         <Link prefetch={false} className="bus-btn" href={href}>

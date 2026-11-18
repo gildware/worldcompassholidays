@@ -6261,11 +6261,129 @@ a.rental-related__book:hover {
   white-space: nowrap;
 }
 
+.worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+  list-style: none;
+}
+
+.worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-measure > li > span,
+.worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-more__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-more__btn.is-current {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1px;
+}
+
+.worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-more__panel {
+  position: fixed;
+  z-index: 1200;
+  min-width: 220px;
+  margin: 0;
+  padding: 8px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(5, 16, 54, 0.18);
+}
+
+.worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-more__panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-more__panel a {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: auto;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #051036;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-more__panel a:hover,
+.worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-more__panel a[aria-current="page"] {
+  background: rgba(53, 84, 209, 0.08);
+  color: #3554d1;
+}
+
 @media (min-width: 1200px) {
-  .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-menu .menu__nav > li > a {
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .row > .header-lead {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+  }
+
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-lead__inner {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-logo {
+    flex: 0 0 auto;
+  }
+
+  html[dir="rtl"] .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-logo {
+    margin-right: 0 !important;
+    margin-left: 20px !important;
+  }
+
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-menu {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-menu .menu__nav {
+    flex-wrap: nowrap;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-menu .menu__nav > li > a,
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-measure > li > span,
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-more__btn {
     padding-right: 11px;
     padding-left: 11px;
     font-size: 15px;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-more {
+    display: flex;
+    align-items: center;
+    padding-top: 25px;
+    padding-bottom: 25px;
   }
 }
 
@@ -6275,7 +6393,9 @@ a.rental-related__book:hover {
     padding-left: 16px !important;
   }
 
-  .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-menu .menu__nav > li > a {
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .header-menu .menu__nav > li > a,
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-measure > li > span,
+  .worldcompassholiday-page.worldcompassholiday-header-scope .header .nav-more__btn {
     padding-right: 7px;
     padding-left: 7px;
     font-size: 14px;

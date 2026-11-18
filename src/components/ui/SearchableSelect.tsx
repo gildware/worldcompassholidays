@@ -289,7 +289,7 @@ export function SearchableSelect({
                   "flex w-full items-center gap-3 px-3 py-2 text-sm",
                   option.action
                     ? "justify-center text-center font-semibold text-[#3554d1]"
-                    : "justify-between text-left",
+                    : "justify-between text-start",
                   active ? "bg-brand-soft" : "hover:bg-surface",
                   option.action ? "" : chosen ? "font-medium text-navy" : "text-foreground",
                 ].join(" ")}
@@ -423,7 +423,7 @@ export function SearchableSelect({
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onTriggerKeyDown}
         className={[
-          "flex h-11 w-full items-center justify-between gap-2 rounded-lg border bg-white px-3 text-left text-sm",
+          "flex h-11 w-full items-center justify-between gap-2 rounded-lg border bg-white px-3 text-start text-sm",
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-60",
           invalid
@@ -650,7 +650,7 @@ export function MultiSearchableSelect({
                 role="option"
                 aria-selected={chosen}
                 className={[
-                  "flex w-full items-center gap-2 px-3 py-2 text-left text-sm",
+                  "flex w-full items-center gap-2 px-3 py-2 text-start text-sm",
                   active ? "bg-brand-soft" : "hover:bg-surface",
                   chosen ? "font-medium text-navy" : "text-foreground",
                 ].join(" ")}
@@ -768,7 +768,7 @@ export function MultiSearchableSelect({
           }
         }}
         className={[
-          "flex min-h-10 w-full cursor-pointer items-center gap-2 rounded-lg border bg-white px-2 py-1.5 text-left text-sm",
+          "flex min-h-10 w-full cursor-pointer items-center gap-2 rounded-lg border bg-white px-2 py-1.5 text-start text-sm",
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
           invalid
             ? "border-red-500"

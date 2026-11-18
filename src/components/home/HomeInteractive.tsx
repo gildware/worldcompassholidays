@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useCopy, useFormatMoney, useFormatNumber } from "@/components/i18n/I18nProvider";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { usePhotoSwipe } from "@/hooks/usePhotoSwipe";
 import type { FavoriteKind } from "@/lib/favorite-kinds";
-import { formatMoney } from "@/lib/format";
 import "./home-interactive.css";
 
 function useCalm() {
@@ -281,6 +281,9 @@ function HomeStayMedia({
 
 export function HomeStayGrid({ stays }: { stays: HomeStayCard[] }) {
   const calm = useCalm();
+  const t = useCopy();
+  const money = useFormatMoney();
+  const countLabel = useFormatNumber();
   const [photos, setPhotos] = useState<Record<string, number>>({});
   const [nights, setNights] = useState<Record<string, number>>({});
   const [broken, setBroken] = useState<Record<string, boolean>>({});
@@ -302,7 +305,8 @@ export function HomeStayGrid({ stays }: { stays: HomeStayCard[] }) {
           const index = photos[stay.id] ?? 0;
           const many = shots.length > 1 && Boolean(shots[0]);
           const count = nights[stay.id] ?? 1;
-          const word = starWord(stay.stars);
+          const label = starWord(stay.stars);
+          const word = label ? t(label) : "";
           return (
             <article key={stay.id} className="hic-stay">
               <HomeStayMedia
@@ -331,7 +335,7 @@ export function HomeStayGrid({ stays }: { stays: HomeStayCard[] }) {
                       −
                     </button>
                     <span>
-                      {count} night{count === 1 ? "" : "s"}
+                      {countLabel(count)} {t(count === 1 ? "night" : "nights")}
                     </span>
                     <button
                       type="button"
@@ -348,23 +352,23 @@ export function HomeStayGrid({ stays }: { stays: HomeStayCard[] }) {
                     {stay.priceFrom > 0 ? (
                       count === 1 ? (
                         <>
-                          <strong>{formatMoney(stay.priceFrom, stay.currency || "INR")}</strong>{" "}
-                          <small>/ night</small>
+                          <strong>{money(stay.priceFrom, stay.currency || "INR")}</strong>{" "}
+                          <small>{t("/ night")}</small>
                         </>
                       ) : (
                         <>
-                          <strong>{formatMoney(stay.priceFrom * count, stay.currency || "INR")}</strong>{" "}
+                          <strong>{money(stay.priceFrom * count, stay.currency || "INR")}</strong>{" "}
                           <small>
-                            total · {formatMoney(stay.priceFrom, stay.currency || "INR")} / night
+                            {t("total")} · {money(stay.priceFrom, stay.currency || "INR")} {t("/ night")}
                           </small>
                         </>
                       )
                     ) : (
-                      <strong>Price on request</strong>
+                      <strong>{t("Price on request")}</strong>
                     )}
                   </p>
                   <Link prefetch={false} href={stay.href} className="hic-btn">
-                    View
+                    {t("View")}
                   </Link>
                 </div>
               </div>
@@ -395,6 +399,7 @@ export function HomeFlipGrid({
   tours: HomeFlipCard[];
 }) {
   const calm = useCalm();
+  const t = useCopy();
   const [flipped, setFlipped] = useState<Record<string, boolean>>({});
   if (!tours.length) return null;
 
@@ -428,10 +433,10 @@ export function HomeFlipGrid({
                       <p className="hic-price">
                         {tour.price ? (
                           <>
-                            <strong>{tour.price}</strong> <small>/ person</small>
+                            <strong>{tour.price}</strong> <small>{t("/ person")}</small>
                           </>
                         ) : (
-                          <strong>Price on request</strong>
+                          <strong>{t("Price on request")}</strong>
                         )}
                       </p>
                       <button
@@ -443,7 +448,7 @@ export function HomeFlipGrid({
                           setFlipped((current) => ({ ...current, [tour.id]: true }));
                         }}
                       >
-                        See plan
+                        {t("See plan")}
                       </button>
                     </div>
                   </div>
@@ -460,14 +465,14 @@ export function HomeFlipGrid({
                   ) : null}
                   <div className="hic-flip__actions">
                     <Link prefetch={false} href={tour.href} className="hic-btn">
-                      View tour
+                      {t("View tour")}
                     </Link>
                     <button
                       type="button"
                       className="hic-btn hic-btn--ghost"
                       onClick={() => setFlipped((current) => ({ ...current, [tour.id]: false }))}
                     >
-                      Flip back
+                      {t("Flip back")}
                     </button>
                   </div>
                 </article>
@@ -494,6 +499,7 @@ export type HomeDealCard = {
 };
 
 export function HomeDealList({ items }: { items: HomeDealCard[] }) {
+  const t = useCopy();
   const calm = useCalm();
   if (!items.length) return null;
 
@@ -508,14 +514,14 @@ export function HomeDealList({ items }: { items: HomeDealCard[] }) {
             </div>
             <div className="hic-deal__body">
               <h3>{deal.title}</h3>
-              {deal.meta ? <p className="hic-note">{deal.meta}</p> : <p className="hic-note">City to city</p>}
-              <p className="hic-deal__extra">{deal.detail || "Indicative fare. Ask before you pay."}</p>
+              {deal.meta ? <p className="hic-note">{deal.meta}</p> : <p className="hic-note">{t("City to city")}</p>}
+              <p className="hic-deal__extra">{deal.detail || t("Indicative fare. Ask before you pay.")}</p>
               <div className="hic-deal__foot">
                 <p className="hic-price">
                   <strong>{deal.price}</strong> {deal.unit ? <small>{deal.unit}</small> : null}
                 </p>
                 <Link prefetch={false} href={deal.href} className="hic-btn">
-                  {deal.cta || "Hold"}
+                  {deal.cta || t("Hold")}
                 </Link>
               </div>
             </div>

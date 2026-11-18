@@ -22,13 +22,14 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 72% center;
+  object-position: center;
+  filter: brightness(0.32) saturate(0.75);
 }
 
 .worldcompassholiday-page .assist-hero-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(5, 16, 54, 0.92) 0%, rgba(5, 16, 54, 0.72) 38%, rgba(5, 16, 54, 0.18) 72%);
+  background: rgba(5, 16, 54, 0.72);
 }
 
 .worldcompassholiday-page .assist-hero-copy {
@@ -715,9 +716,6 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .worldcompassholiday-page .assist-hero-shade {
-    background: linear-gradient(180deg, rgba(5, 16, 54, 0.35) 0%, rgba(5, 16, 54, 0.88) 70%);
-  }
 }
 
 @media (max-width: 700px) {

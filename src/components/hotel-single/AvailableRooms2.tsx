@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { HotelRoomCard } from "@/components/hotel-single/types";
-import { formatMoney } from "@/lib/format";
+import { useFormatMoney } from "@/components/i18n/I18nProvider";
 
 function reserveHref(hotelName: string, location: string, roomName: string, count: number) {
   const params = new URLSearchParams({
@@ -27,6 +27,7 @@ function RoomBlock({
   hotelName: string;
   location: string;
 }) {
+  const money = useFormatMoney();
   const [count, setCount] = useState(1);
   const options = Math.max(1, room.quantity);
   const features = room.features.slice(0, 4);
@@ -74,7 +75,7 @@ function RoomBlock({
               const amount = index + 1;
               return (
                 <option key={amount} value={amount}>
-                  {amount} ({formatMoney(room.price * amount, room.currency)})
+                  {amount} ({money(room.price * amount, room.currency)})
                 </option>
               );
             })}
@@ -84,7 +85,7 @@ function RoomBlock({
           <div className="room-card__for">
             {count} room{count === 1 ? "" : "s"} for
           </div>
-          <div className="room-card__amount">{formatMoney(room.price * count, room.currency)}</div>
+          <div className="room-card__amount">{money(room.price * count, room.currency)}</div>
           <Link
             href={reserveHref(hotelName, location, room.name, count)}
             className="button room-card__reserve -dark-1 bg-blue-1 text-white"

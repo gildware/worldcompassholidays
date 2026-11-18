@@ -1,6 +1,8 @@
 import "server-only";
 import { modules } from "@/config/modules";
 import { prisma } from "@/lib/db";
+import { getUserLocale } from "@/i18n/get-locale";
+import { loadCopyMap, withHotelCopy, withNameCopy, withPlaceCopy, withTourCopy, withVehicleCopy } from "@/lib/i18n/content";
 import { type FavoriteCard, type FavoriteKind, isFavoriteKind } from "@/lib/favorite-kinds";
 import { formatMoney } from "@/lib/format";
 import { propertyTypeLabel } from "@/lib/hotels/options";
@@ -77,8 +79,10 @@ export async function listFavoriteCards(userId: string): Promise<FavoriteCard[]>
         featuredImageUrl: true,
         priceFrom: true,
         currency: true,
+        summary: true,
+        description: true,
         category: true,
-        destination: { select: { name: true } },
+        destination: { select: { id: true, name: true, summary: true } },
       },
     }),
     prisma.hotel.findMany({
@@ -92,7 +96,7 @@ export async function listFavoriteCards(userId: string): Promise<FavoriteCard[]>
         priceFrom: true,
         currency: true,
         propertyType: true,
-        destination: { select: { name: true } },
+        destination: { select: { id: true, name: true, summary: true } },
       },
     }),
     prisma.vehicle.findMany({
@@ -105,16 +109,63 @@ export async function listFavoriteCards(userId: string): Promise<FavoriteCard[]>
         pricePerDay: true,
         currency: true,
         brand: true,
-        destination: { select: { name: true } },
-        vehicleType: { select: { name: true } },
+        destination: { select: { id: true, name: true, summary: true } },
+        vehicleType: { select: { id: true, name: true } },
         images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
       },
     }),
   ]);
 
-  const toursById = new Map(tours.map((tour) => [tour.id, tour]));
-  const hotelsById = new Map(hotels.map((hotel) => [hotel.id, hotel]));
-  const vehiclesById = new Map(vehicles.map((vehicle) => [vehicle.id, vehicle]));
+  const locale = await getUserLocale();
+  const [tourCopies, placeCopies, hotelCopies, vehicleCopies, configCopies] = await Promise.all([
+    loadCopyMap("tour", tours.map((tour) => tour.id), locale),
+    loadCopyMap(
+      "destination",
+      [
+        ...tours.flatMap((tour) => (tour.destination ? [tour.destination.id] : [])),
+        ...hotels.flatMap((hotel) => (hotel.destination ? [hotel.destination.id] : [])),
+        ...vehicles.flatMap((vehicle) => (vehicle.destination ? [vehicle.destination.id] : [])),
+      ],
+      locale,
+    ),
+    loadCopyMap("hotel", hotels.map((hotel) => hotel.id), locale),
+    loadCopyMap("vehicle", vehicles.map((vehicle) => vehicle.id), locale),
+    loadCopyMap(
+      "rentalConfig",
+      vehicles.flatMap((vehicle) => (vehicle.vehicleType ? [vehicle.vehicleType.id] : [])),
+      locale,
+    ),
+  ]);
+  const toursById = new Map(
+    tours.map((tour) => {
+      const localized = withTourCopy(tour, tourCopies.get(tour.id));
+      const destination = tour.destination
+        ? withPlaceCopy(tour.destination, placeCopies.get(tour.destination.id))
+        : null;
+      return [tour.id, { ...localized, destination }] as const;
+    }),
+  );
+  const hotelsById = new Map(
+    hotels.map((hotel) => {
+      const localized = withHotelCopy({ ...hotel, summary: "", description: "" }, hotelCopies.get(hotel.id));
+      const destination = hotel.destination
+        ? withPlaceCopy(hotel.destination, placeCopies.get(hotel.destination.id))
+        : null;
+      return [hotel.id, { ...localized, destination }] as const;
+    }),
+  );
+  const vehiclesById = new Map(
+    vehicles.map((vehicle) => {
+      const localized = withVehicleCopy(vehicle, vehicleCopies.get(vehicle.id));
+      const destination = vehicle.destination
+        ? withPlaceCopy(vehicle.destination, placeCopies.get(vehicle.destination.id))
+        : null;
+      const vehicleType = vehicle.vehicleType
+        ? withNameCopy(vehicle.vehicleType, configCopies.get(vehicle.vehicleType.id))
+        : null;
+      return [vehicle.id, { ...localized, destination, vehicleType }] as const;
+    }),
+  );
   const stale: string[] = [];
   const cards: FavoriteCard[] = [];
 
@@ -135,7 +186,7 @@ export async function listFavoriteCards(userId: string): Promise<FavoriteCard[]>
         href: `/tours/${tour.slug}`,
         image: firstImage(tour.featuredImageUrl, tour.imageUrl),
         meta: place || "Tour",
-        price: tour.priceFrom > 0 ? `From ${formatMoney(tour.priceFrom, tour.currency || "INR")}` : "",
+        price: tour.priceFrom > 0 ? `From ${formatMoney(tour.priceFrom, tour.currency || "INR", locale)}` : "",
       });
       continue;
     }
@@ -153,7 +204,7 @@ export async function listFavoriteCards(userId: string): Promise<FavoriteCard[]>
         href: `/hotels/${hotel.slug}`,
         image: firstImage(hotel.featuredImageUrl, hotel.imageUrl),
         meta: [hotel.destination?.name, propertyTypeLabel(hotel.propertyType)].filter(Boolean).join(" · ") || "Hotel",
-        price: hotel.priceFrom > 0 ? `${formatMoney(hotel.priceFrom, hotel.currency || "INR")} / night` : "",
+        price: hotel.priceFrom > 0 ? `${formatMoney(hotel.priceFrom, hotel.currency || "INR", locale)} / night` : "",
       });
       continue;
     }
@@ -170,7 +221,7 @@ export async function listFavoriteCards(userId: string): Promise<FavoriteCard[]>
       href: `/rentals/${vehicle.slug}`,
       image: vehicle.images[0]?.url ?? "",
       meta: [vehicle.destination?.name, vehicle.vehicleType?.name || vehicle.brand].filter(Boolean).join(" · "),
-      price: vehicle.pricePerDay > 0 ? `${formatMoney(vehicle.pricePerDay, vehicle.currency || "INR")} / day` : "",
+      price: vehicle.pricePerDay > 0 ? `${formatMoney(vehicle.pricePerDay, vehicle.currency || "INR", locale)} / day` : "",
     });
   }
 

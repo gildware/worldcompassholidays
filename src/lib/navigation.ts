@@ -23,30 +23,56 @@ const moduleHrefs: Record<ModuleKey, string> = {
   buses: "/buses",
 };
 
-const publicModuleLabels: Record<ModuleKey, string> = {
+export type PublicNavLabels = {
+  home: string;
+  destinations: string;
+  tours: string;
+  hotels: string;
+  cars: string;
+  bikes: string;
+  buses: string;
+  visa: string;
+  meet: string;
+  contact: string;
+};
+
+const fallbackNav: PublicNavLabels = {
+  home: "Home",
+  destinations: "Destinations",
   tours: "Plan a tour",
   hotels: "Find a stay",
   cars: "Rent a car",
   bikes: "Rent a bike",
   buses: "Find a bus",
+  visa: "Apply for a visa",
+  meet: "Request a greeter",
+  contact: "Send an enquiry",
 };
 
-export function getPublicNav(): NavItem[] {
+const moduleLabelKey: Record<ModuleKey, keyof PublicNavLabels> = {
+  tours: "tours",
+  hotels: "hotels",
+  cars: "cars",
+  bikes: "bikes",
+  buses: "buses",
+};
+
+export function getPublicNav(labels: PublicNavLabels = fallbackNav): NavItem[] {
   const items: NavItem[] = [
-    { href: "/", label: "Home" },
-    { href: "/destinations", label: "Destinations" },
+    { href: "/", label: labels.home },
+    { href: "/destinations", label: labels.destinations },
   ];
 
   (Object.keys(modules) as ModuleKey[]).forEach((key) => {
     if (!modules[key]) return;
     const href = moduleHrefs[key];
     if (items.some((item) => item.href === href)) return;
-    items.push({ href, label: publicModuleLabels[key] });
+    items.push({ href, label: labels[moduleLabelKey[key]] });
   });
 
-  items.push({ href: "/visa-services", label: "Apply for a visa" });
-  items.push({ href: "/meet-and-assist", label: "Request a greeter" });
-  items.push({ href: "/contact", label: "Send an enquiry" });
+  items.push({ href: "/visa-services", label: labels.visa });
+  items.push({ href: "/meet-and-assist", label: labels.meet });
+  items.push({ href: "/contact", label: labels.contact });
   return items;
 }
 
@@ -185,6 +211,12 @@ const adminNav: (NavItem & {
     {
       href: "/admin/home",
       label: "Homepage",
+      permission: "staff.manage",
+      enabled: true,
+    },
+    {
+      href: "/admin/languages",
+      label: "Languages",
       permission: "staff.manage",
       enabled: true,
     },

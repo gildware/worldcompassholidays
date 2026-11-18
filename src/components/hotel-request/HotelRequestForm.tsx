@@ -6,7 +6,9 @@ import type { FirebaseOptions } from "firebase/app";
 import { submitHotelRequest } from "@/actions/hotel-request";
 import { RequestPhoneVerify } from "@/components/auth/RequestPhoneVerify";
 import { formatPhone, canonicalPhone } from "@/lib/auth/phone";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { DateMenu, prettyStayDate } from "@/components/hotel-list/stay-list/HotelStayList";
+import type { Locale } from "@/i18n/locales";
 import { deferGuideStep, GuideProgress, RequestSuccessStep } from "@/components/service-request/guide-ui";
 import { SearchableSelect, type SelectOption } from "@/components/ui/SearchableSelect";
 import {
@@ -185,6 +187,7 @@ export function HotelRequestForm({
   firebaseConfig?: FirebaseOptions | null;
   defaultCountry?: string;
 }) {
+  const { locale } = useI18n();
   const [state, action, pending] = useActionState(submitHotelRequest, initialFormState);
   const [whatsappState, setWhatsappState] = useState<FormState | null>(null);
   const [whatsappPending, setWhatsappPending] = useState(false);
@@ -735,7 +738,7 @@ export function HotelRequestForm({
                 <ReviewLine label="Destination" icon="pin" value={destinationValue || "Not provided"} />
                 {hotelName ? <ReviewLine label="Preferred hotel" icon="hotel" value={hotelName} /> : null}
                 {area ? <ReviewLine label="Area" icon="area" value={area} /> : null}
-                <ReviewLine label="Dates" icon="calendar" value={`${prettyDate(checkIn)} – ${prettyDate(checkOut)}${nightCount(checkIn, checkOut) ? ` · ${nightCount(checkIn, checkOut)} nights` : ""}`} />
+                <ReviewLine label="Dates" icon="calendar" value={`${prettyDate(checkIn, locale)} – ${prettyDate(checkOut, locale)}${nightCount(checkIn, checkOut) ? ` · ${nightCount(checkIn, checkOut)} nights` : ""}`} />
                 <ReviewLine label="Guests" icon="adults" value={`${adults} adults · ${children} ${children === 1 ? "child" : "children"}${children ? ` (${childAges.join(", ")} years)` : ""} · ${rooms} ${rooms === 1 ? "room" : "rooms"}`} />
               </ReviewSection>
               <ReviewSection title="Stay preferences" icon="comfortable" onEdit={() => setStep(1)}>
@@ -840,9 +843,9 @@ function ReviewLine({ label, icon, value }: { label: string; icon: string; value
   return <div className="hotel-guide-review-line"><dt><Glyph name={icon} />{label}</dt><dd>{value}</dd></div>;
 }
 
-function prettyDate(iso: string) {
+function prettyDate(iso: string, locale: Locale) {
   if (!iso) return "Not selected";
-  return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${iso}T00:00:00`));
+  return prettyStayDate(iso, locale);
 }
 
 function ChoiceRow({
@@ -1016,6 +1019,7 @@ function StayDateField({
   error?: string;
   onPick: (iso: string) => void;
 }) {
+  const { locale } = useI18n();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -1072,7 +1076,7 @@ function StayDateField({
             aria-describedby={error ? `${name}-error` : undefined}
             onClick={() => setOpen((current) => !current)}
           >
-            <strong>{value ? prettyStayDate(value) : "Select date"}</strong>
+            <strong>{value ? prettyStayDate(value, locale) : "Select date"}</strong>
           </button>
           {open && pos && typeof document !== "undefined" ? createPortal(
             <div className="stay-list hr-cal-pop" style={{ top: pos.top, bottom: pos.bottom, left: pos.left }} data-picker>

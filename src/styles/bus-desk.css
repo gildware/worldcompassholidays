@@ -912,14 +912,14 @@ button.bus-chip {
 }
 
 .bus-ticks li {
-  padding-left: 18px;
+  padding-inline-start: 18px;
   position: relative;
 }
 
 .bus-ticks li::before {
   content: "";
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 0.55em;
   width: 8px;
   height: 8px;

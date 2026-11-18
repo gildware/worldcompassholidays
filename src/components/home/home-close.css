@@ -297,16 +297,18 @@
   align-items: start;
   margin: 0;
   padding: 22px 20px 4px 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  padding-inline-end: 20px;
+  padding-inline-start: 0;
+  border-inline-end: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .home-invite__steps li:last-child {
-  border-right: 0;
-  padding-right: 0;
+  border-inline-end: 0;
+  padding-inline-end: 0;
 }
 
 .home-invite__steps li:not(:first-child) {
-  padding-left: 20px;
+  padding-inline-start: 20px;
 }
 
 .home-invite__step-num {
@@ -420,7 +422,7 @@
 
   .home-invite__actions {
     align-items: flex-start;
-    text-align: left;
+    text-align: start;
   }
 
   .home-invite__steps {

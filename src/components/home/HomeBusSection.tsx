@@ -1,6 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { HomeBusScene } from "@/components/home/HomeBusScene";
-import { formatMoney } from "@/lib/format";
+import { useFormatMoney } from "@/components/i18n/I18nProvider";
 import "@/components/home/home-bus.css";
 
 export type HomeBus = {
@@ -61,9 +63,10 @@ export function HomeBusRequestCard() {
 }
 
 function HomeBusRunCard({ bus }: { bus: HomeBus }) {
+  const money = useFormatMoney();
   const from = bus.fromCity || "From";
   const to = bus.toCity || "To";
-  const fare = bus.fareFrom > 0 ? formatMoney(bus.fareFrom) : "On request";
+  const fare = bus.fareFrom > 0 ? money(bus.fareFrom) : "On request";
 
   return (
     <Link prefetch={false} href={`/buses/${bus.slug}`} className="hb-run">

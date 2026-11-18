@@ -11,6 +11,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveTour } from "@/actions/tours";
 import { HtmlEditor } from "@/components/admin/HtmlEditor";
+import { LanguageTabs } from "@/components/admin/LanguageTabs";
+import type { Locale } from "@/i18n/locales";
+import { copyFilled, type CopyMap } from "@/lib/i18n/content";
 import {
   imageFromFields,
   type TourFormValues,
@@ -401,14 +404,34 @@ function CatalogMultiSelect({
   );
 }
 
+const translatedTourFields = new Set([
+  "title",
+  "summary",
+  "description",
+  "seoTitle",
+  "seoDescription",
+  "facebookTitle",
+  "facebookDescription",
+  "twitterTitle",
+  "twitterDescription",
+  "itinerary",
+  "extraFaqs",
+]);
+
+function textValue(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
 export function TourTabsForm({
   tour,
   destinations,
   catalog,
+  translations = {},
 }: {
   tour?: TourFormValues;
   destinations: TourDestinationOption[];
   catalog: TourCatalog;
+  translations?: CopyMap;
 }) {
   const isEdit = Boolean(tour);
   const seoImageEdited = useRef(
@@ -420,6 +443,8 @@ export function TourTabsForm({
   );
   const router = useRouter();
   const [step, setStep] = useState(0);
+  const [locale, setLocale] = useState<Locale>("en");
+  const [copies, setCopies] = useState<CopyMap>(translations);
   const [draft, setDraft] = useState<Draft>(() => {
     const initial = buildDraft(tour, catalog);
     const pin = destinationPin(initial, initial.destinationId, destinations);
@@ -497,11 +522,60 @@ export function TourTabsForm({
   }
 
   function patch<K extends keyof Draft>(key: K, value: Draft[K]) {
+    if (locale !== "en" && translatedTourFields.has(String(key))) {
+      setCopies((current) => ({
+        ...current,
+        [locale]: { ...(current[locale] ?? {}), [key]: value },
+      }));
+      clearFieldError(String(key));
+      return;
+    }
     setDraft((current) => ({ ...current, [key]: value }));
     clearFieldError(String(key));
   }
 
+  const copy = copies[locale] ?? {};
+  const view: Draft = locale === "en"
+    ? draft
+    : {
+        ...draft,
+        title: textValue(copy.title),
+        summary: textValue(copy.summary),
+        description: textValue(copy.description),
+        seoTitle: textValue(copy.seoTitle),
+        seoDescription: textValue(copy.seoDescription),
+        facebookTitle: textValue(copy.facebookTitle),
+        facebookDescription: textValue(copy.facebookDescription),
+        twitterTitle: textValue(copy.twitterTitle),
+        twitterDescription: textValue(copy.twitterDescription),
+        itinerary: draft.itinerary.map((day) => {
+          const days = Array.isArray(copy.itinerary) ? (copy.itinerary as ItineraryItem[]) : [];
+          const translated = days.find((row) => row.dayNumber === day.dayNumber);
+          return {
+            ...day,
+            title: translated?.title ?? "",
+            description: translated?.description ?? "",
+            morning: translated?.morning ?? "",
+            afternoon: translated?.afternoon ?? "",
+            evening: translated?.evening ?? "",
+          };
+        }),
+        extraFaqs: draft.extraFaqs.map((faq, index) => {
+          const faqs = Array.isArray(copy.extraFaqs)
+            ? (copy.extraFaqs as { title?: string; content?: string }[])
+            : [];
+          return {
+            title: faqs[index]?.title ?? "",
+            content: faqs[index]?.content ?? "",
+          };
+        }),
+      };
+
   function patchTitle(value: string) {
+    if (locale !== "en") {
+      patch("title", value);
+      return;
+    }
     setDraft((current) => ({
       ...current,
       title: value,
@@ -517,6 +591,10 @@ export function TourTabsForm({
   }
 
   function patchSummary(value: string) {
+    if (locale !== "en") {
+      patch("summary", value);
+      return;
+    }
     setDraft((current) => ({
       ...current,
       summary: value,
@@ -796,6 +874,7 @@ export function TourTabsForm({
     formData.set("galleryJson", JSON.stringify(draft.gallery));
     formData.set("travelStylesJson", JSON.stringify(draft.travelStyles));
     formData.set("facilitiesJson", JSON.stringify(draft.facilities));
+    formData.set("translationsJson", JSON.stringify(copies));
     if (publish) formData.set("published", "on");
     if (draft.seoIndex) formData.set("seoIndex", "on");
 
@@ -887,10 +966,20 @@ export function TourTabsForm({
   }
 
   function updateItinerary(index: number, next: Partial<ItineraryItem>) {
-    patch(
-      "itinerary",
-      draft.itinerary.map((row, i) => (i === index ? { ...row, ...next } : row)),
+    const textOnly = Object.keys(next).every((key) =>
+      ["title", "description", "morning", "afternoon", "evening"].includes(key),
     );
+    if (locale !== "en" && textOnly) {
+      patch(
+        "itinerary",
+        view.itinerary.map((row, i) => (i === index ? { ...row, ...next } : row)),
+      );
+      return;
+    }
+    setDraft((current) => ({
+      ...current,
+      itinerary: current.itinerary.map((row, i) => (i === index ? { ...row, ...next } : row)),
+    }));
   }
 
   function addItineraryItem() {
@@ -934,7 +1023,23 @@ export function TourTabsForm({
 
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 overflow-hidden">
-      <div className="shrink-0">
+      <div className="shrink-0 space-y-2">
+        <LanguageTabs
+          locale={locale}
+          onChange={setLocale}
+          filled={{
+            fr: copyFilled(copies.fr),
+            hi: copyFilled(copies.hi),
+            he: copyFilled(copies.he),
+            ar: copyFilled(copies.ar),
+            ur: copyFilled(copies.ur),
+          }}
+        />
+        {locale !== "en" ? (
+          <p className="text-xs text-muted">
+            Optional. A blank field stays in English on the site. Price, dates, and photos are shared.
+          </p>
+        ) : null}
         <Stepper current={step} onJump={jumpTo} />
       </div>
 
@@ -983,10 +1088,10 @@ export function TourTabsForm({
                 error={fieldErrors.title}
               >
                 <input
-                  value={draft.title}
+                  value={view.title}
                   onChange={(e) => patchTitle(e.target.value)}
                   className="!h-10"
-                  placeholder="Title"
+                  placeholder={locale === "en" ? "Title" : draft.title || "Title"}
                   aria-invalid={Boolean(fieldErrors.title)}
                 />
               </Field>
@@ -998,7 +1103,8 @@ export function TourTabsForm({
                 error={fieldErrors.summary}
               >
                 <textarea
-                  value={draft.summary}
+                  value={view.summary}
+                  placeholder={locale === "en" ? undefined : draft.summary}
                   onChange={(e) => patchSummary(e.target.value)}
                   rows={3}
                   className="!min-h-0 resize-y"
@@ -1218,16 +1324,18 @@ export function TourTabsForm({
                   <p className="text-xs text-muted">
                     Add as many stops as you need. The number does not have to match the duration.
                   </p>
-                  <Button type="button" size="sm" variant="secondary" onClick={addItineraryItem}>
-                    Add new itinerary item
-                  </Button>
+                  {locale === "en" ? (
+                    <Button type="button" size="sm" variant="secondary" onClick={addItineraryItem}>
+                      Add new itinerary item
+                    </Button>
+                  ) : null}
                 </div>
-                {draft.itinerary.length === 0 ? (
+                {view.itinerary.length === 0 ? (
                   <p className="rounded-md border border-dashed border-line px-3 py-6 text-center text-xs text-muted">
                     No itinerary items yet.
                   </p>
                 ) : (
-                  draft.itinerary.map((item, index) => {
+                  view.itinerary.map((item, index) => {
                     const image =
                       item.imageUrl && item.imageKey
                         ? {
@@ -1245,6 +1353,7 @@ export function TourTabsForm({
                         className="rounded-md border border-line"
                       >
                         <div className="flex justify-end px-3 pt-3">
+                          {locale === "en" ? (
                           <button
                             type="button"
                             className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
@@ -1266,6 +1375,7 @@ export function TourTabsForm({
                             </svg>
                             Remove itinerary item
                           </button>
+                          ) : null}
                         </div>
                         <div className="grid items-start gap-4 p-3 sm:grid-cols-[11rem_minmax(0,1fr)]">
                         <ImageUploader
@@ -1288,7 +1398,7 @@ export function TourTabsForm({
                           <Field label="Title">
                             <input
                               value={item.title}
-                              placeholder="Title"
+                              placeholder={locale === "en" ? "Title" : draft.itinerary[index]?.title || "Title"}
                               className="!h-10"
                               onChange={(e) =>
                                 updateItinerary(index, { title: e.target.value })
@@ -1300,7 +1410,11 @@ export function TourTabsForm({
                               <textarea
                                 value={item[key] ?? ""}
                                 rows={2}
-                                placeholder={`What happens in the ${label.toLowerCase()}`}
+                                placeholder={
+                                  locale === "en"
+                                    ? `What happens in the ${label.toLowerCase()}`
+                                    : draft.itinerary[index]?.[key] || `What happens in the ${label.toLowerCase()}`
+                                }
                                 className="!min-h-0 resize-y"
                                 onChange={(e) =>
                                   updateItinerary(index, {
@@ -1346,7 +1460,7 @@ export function TourTabsForm({
                 Format the story with the editor, or use Source to paste HTML and styles.
               </p>
               <HtmlEditor
-                value={draft.description}
+                value={view.description}
                 onChange={(html) => patch("description", html)}
               />
             </div>
@@ -1554,6 +1668,7 @@ export function TourTabsForm({
                     type="button"
                     size="sm"
                     variant="secondary"
+                    className={locale === "en" ? undefined : "hidden"}
                     onClick={() =>
                       patch("extraFaqs", [
                         { title: "", content: "" },
@@ -1564,13 +1679,14 @@ export function TourTabsForm({
                     Add FAQ
                   </Button>
                 </div>
-                {draft.extraFaqs.length === 0 ? (
+                {view.extraFaqs.length === 0 ? (
                   <p className="text-xs text-muted">
                     Shared FAQs come from the list above. Add a question here when it only applies to this tour.
                   </p>
                 ) : (
-                  draft.extraFaqs.map((item, index) => (
+                  view.extraFaqs.map((item, index) => (
                     <div key={index} className="grid gap-3 rounded-lg border border-line p-3">
+                      {locale === "en" ? (
                       <div className="flex justify-end">
                         <button
                           type="button"
@@ -1578,20 +1694,21 @@ export function TourTabsForm({
                           onClick={() =>
                             patch(
                               "extraFaqs",
-                              draft.extraFaqs.filter((_, itemIndex) => itemIndex !== index),
+                              view.extraFaqs.filter((_, itemIndex) => itemIndex !== index),
                             )
                           }
                         >
                           Remove
                         </button>
                       </div>
+                      ) : null}
                       <Field label="Question">
                         <input
                           value={item.title}
                           onChange={(event) =>
                             patch(
                               "extraFaqs",
-                              draft.extraFaqs.map((faq, itemIndex) =>
+                              view.extraFaqs.map((faq, itemIndex) =>
                                 itemIndex === index
                                   ? { ...faq, title: event.target.value }
                                   : faq,
@@ -1608,7 +1725,7 @@ export function TourTabsForm({
                           onChange={(event) =>
                             patch(
                               "extraFaqs",
-                              draft.extraFaqs.map((faq, itemIndex) =>
+                              view.extraFaqs.map((faq, itemIndex) =>
                                 itemIndex === index
                                   ? { ...faq, content: event.target.value }
                                   : faq,
@@ -1840,10 +1957,10 @@ export function TourTabsForm({
                     error={fieldErrors.seoTitle}
                   >
                     <input
-                      value={draft.seoTitle}
+                      value={view.seoTitle}
+                      placeholder={locale === "en" ? "Title shown in search results" : draft.seoTitle || "Title shown in search results"}
                       onChange={(e) => patch("seoTitle", e.target.value)}
                       className="!h-10"
-                      placeholder="Title shown in search results"
                       aria-invalid={Boolean(fieldErrors.seoTitle)}
                     />
                   </Field>
@@ -1854,7 +1971,8 @@ export function TourTabsForm({
                     error={fieldErrors.seoDescription}
                   >
                     <textarea
-                      value={draft.seoDescription}
+                      value={view.seoDescription}
+                      placeholder={locale === "en" ? undefined : draft.seoDescription}
                       onChange={(e) => patch("seoDescription", e.target.value)}
                       rows={3}
                       className="!min-h-0 resize-y"
@@ -1865,14 +1983,16 @@ export function TourTabsForm({
               </div>
               <Field label="Facebook title">
                 <input
-                  value={draft.facebookTitle}
+                  value={view.facebookTitle}
+                  placeholder={locale === "en" ? undefined : draft.facebookTitle}
                   onChange={(e) => patch("facebookTitle", e.target.value)}
                   className="!h-10"
                 />
               </Field>
               <Field label="Facebook description">
                 <textarea
-                  value={draft.facebookDescription}
+                  value={view.facebookDescription}
+                  placeholder={locale === "en" ? undefined : draft.facebookDescription}
                   onChange={(e) =>
                     patch("facebookDescription", e.target.value)
                   }
@@ -1882,14 +2002,16 @@ export function TourTabsForm({
               </Field>
               <Field label="X title">
                 <input
-                  value={draft.twitterTitle}
+                  value={view.twitterTitle}
+                  placeholder={locale === "en" ? undefined : draft.twitterTitle}
                   onChange={(e) => patch("twitterTitle", e.target.value)}
                   className="!h-10"
                 />
               </Field>
               <Field label="X description">
                 <textarea
-                  value={draft.twitterDescription}
+                  value={view.twitterDescription}
+                  placeholder={locale === "en" ? undefined : draft.twitterDescription}
                   onChange={(e) =>
                     patch("twitterDescription", e.target.value)
                   }

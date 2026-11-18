@@ -39,6 +39,7 @@ export default async function AdminEnquiryPage({ params }: Props) {
       </Link>
       <EnquiryFacts
         enquiry={enquiry}
+        bilingual
         footer={
           canManage ? (
             <section className="rounded-xl border border-line bg-white p-3 shadow-sm">

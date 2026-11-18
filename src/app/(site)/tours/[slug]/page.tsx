@@ -9,6 +9,16 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { loadTourCatalog } from "@/lib/catalog-query";
 import { isFavorited } from "@/lib/favorites";
 import { prisma } from "@/lib/db";
+import { getUserLocale } from "@/i18n/get-locale";
+import { localFaqs } from "@/lib/catalog";
+import {
+  applyLocalFaqCopy,
+  loadCopyMap,
+  loadOwnerCopies,
+  withCatalogCopy,
+  withPlaceCopy,
+  withTourCopy,
+} from "@/lib/i18n/content";
 import { firebaseWebConfig } from "@/lib/firebase/config";
 import { cached } from "@/lib/ttl-cache";
 import { formatMoney } from "@/lib/format";
@@ -65,9 +75,9 @@ function loadTour(slug: string) {
     prisma.tour.findUnique({
       where: { slug },
       include: {
-        destination: { select: { name: true, slug: true } },
+        destination: { select: { id: true, name: true, slug: true, summary: true } },
         destinationLinks: {
-          include: { destination: { select: { name: true, slug: true } } },
+          include: { destination: { select: { id: true, name: true, slug: true, summary: true } } },
           take: 1,
         },
         days: { orderBy: { dayNumber: "asc" } },
@@ -82,9 +92,9 @@ function loadSimilarTours() {
     prisma.tour.findMany({
       where: { published: true },
       include: {
-        destination: { select: { name: true } },
+        destination: { select: { id: true, name: true, summary: true } },
         destinationLinks: {
-          include: { destination: { select: { name: true } } },
+          include: { destination: { select: { id: true, name: true, summary: true } } },
           take: 1,
         },
       },
@@ -96,9 +106,15 @@ function loadSimilarTours() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const tour = await loadTour(slug);
+  const locale = await getUserLocale();
+  const loaded = await loadTour(slug);
+  const copy = loaded && locale !== "en" ? (await loadOwnerCopies("tour", loaded.id))[locale] : undefined;
+  const tour = loaded ? withTourCopy(loaded, copy) : null;
   if (!tour?.published) return privateMetadata("Tour");
-  const place = tour.destination?.name;
+  const placeSource = tour.destination ?? tour.destinationLinks[0]?.destination ?? null;
+  const placeCopy =
+    placeSource && locale !== "en" ? (await loadOwnerCopies("destination", placeSource.id))[locale] : undefined;
+  const place = placeSource ? withPlaceCopy(placeSource, placeCopy).name : undefined;
   const written = tour.seoDescription.trim() || tour.summary.trim() || plainText(tour.description);
   const fallbackTitle = place ? `${tour.title} | ${place} Tour` : `${tour.title} | India Tour`;
   return pageMetadata({
@@ -121,34 +137,73 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TourPage({ params }: Props) {
   if (!modules.tours) notFound();
   const { slug } = await params;
+  const locale = await getUserLocale();
 
-  const [tour, catalog, user, similarPool] = await Promise.all([
+  const [loaded, catalog, user, similarPool] = await Promise.all([
     loadTour(slug),
     loadTourCatalog(),
     getCurrentUser(),
     loadSimilarTours(),
   ]);
-  if (!tour || !tour.published) notFound();
+  if (!loaded || !loaded.published) notFound();
+  const catalogIds = [
+    ...catalog.categories,
+    ...catalog.styles,
+    ...catalog.facilities,
+    ...catalog.faqs,
+    ...catalog.includes,
+    ...catalog.excludes,
+    ...catalog.beforeYouGo,
+  ].map((item) => item.id);
+  const placeIds = [
+    ...new Set(
+      [loaded, ...similarPool].flatMap((tour) => {
+        const place = tour.destination ?? tour.destinationLinks[0]?.destination ?? null;
+        return place ? [place.id] : [];
+      }),
+    ),
+  ];
+  const [copies, catalogCopies, placeCopies] = await Promise.all([
+    loadCopyMap("tour", [loaded.id, ...similarPool.map((item) => item.id)], locale),
+    loadCopyMap("catalog", catalogIds, locale),
+    loadCopyMap("destination", placeIds, locale),
+  ]);
+  const spokenCatalog = {
+    categories: withCatalogCopy(catalog.categories, catalogCopies),
+    styles: withCatalogCopy(catalog.styles, catalogCopies),
+    facilities: withCatalogCopy(catalog.facilities, catalogCopies),
+    faqs: withCatalogCopy(catalog.faqs, catalogCopies),
+    includes: withCatalogCopy(catalog.includes, catalogCopies),
+    excludes: withCatalogCopy(catalog.excludes, catalogCopies),
+    beforeYouGo: withCatalogCopy(catalog.beforeYouGo, catalogCopies),
+  };
+  const tour = withTourCopy(loaded, copies.get(loaded.id));
   recordCatalogView("tour", tour.id);
   const saved = user?.scope === "customer" ? await isFavorited(user.id, "tour", tour.id) : false;
 
-  const place = tour.destination ?? tour.destinationLinks[0]?.destination ?? null;
+  const placeSource = tour.destination ?? tour.destinationLinks[0]?.destination ?? null;
+  const place = placeSource ? withPlaceCopy(placeSource, placeCopies.get(placeSource.id)) : null;
   const similarRows = similarPool.filter((row) => row.id !== tour.id).slice(0, 8);
 
   const images = galleryUrls(tour.imageUrl, tour.featuredImageUrl, tour.galleryJson);
-  const includes = resolveCatalogItems(tour.includesJson, catalog.includes);
-  const excludes = resolveCatalogItems(tour.excludesJson, catalog.excludes);
-  const beforeYouGo = resolveCatalogItems(tour.beforeYouGoJson, catalog.beforeYouGo);
-  const facilities = resolveCatalogItems(tour.facilitiesJson, catalog.facilities);
-  const styles = resolveCatalogItems(tour.travelStylesJson, catalog.styles);
-  const faqs = resolveFaqs(tour.faqsJson, catalog.faqs);
+  const includes = resolveCatalogItems(tour.includesJson, spokenCatalog.includes);
+  const excludes = resolveCatalogItems(tour.excludesJson, spokenCatalog.excludes);
+  const beforeYouGo = resolveCatalogItems(tour.beforeYouGoJson, spokenCatalog.beforeYouGo);
+  const facilities = resolveCatalogItems(tour.facilitiesJson, spokenCatalog.facilities);
+  const styles = resolveCatalogItems(tour.travelStylesJson, spokenCatalog.styles);
+  const faqs = applyLocalFaqCopy(
+    resolveFaqs(tour.faqsJson, spokenCatalog.faqs),
+    localFaqs(parseJsonArray(tour.faqsJson)).length,
+    copies.get(loaded.id),
+  );
   const categoryOption =
     catalog.categories.find(
       (item) =>
         item.id === tour.categoryId ||
-        item.title.toLowerCase() === tour.category.trim().toLowerCase(),
+        item.title.toLowerCase() === loaded.category.trim().toLowerCase(),
     ) ?? null;
-  const haystack = `${tour.title} ${tour.summary} ${plainText(tour.description)} ${includes.map((item) => item.title).join(" ")}`;
+  const englishIncludes = resolveCatalogItems(loaded.includesJson, catalog.includes);
+  const haystack = `${loaded.title} ${loaded.summary} ${plainText(loaded.description)} ${englishIncludes.map((item) => item.title).join(" ")}`;
   const languages = languageNames.filter((name) => haystack.toLowerCase().includes(name.toLowerCase()));
   const unit = parseDurationUnit(tour.durationUnit);
   const durationLabel = durationText(tour.durationDays, unit, tour.durationLabel);
@@ -156,15 +211,19 @@ export default async function TourPage({ params }: Props) {
   const today = new Date().toISOString().slice(0, 10);
   const openDepartures = tour.departures.filter((item) => item.status !== "closed" && isoDay(item.startDate) >= today);
 
-  const similar = similarRows.map((item) => {
-    const itemPlace = item.destination ?? item.destinationLinks[0]?.destination ?? null;
+  const similar = similarRows.map((row) => {
+    const item = withTourCopy(row, copies.get(row.id));
+    const itemPlaceSource = item.destination ?? item.destinationLinks[0]?.destination ?? null;
+    const itemPlace = itemPlaceSource
+      ? withPlaceCopy(itemPlaceSource, placeCopies.get(itemPlaceSource.id))
+      : null;
     const slides = galleryUrls(item.imageUrl, item.featuredImageUrl, item.galleryJson);
     return {
       href: `/tours/${item.slug}`,
       title: item.title,
       location: itemPlace?.name ?? "",
       duration: durationText(item.durationDays, item.durationUnit, item.durationLabel),
-      price: formatMoney(item.priceFrom, item.currency || "INR"),
+      price: formatMoney(item.priceFrom, item.currency || "INR", locale),
       image: slides[0] ?? "",
     };
   });

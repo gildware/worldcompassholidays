@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { TourListCard } from "@/components/tour-list/types";
-import { formatMoney } from "@/lib/format";
+import { useFormatMoney } from "@/components/i18n/I18nProvider";
 
 function tagClass(tag: string) {
   const value = tag.toLowerCase();
@@ -16,6 +16,7 @@ function tagClass(tag: string) {
 }
 
 export function TourProperties({ tours }: { tours: TourListCard[] }) {
+  const money = useFormatMoney();
   if (tours.length === 0) {
     return (
       <div className="tour-workspace__empty">
@@ -112,7 +113,7 @@ export function TourProperties({ tours }: { tours: TourListCard[] }) {
                 <div className="col-auto">
                   <div className="text-14 text-light-1">
                     From
-                    <span className="text-16 fw-500 text-dark-1"> {formatMoney(item.price, item.currency)}</span>
+                    <span className="text-16 fw-500 text-dark-1"> {money(item.price, item.currency)}</span>
                   </div>
                 </div>
               </div>
