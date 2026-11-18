@@ -21,19 +21,33 @@ export const metadata: Metadata = pageMetadata({
   keywords: ["contact World Compass Holidays", "trip enquiry India", "travel WhatsApp India"],
 });
 
+const indiaOfficeAddress = "Beehama, Ganderbal, Ganderbal, Jammu and Kashmir 191201";
+const israelOfficeAddress = "1, Gonen, 12130, Israel";
+
+const indiaOffice = {
+  country: "India",
+  contact: company.contactName,
+  address: indiaOfficeAddress,
+  // World Compass Holidays by Nego Trip — Google Maps place pin
+  lat: 34.2165109,
+  lng: 74.7718945,
+  mapUrl:
+    "https://www.google.com/maps/place/World+compass+holidays+by+nego+trip+private+limited/@34.2165109,74.7718945,17z/data=!3m1!4b1!4m6!3m5!1s0x38e19dc97e30f38f:0xbdb86ec9498d97d8!8m2!3d34.2165109!4d74.7718945!16s%2Fg%2F11p2bfr2q0",
+} as const;
+
 const israelOffice = {
   country: "Israel",
   contact: "Omer",
   phone: "+972 54 564 7635",
-  mapQuery: "Israel",
+  address: israelOfficeAddress,
+  // 1, Gonen, 12130, Israel
+  lat: 33.1225,
+  lng: 35.64639,
+  mapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(israelOfficeAddress)}`,
 } as const;
 
-function officeMapEmbed(query: string) {
-  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=5&output=embed`;
-}
-
-function officeMapLink(query: string) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+function officeMapEmbed(lat: number, lng: number, zoom = 16) {
+  return `https://maps.google.com/maps?q=${lat},${lng}&z=${zoom}&output=embed`;
 }
 
 export default async function ContactPage({
@@ -69,16 +83,16 @@ export default async function ContactPage({
       />
       <div className="grid h-[280px] grid-cols-2 overflow-hidden bg-[#f9f9f9] sm:h-[360px] lg:h-[420px]">
         <iframe
-          title="Map of India"
-          src={officeMapEmbed("India")}
+          title={`Map of ${indiaOffice.address}`}
+          src={officeMapEmbed(indiaOffice.lat, indiaOffice.lng)}
           className="h-full w-full border-0"
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
           allowFullScreen
         />
         <iframe
-          title="Map of Israel"
-          src={officeMapEmbed(israelOffice.mapQuery)}
+          title={`Map of ${israelOffice.address}`}
+          src={officeMapEmbed(israelOffice.lat, israelOffice.lng)}
           className="h-full w-full border-0"
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
@@ -118,10 +132,8 @@ export default async function ContactPage({
 function ContactDetails({ settings }: { settings: SiteSettings }) {
   const offices = [
     {
-      country: "India",
-      contact: company.contactName,
+      ...indiaOffice,
       phone: settings.phone,
-      mapQuery: settings.address.trim() || "India",
     },
     israelOffice,
   ];
@@ -166,6 +178,7 @@ function ContactDetails({ settings }: { settings: SiteSettings }) {
               </span>
               <p className="mt-3 text-sm text-muted">{label}</p>
               <p className="mt-1 text-base font-medium leading-6">{office.contact}</p>
+              <p className="mt-2 text-sm leading-6 text-navy">{office.address}</p>
               <a href={`tel:${phoneE164(office.phone)}`} className="mt-2 break-words text-sm font-medium text-brand">
                 {office.phone}
               </a>
@@ -178,7 +191,7 @@ function ContactDetails({ settings }: { settings: SiteSettings }) {
                     WhatsApp
                   </a>
                 ) : null}
-                <a href={officeMapLink(office.mapQuery)} target="_blank" rel="noreferrer" className="text-brand">
+                <a href={office.mapUrl} target="_blank" rel="noreferrer" className="text-brand">
                   Map
                 </a>
               </div>

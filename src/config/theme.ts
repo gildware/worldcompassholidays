@@ -16,7 +16,7 @@ export const theme = {
   font: "Jost",
   layout: "destination-first",
   contact: {
-    city: "India",
+    city: "Beehama, Ganderbal, Ganderbal, Jammu and Kashmir 191201",
     phone: "+91- 70064 22204",
     whatsapp: "+91- 70064 22204",
     email: "hi@worldcompassholiday.com",

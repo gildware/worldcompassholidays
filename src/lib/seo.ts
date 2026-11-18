@@ -189,6 +189,10 @@ export function organizationNode() {
     areaServed: { "@type": "Country", name: "India" },
     address: {
       "@type": "PostalAddress",
+      streetAddress: "Beehama",
+      addressLocality: "Ganderbal",
+      addressRegion: "Jammu and Kashmir",
+      postalCode: "191201",
       addressCountry: "IN",
     },
     ...(sameAs.length ? { sameAs } : {}),
